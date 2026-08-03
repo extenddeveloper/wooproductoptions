@@ -1,5 +1,36 @@
 # Changelog
 
+## 0.9.0-beta.29 — 2026-08-03
+
+- Added insertion-aware drag and drop across existing canvas fields, with full-canvas and before/after drop highlighting.
+- Added an Image Swatches option to update the main WooCommerce product image when a swatch is selected.
+- Added WordPress ColorPicker controls for color swatches and improved Color Picker field rendering in the builder and storefront.
+- Repaired canvas previews for private file upload, textarea, and dropdown fields.
+
+## 0.9.0-beta.28 — 2026-08-03
+
+- Restored the beta.25 Version History version-browser interface in readable TSX.
+- Restored the beta.25 product-assignment picker, searchable target tabs, assignment cards, and modal actions in readable TSX.
+- Corrected assignment types to use the backend-supported global, product, variation, category, tag, and product-type contract.
+- Restored saved choice-image thumbnails after reopening the builder by resolving WordPress Media Library attachment IDs.
+- Persisted attachment-backed image URLs during definition normalization and added a safe frontend image fallback.
+- Restored image previews in the live builder canvas after reload.
+
+## 0.9.0-beta.27 — 2026-08-03
+
+- Restored the polished beta.25 Option Sets manager styling in the new TSX application.
+- Replaced raw bulk-action controls with WordPress component buttons and restored managed table, loading overlay, row menu, checkbox, and DataTables-style pagination markup.
+- Rebuilt conditional logic as readable TSX with the previous multi-group AND/OR editor, show/hide behavior, choice-aware values, and compact rule cards.
+- Restored field-level condition serialization used by the storefront compiler.
+
+## 0.9.0-beta.26 — 2026-08-03
+
+- Replaced the reconstructed admin bundle with genuine readable React + TypeScript source.
+- Added strict option-set, field, choice, rule, revision, assignment, and builder-state models.
+- Added a namespaced WordPress data store with immutable edits and bounded undo/redo.
+- Split dashboard, Option Sets, templates, builder, canvas, inspector, logic, style, history, and assignments into maintainable TSX components.
+- Added TypeScript compilation, source maps, local watcher, dependency metadata generation, and developer architecture documentation.
+
 ## 0.9.0-beta.25 — 2026-08-03
 
 - Restored 10 option sets per page as the default.

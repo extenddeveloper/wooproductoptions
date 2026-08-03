@@ -34,14 +34,23 @@ final class ChoiceFieldType extends AbstractFieldType {
 			if (! Uuid::is_valid($uuid)) {
 				$uuid = Uuid::v4();
 			}
+			$image_id  = max(0, (int) ($choice['imageId'] ?? 0));
+			$image_url = $this->safe_asset_url((string) ($choice['imageUrl'] ?? ''));
+			if ($image_id > 0 && function_exists('wp_get_attachment_image_url')) {
+				$resolved_image = wp_get_attachment_image_url($image_id, 'thumbnail');
+				if (is_string($resolved_image) && '' !== $resolved_image) {
+					$image_url = esc_url_raw($resolved_image);
+				}
+			}
+
 			$choices[] = [
 				'uuid'              => strtolower($uuid),
 				'label'             => self::plain_text((string) ($choice['label'] ?? 'Choice'), 200),
 				'description'       => self::plain_text((string) ($choice['description'] ?? ''), 500),
 				'adminLabel'        => self::plain_text((string) ($choice['adminLabel'] ?? ''), 200),
 				'color'             => $this->safe_color((string) ($choice['color'] ?? '')),
-				'imageId'           => max(0, (int) ($choice['imageId'] ?? 0)),
-				'imageUrl'          => $this->safe_asset_url((string) ($choice['imageUrl'] ?? '')),
+				'imageId'           => $image_id,
+				'imageUrl'          => $image_url,
 				'disabled'          => ! empty($choice['disabled']),
 				'default'           => ! empty($choice['default']),
 				'pricing'           => self::pricing(is_array($choice['pricing'] ?? null) ? $choice['pricing'] : []),
@@ -57,6 +66,7 @@ final class ChoiceFieldType extends AbstractFieldType {
 		$normalized['multiple']   = $this->multiple;
 		$normalized['minChoices'] = max(0, (int) ($definition['minChoices'] ?? 0));
 		$normalized['maxChoices'] = max(0, (int) ($definition['maxChoices'] ?? 0));
+		$normalized['updateProductImage'] = 'image_swatch' === $this->type_key && ! empty($definition['updateProductImage']);
 		return $normalized;
 	}
 

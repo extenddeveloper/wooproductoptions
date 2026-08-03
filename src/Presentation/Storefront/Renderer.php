@@ -174,7 +174,11 @@ final class Renderer {
 		$description_id = 'wof-description-' . str_replace('-', '', $uuid);
 		$required       = ! empty($field['required']);
 		$classes        = 'wof-field wof-field--' . sanitize_html_class($type);
-		echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="' . esc_attr($type) . '">';
+		echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="' . esc_attr($type) . '"';
+		if ('image_swatch' === $type && ! empty($field['updateProductImage'])) {
+			echo ' data-wof-update-product-image="1"';
+		}
+		echo '>';
 
 		if (! in_array($type, ['checkbox', 'toggle'], true)) {
 			echo '<label class="wof-field__label" for="wof-' . esc_attr($uuid) . '">';
@@ -199,6 +203,8 @@ final class Renderer {
 			$this->render_upload($field, $name, $description_id);
 		} elseif ('repeater' === $type) {
 			$this->render_repeater($field, $name);
+		} elseif ('color_picker' === $type) {
+			$this->render_color_picker($field, $name, $description_id);
 		} else {
 			$this->render_scalar($field, $name, $description_id);
 		}
@@ -244,13 +250,34 @@ final class Renderer {
 			echo '<label class="wof-choice" for="' . esc_attr($id) . '">';
 			echo '<input id="' . esc_attr($id) . '" type="' . esc_attr($input) . '" name="' . esc_attr($group) . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
+			if ('image_swatch' === $type && ! empty($field['updateProductImage'])) {
+				$product_image_url = '';
+				if ((int) ($choice['imageId'] ?? 0) > 0) {
+					$resolved = wp_get_attachment_image_url((int) $choice['imageId'], 'woocommerce_single');
+					if (! is_string($resolved) || '' === $resolved) {
+						$resolved = wp_get_attachment_image_url((int) $choice['imageId'], 'full');
+					}
+					$product_image_url = is_string($resolved) ? $resolved : '';
+				}
+				if ('' === $product_image_url) {
+					$product_image_url = (string) ($choice['imageUrl'] ?? '');
+				}
+				if ('' !== $product_image_url) {
+					echo ' data-wof-product-image-url="' . esc_url($product_image_url) . '"';
+				}
+			}
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
 			if ('color_swatch' === $type && '' !== (string) ($choice['color'] ?? '')) {
 				echo '<span class="wof-choice__swatch" style="--wof-swatch:' . esc_attr((string) $choice['color']) . '" aria-hidden="true"></span>';
 			}
+			$image_html = '';
 			if ((int) ($choice['imageId'] ?? 0) > 0) {
-				echo wp_get_attachment_image((int) $choice['imageId'], 'thumbnail', false, ['class' => 'wof-choice__image', 'alt' => '']);
+				$image_html = (string) wp_get_attachment_image((int) $choice['imageId'], 'thumbnail', false, ['class' => 'wof-choice__image', 'alt' => '']);
 			}
+			if ('' === $image_html && '' !== (string) ($choice['imageUrl'] ?? '')) {
+				$image_html = '<img class="wof-choice__image" src="' . esc_url((string) $choice['imageUrl']) . '" alt="">';
+			}
+			echo wp_kses_post($image_html);
 			echo '<span class="wof-choice__body"><strong>' . esc_html((string) $choice['label']) . '</strong>';
 			if ('' !== (string) ($choice['description'] ?? '')) {
 				echo '<small>' . esc_html((string) $choice['description']) . '</small>';
@@ -275,6 +302,23 @@ final class Renderer {
 			echo '<small>' . esc_html((string) $field['description']) . '</small>';
 		}
 		echo '</span></label>';
+	}
+
+	/**
+	 * @param array<string,mixed> $field Field.
+	 */
+	private function render_color_picker(array $field, string $name, string $description_id): void {
+		$uuid  = (string) $field['uuid'];
+		$value = strtoupper((string) ($field['default'] ?? '#5B4FF5'));
+		if (1 !== preg_match('/\A#[0-9A-F]{6}\z/', $value)) {
+			$value = '#5B4FF5';
+		}
+		echo '<div class="wof-color-picker" data-wof-color-picker>';
+		echo '<input id="wof-' . esc_attr($uuid) . '" type="color" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '" data-wof-color-input';
+		echo $this->input_attributes($field, $description_id) . '>';
+		echo '<span class="wof-color-picker__value"><strong data-wof-color-value>' . esc_html($value) . '</strong><small>' . esc_html__('Click to choose a color', 'wooptionsfic') . '</small></span>';
+		echo '<svg class="wof-color-picker__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.4 0 2.1-.82 2.1-1.72 0-.55-.28-1.02-.28-1.52 0-.82.67-1.49 1.49-1.49h1.22A3.97 3.97 0 0 0 20.5 11.8 8.3 8.3 0 0 0 12 3.5Zm-4.1 9.05a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm1.7-4.1a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm4.3-.7a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm3.1 3.25a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z" fill="currentColor"/></svg>';
+		echo '</div>';
 	}
 
 	/**

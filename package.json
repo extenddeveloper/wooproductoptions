@@ -1,0 +1,23 @@
+{
+  "name": "wooptionsfic",
+  "version": "0.9.0-beta.29",
+  "private": true,
+  "description": "WooOptionsFic React + TypeScript development source",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "typecheck": "tsc -p tsconfig.admin.json --noEmit",
+    "build": "node scripts/build-tsx.mjs",
+    "dev": "node scripts/dev-tsx.mjs",
+    "check:js": "node --check build/admin.js && node --check build/storefront.js",
+    "check:php": "node scripts/check-php.mjs",
+    "check": "npm run build && npm run check:js && npm run check:php",
+    "package": "node scripts/package-tsx.mjs"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,6 +1,6 @@
 # WooOptionsFic
 
-WooOptionsFic 0.9.0-beta.25 is an installable, staging-oriented WooCommerce product-options plugin. It provides a polished WordPress-native React administration experience and an accessible server-rendered storefront whose selections, rules, formulas, linked products, uploads, and prices are revalidated by PHP.
+WooOptionsFic 0.9.0-beta.29 is an installable, staging-oriented WooCommerce product-options plugin. It provides a polished WordPress-native React administration experience and an accessible server-rendered storefront whose selections, rules, formulas, linked products, uploads, and prices are revalidated by PHP.
 
 ## Requirements
 
@@ -28,21 +28,23 @@ WooOptionsFic 0.9.0-beta.25 is an installable, staging-oriented WooCommerce prod
 - File uploads are size-, extension-, detected-MIME-, image-dimension-, ownership-, product-, variation-, field-, row-, and revision-bound.
 - Share URLs contain random tokens, not raw selections.
 
-## Development checks
+## Local development
 
-From the source directory:
+This source workspace includes editable assets in `resources/` and dependency-free build scripts. Start with:
 
 ```bash
-npm ci
-npm run typecheck
-npm run lint:js
-npm run lint:css
+npm install
 npm run build
-php tests/php/syntax-smoke.php
-php tests/php/domain-smoke.php
+npm run dev
 ```
 
-The production ZIP excludes Node dependencies, TypeScript/CSS source, tests, and development configuration. PHP under `src/`, JSON templates, block metadata, runtime configuration, and compiled `build/` assets are required at runtime.
+Run syntax checks with:
+
+```bash
+npm run check
+```
+
+See `DEVELOPMENT.md` and `SOURCE-NOTES.md` before changing the JavaScript application. Runtime files remain under `src/`, `config/`, `templates/`, `blocks/`, and `build/`.
 
 ## Data retention
 

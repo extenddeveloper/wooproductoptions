@@ -1,772 +1,2738 @@
-(()=>{"use strict";const e={n:t=>{const n=t&&t.__esModule?()=>t.default:()=>t;return e.d(n,{a:n}),n},d:(t,n)=>{if(Array.isArray(n))for(var i=0;i<n.length;){var s=n[i++],o=n[i++];e.o(t,s)?0===o&&i++:0===o?Object.defineProperty(t,s,{enumerable:!0,value:n[i++]}):Object.defineProperty(t,s,{enumerable:!0,get:o})}else for(var s in n)e.o(n,s)&&!e.o(t,s)&&Object.defineProperty(t,s,{enumerable:!0,get:n[s]})},o:(e,t)=>Object.hasOwn(e,t)},t=window.wp.element,n=window.wp.components,i=window.wp.i18n,s=window.ReactJSXRuntime,o=[{route:"dashboard",label:(0,i.__)("Dashboard","wooptionsfic"),icon:"⌂"},{route:"option-sets",label:(0,i.__)("Option Sets","wooptionsfic"),icon:"◫"},{route:"templates",label:(0,i.__)("Templates","wooptionsfic"),icon:"✦"},{route:"analytics",label:(0,i.__)("Analytics","wooptionsfic"),icon:"↗"},{route:"integrations",label:(0,i.__)("Integrations","wooptionsfic"),icon:"⌁"},{route:"diagnostics",label:(0,i.__)("Diagnostics","wooptionsfic"),icon:"✓"},{route:"settings",label:(0,i.__)("Settings","wooptionsfic"),icon:"⚙"},{route:"help",label:(0,i.__)("Help","wooptionsfic"),icon:"?"}];function r({route:e,navigate:t,children:n}){const r="builder"===e;return(0,s.jsxs)("div",{className:"wof-admin "+(r?"is-builder":""),children:[(0,s.jsxs)("header",{className:"wof-admin__masthead",children:[(0,s.jsxs)("button",{type:"button",className:"wof-brand",onClick:()=>t("dashboard"),"aria-label":(0,i.__)("WooOptionsFic dashboard","wooptionsfic"),children:[(0,s.jsx)("span",{className:"wof-brand-mark","aria-hidden":"true",children:"W"}),(0,s.jsxs)("span",{className:"wof-brand-copy",children:[(0,s.jsx)("strong",{children:"WooOptionsFic"}),(0,s.jsx)("small",{children:(0,i.__)("Precision Workshop","wooptionsfic")})]})]}),(0,s.jsxs)("div",{className:"wof-masthead__meta",children:[(0,s.jsx)("span",{className:"wof-beta-pill",children:window.WooOptionsFicAdmin.version}),(0,s.jsx)("span",{className:"wof-user-chip",children:window.WooOptionsFicAdmin.currentUser.name})]})]}),(0,s.jsxs)("div",{className:"wof-admin__body",children:[(0,s.jsxs)("nav",{className:"wof-admin__nav","aria-label":(0,i.__)("WooOptionsFic sections","wooptionsfic"),children:[o.map(n=>(0,s.jsxs)("button",{type:"button",className:e===n.route||r&&"option-sets"===n.route?"is-active":"",onClick:()=>t(n.route),"aria-current":e===n.route?"page":void 0,children:[(0,s.jsx)("span",{"aria-hidden":"true",children:n.icon}),n.label]},n.route)),(0,s.jsxs)("div",{className:"wof-nav__signal",children:[(0,s.jsx)("span",{className:window.WooOptionsFicAdmin.wooAvailable?"is-connected":"is-paused","aria-hidden":"true"}),(0,s.jsxs)("div",{children:[(0,s.jsx)("strong",{children:"WooCommerce"}),(0,s.jsx)("small",{children:window.WooOptionsFicAdmin.wooAvailable?(0,i.__)("Connected","wooptionsfic"):(0,i.__)("Needs attention","wooptionsfic")})]})]})]}),(0,s.jsx)("main",{className:"wof-admin__content",children:n})]})]})}const a=window.wp.apiFetch;var l=e.n(a);const c=window.WooOptionsFicAdmin;async function d(e,t={}){return l()({path:`/wooptionsfic/v1${e}`,method:t.method??"GET",data:t.data})}l().use(l().createNonceMiddleware(c.nonce));const u=(e="",t="active",n=1,i=20,s="updated_at_gmt",o="DESC")=>d(`/option-sets?page=${n}&perPage=${i}&status=${encodeURIComponent(t)}&search=${encodeURIComponent(e)}&orderBy=${encodeURIComponent(s)}&order=${encodeURIComponent(o)}`),h=e=>d(`/option-sets/${e}`,{method:"DELETE"});function p(e){return"object"==typeof e&&null!==e&&"message"in e&&"string"==typeof e.message?e.message:"Something went wrong. Please try again."}function f({eyebrow:e,title:t,description:n,actions:i}){return(0,s.jsxs)("header",{className:"wof-page-header",children:[(0,s.jsxs)("div",{children:[e&&(0,s.jsx)("span",{className:"wof-eyebrow",children:e}),(0,s.jsx)("h1",{children:t}),(0,s.jsx)("p",{children:n})]}),i&&(0,s.jsx)("div",{className:"wof-page-header__actions",children:i})]})}function g({label:e="Loading…"}){return(0,s.jsxs)("div",{className:"wof-loading",role:"status",children:[(0,s.jsx)("span",{className:"wof-loader","aria-hidden":"true"}),(0,s.jsx)("span",{children:e})]})}function m({icon:e,title:t,description:n,action:i}){return(0,s.jsxs)("div",{className:"wof-empty",children:[(0,s.jsx)("div",{className:"wof-empty__icon","aria-hidden":"true",children:e}),(0,s.jsx)("h2",{children:t}),(0,s.jsx)("p",{children:n}),i]})}function v({status:e}){const t=e.toLowerCase().replace(/[^a-z-]/g,"");return(0,s.jsxs)("span",{className:`wof-status-pill is-${t}`,children:[(0,s.jsx)("span",{"aria-hidden":"true"}),e]})}function w({title:e,message:t,confirmLabel:i,cancelLabel:o,busy:r=!1,onConfirm:a,onCancel:l}){return(0,s.jsxs)(n.Modal,{title:e,onRequestClose:()=>{r||l()},className:"wof-modal wof-confirm-modal",children:[(0,s.jsx)("p",{children:t}),(0,s.jsxs)("div",{className:"wof-modal__actions",children:[(0,s.jsx)(n.Button,{variant:"tertiary",disabled:r,onClick:l,children:o}),(0,s.jsx)(n.Button,{variant:"primary",isDestructive:!0,isBusy:r,onClick:a,children:i})]})]})}function y({navigate:e}){const[o,r]=(0,t.useState)([]),[a,l]=(0,t.useState)(!0);(0,t.useEffect)(()=>{u().then(e=>r(e.items.slice(0,5))).finally(()=>l(!1))},[]);const c=o.filter(e=>e.publishedRevisionId).length;return(0,s.jsxs)("div",{className:"wof-page",children:[(0,s.jsx)(f,{eyebrow:(0,i.__)("Your product experience studio","wooptionsfic"),title:(0,i.sprintf)(/* translators: %s: user display name. */ /* translators: %s: user display name. */
-(0,i.__)("Good to see you, %s.","wooptionsfic"),window.WooOptionsFicAdmin.currentUser.name.split(" ")[0]??window.WooOptionsFicAdmin.currentUser.name),description:(0,i.__)("Build thoughtful product choices, price them safely, and publish without touching theme code.","wooptionsfic"),actions:(0,s.jsx)(n.Button,{variant:"primary",onClick:()=>e("option-sets"),children:(0,i.__)("Create an option set","wooptionsfic")})}),(0,s.jsxs)("section",{className:"wof-hero-card",children:[(0,s.jsxs)("div",{className:"wof-hero-card__copy",children:[(0,s.jsx)("span",{className:"wof-eyebrow",children:(0,i.__)("Start with confidence","wooptionsfic")}),(0,s.jsx)("h2",{children:(0,i.__)("A polished configurator in three moves","wooptionsfic")}),(0,s.jsxs)("div",{className:"wof-steps",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("b",{children:"1"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Shape","wooptionsfic")}),(0,s.jsx)("small",{children:(0,i.__)("Add fields and choices","wooptionsfic")})]})]}),(0,s.jsxs)("div",{children:[(0,s.jsx)("b",{children:"2"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Assign","wooptionsfic")}),(0,s.jsx)("small",{children:(0,i.__)("Choose matching products","wooptionsfic")})]})]}),(0,s.jsxs)("div",{children:[(0,s.jsx)("b",{children:"3"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Publish","wooptionsfic")}),(0,s.jsx)("small",{children:(0,i.__)("Run checks and go live","wooptionsfic")})]})]})]}),(0,s.jsxs)("div",{className:"wof-inline-actions",children:[(0,s.jsx)(n.Button,{variant:"primary",onClick:()=>e("templates"),children:(0,i.__)("Explore templates","wooptionsfic")}),(0,s.jsx)(n.Button,{variant:"tertiary",onClick:()=>e("help"),children:(0,i.__)("Take the quick tour","wooptionsfic")})]})]}),(0,s.jsx)("div",{className:"wof-hero-preview","aria-hidden":"true",children:(0,s.jsxs)("div",{className:"wof-preview-window",children:[(0,s.jsxs)("div",{className:"wof-preview-window__bar",children:[(0,s.jsx)("i",{}),(0,s.jsx)("i",{}),(0,s.jsx)("i",{})]}),(0,s.jsxs)("div",{className:"wof-preview-window__body",children:[(0,s.jsxs)("div",{className:"wof-preview-palette",children:[(0,s.jsx)("span",{}),(0,s.jsx)("span",{}),(0,s.jsx)("span",{}),(0,s.jsx)("span",{})]}),(0,s.jsxs)("div",{className:"wof-preview-canvas",children:[(0,s.jsxs)("div",{className:"wof-preview-field is-selected",children:[(0,s.jsx)("em",{}),(0,s.jsx)("span",{})]}),(0,s.jsxs)("div",{className:"wof-preview-field",children:[(0,s.jsx)("em",{}),(0,s.jsx)("span",{})]}),(0,s.jsxs)("div",{className:"wof-preview-field",children:[(0,s.jsx)("em",{}),(0,s.jsx)("span",{})]})]}),(0,s.jsxs)("div",{className:"wof-preview-inspector",children:[(0,s.jsx)("span",{}),(0,s.jsx)("span",{}),(0,s.jsx)("span",{})]})]})]})})]}),(0,s.jsxs)("div",{className:"wof-stat-grid",children:[(0,s.jsxs)("div",{className:"wof-stat",children:[(0,s.jsx)("span",{children:(0,i.__)("Active sets","wooptionsfic")}),(0,s.jsx)("strong",{children:o.length}),(0,s.jsx)("small",{children:(0,i.__)("Loaded in this view","wooptionsfic")})]}),(0,s.jsxs)("div",{className:"wof-stat",children:[(0,s.jsx)("span",{children:(0,i.__)("Published","wooptionsfic")}),(0,s.jsx)("strong",{children:c}),(0,s.jsx)("small",{children:(0,i.__)("Immutable live revisions","wooptionsfic")})]}),(0,s.jsxs)("div",{className:"wof-stat",children:[(0,s.jsx)("span",{children:(0,i.__)("Built-in templates","wooptionsfic")}),(0,s.jsx)("strong",{children:"10"}),(0,s.jsx)("small",{children:(0,i.__)("Ready to customize","wooptionsfic")})]}),(0,s.jsxs)("div",{className:"wof-stat is-accent",children:[(0,s.jsx)("span",{children:(0,i.__)("Commerce truth","wooptionsfic")}),(0,s.jsx)("strong",{children:"100%"}),(0,s.jsx)("small",{children:(0,i.__)("Calculated on the server","wooptionsfic")})]})]}),(0,s.jsxs)("section",{className:"wof-panel",children:[(0,s.jsxs)("div",{className:"wof-panel__header",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Recently edited","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Pick up exactly where you left off.","wooptionsfic")})]}),(0,s.jsx)(n.Button,{variant:"tertiary",onClick:()=>e("option-sets"),children:(0,i.__)("View all","wooptionsfic")})]}),a?(0,s.jsx)(g,{label:(0,i.__)("Loading your workshop…","wooptionsfic")}):o.length?(0,s.jsx)("div",{className:"wof-recent-list",children:o.map(t=>(0,s.jsxs)("button",{type:"button",onClick:()=>e(`builder/${t.uuid}`),children:[(0,s.jsx)("span",{className:"wof-set-glyph","aria-hidden":"true",children:"◫"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:t.title}),(0,s.jsx)("small",{children:new Date(`${t.updatedAtGmt}Z`).toLocaleString()})]}),(0,s.jsx)(v,{status:t.publishedRevisionId?(0,i.__)("Published","wooptionsfic"):(0,i.__)("Draft","wooptionsfic")}),(0,s.jsx)("b",{"aria-hidden":"true",children:"→"})]},t.uuid))}):(0,s.jsx)("div",{className:"wof-panel__empty",children:(0,s.jsx)("p",{children:(0,i.__)("Your workshop is clear. Import a template or create a blank option set.","wooptionsfic")})})]})]})}function x({ navigate: e }) {
-  const [o, r] = (0, t.useState)([]);
-  const [a, l] = (0, t.useState)("active");
-  const [c, y] = (0, t.useState)("");
-  const [x, b] = (0, t.useState)("updated");
-  const [_, j] = (0, t.useState)(true);
-  const [S, C] = (0, t.useState)(false);
-  const [k, N] = (0, t.useState)("");
-  const [O, E] = (0, t.useState)(null);
-  const [D, M] = (0, t.useState)("");
-  const [A, T] = (0, t.useState)([]);
-  const [P, I] = (0, t.useState)(null);
-  const [W, R] = (0, t.useState)(1);
-  const [F, L] = (0, t.useState)(0);
-  const [B, U] = (0, t.useState)(null);
-  const [V, setPerPage] = (0, t.useState)(10);
-  const H = Math.max(1, Math.ceil(F / V));
-  const z = {
-    updated: ["updated_at_gmt", "DESC"],
-    created: ["created_at_gmt", "DESC"],
-    title: ["title", "ASC"],
-  }[x] ?? ["updated_at_gmt", "DESC"];
-
-  const G = (0, t.useCallback)(() => {
-    j(true);
-    M("");
-    u(c, a, W, V, z[0], z[1])
-      .then((e) => {
-        r(e.items ?? []);
-        L(Number(e.total ?? 0));
-        if (Number(e.page ?? W) !== W) R(Number(e.page ?? 1));
-      })
-      .catch((e) => M(p(e)))
-      .finally(() => j(false));
-  }, [c, a, W, x, V]);
-
-  (0, t.useEffect)(() => {
-    const e = window.setTimeout(G, 220);
-    return () => window.clearTimeout(e);
-  }, [G]);
-
-  (0, t.useEffect)(() => {
-    R(1);
-    T([]);
-    U(null);
-  }, [a, c, x, V]);
-
-  (0, t.useEffect)(() => {
-    if (W > H) R(H);
-  }, [H, W]);
-
-  const q = async () => {
-    if (!k.trim()) return;
-    E("create");
-    M("");
-    try {
-      const t = await d("/option-sets", { method: "POST", data: { title: k } });
-      C(false);
-      N("");
-      e(`builder/${t.uuid}`);
-    } catch (e) {
-      M(p(e));
-    } finally {
-      E(null);
-    }
-  };
-
-  const Y = (uuid, checked) => {
-    T((selected) =>
-      checked ? [...new Set([...selected, uuid])] : selected.filter((item) => item !== uuid)
-    );
-  };
-
-  const K = o.length > 0 && o.every((item) => A.includes(item.uuid));
-
-  const Q = (data, filename) => {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = filename;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 0);
-  };
-
-  const X = async (uuid) => {
-    E(`export:${uuid}`);
-    try {
-      const result = await d(`/exports/${uuid}`);
-      const slug = (result.optionSet?.title ?? "option-set")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-|-$/g, "");
-      Q(result, `${slug || "option-set"}.json`);
-    } catch (error) {
-      M(p(error));
-    } finally {
-      E(null);
-      U(null);
-    }
-  };
-
-  const J = async (action, uuids = A) => {
-    if (!uuids.length) return;
-    E(`bulk:${action}`);
-    M("");
-    try {
-      if (action === "export") {
-        const exports = await Promise.all(uuids.map((uuid) => d(`/exports/${uuid}`)));
-        Q(
-          {
-            exportSchemaVersion: 1,
-            pluginVersion: window.WooOptionsFicAdmin.version,
-            exportedAtGmt: new Date().toISOString(),
-            optionSets: exports.map((item) => item.optionSet),
-          },
-          `woooptionsfic-option-sets-${new Date().toISOString().slice(0, 10)}.json`
-        );
-      } else if (action === "archive") {
-        await Promise.all(uuids.map(h));
-      } else if (action === "delete") {
-        await Promise.all(
-          uuids.map((uuid) => d(`/option-sets/${uuid}/delete-permanently`, { method: "POST" }))
-        );
-      } else {
-        await Promise.all(
-          uuids.map((uuid) =>
-            d(`/option-sets/${uuid}`, { method: "PATCH", data: { status: action } })
-          )
-        );
-      }
-      T([]);
-      I(null);
-      G();
-    } catch (error) {
-      M(p(error));
-      I(null);
-    } finally {
-      E(null);
-    }
-  };
-
-  const Z = (() => {
-    const pages = [];
-    for (let page = Math.max(1, W - 2); page <= Math.min(H, W + 2); page++) pages.push(page);
-    if (pages[0] > 1) pages.unshift(1);
-    if (pages[pages.length - 1] < H) pages.push(H);
-    return [...new Set(pages)];
-  })();
-
-  const lifecycleLabel = (status) =>
-    status === "active"
-      ? (0, i.__)("Active", "wooptionsfic")
-      : status === "inactive"
-        ? (0, i.__)("Deactivated", "wooptionsfic")
-        : (0, i.__)("Archived", "wooptionsfic");
-
-  const rowMenu = (item) =>
-    s.jsxs("div", {
-      className: "wof-row-menu",
-      children: [
-        s.jsx("button", {
-          type: "button",
-          className: "wof-row-menu__toggle",
-          "aria-label": (0, i.__)("Option set actions", "wooptionsfic"),
-          "aria-expanded": B === item.uuid,
-          onClick: () => U(B === item.uuid ? null : item.uuid),
-          children: s.jsx("span", {
-            className: "dashicons dashicons-ellipsis",
-            "aria-hidden": "true",
-          }),
-        }),
-        B === item.uuid &&
-          s.jsxs("div", {
-            className: "wof-row-menu__popover",
-            children: [
-              a !== "archived" &&
-                s.jsxs("button", {
-                  type: "button",
-                  onClick: () => e(`builder/${item.uuid}`),
-                  children: [
-                    s.jsx("span", { className: "dashicons dashicons-edit" }),
-                    (0, i.__)("Edit", "wooptionsfic"),
-                  ],
-                }),
-              s.jsxs("button", {
-                type: "button",
-                onClick: () => X(item.uuid),
-                disabled: O === `export:${item.uuid}`,
-                children: [
-                  s.jsx("span", { className: "dashicons dashicons-download" }),
-                  (0, i.__)("Export", "wooptionsfic"),
-                ],
-              }),
-              a !== "archived" &&
-                s.jsxs("button", {
-                  type: "button",
-                  onClick: async () => {
-                    E(item.uuid);
-                    try {
-                      const copy = await d(`/option-sets/${item.uuid}/duplicate`, { method: "POST" });
-                      e(`builder/${copy.uuid}`);
-                    } catch (error) {
-                      M(p(error));
-                    } finally {
-                      E(null);
-                      U(null);
+"use strict";
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Utils;
+    (function (Utils) {
+        Utils.i18n = wp.i18n;
+        function clone(value) {
+            if (typeof structuredClone === 'function') {
+                return structuredClone(value);
+            }
+            return JSON.parse(JSON.stringify(value));
+        }
+        Utils.clone = clone;
+        function uuid() {
+            if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+                return crypto.randomUUID();
+            }
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+                const random = Math.floor(Math.random() * 16);
+                const value = character === 'x' ? random : (random & 0x3) | 0x8;
+                return value.toString(16);
+            });
+        }
+        Utils.uuid = uuid;
+        function errorMessage(error) {
+            if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+                return error.message;
+            }
+            return Utils.i18n.__('Something went wrong. Please try again.', 'wooptionsfic');
+        }
+        Utils.errorMessage = errorMessage;
+        function formatDate(value) {
+            if (!value)
+                return '—';
+            const normalized = /Z$/.test(value) ? value : `${value}Z`;
+            const date = new Date(normalized);
+            if (Number.isNaN(date.getTime()))
+                return value;
+            return new Intl.DateTimeFormat(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            }).format(date);
+        }
+        Utils.formatDate = formatDate;
+        function downloadJson(filename, payload) {
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = filename;
+            document.body.append(anchor);
+            anchor.click();
+            anchor.remove();
+            URL.revokeObjectURL(url);
+        }
+        Utils.downloadJson = downloadJson;
+        function slug(value) {
+            return value
+                .toLowerCase()
+                .trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+        }
+        Utils.slug = slug;
+        function fieldByUuid(document, uuidValue) {
+            if (!document || !uuidValue)
+                return null;
+            const walk = (fields) => {
+                for (const field of fields) {
+                    if (field.uuid === uuidValue)
+                        return field;
+                    if (field.children?.length) {
+                        const child = walk(field.children);
+                        if (child)
+                            return child;
                     }
-                  },
-                  children: [
-                    s.jsx("span", { className: "dashicons dashicons-admin-page" }),
-                    (0, i.__)("Duplicate", "wooptionsfic"),
-                  ],
-                }),
-              a === "active" &&
-                s.jsxs("button", {
-                  type: "button",
-                  onClick: async () => {
-                    await d(`/option-sets/${item.uuid}`, {
-                      method: "PATCH",
-                      data: { status: "inactive" },
+                }
+                return null;
+            };
+            return walk(document.fields);
+        }
+        Utils.fieldByUuid = fieldByUuid;
+        function updateFieldTree(fields, uuidValue, updater) {
+            return fields.map((field) => {
+                if (field.uuid === uuidValue)
+                    return updater(field);
+                if (field.children?.length) {
+                    return { ...field, children: updateFieldTree(field.children, uuidValue, updater) };
+                }
+                return field;
+            });
+        }
+        Utils.updateFieldTree = updateFieldTree;
+        function removeFieldTree(fields, uuidValue) {
+            return fields
+                .filter((field) => field.uuid !== uuidValue)
+                .map((field) => ({
+                ...field,
+                children: field.children ? removeFieldTree(field.children, uuidValue) : field.children,
+            }));
+        }
+        Utils.removeFieldTree = removeFieldTree;
+        function allFields(fields) {
+            const result = [];
+            const walk = (items) => {
+                items.forEach((field) => {
+                    result.push(field);
+                    if (field.children?.length)
+                        walk(field.children);
+                });
+            };
+            walk(fields);
+            return result;
+        }
+        Utils.allFields = allFields;
+        function countChoices(fields) {
+            return allFields(fields).reduce((count, field) => count + (field.choices?.length ?? 0), 0);
+        }
+        Utils.countChoices = countChoices;
+        function classNames(...values) {
+            return values.filter(Boolean).join(' ');
+        }
+        Utils.classNames = classNames;
+    })(Utils = WooOptionsFic.Utils || (WooOptionsFic.Utils = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Api;
+    (function (Api) {
+        const apiFetch = wp.apiFetch;
+        apiFetch.use(apiFetch.createNonceMiddleware(window.WooOptionsFicAdmin.nonce));
+        async function request(path, options = {}) {
+            return apiFetch({
+                path: `/wooptionsfic/v1${path}`,
+                method: options.method ?? 'GET',
+                data: options.data,
+            });
+        }
+        Api.request = request;
+        function listOptionSets(params = {}) {
+            const query = new URLSearchParams({
+                page: String(params.page ?? 1),
+                perPage: String(params.perPage ?? 10),
+                status: params.status ?? 'active',
+                search: params.search ?? '',
+                orderBy: params.orderBy ?? 'updated_at_gmt',
+                order: params.order ?? 'DESC',
+            });
+            return request(`/option-sets?${query.toString()}`);
+        }
+        Api.listOptionSets = listOptionSets;
+        function createOptionSet(title) {
+            return request('/option-sets', { method: 'POST', data: { title } });
+        }
+        Api.createOptionSet = createOptionSet;
+        function getOptionSet(uuid) {
+            return request(`/option-sets/${uuid}`);
+        }
+        Api.getOptionSet = getOptionSet;
+        function updateOptionSet(uuid, data) {
+            return request(`/option-sets/${uuid}`, { method: 'PUT', data });
+        }
+        Api.updateOptionSet = updateOptionSet;
+        function duplicateOptionSet(uuid) {
+            return request(`/option-sets/${uuid}/duplicate`, { method: 'POST' });
+        }
+        Api.duplicateOptionSet = duplicateOptionSet;
+        function deleteOptionSet(uuid) {
+            return request(`/option-sets/${uuid}/delete-permanently`, { method: 'POST' });
+        }
+        Api.deleteOptionSet = deleteOptionSet;
+        function saveRevision(uuid, definition, expectedHash, versionNote) {
+            return request(`/option-sets/${uuid}/revisions`, {
+                method: 'POST',
+                data: { definition, expectedHash, versionNote },
+            });
+        }
+        Api.saveRevision = saveRevision;
+        function validateDefinition(uuid, definition) {
+            return request(`/option-sets/${uuid}/validate`, { method: 'POST', data: { definition } });
+        }
+        Api.validateDefinition = validateDefinition;
+        function publishOptionSet(uuid, expectedHash) {
+            return request(`/option-sets/${uuid}/publish`, {
+                method: 'POST',
+                data: { expectedHash, versionNote: 'Published from the TypeScript builder' },
+            });
+        }
+        Api.publishOptionSet = publishOptionSet;
+        function listRevisions(uuid) {
+            return request(`/option-sets/${uuid}/revisions`);
+        }
+        Api.listRevisions = listRevisions;
+        function rollback(uuid, revisionUuid) {
+            return request(`/option-sets/${uuid}/rollback`, { method: 'POST', data: { revisionUuid } });
+        }
+        Api.rollback = rollback;
+        function getAssignments(uuid) {
+            return request(`/option-sets/${uuid}/assignments`);
+        }
+        Api.getAssignments = getAssignments;
+        function saveAssignments(uuid, assignments) {
+            return request(`/option-sets/${uuid}/assignments`, { method: 'PUT', data: { assignments } });
+        }
+        Api.saveAssignments = saveAssignments;
+        function searchAssignmentTargets(type, search, include = []) {
+            const query = new URLSearchParams({ type, search, include: include.join(','), perPage: '25' });
+            return request(`/assignment-targets?${query.toString()}`);
+        }
+        Api.searchAssignmentTargets = searchAssignmentTargets;
+        function listTemplates() {
+            return request('/templates');
+        }
+        Api.listTemplates = listTemplates;
+        function importTemplate(slug) {
+            return request('/templates', { method: 'POST', data: { slug } });
+        }
+        Api.importTemplate = importTemplate;
+        function exportOptionSet(uuid) {
+            return request(`/exports/${uuid}`);
+        }
+        Api.exportOptionSet = exportOptionSet;
+        function analytics() {
+            return request('/analytics');
+        }
+        Api.analytics = analytics;
+        function integrations() {
+            return request('/integrations');
+        }
+        Api.integrations = integrations;
+        function diagnostics() {
+            return request('/diagnostics');
+        }
+        Api.diagnostics = diagnostics;
+        function getSettings() {
+            return request('/settings');
+        }
+        Api.getSettings = getSettings;
+        function saveSettings(settings) {
+            return request('/settings', { method: 'PUT', data: settings });
+        }
+        Api.saveSettings = saveSettings;
+    })(Api = WooOptionsFic.Api || (WooOptionsFic.Api = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var BuilderStore;
+    (function (BuilderStore) {
+        BuilderStore.STORE_KEY = 'wooptionsfic/builder';
+        const initialState = {
+            optionSet: null,
+            document: null,
+            selectedUuid: null,
+            inspectorTab: 'content',
+            device: 'desktop',
+            saveStatus: 'idle',
+            dirty: false,
+            history: [],
+            future: [],
+            errors: [],
+            warnings: [],
+        };
+        function pushHistory(state) {
+            if (!state.document)
+                return state;
+            const history = [...state.history, WooOptionsFic.Utils.clone(state.document)].slice(-60);
+            return { ...state, history, future: [] };
+        }
+        const actions = {
+            loadSet(optionSet) {
+                return { type: 'LOAD_SET', optionSet };
+            },
+            replaceDocument(document) {
+                return { type: 'REPLACE_DOCUMENT', document };
+            },
+            updateDocument(patch) {
+                return { type: 'UPDATE_DOCUMENT', patch };
+            },
+            addField(field, index) {
+                return { type: 'ADD_FIELD', field, index };
+            },
+            updateField(uuid, patch) {
+                return { type: 'UPDATE_FIELD', uuid, patch };
+            },
+            replaceField(uuid, field) {
+                return { type: 'REPLACE_FIELD', uuid, field };
+            },
+            deleteField(uuid) {
+                return { type: 'DELETE_FIELD', uuid };
+            },
+            moveField(from, to) {
+                return { type: 'MOVE_FIELD', from, to };
+            },
+            selectField(uuid) {
+                return { type: 'SELECT_FIELD', uuid };
+            },
+            setInspectorTab(tab) {
+                return { type: 'SET_INSPECTOR_TAB', tab };
+            },
+            setDevice(device) {
+                return { type: 'SET_DEVICE', device };
+            },
+            setSaveStatus(status) {
+                return { type: 'SET_SAVE_STATUS', status };
+            },
+            setValidation(errors, warnings) {
+                return { type: 'SET_VALIDATION', errors, warnings };
+            },
+            saved(optionSet, document) {
+                return { type: 'SAVED', optionSet, document };
+            },
+            undo() {
+                return { type: 'UNDO' };
+            },
+            redo() {
+                return { type: 'REDO' };
+            },
+        };
+        function reducer(state = initialState, action) {
+            switch (action.type) {
+                case 'LOAD_SET': {
+                    const optionSet = action.optionSet;
+                    const document = optionSet.currentRevision?.definition ?? null;
+                    return {
+                        ...initialState,
+                        optionSet,
+                        document: document ? WooOptionsFic.Utils.clone(document) : null,
+                        saveStatus: 'saved',
+                    };
+                }
+                case 'REPLACE_DOCUMENT': {
+                    return {
+                        ...pushHistory(state),
+                        document: WooOptionsFic.Utils.clone(action.document),
+                        dirty: true,
+                        saveStatus: 'dirty',
+                    };
+                }
+                case 'UPDATE_DOCUMENT': {
+                    if (!state.document)
+                        return state;
+                    const next = pushHistory(state);
+                    return {
+                        ...next,
+                        document: { ...state.document, ...action.patch },
+                        dirty: true,
+                        saveStatus: 'dirty',
+                    };
+                }
+                case 'ADD_FIELD': {
+                    if (!state.document)
+                        return state;
+                    const next = pushHistory(state);
+                    const fields = [...state.document.fields];
+                    const index = typeof action.index === 'number' ? Math.max(0, Math.min(fields.length, action.index)) : fields.length;
+                    fields.splice(index, 0, action.field);
+                    return {
+                        ...next,
+                        document: { ...state.document, fields },
+                        selectedUuid: action.field.uuid,
+                        inspectorTab: 'content',
+                        dirty: true,
+                        saveStatus: 'dirty',
+                    };
+                }
+                case 'UPDATE_FIELD': {
+                    if (!state.document)
+                        return state;
+                    const next = pushHistory(state);
+                    const fields = WooOptionsFic.Utils.updateFieldTree(state.document.fields, action.uuid, (field) => ({ ...field, ...action.patch }));
+                    return { ...next, document: { ...state.document, fields }, dirty: true, saveStatus: 'dirty' };
+                }
+                case 'REPLACE_FIELD': {
+                    if (!state.document)
+                        return state;
+                    const next = pushHistory(state);
+                    const fields = WooOptionsFic.Utils.updateFieldTree(state.document.fields, action.uuid, () => action.field);
+                    return { ...next, document: { ...state.document, fields }, dirty: true, saveStatus: 'dirty' };
+                }
+                case 'DELETE_FIELD': {
+                    if (!state.document)
+                        return state;
+                    const next = pushHistory(state);
+                    const fields = WooOptionsFic.Utils.removeFieldTree(state.document.fields, action.uuid);
+                    const rules = state.document.rules.filter((rule) => !rule.actions.some((item) => item.target === action.uuid));
+                    return {
+                        ...next,
+                        document: { ...state.document, fields, rules },
+                        selectedUuid: state.selectedUuid === action.uuid ? null : state.selectedUuid,
+                        dirty: true,
+                        saveStatus: 'dirty',
+                    };
+                }
+                case 'MOVE_FIELD': {
+                    if (!state.document || action.from === action.to)
+                        return state;
+                    const next = pushHistory(state);
+                    const fields = [...state.document.fields];
+                    const from = Math.max(0, Math.min(fields.length - 1, action.from));
+                    const to = Math.max(0, Math.min(fields.length - 1, action.to));
+                    const [field] = fields.splice(from, 1);
+                    fields.splice(to, 0, field);
+                    return { ...next, document: { ...state.document, fields }, dirty: true, saveStatus: 'dirty' };
+                }
+                case 'SELECT_FIELD':
+                    return { ...state, selectedUuid: action.uuid };
+                case 'SET_INSPECTOR_TAB':
+                    return { ...state, inspectorTab: action.tab };
+                case 'SET_DEVICE':
+                    return { ...state, device: action.device };
+                case 'SET_SAVE_STATUS':
+                    return { ...state, saveStatus: action.status };
+                case 'SET_VALIDATION':
+                    return { ...state, errors: action.errors, warnings: action.warnings };
+                case 'SAVED': {
+                    const optionSet = action.optionSet;
+                    return {
+                        ...state,
+                        optionSet,
+                        document: action.document ?? state.document,
+                        dirty: false,
+                        saveStatus: 'saved',
+                    };
+                }
+                case 'UNDO': {
+                    if (!state.document || !state.history.length)
+                        return state;
+                    const history = [...state.history];
+                    const previous = history.pop();
+                    return {
+                        ...state,
+                        document: previous,
+                        history,
+                        future: [WooOptionsFic.Utils.clone(state.document), ...state.future].slice(0, 60),
+                        dirty: true,
+                        saveStatus: 'dirty',
+                    };
+                }
+                case 'REDO': {
+                    if (!state.document || !state.future.length)
+                        return state;
+                    const [nextDocument, ...future] = state.future;
+                    return {
+                        ...state,
+                        document: nextDocument,
+                        history: [...state.history, WooOptionsFic.Utils.clone(state.document)].slice(-60),
+                        future,
+                        dirty: true,
+                        saveStatus: 'dirty',
+                    };
+                }
+                default:
+                    return state;
+            }
+        }
+        const selectors = {
+            getState(state) {
+                return state;
+            },
+            getDocument(state) {
+                return state.document;
+            },
+            getSelectedField(state) {
+                return WooOptionsFic.Utils.fieldByUuid(state.document, state.selectedUuid);
+            },
+        };
+        wp.data.registerStore(BuilderStore.STORE_KEY, { reducer, actions, selectors });
+    })(BuilderStore = WooOptionsFic.BuilderStore || (WooOptionsFic.BuilderStore = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var FieldFactory;
+    (function (FieldFactory) {
+        const choiceTypes = new Set(['select', 'radio', 'checkbox_group', 'segmented', 'color_swatch', 'image_swatch', 'product', 'font']);
+        function emptyPricing() {
+            return { strategy: 'none', amount: '0', percent: '0', mode: 'adjustment' };
+        }
+        FieldFactory.emptyPricing = emptyPricing;
+        function choice(label, index = 0) {
+            return {
+                uuid: WooOptionsFic.Utils.uuid(),
+                label,
+                description: '',
+                adminLabel: '',
+                color: index === 0 ? '#5B4FF5' : index === 1 ? '#0F766E' : '#64748B',
+                imageId: 0,
+                imageUrl: '',
+                disabled: false,
+                default: index === 0,
+                pricing: emptyPricing(),
+                quantityEnabled: false,
+                linkedProductId: 0,
+                linkedVariationId: 0,
+                linkedQuantity: 1,
+                preview: {},
+            };
+        }
+        FieldFactory.choice = choice;
+        function create(type) {
+            const manifest = window.WooOptionsFicAdmin.fieldTypes[type];
+            const label = manifest?.label ?? 'Field';
+            const field = {
+                uuid: WooOptionsFic.Utils.uuid(),
+                type,
+                label,
+                description: '',
+                required: false,
+                disabled: false,
+                default: null,
+                validation: {},
+                pricing: emptyPricing(),
+                conditions: {},
+                style: {},
+                preview: {},
+                help: '',
+            };
+            if (choiceTypes.has(type)) {
+                field.choices = [choice('Choice 1', 0), choice('Choice 2', 1), choice('Choice 3', 2)];
+                field.multiple = Boolean(manifest?.multiple);
+                field.minChoices = 0;
+                field.maxChoices = 0;
+                if (type === 'image_swatch')
+                    field.updateProductImage = false;
+            }
+            if (['text', 'textarea', 'password', 'tel', 'email', 'url', 'number', 'range', 'quantity', 'date', 'date_range', 'time', 'datetime', 'customer_defined_price', 'color_picker'].includes(type)) {
+                field.placeholder = '';
+                field.min = null;
+                field.max = null;
+                field.step = ['number', 'range', 'customer_defined_price'].includes(type) ? '1' : null;
+                field.maxLength = 0;
+            }
+            if (type === 'file') {
+                field.allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
+                field.maxFiles = 1;
+                field.maxFileMb = 5;
+            }
+            if (type === 'formula' || type === 'calculated') {
+                field.expression = '0';
+                field.displayMode = 'number';
+            }
+            if (type === 'repeater') {
+                field.children = [create('text')];
+                field.minRows = 0;
+                field.maxRows = 10;
+            }
+            if (type === 'heading') {
+                field.label = 'Section heading';
+            }
+            if (type === 'paragraph') {
+                field.description = 'Add supporting product-option content here.';
+            }
+            if (type === 'help') {
+                field.description = 'Helpful information for customers.';
+            }
+            if (type === 'spacer') {
+                field.style = { height: 24 };
+            }
+            return field;
+        }
+        FieldFactory.create = create;
+        function duplicate(field) {
+            const copy = WooOptionsFic.Utils.clone(field);
+            const remap = (item) => ({
+                ...item,
+                uuid: WooOptionsFic.Utils.uuid(),
+                label: item === copy ? `${item.label} copy` : item.label,
+                choices: item.choices?.map((choiceItem) => ({ ...choiceItem, uuid: WooOptionsFic.Utils.uuid() })),
+                children: item.children?.map(remap),
+            });
+            return remap(copy);
+        }
+        FieldFactory.duplicate = duplicate;
+    })(FieldFactory = WooOptionsFic.FieldFactory || (WooOptionsFic.FieldFactory = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Components;
+    (function (Components) {
+        const iconMap = {
+            select: 'list-view',
+            radio: 'marker',
+            checkbox_group: 'yes-alt',
+            checkbox: 'yes',
+            toggle: 'image-flip-horizontal',
+            segmented: 'grid-view',
+            color_swatch: 'art',
+            image_swatch: 'format-image',
+            product: 'products',
+            font: 'editor-textcolor',
+            text: 'editor-textcolor',
+            textarea: 'text-page',
+            password: 'lock',
+            tel: 'phone',
+            email: 'email',
+            url: 'admin-links',
+            number: 'editor-ol',
+            range: 'leftright',
+            quantity: 'plus-alt2',
+            date: 'calendar-alt',
+            date_range: 'calendar',
+            time: 'clock',
+            datetime: 'schedule',
+            customer_defined_price: 'money-alt',
+            color_picker: 'admin-customizer',
+            file: 'upload',
+            formula: 'calculator',
+            calculated: 'chart-line',
+            repeater: 'screenoptions',
+            heading: 'heading',
+            paragraph: 'editor-paragraph',
+            help: 'editor-help',
+            separator: 'minus',
+            spacer: 'editor-contract',
+        };
+        function Dashicon(props) {
+            return wp.element.createElement("span", { className: WooOptionsFic.Utils.classNames('dashicons', `dashicons-${props.name}`, props.className), "aria-hidden": "true" });
+        }
+        Components.Dashicon = Dashicon;
+        function FieldIcon(props) {
+            return wp.element.createElement(Dashicon, { name: iconMap[props.type] ?? 'admin-generic' });
+        }
+        Components.FieldIcon = FieldIcon;
+        function GripIcon() {
+            return wp.element.createElement("span", { className: "wof-grip-dots", "aria-hidden": "true" },
+                wp.element.createElement("i", null),
+                wp.element.createElement("i", null),
+                wp.element.createElement("i", null),
+                wp.element.createElement("i", null),
+                wp.element.createElement("i", null),
+                wp.element.createElement("i", null));
+        }
+        Components.GripIcon = GripIcon;
+    })(Components = WooOptionsFic.Components || (WooOptionsFic.Components = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Components;
+    (function (Components) {
+        const { Button, Modal, Spinner } = wp.components;
+        const { __ } = wp.i18n;
+        const { useEffect, useState } = wp.element;
+        function MediaImage(props) {
+            const [resolvedSrc, setResolvedSrc] = useState(props.src ?? '');
+            useEffect(() => {
+                let active = true;
+                setResolvedSrc(props.src ?? '');
+                const attachmentId = Number(props.attachmentId ?? 0);
+                if (!attachmentId || !wp.media?.attachment)
+                    return () => { active = false; };
+                const attachment = wp.media.attachment(attachmentId);
+                const update = () => {
+                    if (!active)
+                        return;
+                    const data = attachment.toJSON?.() ?? {};
+                    const source = data.sizes?.thumbnail?.url ?? data.sizes?.medium?.url ?? data.url ?? '';
+                    if (source)
+                        setResolvedSrc(String(source));
+                };
+                update();
+                const request = attachment.fetch?.();
+                if (request)
+                    Promise.resolve(request).then(update).catch(() => undefined);
+                return () => { active = false; };
+            }, [props.attachmentId, props.src]);
+            return resolvedSrc ? wp.element.createElement("img", { src: resolvedSrc, alt: props.alt ?? '', className: props.className }) : null;
+        }
+        Components.MediaImage = MediaImage;
+        function Loading(props) {
+            return (wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-loading', props.overlay && 'is-overlay'), role: "status" },
+                wp.element.createElement("span", { className: "wof-loader", "aria-hidden": "true" }),
+                wp.element.createElement("span", null, props.label ?? __('Loading…', 'wooptionsfic'))));
+        }
+        Components.Loading = Loading;
+        function PageHeader(props) {
+            return (wp.element.createElement("header", { className: "wof-page-header" },
+                wp.element.createElement("div", null,
+                    props.eyebrow ? wp.element.createElement("span", { className: "wof-eyebrow" }, props.eyebrow) : null,
+                    wp.element.createElement("h1", null, props.title),
+                    props.description ? wp.element.createElement("p", null, props.description) : null),
+                props.actions ? wp.element.createElement("div", { className: "wof-page-header__actions" }, props.actions) : null));
+        }
+        Components.PageHeader = PageHeader;
+        function EmptyState(props) {
+            return (wp.element.createElement("div", { className: "wof-empty" },
+                wp.element.createElement("div", { className: "wof-empty__icon" },
+                    wp.element.createElement(Components.Dashicon, { name: props.icon })),
+                wp.element.createElement("h2", null, props.title),
+                wp.element.createElement("p", null, props.description),
+                props.action));
+        }
+        Components.EmptyState = EmptyState;
+        function StatusPill(props) {
+            const normalized = props.status.toLowerCase().replace(/[^a-z-]/g, '');
+            return wp.element.createElement("span", { className: `wof-status-pill is-${normalized}` },
+                wp.element.createElement("span", { "aria-hidden": "true" }),
+                props.status);
+        }
+        Components.StatusPill = StatusPill;
+        function ConfirmModal(props) {
+            return (wp.element.createElement(Modal, { title: props.title, onRequestClose: () => !props.busy && props.onCancel(), className: "wof-modal wof-confirm-modal" },
+                wp.element.createElement("p", null, props.message),
+                wp.element.createElement("div", { className: "wof-modal__actions" },
+                    wp.element.createElement(Button, { variant: "tertiary", disabled: props.busy, onClick: props.onCancel }, props.cancelLabel ?? __('Cancel', 'wooptionsfic')),
+                    wp.element.createElement(Button, { variant: "primary", isDestructive: props.destructive, isBusy: props.busy, onClick: props.onConfirm }, props.confirmLabel))));
+        }
+        Components.ConfirmModal = ConfirmModal;
+        function InlineNotice(props) {
+            return (wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-inline-notice', props.type && `is-${props.type}`), role: props.type === 'error' ? 'alert' : 'status' },
+                wp.element.createElement("span", { "aria-hidden": "true" }, props.type === 'error' ? '!' : props.type === 'warning' ? '•' : '✓'),
+                wp.element.createElement("div", null, props.children),
+                props.onClose ? wp.element.createElement("button", { type: "button", onClick: props.onClose, "aria-label": __('Dismiss', 'wooptionsfic') }, "\u00D7") : null));
+        }
+        Components.InlineNotice = InlineNotice;
+        function ModalLoading(props) {
+            return wp.element.createElement("div", { className: "wof-modal-loading" },
+                wp.element.createElement(Spinner, null),
+                wp.element.createElement("span", null, props.label ?? __('Loading…', 'wooptionsfic')));
+        }
+        Components.ModalLoading = ModalLoading;
+    })(Components = WooOptionsFic.Components || (WooOptionsFic.Components = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Components;
+    (function (Components) {
+        const { __ } = wp.i18n;
+        const navigation = [
+            { route: 'dashboard', label: __('Dashboard', 'wooptionsfic'), icon: 'dashboard' },
+            { route: 'option-sets', label: __('Option Sets', 'wooptionsfic'), icon: 'screenoptions' },
+            { route: 'templates', label: __('Templates', 'wooptionsfic'), icon: 'star-filled' },
+            { route: 'analytics', label: __('Analytics', 'wooptionsfic'), icon: 'chart-area' },
+            { route: 'integrations', label: __('Integrations', 'wooptionsfic'), icon: 'admin-links' },
+            { route: 'diagnostics', label: __('Diagnostics', 'wooptionsfic'), icon: 'yes-alt' },
+            { route: 'settings', label: __('Settings', 'wooptionsfic'), icon: 'admin-settings' },
+            { route: 'help', label: __('Help', 'wooptionsfic'), icon: 'editor-help' },
+        ];
+        function AdminShell(props) {
+            const isBuilder = props.route.startsWith('builder/');
+            if (isBuilder) {
+                return wp.element.createElement("div", { className: "wof-admin is-builder" },
+                    wp.element.createElement("main", { className: "wof-admin__content" }, props.children));
+            }
+            return (wp.element.createElement("div", { className: "wof-admin" },
+                wp.element.createElement("header", { className: "wof-admin__masthead" },
+                    wp.element.createElement("button", { type: "button", className: "wof-brand", onClick: () => props.navigate('dashboard') },
+                        wp.element.createElement("span", { className: "wof-brand-mark" },
+                            wp.element.createElement(Components.Dashicon, { name: "screenoptions" })),
+                        wp.element.createElement("span", { className: "wof-brand-copy" },
+                            wp.element.createElement("strong", null, "WooOptionsFic"),
+                            wp.element.createElement("small", null, __('Precision Workshop', 'wooptionsfic')))),
+                    wp.element.createElement("div", { className: "wof-masthead__meta" },
+                        wp.element.createElement("span", { className: "wof-beta-pill" }, window.WooOptionsFicAdmin.version),
+                        wp.element.createElement("span", { className: "wof-user-chip" }, window.WooOptionsFicAdmin.currentUser.name))),
+                wp.element.createElement("div", { className: "wof-admin__body" },
+                    wp.element.createElement("nav", { className: "wof-admin__nav", "aria-label": __('WooOptionsFic sections', 'wooptionsfic') },
+                        navigation.map((item) => (wp.element.createElement("button", { type: "button", key: item.route, className: props.route === item.route ? 'is-active' : '', "aria-current": props.route === item.route ? 'page' : undefined, onClick: () => props.navigate(item.route) },
+                            wp.element.createElement(Components.Dashicon, { name: item.icon }),
+                            item.label))),
+                        wp.element.createElement("div", { className: "wof-nav__signal" },
+                            wp.element.createElement("span", { className: window.WooOptionsFicAdmin.wooAvailable ? 'is-connected' : 'is-paused', "aria-hidden": "true" }),
+                            wp.element.createElement("div", null,
+                                wp.element.createElement("strong", null, "WooCommerce"),
+                                wp.element.createElement("small", null, window.WooOptionsFicAdmin.wooAvailable ? __('Connected', 'wooptionsfic') : __('Needs attention', 'wooptionsfic'))))),
+                    wp.element.createElement("main", { className: "wof-admin__content" }, props.children))));
+        }
+        Components.AdminShell = AdminShell;
+    })(Components = WooOptionsFic.Components || (WooOptionsFic.Components = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Pages;
+    (function (Pages) {
+        const { Button } = wp.components;
+        const { __, sprintf } = wp.i18n;
+        const { useEffect, useState } = wp.element;
+        function Dashboard(props) {
+            const [items, setItems] = useState([]);
+            const [loading, setLoading] = useState(true);
+            useEffect(() => {
+                WooOptionsFic.Api.listOptionSets({ perPage: 5 }).then((response) => setItems(response.items)).finally(() => setLoading(false));
+            }, []);
+            const published = items.filter((item) => item.publishedRevisionId).length;
+            return (wp.element.createElement("div", { className: "wof-page" },
+                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Your product experience studio', 'wooptionsfic'), title: sprintf(__('Good to see you, %s.', 'wooptionsfic'), window.WooOptionsFicAdmin.currentUser.name.split(' ')[0] ?? window.WooOptionsFicAdmin.currentUser.name), description: __('Build thoughtful product choices, price them safely, and publish without touching theme code.', 'wooptionsfic'), actions: wp.element.createElement(Button, { variant: "primary", onClick: () => props.navigate('option-sets') }, __('Create an option set', 'wooptionsfic')) }),
+                wp.element.createElement("section", { className: "wof-hero-card" },
+                    wp.element.createElement("div", { className: "wof-hero-card__copy" },
+                        wp.element.createElement("span", { className: "wof-eyebrow" }, __('Start with confidence', 'wooptionsfic')),
+                        wp.element.createElement("h2", null, __('A polished configurator in three moves', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-steps" },
+                            wp.element.createElement("div", null,
+                                wp.element.createElement("b", null, "1"),
+                                wp.element.createElement("span", null,
+                                    wp.element.createElement("strong", null, __('Shape', 'wooptionsfic')),
+                                    wp.element.createElement("small", null, __('Add fields and choices', 'wooptionsfic')))),
+                            wp.element.createElement("div", null,
+                                wp.element.createElement("b", null, "2"),
+                                wp.element.createElement("span", null,
+                                    wp.element.createElement("strong", null, __('Assign', 'wooptionsfic')),
+                                    wp.element.createElement("small", null, __('Choose matching products', 'wooptionsfic')))),
+                            wp.element.createElement("div", null,
+                                wp.element.createElement("b", null, "3"),
+                                wp.element.createElement("span", null,
+                                    wp.element.createElement("strong", null, __('Publish', 'wooptionsfic')),
+                                    wp.element.createElement("small", null, __('Run checks and go live', 'wooptionsfic'))))),
+                        wp.element.createElement("div", { className: "wof-inline-actions" },
+                            wp.element.createElement(Button, { variant: "primary", onClick: () => props.navigate('templates') }, __('Explore templates', 'wooptionsfic')),
+                            wp.element.createElement(Button, { variant: "tertiary", onClick: () => props.navigate('help') }, __('Take the quick tour', 'wooptionsfic')))),
+                    wp.element.createElement("div", { className: "wof-hero-preview", "aria-hidden": "true" },
+                        wp.element.createElement("div", { className: "wof-preview-window" },
+                            wp.element.createElement("div", { className: "wof-preview-window__bar" },
+                                wp.element.createElement("i", null),
+                                wp.element.createElement("i", null),
+                                wp.element.createElement("i", null)),
+                            wp.element.createElement("div", { className: "wof-preview-window__body" },
+                                wp.element.createElement("div", { className: "wof-preview-palette" },
+                                    wp.element.createElement("span", null),
+                                    wp.element.createElement("span", null),
+                                    wp.element.createElement("span", null),
+                                    wp.element.createElement("span", null)),
+                                wp.element.createElement("div", { className: "wof-preview-canvas" },
+                                    wp.element.createElement("div", { className: "wof-preview-field is-selected" },
+                                        wp.element.createElement("em", null),
+                                        wp.element.createElement("span", null)),
+                                    wp.element.createElement("div", { className: "wof-preview-field" },
+                                        wp.element.createElement("em", null),
+                                        wp.element.createElement("span", null)),
+                                    wp.element.createElement("div", { className: "wof-preview-field" },
+                                        wp.element.createElement("em", null),
+                                        wp.element.createElement("span", null))),
+                                wp.element.createElement("div", { className: "wof-preview-inspector" },
+                                    wp.element.createElement("span", null),
+                                    wp.element.createElement("span", null),
+                                    wp.element.createElement("span", null)))))),
+                wp.element.createElement("div", { className: "wof-stat-grid" },
+                    wp.element.createElement("div", { className: "wof-stat" },
+                        wp.element.createElement("span", null, __('Active sets', 'wooptionsfic')),
+                        wp.element.createElement("strong", null, items.length),
+                        wp.element.createElement("small", null, __('Loaded in this view', 'wooptionsfic'))),
+                    wp.element.createElement("div", { className: "wof-stat" },
+                        wp.element.createElement("span", null, __('Published', 'wooptionsfic')),
+                        wp.element.createElement("strong", null, published),
+                        wp.element.createElement("small", null, __('Immutable live revisions', 'wooptionsfic'))),
+                    wp.element.createElement("div", { className: "wof-stat" },
+                        wp.element.createElement("span", null, __('Built-in templates', 'wooptionsfic')),
+                        wp.element.createElement("strong", null, "10"),
+                        wp.element.createElement("small", null, __('Ready to customize', 'wooptionsfic'))),
+                    wp.element.createElement("div", { className: "wof-stat is-accent" },
+                        wp.element.createElement("span", null, __('Commerce truth', 'wooptionsfic')),
+                        wp.element.createElement("strong", null, "100%"),
+                        wp.element.createElement("small", null, __('Calculated on the server', 'wooptionsfic')))),
+                wp.element.createElement("section", { className: "wof-panel" },
+                    wp.element.createElement("div", { className: "wof-panel__header" },
+                        wp.element.createElement("div", null,
+                            wp.element.createElement("h2", null, __('Recently edited', 'wooptionsfic')),
+                            wp.element.createElement("p", null, __('Pick up exactly where you left off.', 'wooptionsfic'))),
+                        wp.element.createElement(Button, { variant: "tertiary", onClick: () => props.navigate('option-sets') }, __('View all', 'wooptionsfic'))),
+                    loading ? wp.element.createElement(WooOptionsFic.Components.Loading, { label: __('Loading your workshop…', 'wooptionsfic') }) : items.length ? wp.element.createElement("div", { className: "wof-recent-list" }, items.map((item) => wp.element.createElement("button", { type: "button", key: item.uuid, onClick: () => props.navigate(`builder/${item.uuid}`) },
+                        wp.element.createElement("span", { className: "wof-set-glyph" },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "screenoptions" })),
+                        wp.element.createElement("span", null,
+                            wp.element.createElement("strong", null, item.title),
+                            wp.element.createElement("small", null, WooOptionsFic.Utils.formatDate(item.updatedAtGmt))),
+                        wp.element.createElement(WooOptionsFic.Components.StatusPill, { status: item.publishedRevisionId ? __('Published', 'wooptionsfic') : __('Draft', 'wooptionsfic') }),
+                        wp.element.createElement("b", { "aria-hidden": "true" }, "\u2192")))) : wp.element.createElement("div", { className: "wof-panel__empty" },
+                        wp.element.createElement("p", null, __('Your workshop is clear. Import a template or create a blank option set.', 'wooptionsfic'))))));
+        }
+        Pages.Dashboard = Dashboard;
+    })(Pages = WooOptionsFic.Pages || (WooOptionsFic.Pages = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Pages;
+    (function (Pages) {
+        const { Button, Modal, SearchControl, SelectControl, TextControl } = wp.components;
+        const { __ } = wp.i18n;
+        const { useCallback, useEffect, useMemo, useState } = wp.element;
+        function ActionMenu(props) {
+            const [open, setOpen] = useState(false);
+            useEffect(() => {
+                if (!open)
+                    return;
+                const close = () => setOpen(false);
+                document.addEventListener('click', close);
+                return () => document.removeEventListener('click', close);
+            }, [open]);
+            return wp.element.createElement("div", { className: "wof-row-menu", onClick: (event) => event.stopPropagation() },
+                wp.element.createElement("button", { type: "button", className: "wof-row-menu__toggle", "aria-expanded": open, onClick: () => setOpen(!open) },
+                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "ellipsis" })),
+                open ? wp.element.createElement("div", { className: "wof-row-menu__popover" },
+                    wp.element.createElement("button", { type: "button", onClick: () => props.onAction('edit') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "edit" }),
+                        __('Edit', 'wooptionsfic')),
+                    wp.element.createElement("button", { type: "button", onClick: () => props.onAction('export') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "download" }),
+                        __('Export', 'wooptionsfic')),
+                    wp.element.createElement("button", { type: "button", onClick: () => props.onAction('duplicate') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-page" }),
+                        __('Duplicate', 'wooptionsfic')),
+                    wp.element.createElement("button", { type: "button", onClick: () => props.onAction(props.item.status === 'inactive' ? 'activate' : 'deactivate') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: props.item.status === 'inactive' ? 'yes' : 'hidden' }),
+                        props.item.status === 'inactive' ? __('Activate', 'wooptionsfic') : __('Deactivate', 'wooptionsfic')),
+                    wp.element.createElement("button", { type: "button", onClick: () => props.onAction(props.item.status === 'archived' ? 'restore' : 'archive') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: props.item.status === 'archived' ? 'undo' : 'archive' }),
+                        props.item.status === 'archived' ? __('Restore', 'wooptionsfic') : __('Archive', 'wooptionsfic')),
+                    wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: () => props.onAction('delete') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }),
+                        __('Delete permanently', 'wooptionsfic'))) : null);
+        }
+        function OptionSets(props) {
+            const [collection, setCollection] = useState({ items: [], total: 0, page: 1, perPage: 10 });
+            const [status, setStatus] = useState('active');
+            const [search, setSearch] = useState('');
+            const [sort, setSort] = useState('updated_at_gmt');
+            const [page, setPage] = useState(1);
+            const [perPage, setPerPage] = useState(10);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState('');
+            const [selected, setSelected] = useState([]);
+            const [createOpen, setCreateOpen] = useState(false);
+            const [createTitle, setCreateTitle] = useState('');
+            const [busy, setBusy] = useState(false);
+            const [deleteTarget, setDeleteTarget] = useState(null);
+            const load = useCallback(() => {
+                setLoading(true);
+                setError('');
+                WooOptionsFic.Api.listOptionSets({ page, perPage, status, search, orderBy: sort, order: sort === 'title' ? 'ASC' : 'DESC' })
+                    .then((response) => setCollection(response))
+                    .catch((reason) => setError(WooOptionsFic.Utils.errorMessage(reason)))
+                    .finally(() => setLoading(false));
+            }, [page, perPage, status, search, sort]);
+            useEffect(() => {
+                const timeout = window.setTimeout(load, 180);
+                return () => window.clearTimeout(timeout);
+            }, [load]);
+            useEffect(() => { setSelected([]); setPage(1); }, [status, search, perPage, sort]);
+            const totalPages = Math.max(1, Math.ceil(collection.total / perPage));
+            const start = collection.total ? (collection.page - 1) * collection.perPage + 1 : 0;
+            const end = collection.total ? Math.min(collection.total, start + collection.items.length - 1) : 0;
+            const allSelected = collection.items.length > 0 && collection.items.every((item) => selected.includes(item.uuid));
+            const create = async () => {
+                if (!createTitle.trim())
+                    return;
+                setBusy(true);
+                try {
+                    const result = await WooOptionsFic.Api.createOptionSet(createTitle);
+                    setCreateOpen(false);
+                    setCreateTitle('');
+                    props.navigate(`builder/${result.uuid}`);
+                }
+                catch (reason) {
+                    setError(WooOptionsFic.Utils.errorMessage(reason));
+                }
+                finally {
+                    setBusy(false);
+                }
+            };
+            const exportItems = async (uuids) => {
+                const exports = await Promise.all(uuids.map((uuid) => WooOptionsFic.Api.exportOptionSet(uuid)));
+                WooOptionsFic.Utils.downloadJson(uuids.length === 1 ? `wooptionsfic-${uuids[0]}.json` : `wooptionsfic-option-sets-${Date.now()}.json`, uuids.length === 1 ? exports[0] : { exportSchemaVersion: 1, exportedAtGmt: new Date().toISOString(), optionSets: exports });
+            };
+            const updateStatus = async (uuid, nextStatus) => {
+                await WooOptionsFic.Api.updateOptionSet(uuid, { status: nextStatus });
+            };
+            const rowAction = async (item, action) => {
+                setBusy(true);
+                try {
+                    if (action === 'edit')
+                        props.navigate(`builder/${item.uuid}`);
+                    if (action === 'export')
+                        await exportItems([item.uuid]);
+                    if (action === 'duplicate')
+                        await WooOptionsFic.Api.duplicateOptionSet(item.uuid);
+                    if (action === 'activate' || action === 'restore')
+                        await updateStatus(item.uuid, 'active');
+                    if (action === 'deactivate')
+                        await updateStatus(item.uuid, 'inactive');
+                    if (action === 'archive')
+                        await updateStatus(item.uuid, 'archived');
+                    if (action === 'delete') {
+                        setDeleteTarget(item);
+                        return;
+                    }
+                    load();
+                }
+                catch (reason) {
+                    setError(WooOptionsFic.Utils.errorMessage(reason));
+                }
+                finally {
+                    setBusy(false);
+                }
+            };
+            const bulk = async (action) => {
+                if (!selected.length)
+                    return;
+                if (action === 'delete') {
+                    const target = collection.items.find((item) => item.uuid === selected[0]);
+                    if (target)
+                        setDeleteTarget({ ...target, title: selected.length > 1 ? `${selected.length} selected option sets` : target.title });
+                    return;
+                }
+                setBusy(true);
+                try {
+                    if (action === 'export')
+                        await exportItems(selected);
+                    else
+                        await Promise.all(selected.map((uuid) => updateStatus(uuid, action === 'activate' || action === 'restore' ? 'active' : action === 'deactivate' ? 'inactive' : 'archived')));
+                    setSelected([]);
+                    load();
+                }
+                catch (reason) {
+                    setError(WooOptionsFic.Utils.errorMessage(reason));
+                }
+                finally {
+                    setBusy(false);
+                }
+            };
+            const confirmDelete = async () => {
+                if (!deleteTarget)
+                    return;
+                setBusy(true);
+                try {
+                    const targets = deleteTarget.title.includes('selected option sets') ? selected : [deleteTarget.uuid];
+                    await Promise.all(targets.map((uuid) => WooOptionsFic.Api.deleteOptionSet(uuid)));
+                    setDeleteTarget(null);
+                    setSelected([]);
+                    load();
+                }
+                catch (reason) {
+                    setError(WooOptionsFic.Utils.errorMessage(reason));
+                }
+                finally {
+                    setBusy(false);
+                }
+            };
+            const pages = useMemo(() => {
+                const values = [];
+                const min = Math.max(1, Math.min(page - 2, totalPages - 4));
+                const max = Math.min(totalPages, min + 4);
+                for (let value = min; value <= max; value += 1)
+                    values.push(value);
+                return values;
+            }, [page, totalPages]);
+            return wp.element.createElement("div", { className: "wof-page" },
+                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Configuration library', 'wooptionsfic'), title: __('Option Sets', 'wooptionsfic'), description: __('Design once, assign precisely, and preserve every published revision.', 'wooptionsfic'), actions: wp.element.createElement(wp.element.Fragment, null,
+                        wp.element.createElement(Button, { variant: "secondary", onClick: () => props.navigate('templates') }, __('Browse templates', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "primary", onClick: () => setCreateOpen(true) },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
+                            __('New option set', 'wooptionsfic'))) }),
+                error ? wp.element.createElement(WooOptionsFic.Components.InlineNotice, { type: "error", onClose: () => setError('') }, error) : null,
+                wp.element.createElement("section", { className: "wof-panel wof-library-panel" },
+                    wp.element.createElement("div", { className: "wof-library-toolbar" },
+                        wp.element.createElement("div", { className: "wof-segmented-tabs", role: "tablist" }, ['active', 'inactive', 'archived'].map((value) => wp.element.createElement("button", { type: "button", role: "tab", "aria-selected": status === value, className: status === value ? 'is-active' : '', onClick: () => setStatus(value), key: value }, value === 'active' ? __('Active', 'wooptionsfic') : value === 'inactive' ? __('Deactivated', 'wooptionsfic') : __('Archived', 'wooptionsfic')))),
+                        wp.element.createElement("div", { className: "wof-toolbar-controls" },
+                            wp.element.createElement(SearchControl, { label: __('Search option sets', 'wooptionsfic'), value: search, onChange: setSearch, placeholder: __('Search name or UUID…', 'wooptionsfic') }),
+                            wp.element.createElement(SelectControl, { label: __('Sort option sets', 'wooptionsfic'), hideLabelFromVision: true, value: sort, onChange: setSort, options: [{ label: __('Recently updated', 'wooptionsfic'), value: 'updated_at_gmt' }, { label: __('Recently created', 'wooptionsfic'), value: 'created_at_gmt' }, { label: __('Title A–Z', 'wooptionsfic'), value: 'title' }] }))),
+                    selected.length ? wp.element.createElement("div", { className: "wof-bulk-bar wof-bulk-bar--modern" },
+                        wp.element.createElement("strong", null,
+                            selected.length,
+                            " ",
+                            selected.length === 1 ? __('item selected', 'wooptionsfic') : __('items selected', 'wooptionsfic')),
+                        status === 'active' ? wp.element.createElement(Button, { variant: "tertiary", disabled: busy, onClick: () => bulk('deactivate') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "hidden" }),
+                            __('Deactivate', 'wooptionsfic')) : null,
+                        status === 'inactive' ? wp.element.createElement(Button, { variant: "tertiary", disabled: busy, onClick: () => bulk('activate') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "yes-alt" }),
+                            __('Activate', 'wooptionsfic')) : null,
+                        status !== 'archived' ? wp.element.createElement(Button, { variant: "tertiary", disabled: busy, onClick: () => bulk('archive') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "archive" }),
+                            __('Archive', 'wooptionsfic')) : wp.element.createElement(Button, { variant: "tertiary", disabled: busy, onClick: () => bulk('restore') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "image-rotate" }),
+                            __('Restore', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "tertiary", disabled: busy, onClick: () => bulk('export') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "download" }),
+                            __('Export', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "tertiary", isDestructive: true, disabled: busy, onClick: () => bulk('delete') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }),
+                            __('Delete', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "tertiary", disabled: busy, onClick: () => setSelected([]) }, __('Clear', 'wooptionsfic'))) : null,
+                    wp.element.createElement("div", { className: "wof-option-set-results" },
+                        loading && collection.items.length ? wp.element.createElement("div", { className: "wof-table-loading-overlay", role: "status" },
+                            wp.element.createElement("span", { className: "wof-loader", "aria-hidden": "true" }),
+                            wp.element.createElement("small", null, __('Refreshing option sets…', 'wooptionsfic'))) : null,
+                        wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-set-table-wrap', loading && 'is-loading') },
+                            wp.element.createElement("table", { className: "wof-set-table wof-set-table--managed" },
+                                wp.element.createElement("thead", null,
+                                    wp.element.createElement("tr", null,
+                                        wp.element.createElement("th", { className: "wof-check-cell" },
+                                            wp.element.createElement("input", { className: "wof-table-checkbox", type: "checkbox", checked: allSelected, onChange: () => setSelected(allSelected ? selected.filter((uuid) => !collection.items.some((item) => item.uuid === uuid)) : Array.from(new Set([...selected, ...collection.items.map((item) => item.uuid)]))), "aria-label": __('Select all on this page', 'wooptionsfic') })),
+                                        wp.element.createElement("th", null, __('Title', 'wooptionsfic')),
+                                        wp.element.createElement("th", null, __('Status', 'wooptionsfic')),
+                                        wp.element.createElement("th", null, __('Options applied', 'wooptionsfic')),
+                                        wp.element.createElement("th", null, __('Updated', 'wooptionsfic')),
+                                        wp.element.createElement("th", { className: "wof-actions-heading" }, __('Actions', 'wooptionsfic')))),
+                                wp.element.createElement("tbody", null, collection.items.map((item) => wp.element.createElement("tr", { key: item.uuid },
+                                    wp.element.createElement("td", { className: "wof-check-cell" },
+                                        wp.element.createElement("input", { className: "wof-table-checkbox", type: "checkbox", checked: selected.includes(item.uuid), onChange: () => setSelected(selected.includes(item.uuid) ? selected.filter((uuid) => uuid !== item.uuid) : [...selected, item.uuid]), "aria-label": __('Select option set', 'wooptionsfic') })),
+                                    wp.element.createElement("td", null,
+                                        wp.element.createElement("button", { type: "button", className: "wof-set-title", onClick: () => props.navigate(`builder/${item.uuid}`) },
+                                            wp.element.createElement("span", { className: "wof-set-glyph" },
+                                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "screenoptions" })),
+                                            wp.element.createElement("span", null,
+                                                wp.element.createElement("strong", null, item.title),
+                                                wp.element.createElement("small", null, item.uuid)))),
+                                    wp.element.createElement("td", null,
+                                        wp.element.createElement(WooOptionsFic.Components.StatusPill, { status: item.status })),
+                                    wp.element.createElement("td", null,
+                                        wp.element.createElement("strong", { className: "wof-field-count" }, item.fieldCount ?? 0)),
+                                    wp.element.createElement("td", null,
+                                        wp.element.createElement("time", null, WooOptionsFic.Utils.formatDate(item.updatedAtGmt))),
+                                    wp.element.createElement("td", { className: "wof-actions-cell" },
+                                        wp.element.createElement(ActionMenu, { item: item, onAction: (action) => rowAction(item, action) })))))),
+                            !loading && !collection.items.length ? wp.element.createElement(WooOptionsFic.Components.EmptyState, { icon: "screenoptions", title: __('No option sets found', 'wooptionsfic'), description: __('Try another status or search, or create a new option set.', 'wooptionsfic'), action: wp.element.createElement(Button, { variant: "primary", onClick: () => setCreateOpen(true) }, __('Create option set', 'wooptionsfic')) }) : null,
+                            loading && !collection.items.length ? wp.element.createElement(WooOptionsFic.Components.Loading, { label: __('Organizing option sets…', 'wooptionsfic') }) : null)),
+                    wp.element.createElement("nav", { className: "wof-pagination", "aria-label": __('Option set pagination', 'wooptionsfic') },
+                        wp.element.createElement("label", { className: "wof-pagination__length" },
+                            wp.element.createElement("span", null, __('Show', 'wooptionsfic')),
+                            wp.element.createElement("select", { value: perPage, disabled: loading, onChange: (event) => setPerPage(Number(event.target.value)) }, [10, 25, 50, 100].map((value) => wp.element.createElement("option", { value: value, key: value }, value))),
+                            wp.element.createElement("span", null, __('entries', 'wooptionsfic'))),
+                        wp.element.createElement("span", { className: "wof-pagination__summary" },
+                            __('Showing', 'wooptionsfic'),
+                            " ",
+                            start,
+                            "\u2013",
+                            end,
+                            " ",
+                            __('of', 'wooptionsfic'),
+                            " ",
+                            collection.total),
+                        wp.element.createElement("div", { className: "wof-pagination__controls" },
+                            wp.element.createElement("button", { type: "button", className: "wof-pagination__direction", disabled: page <= 1 || loading, onClick: () => setPage(Math.max(1, page - 1)) }, __('Previous', 'wooptionsfic')),
+                            pages.map((value) => wp.element.createElement("button", { type: "button", key: value, className: page === value ? 'is-current' : '', "aria-current": page === value ? 'page' : undefined, disabled: loading, onClick: () => setPage(value) }, value)),
+                            wp.element.createElement("button", { type: "button", className: "wof-pagination__direction", disabled: page >= totalPages || loading, onClick: () => setPage(Math.min(totalPages, page + 1)) }, __('Next', 'wooptionsfic'))))),
+                createOpen ? wp.element.createElement(Modal, { title: __('Create an option set', 'wooptionsfic'), onRequestClose: () => !busy && setCreateOpen(false), className: "wof-modal" },
+                    wp.element.createElement(TextControl, { label: __('Option set title', 'wooptionsfic'), value: createTitle, onChange: setCreateTitle, autoFocus: true }),
+                    wp.element.createElement("div", { className: "wof-modal__actions" },
+                        wp.element.createElement(Button, { variant: "tertiary", onClick: () => setCreateOpen(false) }, __('Cancel', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "primary", isBusy: busy, disabled: !createTitle.trim(), onClick: create }, __('Create and open', 'wooptionsfic')))) : null,
+                deleteTarget ? wp.element.createElement(WooOptionsFic.Components.ConfirmModal, { title: __('Delete permanently?', 'wooptionsfic'), message: __('This removes the option set and its complete revision history. This action cannot be undone.', 'wooptionsfic'), confirmLabel: __('Delete permanently', 'wooptionsfic'), busy: busy, destructive: true, onConfirm: confirmDelete, onCancel: () => setDeleteTarget(null) }) : null);
+        }
+        Pages.OptionSets = OptionSets;
+    })(Pages = WooOptionsFic.Pages || (WooOptionsFic.Pages = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Pages;
+    (function (Pages) {
+        const { Button, SearchControl } = wp.components;
+        const { __ } = wp.i18n;
+        const { useEffect, useMemo, useState } = wp.element;
+        function Templates(props) {
+            const [items, setItems] = useState([]);
+            const [search, setSearch] = useState('');
+            const [loading, setLoading] = useState(true);
+            const [busy, setBusy] = useState(null);
+            const [error, setError] = useState('');
+            useEffect(() => { WooOptionsFic.Api.listTemplates().then((response) => setItems(response.items)).catch((reason) => setError(WooOptionsFic.Utils.errorMessage(reason))).finally(() => setLoading(false)); }, []);
+            const filtered = useMemo(() => {
+                const term = search.trim().toLowerCase();
+                return term ? items.filter((item) => `${item.name} ${item.description} ${item.category}`.toLowerCase().includes(term)) : items;
+            }, [items, search]);
+            const importTemplate = async (slug) => {
+                setBusy(slug);
+                try {
+                    const result = await WooOptionsFic.Api.importTemplate(slug);
+                    props.navigate(`builder/${result.uuid}`);
+                }
+                catch (reason) {
+                    setError(WooOptionsFic.Utils.errorMessage(reason));
+                }
+                finally {
+                    setBusy(null);
+                }
+            };
+            return wp.element.createElement("div", { className: "wof-page" },
+                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Fast, practical starting points', 'wooptionsfic'), title: __('Template gallery', 'wooptionsfic'), description: __('Every template is an editable option set—not a locked demo.', 'wooptionsfic') }),
+                error ? wp.element.createElement(WooOptionsFic.Components.InlineNotice, { type: "error" }, error) : null,
+                wp.element.createElement("div", { className: "wof-template-toolbar" },
+                    wp.element.createElement("div", null,
+                        wp.element.createElement("strong", null, __('Original templates', 'wooptionsfic')),
+                        wp.element.createElement("span", null, __('Schema-tested and ready to adapt', 'wooptionsfic'))),
+                    wp.element.createElement(SearchControl, { label: __('Search templates', 'wooptionsfic'), value: search, onChange: setSearch, placeholder: __('Search use cases…', 'wooptionsfic') })),
+                loading ? wp.element.createElement(WooOptionsFic.Components.Loading, { label: __('Loading templates…', 'wooptionsfic') }) : wp.element.createElement("div", { className: "wof-template-grid" }, filtered.map((item) => wp.element.createElement("article", { className: "wof-template-card", key: item.slug },
+                    wp.element.createElement("div", { className: "wof-template-art" },
+                        wp.element.createElement("span", null,
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "star-filled" }))),
+                    wp.element.createElement("div", { className: "wof-template-card__body" },
+                        wp.element.createElement("span", { className: "wof-eyebrow" }, item.category),
+                        wp.element.createElement("h2", null, item.name),
+                        wp.element.createElement("p", null, item.description),
+                        wp.element.createElement("div", { className: "wof-template-card__meta" },
+                            wp.element.createElement("span", null,
+                                item.fieldCount ?? '—',
+                                " ",
+                                __('fields', 'wooptionsfic'))),
+                        wp.element.createElement(Button, { variant: "primary", isBusy: busy === item.slug, onClick: () => importTemplate(item.slug) }, __('Use this template', 'wooptionsfic')))))));
+        }
+        Pages.Templates = Templates;
+    })(Pages = WooOptionsFic.Pages || (WooOptionsFic.Pages = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Pages;
+    (function (Pages) {
+        const { __ } = wp.i18n;
+        const { useEffect, useState } = wp.element;
+        function Analytics() {
+            const [data, setData] = useState(null);
+            const [error, setError] = useState('');
+            useEffect(() => { WooOptionsFic.Api.analytics().then(setData).catch((reason) => setError(WooOptionsFic.Utils.errorMessage(reason))); }, []);
+            return wp.element.createElement("div", { className: "wof-page" },
+                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Storefront signals', 'wooptionsfic'), title: __('Analytics', 'wooptionsfic'), description: __('Understand interactions, validation friction, and configured-product conversions.', 'wooptionsfic') }),
+                error ? wp.element.createElement(WooOptionsFic.Components.InlineNotice, { type: "error" }, error) : !data ? wp.element.createElement(WooOptionsFic.Components.Loading, null) : wp.element.createElement(wp.element.Fragment, null,
+                    wp.element.createElement("div", { className: "wof-stat-grid" }, Object.entries(data).slice(0, 4).map(([key, value]) => wp.element.createElement("div", { className: "wof-stat", key: key },
+                        wp.element.createElement("span", null, key.replace(/([A-Z])/g, ' $1')),
+                        wp.element.createElement("strong", null, typeof value === 'number' || typeof value === 'string' ? value : '—'),
+                        wp.element.createElement("small", null, __('Current reporting window', 'wooptionsfic'))))),
+                    wp.element.createElement("section", { className: "wof-panel" },
+                        wp.element.createElement("div", { className: "wof-panel__header" },
+                            wp.element.createElement("div", null,
+                                wp.element.createElement("h2", null, __('Analytics payload', 'wooptionsfic')),
+                                wp.element.createElement("p", null, __('Raw server-authoritative summary for development and verification.', 'wooptionsfic')))),
+                        wp.element.createElement("pre", { className: "wof-code-panel" }, JSON.stringify(data, null, 2)))));
+        }
+        Pages.Analytics = Analytics;
+    })(Pages = WooOptionsFic.Pages || (WooOptionsFic.Pages = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Pages;
+    (function (Pages) {
+        const { Button, TextControl, ToggleControl } = wp.components;
+        const { __ } = wp.i18n;
+        const { useEffect, useState } = wp.element;
+        function Integrations() {
+            const [items, setItems] = useState(null);
+            useEffect(() => { WooOptionsFic.Api.integrations().then((response) => setItems(response.items)).catch(() => setItems([])); }, []);
+            return wp.element.createElement("div", { className: "wof-page" },
+                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Connected commerce surface', 'wooptionsfic'), title: __('Integrations', 'wooptionsfic'), description: __('See the WooCommerce and WordPress services WooOptionsFic can use.', 'wooptionsfic') }),
+                items === null ? wp.element.createElement(WooOptionsFic.Components.Loading, null) : wp.element.createElement("div", { className: "wof-integration-grid" }, items.map((item, index) => wp.element.createElement("article", { className: "wof-integration-card", key: item.id ?? index },
+                    wp.element.createElement("span", null,
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-links" })),
+                    wp.element.createElement("h2", null, item.name ?? item.label ?? `Integration ${index + 1}`),
+                    wp.element.createElement("p", null, item.description ?? item.detail ?? ''),
+                    wp.element.createElement(WooOptionsFic.Components.StatusPill, { status: item.available || item.connected ? __('Connected', 'wooptionsfic') : __('Unavailable', 'wooptionsfic') })))));
+        }
+        Pages.Integrations = Integrations;
+        function Diagnostics() {
+            const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const refresh = () => { setLoading(true); WooOptionsFic.Api.diagnostics().then(setData).finally(() => setLoading(false)); };
+            useEffect(refresh, []);
+            return wp.element.createElement("div", { className: "wof-page" },
+                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('System confidence', 'wooptionsfic'), title: __('Diagnostics', 'wooptionsfic'), description: __('Verify database tables, sessions, REST routes, and WooCommerce services.', 'wooptionsfic'), actions: wp.element.createElement(Button, { variant: "secondary", onClick: refresh }, __('Run again', 'wooptionsfic')) }),
+                loading ? wp.element.createElement(WooOptionsFic.Components.Loading, null) : wp.element.createElement("section", { className: "wof-panel" },
+                    wp.element.createElement("pre", { className: "wof-code-panel" }, JSON.stringify(data, null, 2))));
+        }
+        Pages.Diagnostics = Diagnostics;
+        function Settings() {
+            const [settings, setSettings] = useState(null);
+            const [saving, setSaving] = useState(false);
+            const [notice, setNotice] = useState('');
+            useEffect(() => { WooOptionsFic.Api.getSettings().then(setSettings); }, []);
+            if (!settings)
+                return wp.element.createElement("div", { className: "wof-page" },
+                    wp.element.createElement(WooOptionsFic.Components.Loading, null));
+            const set = (key, value) => setSettings({ ...settings, [key]: value });
+            const save = async () => { setSaving(true); try {
+                setSettings(await WooOptionsFic.Api.saveSettings(settings));
+                setNotice(__('Settings saved.', 'wooptionsfic'));
+            }
+            finally {
+                setSaving(false);
+            } };
+            return wp.element.createElement("div", { className: "wof-page" },
+                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Operational defaults', 'wooptionsfic'), title: __('Settings', 'wooptionsfic'), description: __('Control limits and product-option behavior without editing code.', 'wooptionsfic'), actions: wp.element.createElement(Button, { variant: "primary", isBusy: saving, onClick: save }, __('Save settings', 'wooptionsfic')) }),
+                notice ? wp.element.createElement(WooOptionsFic.Components.InlineNotice, { type: "success", onClose: () => setNotice('') }, notice) : null,
+                wp.element.createElement("div", { className: "wof-settings-grid" },
+                    wp.element.createElement("section", { className: "wof-settings-section" },
+                        wp.element.createElement("h2", null, __('Public API limits', 'wooptionsfic')),
+                        wp.element.createElement(TextControl, { label: __('Quote requests per minute', 'wooptionsfic'), type: "number", value: String(settings.quote_rate_limit_per_minute ?? 60), onChange: (value) => set('quote_rate_limit_per_minute', Number(value)) }),
+                        wp.element.createElement(TextControl, { label: __('Upload size limit (MB)', 'wooptionsfic'), type: "number", value: String(settings.upload_max_mb ?? 10), onChange: (value) => set('upload_max_mb', Number(value)) })),
+                    wp.element.createElement("section", { className: "wof-settings-section" },
+                        wp.element.createElement("h2", null, __('Features', 'wooptionsfic')),
+                        Object.entries(settings).filter(([, value]) => typeof value === 'boolean').map(([key, value]) => wp.element.createElement(ToggleControl, { key: key, label: key.replace(/_/g, ' '), checked: Boolean(value), onChange: (checked) => set(key, checked) })))));
+        }
+        Pages.Settings = Settings;
+        function Help(props) {
+            return wp.element.createElement("div", { className: "wof-page" },
+                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Learn the workshop', 'wooptionsfic'), title: __('Help & onboarding', 'wooptionsfic'), description: __('A practical route from your first element to a published product configurator.', 'wooptionsfic') }),
+                wp.element.createElement("div", { className: "wof-onboarding-grid" },
+                    wp.element.createElement("article", null,
+                        wp.element.createElement("span", null, "1"),
+                        wp.element.createElement("h2", null, __('Create or import', 'wooptionsfic')),
+                        wp.element.createElement("p", null, __('Start blank or choose one of the editable templates.', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "secondary", onClick: () => props.navigate('templates') }, __('Browse templates', 'wooptionsfic'))),
+                    wp.element.createElement("article", null,
+                        wp.element.createElement("span", null, "2"),
+                        wp.element.createElement("h2", null, __('Build and style', 'wooptionsfic')),
+                        wp.element.createElement("p", null, __('Add elements, configure prices and logic, and preview the product page live.', 'wooptionsfic'))),
+                    wp.element.createElement("article", null,
+                        wp.element.createElement("span", null, "3"),
+                        wp.element.createElement("h2", null, __('Assign and publish', 'wooptionsfic')),
+                        wp.element.createElement("p", null, __('Target products or catalog groups, run preflight checks, then publish.', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "primary", onClick: () => props.navigate('option-sets') }, __('Open option sets', 'wooptionsfic')))));
+        }
+        Pages.Help = Help;
+    })(Pages = WooOptionsFic.Pages || (WooOptionsFic.Pages = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Builder;
+    (function (Builder) {
+        const { __ } = wp.i18n;
+        function choiceLabel(choice) {
+            const amount = choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? ` · ${choice.pricing.amount}` : '';
+            return `${choice.label}${amount}`;
+        }
+        function previewColor(field) {
+            const value = String(field.default ?? '#5B4FF5').toUpperCase();
+            return /^#[0-9A-F]{6}$/.test(value) ? value : '#5B4FF5';
+        }
+        function FieldPreview(props) {
+            const field = props.field;
+            const choices = field.choices ?? [];
+            if (field.type === 'heading')
+                return wp.element.createElement("h3", { className: "wof-preview-heading" }, field.label);
+            if (field.type === 'paragraph')
+                return wp.element.createElement("p", { className: "wof-preview-paragraph" }, field.description || field.label);
+            if (field.type === 'help')
+                return wp.element.createElement("div", { className: "wof-preview-help" }, field.description || field.help || field.label);
+            if (field.type === 'separator')
+                return wp.element.createElement("hr", { className: "wof-preview-separator" });
+            if (field.type === 'spacer')
+                return wp.element.createElement("div", { className: "wof-preview-spacer", style: { height: `${Number(field.style?.height ?? 24)}px` } });
+            if (field.type === 'formula' || field.type === 'calculated')
+                return wp.element.createElement("output", { className: "wof-preview-output" }, "0.00");
+            if (field.type === 'checkbox' || field.type === 'toggle')
+                return wp.element.createElement("label", { className: "wof-preview-boolean" },
+                    wp.element.createElement("input", { type: "checkbox", disabled: true }),
+                    wp.element.createElement("span", null),
+                    wp.element.createElement("strong", null, field.label));
+            if (field.type === 'textarea') {
+                return wp.element.createElement("div", { className: "wof-preview-textarea-wrap" },
+                    wp.element.createElement("textarea", { className: "wof-preview-textarea", readOnly: true, tabIndex: -1, placeholder: field.placeholder || 'Enter text…' }),
+                    wp.element.createElement("small", null, __('Multi-line text', 'wooptionsfic')));
+            }
+            if (field.type === 'select') {
+                return wp.element.createElement("div", { className: "wof-preview-select-control" },
+                    wp.element.createElement("select", { "aria-disabled": "true", tabIndex: -1, value: "", onChange: () => undefined },
+                        wp.element.createElement("option", { value: "" }, choices[0]?.label ?? __('Choose an option', 'wooptionsfic'))),
+                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-down-alt2" }));
+            }
+            if (field.type === 'color_picker') {
+                const color = previewColor(field);
+                return wp.element.createElement("div", { className: "wof-preview-color-picker" },
+                    wp.element.createElement("span", { className: "wof-preview-color-picker__swatch", style: { background: color } }),
+                    wp.element.createElement("span", null,
+                        wp.element.createElement("strong", null, color),
+                        wp.element.createElement("small", null, __('Click to choose a color', 'wooptionsfic'))),
+                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-customizer" }));
+            }
+            if (field.type === 'range')
+                return wp.element.createElement("input", { disabled: true, type: "range", min: field.min ?? 0, max: field.max ?? 100 });
+            if (field.type === 'file') {
+                const maxFiles = Math.max(1, Number(field.maxFiles ?? 1));
+                const maxMb = Math.max(1, Number(field.maxFileMb ?? 5));
+                return wp.element.createElement("div", { className: "wof-preview-upload" },
+                    wp.element.createElement("div", { className: "wof-preview-upload__picker" },
+                        wp.element.createElement("button", { type: "button", className: "wof-preview-upload__button", tabIndex: -1, "aria-disabled": "true" },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "upload" }),
+                            __('Upload', 'wooptionsfic')),
+                        wp.element.createElement("span", null, __('Click or drag and drop', 'wooptionsfic')),
+                        wp.element.createElement("small", null, maxFiles === 1 ? `${maxMb} MB max` : `Up to ${maxFiles} files, ${maxMb} MB each`)),
+                    wp.element.createElement("div", { className: "wof-preview-upload__item" },
+                        wp.element.createElement("span", { className: "wof-preview-upload__remove", "aria-hidden": "true" }, "\u00D7"),
+                        wp.element.createElement("span", { className: "wof-preview-upload__file-icon" },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "media-default" })),
+                        wp.element.createElement("span", { className: "wof-preview-upload__copy" },
+                            wp.element.createElement("strong", null, __('Uploaded file preview', 'wooptionsfic')),
+                            wp.element.createElement("span", { className: "wof-preview-upload__progress" },
+                                wp.element.createElement("i", null))),
+                        wp.element.createElement("small", null, "0.20 MB")));
+            }
+            if (field.type === 'date_range')
+                return wp.element.createElement("div", { className: "wof-preview-date-range" },
+                    wp.element.createElement("input", { disabled: true, type: "date" }),
+                    wp.element.createElement("span", null, "to"),
+                    wp.element.createElement("input", { disabled: true, type: "date" }));
+            if (['radio', 'checkbox_group', 'segmented', 'font'].includes(field.type)) {
+                return wp.element.createElement("div", { className: "wof-preview-choice-row" }, choices.slice(0, 4).map((choice, index) => wp.element.createElement("span", { className: index === 0 ? 'is-selected' : '', key: choice.uuid }, choiceLabel(choice))));
+            }
+            if (field.type === 'color_swatch') {
+                return wp.element.createElement("div", { className: "wof-preview-swatches" }, choices.slice(0, 5).map((choice, index) => wp.element.createElement("span", { className: index === 0 ? 'is-selected' : '', style: { background: choice.color || '#ddd' }, key: choice.uuid })));
+            }
+            if (field.type === 'image_swatch' || field.type === 'product') {
+                return wp.element.createElement("div", { className: "wof-preview-images" }, choices.slice(0, 4).map((choice, index) => wp.element.createElement("span", { className: index === 0 ? 'is-selected' : '', key: choice.uuid },
+                    choice.imageId || choice.imageUrl ? wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }) : wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" }),
+                    wp.element.createElement("small", null, choice.label))));
+            }
+            if (field.type === 'repeater')
+                return wp.element.createElement("div", { className: "wof-preview-repeater" },
+                    wp.element.createElement("div", null,
+                        wp.element.createElement("strong", null, "Item 1"),
+                        wp.element.createElement("small", null,
+                            field.children?.length ?? 0,
+                            " fields")),
+                    wp.element.createElement("button", { type: "button", disabled: true }, "+ Add item"));
+            const inputType = {
+                password: 'password', tel: 'tel', email: 'email', url: 'url', number: 'number', quantity: 'number', date: 'date', time: 'time', datetime: 'datetime-local', customer_defined_price: 'number',
+            };
+            return wp.element.createElement("input", { disabled: true, type: inputType[field.type] ?? 'text', placeholder: field.placeholder || 'Enter value…' });
+        }
+        Builder.FieldPreview = FieldPreview;
+    })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Builder;
+    (function (Builder) {
+        const { SearchControl } = wp.components;
+        const { __ } = wp.i18n;
+        const { useMemo, useState } = wp.element;
+        const groupLabels = {
+            choice: __('Choices', 'wooptionsfic'),
+            boolean: __('Yes / no', 'wooptionsfic'),
+            scalar: __('Inputs', 'wooptionsfic'),
+            upload: __('Assets', 'wooptionsfic'),
+            calculated: __('Pricing & outputs', 'wooptionsfic'),
+            repeater: __('Structure', 'wooptionsfic'),
+            content: __('Content', 'wooptionsfic'),
+        };
+        function ElementItem(props) {
+            const dragStart = (event) => {
+                event.dataTransfer?.setData('application/x-wooptionsfic-field-type', props.type);
+                if (event.dataTransfer)
+                    event.dataTransfer.effectAllowed = 'copy';
+            };
+            return wp.element.createElement("button", { type: "button", draggable: true, className: "wof-palette-item", onDragStart: dragStart, onClick: () => props.onAdd(WooOptionsFic.FieldFactory.create(props.type)) },
+                wp.element.createElement("span", { className: "wof-palette-item__grip" },
+                    wp.element.createElement(WooOptionsFic.Components.GripIcon, null)),
+                wp.element.createElement("span", { className: "wof-palette-item__icon" },
+                    wp.element.createElement(WooOptionsFic.Components.FieldIcon, { type: props.type })),
+                wp.element.createElement("strong", null, props.label));
+        }
+        function ElementsPanel(props) {
+            const [search, setSearch] = useState('');
+            const groups = useMemo(() => {
+                const term = search.trim().toLowerCase();
+                const map = new Map();
+                Object.entries(window.WooOptionsFicAdmin.fieldTypes).forEach(([type, manifest]) => {
+                    if (term && !`${type} ${manifest.label} ${manifest.group}`.toLowerCase().includes(term))
+                        return;
+                    const items = map.get(manifest.group) ?? [];
+                    items.push({ type, label: manifest.label });
+                    map.set(manifest.group, items);
+                });
+                return map;
+            }, [search]);
+            return wp.element.createElement("aside", { className: "wof-builder-palette" },
+                wp.element.createElement("div", { className: "wof-builder-pane__heading wof-palette-heading" },
+                    wp.element.createElement("div", null,
+                        wp.element.createElement("h2", null, __('Elements', 'wooptionsfic')),
+                        wp.element.createElement("p", null, __('Drag or click to add to the live product form', 'wooptionsfic'))),
+                    wp.element.createElement("button", { type: "button", className: "wof-pane-action", onClick: props.onOpenStyle, "aria-label": __('Open Style Studio', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "ellipsis" }))),
+                wp.element.createElement(SearchControl, { label: __('Search field types', 'wooptionsfic'), value: search, onChange: setSearch, placeholder: __('Find a field…', 'wooptionsfic') }),
+                wp.element.createElement("div", { className: "wof-palette-groups" },
+                    Array.from(groups.entries()).map(([group, items]) => wp.element.createElement("section", { key: group },
+                        wp.element.createElement("h3", null, groupLabels[group] ?? group),
+                        wp.element.createElement("div", null, items.map((item) => wp.element.createElement(ElementItem, { key: item.type, type: item.type, label: item.label, onAdd: props.onAdd }))))),
+                    !groups.size ? wp.element.createElement("p", { className: "wof-palette-empty" }, __('No fields match that search.', 'wooptionsfic')) : null),
+                wp.element.createElement("p", { className: "wof-palette-tip" },
+                    wp.element.createElement(WooOptionsFic.Components.GripIcon, null),
+                    __('Click to add, or drag a field onto the canvas.', 'wooptionsfic')));
+        }
+        Builder.ElementsPanel = ElementsPanel;
+    })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Builder;
+    (function (Builder) {
+        const { __ } = wp.i18n;
+        const { useEffect, useMemo, useState } = wp.element;
+        const FIELD_TYPE_MIME = 'application/x-wooptionsfic-field-type';
+        const FIELD_INDEX_MIME = 'application/x-wooptionsfic-field-index';
+        function hasBuilderDrag(event) {
+            const types = Array.from(event.dataTransfer?.types ?? []);
+            return types.includes(FIELD_TYPE_MIME) || types.includes(FIELD_INDEX_MIME);
+        }
+        function CanvasField(props) {
+            const [dropEdge, setDropEdge] = useState(null);
+            const dragStart = (event) => {
+                event.stopPropagation();
+                event.dataTransfer?.setData(FIELD_INDEX_MIME, String(props.index));
+                if (event.dataTransfer)
+                    event.dataTransfer.effectAllowed = 'move';
+            };
+            const dragOver = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.dataTransfer)
+                    event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes(FIELD_TYPE_MIME) ? 'copy' : 'move';
+                const element = event.currentTarget;
+                const bounds = element.getBoundingClientRect();
+                setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+            };
+            const dragLeave = (event) => {
+                const element = event.currentTarget;
+                if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget))
+                    return;
+                setDropEdge(null);
+            };
+            const drop = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                const type = event.dataTransfer?.getData(FIELD_TYPE_MIME) ?? '';
+                const sourceText = event.dataTransfer?.getData(FIELD_INDEX_MIME) ?? '';
+                const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+                setDropEdge(null);
+                if (type) {
+                    props.onAdd(WooOptionsFic.FieldFactory.create(type), insertIndex);
+                    return;
+                }
+                const source = Number(sourceText);
+                if (!Number.isInteger(source))
+                    return;
+                let finalIndex = insertIndex;
+                if (source < insertIndex)
+                    finalIndex -= 1;
+                finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+                if (finalIndex !== source)
+                    props.onMove(source, finalIndex);
+            };
+            return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after'), onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
+                !props.previewMode ? wp.element.createElement("div", { className: "wof-canvas-field__toolbar", onClick: (event) => event.stopPropagation() },
+                    wp.element.createElement("button", { type: "button", draggable: true, className: "wof-canvas-field__drag-handle", onDragStart: dragStart, onDragEnd: () => setDropEdge(null), "aria-label": __('Drag field', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.GripIcon, null)),
+                    wp.element.createElement("button", { type: "button", onClick: props.onDuplicate, "aria-label": __('Duplicate field', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-page" })),
+                    wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete field', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))) : null,
+                wp.element.createElement("div", { className: "wof-canvas-field__copy" },
+                    wp.element.createElement("div", null,
+                        wp.element.createElement("strong", null, props.field.label || __('Untitled field', 'wooptionsfic')),
+                        props.field.required ? wp.element.createElement("span", null, __('Required', 'wooptionsfic')) : null),
+                    wp.element.createElement("small", null, props.field.choices?.length ? `${props.field.choices.length} ${__('choices', 'wooptionsfic')}` : window.WooOptionsFicAdmin.fieldTypes[props.field.type]?.label ?? props.field.type)),
+                wp.element.createElement("div", { className: "wof-canvas-field__preview" },
+                    wp.element.createElement(Builder.FieldPreview, { field: props.field })));
+        }
+        function Canvas(props) {
+            const [previewMode, setPreviewMode] = useState(false);
+            const [zoom, setZoom] = useState(100);
+            const [dragActive, setDragActive] = useState(false);
+            const palette = window.WooOptionsFicAdmin.palettes[props.document.style.palette] ?? window.WooOptionsFicAdmin.palettes['iris-studio'];
+            const tokens = { ...(palette?.tokens ?? {}), ...(props.document.style.overrides ?? {}) };
+            const typography = props.document.style.typography ?? { family: 'inherit' };
+            const fontStack = {
+                inherit: 'inherit',
+                'system-ui': 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+                Inter: 'Inter, system-ui, sans-serif',
+                Manrope: 'Manrope, system-ui, sans-serif',
+                Poppins: 'Poppins, system-ui, sans-serif',
+                Outfit: 'Outfit, system-ui, sans-serif',
+                'Plus Jakarta Sans': '"Plus Jakarta Sans", system-ui, sans-serif',
+                Roboto: 'Roboto, system-ui, sans-serif',
+            };
+            const style = useMemo(() => ({
+                '--wof-preview-primary': tokens.primary ?? '#5B4FF5',
+                '--wof-preview-background': tokens.background ?? '#F7F7FC',
+                '--wof-preview-surface': tokens.surface ?? '#FFFFFF',
+                '--wof-preview-text': tokens.text ?? '#172033',
+                '--wof-preview-muted': tokens.muted ?? '#5E6A7D',
+                '--wof-preview-border': tokens.border ?? '#D8DEEA',
+                '--wof-preview-font': fontStack[typography.family] ?? typography.family ?? 'inherit',
+                '--wof-preview-label-weight': String(typography.labelWeight ?? 650),
+                zoom: zoom / 100,
+            }), [props.document.style, zoom]);
+            useEffect(() => {
+                const reset = () => setDragActive(false);
+                document.addEventListener('dragend', reset);
+                document.addEventListener('drop', reset);
+                return () => {
+                    document.removeEventListener('dragend', reset);
+                    document.removeEventListener('drop', reset);
+                };
+            }, []);
+            const dropAtEnd = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                setDragActive(false);
+                const type = event.dataTransfer?.getData(FIELD_TYPE_MIME) ?? '';
+                const source = Number(event.dataTransfer?.getData(FIELD_INDEX_MIME));
+                if (type)
+                    props.onAdd(WooOptionsFic.FieldFactory.create(type));
+                else if (Number.isInteger(source))
+                    props.onMove(source, props.document.fields.length - 1);
+            };
+            const canvasDragOver = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                setDragActive(true);
+                if (event.dataTransfer)
+                    event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes(FIELD_TYPE_MIME) ? 'copy' : 'move';
+            };
+            const canvasDragLeave = (event) => {
+                const element = event.currentTarget;
+                if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget))
+                    return;
+                setDragActive(false);
+            };
+            return wp.element.createElement("section", { className: WooOptionsFic.Utils.classNames('wof-builder-canvas', previewMode ? 'is-preview-mode' : 'is-edit-mode', dragActive && 'is-drag-active') },
+                wp.element.createElement("div", { className: "wof-canvas-toolbar" },
+                    wp.element.createElement("div", { className: "wof-canvas-toolbar__copy" },
+                        wp.element.createElement("h2", null, __('Live storefront canvas', 'wooptionsfic')),
+                        wp.element.createElement("p", null, __('The builder and product page use the same component stylesheet.', 'wooptionsfic'))),
+                    wp.element.createElement("div", { className: "wof-canvas-toolbar__controls" },
+                        wp.element.createElement("div", { className: "wof-zoom-control" },
+                            wp.element.createElement("button", { type: "button", disabled: zoom <= 75, onClick: () => setZoom(Math.max(75, zoom - 10)) },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "minus" })),
+                            wp.element.createElement("output", null,
+                                zoom,
+                                "%"),
+                            wp.element.createElement("button", { type: "button", disabled: zoom >= 125, onClick: () => setZoom(Math.min(125, zoom + 10)) },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }))),
+                        wp.element.createElement("span", { className: "wof-interactive-status" },
+                            wp.element.createElement("i", null),
+                            __('Interactive', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-mode-switcher" },
+                            wp.element.createElement("button", { type: "button", className: !previewMode ? 'is-active' : '', onClick: () => setPreviewMode(false) },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "edit" }),
+                                __('Edit', 'wooptionsfic')),
+                            wp.element.createElement("button", { type: "button", className: previewMode ? 'is-active' : '', onClick: () => setPreviewMode(true) },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "visibility" }),
+                                __('Preview', 'wooptionsfic'))))),
+                wp.element.createElement("div", { className: `wof-canvas-device is-${props.device}`, style: style },
+                    wp.element.createElement("div", { className: "wof-canvas-device__chrome" },
+                        wp.element.createElement("span", null, __('Live customer preview', 'wooptionsfic')),
+                        wp.element.createElement("small", null,
+                            props.device,
+                            " \u00B7 ",
+                            props.document.layout.type)),
+                    wp.element.createElement("div", { className: "wof-canvas-frame" },
+                        wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-sheet', dragActive && 'is-drag-active'), onDragEnter: canvasDragOver, onDragOver: canvasDragOver, onDragLeave: canvasDragLeave, onDrop: dropAtEnd },
+                            wp.element.createElement("div", { className: "wof-product-shell" },
+                                wp.element.createElement("aside", { className: "wof-product-shell__media" },
+                                    wp.element.createElement("div", { className: "wof-product-gallery__hero" },
+                                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" })),
+                                    wp.element.createElement("div", { className: "wof-product-gallery__thumbs" },
+                                        wp.element.createElement("div", { className: "wof-product-gallery__thumb" },
+                                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" })),
+                                        wp.element.createElement("div", { className: "wof-product-gallery__thumb" },
+                                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" })),
+                                        wp.element.createElement("div", { className: "wof-product-gallery__thumb" },
+                                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" })))),
+                                wp.element.createElement("div", { className: "wof-product-shell__content" },
+                                    wp.element.createElement("div", { className: "wof-product-preview-meta" },
+                                        wp.element.createElement("span", { className: "wof-product-preview-meta__eyebrow" }, __('Live product preview', 'wooptionsfic')),
+                                        wp.element.createElement("h1", null, __('WowAddon Product (Preview)', 'wooptionsfic')),
+                                        wp.element.createElement("strong", { className: "wof-product-preview-meta__price" }, "20.00 USD")),
+                                    props.document.fields.length ? wp.element.createElement("div", { className: `wof-canvas-fields is-${props.document.layout.type}` },
+                                        props.document.fields.map((field, index) => wp.element.createElement(CanvasField, { key: field.uuid, field: field, index: index, count: props.document.fields.length, selected: field.uuid === props.selectedUuid, previewMode: previewMode, onSelect: () => props.onSelect(field.uuid), onAdd: props.onAdd, onMove: props.onMove, onDuplicate: () => props.onDuplicate(field), onDelete: () => props.onDelete(field.uuid) })),
+                                        wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-drop-end', dragActive && 'is-active'), onDragOver: canvasDragOver, onDrop: dropAtEnd },
+                                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
+                                            __('Drop a field here', 'wooptionsfic'))) : wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-empty', dragActive && 'is-active'), onDragOver: canvasDragOver, onDrop: dropAtEnd },
+                                        wp.element.createElement("div", null,
+                                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "layout" })),
+                                        wp.element.createElement("h3", null, __('Your canvas is ready', 'wooptionsfic')),
+                                        wp.element.createElement("p", null, __('Choose a field from the palette or drag one into this product page preview.', 'wooptionsfic')))))))));
+        }
+        Builder.Canvas = Canvas;
+    })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Builder;
+    (function (Builder) {
+        const { SelectControl, ToggleControl } = wp.components;
+        const { __ } = wp.i18n;
+        function StyleStudio(props) {
+            const document = props.document;
+            const updateStyle = (patch) => props.onChange({ style: { ...document.style, ...patch } });
+            const updateTypography = (patch) => updateStyle({ typography: { ...document.style.typography, ...patch } });
+            const updateSettings = (patch) => props.onChange({ settings: { ...document.settings, ...patch } });
+            const fonts = ['inherit', 'system-ui', 'Inter', 'Manrope', 'Poppins', 'Outfit', 'Plus Jakarta Sans', 'Roboto'];
+            return wp.element.createElement("div", { className: "wof-style-studio" },
+                wp.element.createElement("h3", null, __('Color palette', 'wooptionsfic')),
+                wp.element.createElement("div", { className: "wof-palette-picker" }, Object.entries(window.WooOptionsFicAdmin.palettes).map(([key, palette]) => wp.element.createElement("button", { type: "button", key: key, className: document.style.palette === key ? 'is-selected' : '', onClick: () => updateStyle({ palette: key }) },
+                    wp.element.createElement("span", { className: "wof-palette-dots" }, ['primary', 'accent', 'background', 'surface'].map((token) => wp.element.createElement("i", { key: token, style: { background: palette.tokens[token] } }))),
+                    wp.element.createElement("span", null,
+                        wp.element.createElement("strong", null, palette.name),
+                        wp.element.createElement("small", null, key)),
+                    wp.element.createElement("b", null, "\u2713")))),
+                wp.element.createElement("div", { className: "wof-style-divider" }),
+                wp.element.createElement("h3", null, __('Typography', 'wooptionsfic')),
+                wp.element.createElement(SelectControl, { label: __('Font family', 'wooptionsfic'), value: document.style.typography.family ?? 'inherit', options: fonts.map((font) => ({ label: font === 'inherit' ? __('Inherit from theme', 'wooptionsfic') : font === 'system-ui' ? __('System UI', 'wooptionsfic') : font, value: font })), onChange: (family) => updateTypography({ family }) }),
+                wp.element.createElement(SelectControl, { label: __('Label weight', 'wooptionsfic'), value: String(document.style.typography.labelWeight ?? 650), options: [400, 500, 600, 650, 700, 800].map((value) => ({ label: String(value), value: String(value) })), onChange: (value) => updateTypography({ labelWeight: Number(value) }) }),
+                wp.element.createElement(SelectControl, { label: __('Body weight', 'wooptionsfic'), value: String(document.style.typography.bodyWeight ?? 450), options: [300, 400, 450, 500, 600, 700].map((value) => ({ label: String(value), value: String(value) })), onChange: (value) => updateTypography({ bodyWeight: Number(value) }) }),
+                wp.element.createElement("div", { className: "wof-style-divider" }),
+                wp.element.createElement("h3", null, __('Layout & summary', 'wooptionsfic')),
+                wp.element.createElement(SelectControl, { label: __('Layout preset', 'wooptionsfic'), value: document.layout.type, options: [{ label: __('Stacked form', 'wooptionsfic'), value: 'stack' }, { label: __('Inline', 'wooptionsfic'), value: 'inline' }, { label: __('Responsive grid', 'wooptionsfic'), value: 'grid' }], onChange: (type) => props.onChange({ layout: { ...document.layout, type } }) }),
+                wp.element.createElement(ToggleControl, { label: __('Show itemized price breakdown', 'wooptionsfic'), checked: document.settings.showPriceBreakdown, onChange: (value) => updateSettings({ showPriceBreakdown: value }) }),
+                wp.element.createElement(ToggleControl, { label: __('Keep configuration summary visible', 'wooptionsfic'), checked: document.settings.stickySummary, onChange: (value) => updateSettings({ stickySummary: value }) }),
+                wp.element.createElement(ToggleControl, { label: __('Allow saved configurations', 'wooptionsfic'), checked: document.settings.saveEnabled, onChange: (value) => updateSettings({ saveEnabled: value }) }),
+                wp.element.createElement(ToggleControl, { label: __('Allow shareable links', 'wooptionsfic'), checked: document.settings.shareEnabled, onChange: (value) => updateSettings({ shareEnabled: value }) }));
+        }
+        Builder.StyleStudio = StyleStudio;
+    })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Builder;
+    (function (Builder) {
+        const { SelectControl, TextControl, ToggleControl } = wp.components;
+        const { __, sprintf } = wp.i18n;
+        const { useMemo } = wp.element;
+        const contentOnlyTypes = ['heading', 'paragraph', 'help', 'separator', 'spacer', 'formula', 'calculated'];
+        const operatorOptions = [
+            { label: __('equals', 'wooptionsfic'), value: 'equals' },
+            { label: __('does not equal', 'wooptionsfic'), value: 'not_equals' },
+            { label: __('contains / is selected', 'wooptionsfic'), value: 'contains' },
+            { label: __('does not contain', 'wooptionsfic'), value: 'not_contains' },
+            { label: __('is greater than', 'wooptionsfic'), value: 'greater_than' },
+            { label: __('is less than', 'wooptionsfic'), value: 'less_than' },
+            { label: __('is empty', 'wooptionsfic'), value: 'empty' },
+            { label: __('is not empty', 'wooptionsfic'), value: 'not_empty' },
+        ];
+        function cloneGroups(groups) {
+            return groups.map((group) => ({
+                ...group,
+                conditions: group.conditions.map((condition) => ({ ...condition })),
+            }));
+        }
+        function defaultCondition(fieldUuid, fields) {
+            const source = fields.find((field) => field.uuid === fieldUuid);
+            const operator = source?.multiple || ['checkbox_group', 'product'].includes(source?.type ?? '') ? 'contains' : 'equals';
+            return {
+                field: fieldUuid,
+                operator,
+                value: String(source?.choices?.[0]?.uuid ?? ''),
+            };
+        }
+        function toConditionRow(expression) {
+            return {
+                field: String(expression?.left?.field ?? expression?.field ?? ''),
+                operator: (expression?.operator ?? 'equals'),
+                value: String(expression?.right?.literal ?? expression?.value ?? ''),
+            };
+        }
+        function normalizeState(field, fields) {
+            const visibility = (field.conditions ?? {}).visible;
+            let effect = 'show';
+            let expression = visibility;
+            if (expression?.logic === 'not') {
+                effect = 'hide';
+                expression = expression.not ?? expression.condition ?? {};
+            }
+            let rootLogic = 'and';
+            let storedGroups = [];
+            if (expression?.wofRoot && Array.isArray(expression.conditions)) {
+                rootLogic = expression.logic === 'or' ? 'or' : 'and';
+                storedGroups = expression.conditions;
+            }
+            else if (['and', 'or'].includes(expression?.logic ?? '') && Array.isArray(expression?.conditions)) {
+                const containsNestedGroup = expression.conditions.some((item) => ['and', 'or'].includes(item?.logic ?? '') && Array.isArray(item?.conditions));
+                if (containsNestedGroup) {
+                    rootLogic = expression.logic === 'or' ? 'or' : 'and';
+                    storedGroups = expression.conditions;
+                }
+                else {
+                    storedGroups = [expression];
+                }
+            }
+            else if (expression && (expression.left || expression.field)) {
+                storedGroups = [{ logic: 'and', conditions: [expression] }];
+            }
+            const groups = storedGroups
+                .map((group) => ({
+                logic: group.logic === 'or' ? 'or' : 'and',
+                conditions: (Array.isArray(group.conditions) ? group.conditions : [group])
+                    .filter(Boolean)
+                    .map(toConditionRow),
+            }))
+                .filter((group) => group.conditions.length > 0);
+            const firstField = fields[0]?.uuid ?? '';
+            return {
+                enabled: Boolean(visibility),
+                effect,
+                rootLogic,
+                groups: groups.length ? groups : [{ logic: 'and', conditions: [defaultCondition(firstField, fields)] }],
+            };
+        }
+        function LogicEditor(props) {
+            const sourceFields = useMemo(() => WooOptionsFic.Utils.allFields(props.allFields).filter((field) => field.uuid !== props.field.uuid && !contentOnlyTypes.includes(field.type)), [props.allFields, props.field.uuid]);
+            const state = useMemo(() => normalizeState(props.field, sourceFields), [props.field.conditions, sourceFields]);
+            const save = (patch) => {
+                const next = { ...state, ...patch };
+                const fieldConditions = { ...(props.field.conditions ?? {}) };
+                if (!next.enabled) {
+                    delete fieldConditions.visible;
+                    props.onChange({ ...props.field, conditions: fieldConditions });
+                    return;
+                }
+                const storedGroups = next.groups
+                    .map((group) => ({
+                    logic: group.logic,
+                    conditions: group.conditions
+                        .filter((condition) => Boolean(condition.field))
+                        .map((condition) => ({
+                        left: { field: condition.field },
+                        operator: condition.operator,
+                        right: { literal: condition.value },
+                    })),
+                    wofGroup: true,
+                }))
+                    .filter((group) => Boolean(group.conditions?.length));
+                if (!storedGroups.length) {
+                    delete fieldConditions.visible;
+                }
+                else {
+                    let visibility = storedGroups.length === 1
+                        ? storedGroups[0]
+                        : { logic: next.rootLogic, conditions: storedGroups, wofRoot: true };
+                    if (next.effect === 'hide')
+                        visibility = { logic: 'not', condition: visibility, wofEffect: 'hide' };
+                    fieldConditions.visible = visibility;
+                }
+                props.onChange({ ...props.field, conditions: fieldConditions });
+            };
+            const updateGroup = (groupIndex, patch) => {
+                const groups = cloneGroups(state.groups);
+                groups[groupIndex] = { ...groups[groupIndex], ...patch };
+                save({ groups });
+            };
+            const updateCondition = (groupIndex, conditionIndex, patch) => {
+                const groups = cloneGroups(state.groups);
+                groups[groupIndex].conditions[conditionIndex] = { ...groups[groupIndex].conditions[conditionIndex], ...patch };
+                save({ groups });
+            };
+            const addCondition = (groupIndex) => {
+                const groups = cloneGroups(state.groups);
+                groups[groupIndex].conditions.push(defaultCondition(sourceFields[0]?.uuid ?? '', sourceFields));
+                save({ groups });
+            };
+            const removeCondition = (groupIndex, conditionIndex) => {
+                const groups = cloneGroups(state.groups);
+                groups[groupIndex].conditions.splice(conditionIndex, 1);
+                if (!groups[groupIndex].conditions.length)
+                    groups[groupIndex].conditions.push(defaultCondition(sourceFields[0]?.uuid ?? '', sourceFields));
+                save({ groups });
+            };
+            const removeGroup = (groupIndex) => {
+                const groups = cloneGroups(state.groups);
+                groups.splice(groupIndex, 1);
+                save({ groups: groups.length ? groups : [{ logic: 'and', conditions: [defaultCondition(sourceFields[0]?.uuid ?? '', sourceFields)] }] });
+            };
+            return wp.element.createElement("div", { className: "wof-inspector-section wof-logic-builder" },
+                wp.element.createElement("div", { className: "wof-inspector-section__intro" },
+                    wp.element.createElement("div", null,
+                        wp.element.createElement("h3", null, __('Conditional logic', 'wooptionsfic')),
+                        wp.element.createElement("p", null, __('Show or hide this field using multiple grouped conditions. Rules are rechecked securely on the storefront.', 'wooptionsfic')))),
+                wp.element.createElement(ToggleControl, { __nextHasNoMarginBottom: true, label: __('Enable conditional logic', 'wooptionsfic'), checked: state.enabled, disabled: !sourceFields.length, onChange: (enabled) => enabled
+                        ? save({ enabled: true, groups: [{ logic: 'and', conditions: [defaultCondition(sourceFields[0]?.uuid ?? '', sourceFields)] }] })
+                        : save({ enabled: false }) }),
+                !sourceFields.length ? wp.element.createElement("div", { className: "wof-logic-empty" }, __('Add another customer-input field before creating a condition.', 'wooptionsfic')) : null,
+                state.enabled && sourceFields.length ? wp.element.createElement(wp.element.Fragment, null,
+                    wp.element.createElement("div", { className: "wof-logic-behavior" },
+                        wp.element.createElement(SelectControl, { label: __('Action', 'wooptionsfic'), value: state.effect, options: [{ label: __('Show this field', 'wooptionsfic'), value: 'show' }, { label: __('Hide this field', 'wooptionsfic'), value: 'hide' }], onChange: (effect) => save({ effect }) }),
+                        state.groups.length > 1 ? wp.element.createElement(SelectControl, { label: __('Match rule groups', 'wooptionsfic'), value: state.rootLogic, options: [{ label: __('All groups must match', 'wooptionsfic'), value: 'and' }, { label: __('Any group may match', 'wooptionsfic'), value: 'or' }], onChange: (rootLogic) => save({ rootLogic }) }) : null),
+                    wp.element.createElement("div", { className: "wof-logic-groups" }, state.groups.map((group, groupIndex) => wp.element.createElement("article", { className: "wof-logic-group", key: `group-${groupIndex}` },
+                        wp.element.createElement("header", null,
+                            wp.element.createElement("div", null,
+                                wp.element.createElement("span", null, groupIndex + 1),
+                                wp.element.createElement("div", null,
+                                    wp.element.createElement("strong", null, sprintf(__('Rule group %d', 'wooptionsfic'), groupIndex + 1)),
+                                    wp.element.createElement("small", null, __('Conditions inside this group', 'wooptionsfic')))),
+                            wp.element.createElement(SelectControl, { label: __('Group matching', 'wooptionsfic'), hideLabelFromVision: true, value: group.logic, options: [{ label: __('Match all (AND)', 'wooptionsfic'), value: 'and' }, { label: __('Match any (OR)', 'wooptionsfic'), value: 'or' }], onChange: (logic) => updateGroup(groupIndex, { logic }) }),
+                            state.groups.length > 1 ? wp.element.createElement("button", { type: "button", className: "wof-logic-delete", onClick: () => removeGroup(groupIndex), "aria-label": __('Delete rule group', 'wooptionsfic') },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" })) : null),
+                        wp.element.createElement("div", { className: "wof-logic-conditions" }, group.conditions.map((condition, conditionIndex) => {
+                            const source = sourceFields.find((field) => field.uuid === condition.field);
+                            const hasChoices = Boolean(source?.choices?.length);
+                            const needsValue = !['empty', 'not_empty'].includes(condition.operator);
+                            return wp.element.createElement("div", { className: "wof-logic-condition", key: `condition-${groupIndex}-${conditionIndex}` },
+                                wp.element.createElement("span", { className: "wof-logic-condition__number" }, conditionIndex + 1),
+                                wp.element.createElement(SelectControl, { label: __('Source field', 'wooptionsfic'), hideLabelFromVision: true, value: condition.field, options: sourceFields.map((field) => ({ label: field.label || field.type, value: field.uuid })), onChange: (fieldUuid) => updateCondition(groupIndex, conditionIndex, defaultCondition(fieldUuid, sourceFields)) }),
+                                wp.element.createElement(SelectControl, { label: __('Operator', 'wooptionsfic'), hideLabelFromVision: true, value: condition.operator, options: operatorOptions, onChange: (operator) => updateCondition(groupIndex, conditionIndex, { operator }) }),
+                                needsValue ? hasChoices ? wp.element.createElement(SelectControl, { label: __('Value', 'wooptionsfic'), hideLabelFromVision: true, value: condition.value, options: [{ label: __('Choose a value…', 'wooptionsfic'), value: '' }, ...(source?.choices ?? []).map((choice) => ({ label: choice.label, value: choice.uuid }))], onChange: (value) => updateCondition(groupIndex, conditionIndex, { value }) }) : ['checkbox', 'toggle'].includes(source?.type ?? '') ? wp.element.createElement(SelectControl, { label: __('Value', 'wooptionsfic'), hideLabelFromVision: true, value: condition.value, options: [{ label: __('Checked / Yes', 'wooptionsfic'), value: '1' }, { label: __('Unchecked / No', 'wooptionsfic'), value: '' }], onChange: (value) => updateCondition(groupIndex, conditionIndex, { value }) }) : wp.element.createElement(TextControl, { label: __('Comparison value', 'wooptionsfic'), hideLabelFromVision: true, value: condition.value, placeholder: __('Enter a value', 'wooptionsfic'), onChange: (value) => updateCondition(groupIndex, conditionIndex, { value }) }) : null,
+                                wp.element.createElement("button", { type: "button", className: "wof-logic-condition__remove", disabled: state.groups.length === 1 && group.conditions.length === 1, onClick: () => removeCondition(groupIndex, conditionIndex), "aria-label": __('Remove condition', 'wooptionsfic') },
+                                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "no-alt" })));
+                        })),
+                        wp.element.createElement("button", { type: "button", className: "wof-logic-add-condition", onClick: () => addCondition(groupIndex) },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
+                            __('Add condition', 'wooptionsfic'))))),
+                    wp.element.createElement("button", { type: "button", className: "wof-logic-add-group", onClick: () => save({ groups: [...cloneGroups(state.groups), { logic: 'and', conditions: [defaultCondition(sourceFields[0]?.uuid ?? '', sourceFields)] }] }) },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
+                        __('Add rule group', 'wooptionsfic')),
+                    wp.element.createElement("p", { className: "wof-muted-note" }, __('Use groups to combine AND and OR rules. Choice-based comparisons store stable choice IDs, so renaming labels will not break the logic.', 'wooptionsfic'))) : null);
+        }
+        Builder.LogicEditor = LogicEditor;
+    })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Builder;
+    (function (Builder) {
+        const { Button, ColorPicker, SelectControl, TextControl, TextareaControl, ToggleControl } = wp.components;
+        const { __ } = wp.i18n;
+        const { useEffect, useMemo, useRef, useState } = wp.element;
+        const tabs = [
+            ['content', __('Content', 'wooptionsfic')],
+            ['choices', __('Choices', 'wooptionsfic')],
+            ['pricing', __('Pricing', 'wooptionsfic')],
+            ['logic', __('Logic', 'wooptionsfic')],
+            ['style', __('Style', 'wooptionsfic')],
+            ['advanced', __('Advanced', 'wooptionsfic')],
+        ];
+        function normalizeHexColor(value, fallback = '#5B4FF5') {
+            const color = String(value || '').trim().toUpperCase();
+            return /^#[0-9A-F]{6}$/.test(color) ? color : fallback;
+        }
+        function ChoiceColorControl(props) {
+            const [open, setOpen] = useState(false);
+            const color = normalizeHexColor(props.color);
+            return wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-choice-color-control', open && 'is-open') },
+                wp.element.createElement("span", { className: "wof-choice-color-control__label" }, props.label ?? __('Swatch color', 'wooptionsfic')),
+                wp.element.createElement("div", { className: "wof-choice-color-control__row" },
+                    wp.element.createElement("button", { type: "button", className: "wof-choice-color-control__trigger", onClick: () => setOpen((value) => !value), "aria-expanded": open },
+                        wp.element.createElement("span", { style: { background: color }, "aria-hidden": "true" }),
+                        wp.element.createElement("code", null, color),
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-down-alt2" })),
+                    wp.element.createElement(TextControl, { label: __('Hex color', 'wooptionsfic'), hideLabelFromVision: true, value: color, onChange: (next) => {
+                            if (/^#[0-9a-f]{6}$/i.test(next.trim()))
+                                props.onChange(next.trim().toUpperCase());
+                        } })),
+                open ? wp.element.createElement("div", { className: "wof-choice-color-control__picker" },
+                    wp.element.createElement(ColorPicker, { color: color, enableAlpha: false, onChange: (next) => props.onChange(normalizeHexColor(next, color)) })) : null);
+        }
+        function ChoiceMediaControl(props) {
+            const [previewUrl, setPreviewUrl] = useState(props.choice.imageUrl ?? '');
+            useEffect(() => {
+                let active = true;
+                setPreviewUrl(props.choice.imageUrl ?? '');
+                const attachmentId = Number(props.choice.imageId ?? 0);
+                if (!attachmentId || !wp.media?.attachment)
+                    return () => { active = false; };
+                const attachment = wp.media.attachment(attachmentId);
+                const update = () => {
+                    if (!active)
+                        return;
+                    const data = attachment.toJSON?.() ?? {};
+                    const source = data.sizes?.thumbnail?.url ?? data.sizes?.medium?.url ?? data.url ?? '';
+                    if (source)
+                        setPreviewUrl(String(source));
+                };
+                update();
+                const request = attachment.fetch?.();
+                if (request)
+                    Promise.resolve(request).then(update).catch(() => undefined);
+                return () => { active = false; };
+            }, [props.choice.imageId, props.choice.imageUrl]);
+            const openPicker = () => {
+                if (!wp.media)
+                    return;
+                const frame = wp.media({
+                    title: __('Choose a choice image', 'wooptionsfic'),
+                    button: { text: __('Use this image', 'wooptionsfic') },
+                    library: { type: 'image' },
+                    multiple: false,
+                });
+                frame.on('select', () => {
+                    const attachment = frame.state().get('selection').first().toJSON();
+                    const imageId = Math.max(0, Number(attachment.id ?? 0));
+                    const imageUrl = String(attachment.sizes?.thumbnail?.url ?? attachment.sizes?.medium?.url ?? attachment.url ?? '');
+                    if (!imageId)
+                        return;
+                    setPreviewUrl(imageUrl);
+                    props.onChange({ imageId, imageUrl });
+                });
+                frame.open();
+            };
+            const hasImage = Number(props.choice.imageId ?? 0) > 0 || Boolean(previewUrl);
+            return (wp.element.createElement("div", { className: "wof-media-control" },
+                wp.element.createElement("button", { type: "button", className: `wof-media-control__preview ${hasImage ? 'has-image' : ''}`, onClick: openPicker }, previewUrl ? wp.element.createElement("img", { src: previewUrl, alt: "" }) : wp.element.createElement("span", { className: "dashicons dashicons-format-image", "aria-hidden": "true" })),
+                wp.element.createElement("div", null,
+                    wp.element.createElement("strong", null, props.required ? __('Swatch image', 'wooptionsfic') : __('Choice image (optional)', 'wooptionsfic')),
+                    wp.element.createElement("small", null, props.choice.imageId ? `Media #${props.choice.imageId}` : __('No image selected', 'wooptionsfic')),
+                    wp.element.createElement("div", { className: "wof-media-control__actions" },
+                        wp.element.createElement(Button, { variant: "secondary", onClick: openPicker }, hasImage ? __('Replace', 'wooptionsfic') : __('Choose image', 'wooptionsfic')),
+                        hasImage ? (wp.element.createElement(Button, { variant: "tertiary", isDestructive: true, onClick: () => {
+                                setPreviewUrl('');
+                                props.onChange({ imageId: 0, imageUrl: '' });
+                            } }, __('Remove', 'wooptionsfic'))) : null))));
+        }
+        function ChoiceEditor(props) {
+            const choices = props.field.choices ?? [];
+            const updateChoice = (uuid, patch) => props.onChange({
+                ...props.field,
+                choices: choices.map((choice) => choice.uuid === uuid ? { ...choice, ...patch } : choice),
+            });
+            const removeChoice = (uuid) => props.onChange({
+                ...props.field,
+                choices: choices.filter((choice) => choice.uuid !== uuid),
+            });
+            const addChoice = () => props.onChange({
+                ...props.field,
+                choices: [...choices, WooOptionsFic.FieldFactory.choice(`Choice ${choices.length + 1}`, choices.length)],
+            });
+            if (!props.field.choices)
+                return wp.element.createElement("p", { className: "wof-muted-note" }, __('This element has no choices.', 'wooptionsfic'));
+            return (wp.element.createElement("div", { className: "wof-choice-editor-list" },
+                props.field.type === 'image_swatch' ? wp.element.createElement("div", { className: "wof-image-swatch-behavior" },
+                    wp.element.createElement(ToggleControl, { label: __('Update product image on selection', 'wooptionsfic'), help: __('Replace the main WooCommerce product image with the selected swatch image.', 'wooptionsfic'), checked: Boolean(props.field.updateProductImage), onChange: (updateProductImage) => props.onChange({ ...props.field, updateProductImage }) })) : null,
+                choices.map((choice, index) => (wp.element.createElement("article", { key: choice.uuid },
+                    wp.element.createElement("header", null,
+                        wp.element.createElement(WooOptionsFic.Components.GripIcon, null),
+                        wp.element.createElement("strong", null,
+                            __('Choice', 'wooptionsfic'),
+                            " ",
+                            index + 1),
+                        wp.element.createElement("button", { type: "button", onClick: () => removeChoice(choice.uuid) },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))),
+                    wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: choice.label, onChange: (label) => updateChoice(choice.uuid, { label }) }),
+                    wp.element.createElement(TextControl, { label: __('Description', 'wooptionsfic'), value: choice.description, onChange: (description) => updateChoice(choice.uuid, { description }) }),
+                    props.field.type === 'color_swatch' ? (wp.element.createElement(ChoiceColorControl, { color: choice.color || '#5B4FF5', onChange: (color) => updateChoice(choice.uuid, { color }) })) : null,
+                    ['image_swatch', 'color_swatch', 'product', 'radio', 'checkbox_group', 'segmented'].includes(props.field.type) ? (wp.element.createElement(ChoiceMediaControl, { choice: choice, required: props.field.type === 'image_swatch', onChange: (patch) => updateChoice(choice.uuid, patch) })) : null,
+                    wp.element.createElement("div", { className: "wof-choice-pricing-row" },
+                        wp.element.createElement(SelectControl, { label: __('Price type', 'wooptionsfic'), value: choice.pricing.strategy, options: [
+                                { label: __('No adjustment', 'wooptionsfic'), value: 'none' },
+                                { label: __('Fixed amount', 'wooptionsfic'), value: 'fixed' },
+                                { label: __('Percentage', 'wooptionsfic'), value: 'percentage' },
+                            ], onChange: (strategy) => updateChoice(choice.uuid, { pricing: { ...choice.pricing, strategy } }) }),
+                        choice.pricing.strategy === 'percentage' ? (wp.element.createElement(TextControl, { label: __('Percent', 'wooptionsfic'), type: "number", value: choice.pricing.percent, onChange: (percent) => updateChoice(choice.uuid, { pricing: { ...choice.pricing, percent } }) })) : choice.pricing.strategy !== 'none' ? (wp.element.createElement(TextControl, { label: __('Amount', 'wooptionsfic'), type: "number", value: choice.pricing.amount, onChange: (amount) => updateChoice(choice.uuid, { pricing: { ...choice.pricing, amount } }) })) : null),
+                    wp.element.createElement(ToggleControl, { label: __('Default choice', 'wooptionsfic'), checked: choice.default, onChange: (value) => updateChoice(choice.uuid, { default: value }) }),
+                    wp.element.createElement(ToggleControl, { label: __('Disable choice', 'wooptionsfic'), checked: choice.disabled, onChange: (value) => updateChoice(choice.uuid, { disabled: value }) })))),
+                wp.element.createElement(Button, { variant: "secondary", onClick: addChoice },
+                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
+                    __('Add choice', 'wooptionsfic'))));
+        }
+        function PricingPanel(props) {
+            const pricing = props.field.pricing ?? WooOptionsFic.FieldFactory.emptyPricing();
+            const update = (patch) => props.onChange({ ...props.field, pricing: { ...pricing, ...patch } });
+            return wp.element.createElement("div", null,
+                wp.element.createElement(SelectControl, { label: __('Pricing strategy', 'wooptionsfic'), value: pricing.strategy, options: [{ label: __('No price change', 'wooptionsfic'), value: 'none' }, { label: __('Fixed amount', 'wooptionsfic'), value: 'fixed' }, { label: __('Percentage', 'wooptionsfic'), value: 'percentage' }, { label: __('Per character', 'wooptionsfic'), value: 'per_character' }, { label: __('Per unit', 'wooptionsfic'), value: 'per_unit' }, { label: __('Setup fee', 'wooptionsfic'), value: 'setup' }, { label: __('Formula', 'wooptionsfic'), value: 'formula' }], onChange: (strategy) => update({ strategy }) }),
+                wp.element.createElement(SelectControl, { label: __('Price mode', 'wooptionsfic'), value: pricing.mode, options: [{ label: __('Add to product price', 'wooptionsfic'), value: 'adjustment' }, { label: __('Replace unit price', 'wooptionsfic'), value: 'unit_price' }], onChange: (mode) => update({ mode }) }),
+                pricing.strategy === 'percentage' ? wp.element.createElement(TextControl, { label: __('Percentage', 'wooptionsfic'), type: "number", value: pricing.percent, onChange: (percent) => update({ percent }) }) : pricing.strategy === 'formula' ? wp.element.createElement(TextareaControl, { label: __('Formula expression', 'wooptionsfic'), value: pricing.expression ?? '0', onChange: (expression) => update({ expression }), help: __('Use server-supported FIELD("uuid") and arithmetic expressions.', 'wooptionsfic') }) : pricing.strategy !== 'none' ? wp.element.createElement(TextControl, { label: __('Amount', 'wooptionsfic'), type: "number", value: pricing.amount, onChange: (amount) => update({ amount }) }) : null);
+        }
+        function Inspector(props) {
+            const scrollerRef = useRef(null);
+            const [canLeft, setCanLeft] = useState(false);
+            const [canRight, setCanRight] = useState(false);
+            const updateScroll = () => {
+                const element = scrollerRef.current;
+                if (!element)
+                    return;
+                setCanLeft(element.scrollLeft > 4);
+                setCanRight(element.scrollLeft + element.clientWidth < element.scrollWidth - 4);
+            };
+            useEffect(() => {
+                updateScroll();
+                window.addEventListener('resize', updateScroll);
+                const element = scrollerRef.current;
+                element?.addEventListener('scroll', updateScroll, { passive: true });
+                return () => { window.removeEventListener('resize', updateScroll); element?.removeEventListener('scroll', updateScroll); };
+            }, [props.field]);
+            if (!props.field)
+                return wp.element.createElement("aside", { className: "wof-builder-inspector" },
+                    wp.element.createElement("div", { className: "wof-builder-pane__heading" },
+                        wp.element.createElement("div", null,
+                            wp.element.createElement("span", { className: "wof-eyebrow" }, __('Style', 'wooptionsfic')),
+                            wp.element.createElement("h2", null, __('Option set styling', 'wooptionsfic')))),
+                    wp.element.createElement("div", { className: "wof-inspector-body" },
+                        wp.element.createElement("section", { className: "wof-inspector-section" },
+                            wp.element.createElement(Builder.StyleStudio, { document: props.document, onChange: props.onDocumentChange }))));
+            const field = props.field;
+            const update = (patch) => props.onFieldChange({ ...field, ...patch });
+            const visibleTabs = tabs.filter(([tab]) => tab !== 'choices' || Boolean(field.choices));
+            return wp.element.createElement("aside", { className: "wof-builder-inspector" },
+                wp.element.createElement("div", { className: "wof-builder-pane__heading" },
+                    wp.element.createElement("div", null,
+                        wp.element.createElement("span", { className: "wof-eyebrow" }, window.WooOptionsFicAdmin.fieldTypes[field.type]?.label ?? field.type),
+                        wp.element.createElement("h2", null, field.label)),
+                    wp.element.createElement("div", { className: "wof-inspector-heading-actions" },
+                        wp.element.createElement("button", { type: "button", onClick: props.onDuplicate },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-page" })),
+                        wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" })))),
+                wp.element.createElement("div", { className: "wof-inspector-tabs-shell" },
+                    canLeft ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-left", onClick: () => scrollerRef.current?.scrollBy({ left: -180, behavior: 'smooth' }) },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-left-alt2" })) : null,
+                    wp.element.createElement("div", { className: "wof-inspector-tabs", ref: scrollerRef }, visibleTabs.map(([tab, label]) => wp.element.createElement("button", { type: "button", key: tab, className: props.tab === tab ? 'is-active' : '', onClick: (event) => { props.onTabChange(tab); event.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); } }, label))),
+                    canRight ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-right", onClick: () => scrollerRef.current?.scrollBy({ left: 180, behavior: 'smooth' }) },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-right-alt2" })) : null),
+                wp.element.createElement("div", { className: "wof-inspector-body" },
+                    wp.element.createElement("section", { className: "wof-inspector-section" }, props.tab === 'content' ? wp.element.createElement(wp.element.Fragment, null,
+                        wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
+                        wp.element.createElement(TextareaControl, { label: __('Description', 'wooptionsfic'), value: field.description, onChange: (description) => update({ description }) }),
+                        'placeholder' in field ? wp.element.createElement(TextControl, { label: __('Placeholder', 'wooptionsfic'), value: field.placeholder ?? '', onChange: (placeholder) => update({ placeholder }) }) : null,
+                        field.type === 'color_picker' ? wp.element.createElement(ChoiceColorControl, { label: __('Default color', 'wooptionsfic'), color: String(field.default ?? '#5B4FF5'), onChange: (color) => update({ default: color }) }) : null,
+                        wp.element.createElement(TextareaControl, { label: __('Help text', 'wooptionsfic'), value: field.help, onChange: (help) => update({ help }) }),
+                        wp.element.createElement(ToggleControl, { label: __('Required', 'wooptionsfic'), checked: field.required, onChange: (required) => update({ required }) })) : props.tab === 'choices' ? wp.element.createElement(ChoiceEditor, { field: field, onChange: props.onFieldChange }) : props.tab === 'pricing' ? wp.element.createElement(PricingPanel, { field: field, onChange: props.onFieldChange }) : props.tab === 'logic' ? wp.element.createElement(Builder.LogicEditor, { field: field, allFields: props.document.fields, onChange: props.onFieldChange }) : props.tab === 'style' ? wp.element.createElement(Builder.StyleStudio, { document: props.document, onChange: props.onDocumentChange }) : wp.element.createElement(wp.element.Fragment, null,
+                        wp.element.createElement(ToggleControl, { label: __('Disable this field', 'wooptionsfic'), checked: field.disabled, onChange: (disabled) => update({ disabled }) }),
+                        field.type === 'file' ? wp.element.createElement(wp.element.Fragment, null,
+                            wp.element.createElement(TextControl, { label: __('Allowed extensions', 'wooptionsfic'), value: (field.allowedExtensions ?? []).join(', '), onChange: (value) => update({ allowedExtensions: value.split(',').map((item) => item.trim().replace(/^\./, '')).filter(Boolean) }) }),
+                            wp.element.createElement(TextControl, { label: __('Maximum files', 'wooptionsfic'), type: "number", value: String(field.maxFiles ?? 1), onChange: (value) => update({ maxFiles: Math.max(1, Number(value)) }) }),
+                            wp.element.createElement(TextControl, { label: __('Maximum file size (MB)', 'wooptionsfic'), type: "number", value: String(field.maxFileMb ?? 5), onChange: (value) => update({ maxFileMb: Math.max(1, Number(value)) }) })) : null,
+                        ['number', 'range', 'quantity', 'customer_defined_price'].includes(field.type) ? wp.element.createElement(wp.element.Fragment, null,
+                            wp.element.createElement(TextControl, { label: __('Minimum', 'wooptionsfic'), value: field.min ?? '', onChange: (value) => update({ min: value || null }) }),
+                            wp.element.createElement(TextControl, { label: __('Maximum', 'wooptionsfic'), value: field.max ?? '', onChange: (value) => update({ max: value || null }) }),
+                            wp.element.createElement(TextControl, { label: __('Step', 'wooptionsfic'), value: field.step ?? '', onChange: (value) => update({ step: value || null }) })) : null,
+                        wp.element.createElement(TextControl, { label: __('Field UUID', 'wooptionsfic'), value: field.uuid, disabled: true })))));
+        }
+        Builder.Inspector = Inspector;
+    })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Builder;
+    (function (Builder) {
+        const { Button, Modal } = wp.components;
+        const { __ } = wp.i18n;
+        const { useMemo, useState } = wp.element;
+        function HistoryModal(props) {
+            const [restoring, setRestoring] = useState(null);
+            const revisions = useMemo(() => [...props.revisions].sort((left, right) => Number(right.revisionNumber) - Number(left.revisionNumber)), [props.revisions]);
+            const publishedCount = revisions.filter((revision) => revision.state === 'published').length;
+            const latestNumber = revisions.reduce((latest, revision) => Math.max(latest, Number(revision.revisionNumber) || 0), 0);
+            const restore = async (revisionUuid) => {
+                setRestoring(revisionUuid);
+                try {
+                    await props.onRollback(revisionUuid);
+                }
+                finally {
+                    setRestoring(null);
+                }
+            };
+            return (wp.element.createElement(Modal, { title: __('Version history', 'wooptionsfic'), onRequestClose: props.onClose, className: "wof-modal wof-history-modal" },
+                wp.element.createElement("section", { className: "wof-version-header" },
+                    wp.element.createElement("div", { className: "wof-version-header__copy" },
+                        wp.element.createElement("span", { className: "wof-version-header__icon dashicons dashicons-backup", "aria-hidden": "true" }),
+                        wp.element.createElement("div", null,
+                            wp.element.createElement("h3", null, __('A clear record of every saved version', 'wooptionsfic')),
+                            wp.element.createElement("p", null, __('Published versions stay immutable. Restoring creates a new draft, so the current live configuration remains protected.', 'wooptionsfic')))),
+                    wp.element.createElement("div", { className: "wof-version-overview" },
+                        wp.element.createElement("span", null,
+                            wp.element.createElement("small", null, __('Versions', 'wooptionsfic')),
+                            wp.element.createElement("strong", null, revisions.length)),
+                        wp.element.createElement("span", null,
+                            wp.element.createElement("small", null, __('Published', 'wooptionsfic')),
+                            wp.element.createElement("strong", null, publishedCount)),
+                        wp.element.createElement("span", null,
+                            wp.element.createElement("small", null, __('Latest', 'wooptionsfic')),
+                            wp.element.createElement("strong", null,
+                                "#",
+                                latestNumber || '—')))),
+                props.busy && !revisions.length ? (wp.element.createElement(WooOptionsFic.Components.ModalLoading, { label: __('Loading version history…', 'wooptionsfic') })) : revisions.length ? (wp.element.createElement("div", { className: "wof-version-list" }, revisions.map((revision, index) => {
+                    const published = revision.state === 'published';
+                    const latest = index === 0;
+                    return (wp.element.createElement("article", { key: revision.uuid, className: `wof-version-row ${published ? 'is-published' : 'is-draft'} ${latest ? 'is-latest' : ''}` },
+                        wp.element.createElement("div", { className: "wof-version-number" },
+                            wp.element.createElement("small", null, __('Version', 'wooptionsfic')),
+                            wp.element.createElement("strong", null,
+                                "#",
+                                revision.revisionNumber)),
+                        wp.element.createElement("div", { className: "wof-version-details" },
+                            wp.element.createElement("div", { className: "wof-version-details__top" },
+                                wp.element.createElement("div", { className: "wof-version-badges" },
+                                    wp.element.createElement("span", { className: `wof-version-state is-${revision.state}` }, published ? __('Published', 'wooptionsfic') : __('Draft', 'wooptionsfic')),
+                                    latest ? wp.element.createElement("span", { className: "wof-version-latest" }, __('Latest', 'wooptionsfic')) : null),
+                                wp.element.createElement("time", { dateTime: revision.createdAtGmt }, WooOptionsFic.Utils.formatDate(revision.createdAtGmt))),
+                            wp.element.createElement("p", null, revision.versionNote || __('No version note was added for this save.', 'wooptionsfic'))),
+                        wp.element.createElement(Button, { variant: "secondary", className: "wof-version-restore", isBusy: restoring === revision.uuid, disabled: props.busy || Boolean(restoring), onClick: () => restore(revision.uuid) },
+                            wp.element.createElement("span", { className: "dashicons dashicons-image-rotate", "aria-hidden": "true" }),
+                            __('Restore', 'wooptionsfic'))));
+                }))) : (wp.element.createElement("div", { className: "wof-history-empty" },
+                    wp.element.createElement("span", { className: "dashicons dashicons-backup", "aria-hidden": "true" }),
+                    wp.element.createElement("h3", null, __('No saved versions yet', 'wooptionsfic')),
+                    wp.element.createElement("p", null, __('Save a draft or publish this option set to create the first version.', 'wooptionsfic'))))));
+        }
+        Builder.HistoryModal = HistoryModal;
+    })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Builder;
+    (function (Builder) {
+        const { Button, Modal, SelectControl, TextControl } = wp.components;
+        const { __ } = wp.i18n;
+        const { useEffect, useMemo, useState } = wp.element;
+        const assignmentTypes = [
+            { type: 'product', label: __('Products', 'wooptionsfic'), icon: 'dashicons-products' },
+            { type: 'category', label: __('Categories', 'wooptionsfic'), icon: 'dashicons-category' },
+            { type: 'tag', label: __('Tags', 'wooptionsfic'), icon: 'dashicons-tag' },
+            { type: 'variation', label: __('Variations', 'wooptionsfic'), icon: 'dashicons-image-rotate' },
+            { type: 'global', label: __('All products', 'wooptionsfic'), icon: 'dashicons-admin-site-alt3' },
+        ];
+        function assignmentTypeLabel(type) {
+            const labels = {
+                global: __('All products', 'wooptionsfic'),
+                product: __('Product', 'wooptionsfic'),
+                category: __('Category', 'wooptionsfic'),
+                tag: __('Tag', 'wooptionsfic'),
+                variation: __('Variation', 'wooptionsfic'),
+                product_type: __('Product type', 'wooptionsfic'),
+            };
+            return labels[type] ?? type;
+        }
+        function assignmentTypeIcon(type) {
+            const icons = {
+                global: 'dashicons-admin-site-alt3',
+                product: 'dashicons-products',
+                category: 'dashicons-category',
+                tag: 'dashicons-tag',
+                variation: 'dashicons-image-rotate',
+                product_type: 'dashicons-filter',
+            };
+            return icons[type] ?? 'dashicons-marker';
+        }
+        function TargetSearch(props) {
+            const [query, setQuery] = useState('');
+            const [results, setResults] = useState([]);
+            const [loading, setLoading] = useState(false);
+            const [focused, setFocused] = useState(false);
+            const [error, setError] = useState('');
+            const selectedIds = useMemo(() => new Set(props.assignments
+                .filter((assignment) => assignment.targetType === props.type)
+                .map((assignment) => String(assignment.targetId ?? 'global'))), [props.assignments, props.type]);
+            useEffect(() => {
+                setQuery('');
+                setResults([]);
+                setError('');
+            }, [props.type]);
+            useEffect(() => {
+                const targetType = props.type;
+                if (!focused || targetType === 'global')
+                    return;
+                let active = true;
+                const timeout = window.setTimeout(() => {
+                    setLoading(true);
+                    setError('');
+                    WooOptionsFic.Api.searchAssignmentTargets(targetType, query)
+                        .then((response) => {
+                        if (active)
+                            setResults(Array.isArray(response.items) ? response.items : []);
+                    })
+                        .catch((reason) => {
+                        if (active)
+                            setError(WooOptionsFic.Utils.errorMessage(reason));
+                    })
+                        .finally(() => {
+                        if (active)
+                            setLoading(false);
                     });
-                    U(null);
-                    G();
-                  },
-                  children: [
-                    s.jsx("span", { className: "dashicons dashicons-hidden" }),
-                    (0, i.__)("Deactivate", "wooptionsfic"),
-                  ],
-                }),
-              a === "inactive" &&
-                s.jsxs("button", {
-                  type: "button",
-                  onClick: async () => {
-                    await d(`/option-sets/${item.uuid}`, {
-                      method: "PATCH",
-                      data: { status: "active" },
-                    });
-                    U(null);
-                    G();
-                  },
-                  children: [
-                    s.jsx("span", { className: "dashicons dashicons-yes-alt" }),
-                    (0, i.__)("Activate", "wooptionsfic"),
-                  ],
-                }),
-              a !== "archived" &&
-                s.jsxs("button", {
-                  type: "button",
-                  onClick: () => {
-                    U(null);
-                    I({ type: "archive", uuids: [item.uuid] });
-                  },
-                  children: [
-                    s.jsx("span", { className: "dashicons dashicons-archive" }),
-                    (0, i.__)("Archive", "wooptionsfic"),
-                  ],
-                }),
-              a === "archived" &&
-                s.jsxs("button", {
-                  type: "button",
-                  onClick: async () => {
-                    await d(`/option-sets/${item.uuid}`, {
-                      method: "PATCH",
-                      data: { status: "active" },
-                    });
-                    U(null);
-                    G();
-                  },
-                  children: [
-                    s.jsx("span", { className: "dashicons dashicons-image-rotate" }),
-                    (0, i.__)("Restore", "wooptionsfic"),
-                  ],
-                }),
-              s.jsx("hr", {}),
-              s.jsxs("button", {
-                type: "button",
-                className: "is-destructive",
-                onClick: () => {
-                  U(null);
-                  I({ type: "delete", uuids: [item.uuid] });
-                },
-                children: [
-                  s.jsx("span", { className: "dashicons dashicons-trash" }),
-                  (0, i.__)("Delete permanently", "wooptionsfic"),
-                ],
-              }),
-            ],
-          }),
-      ],
-    });
-
-  const table = o.length
-    ? s.jsx("div", {
-        className: "wof-set-table-wrap",
-        children: s.jsxs("table", {
-          className: "wof-set-table wof-set-table--managed",
-          children: [
-            s.jsx("thead", {
-              children: s.jsxs("tr", {
-                children: [
-                  s.jsx("th", {
-                    className: "wof-check-cell",
-                    children: s.jsx("input", {
-                      className: "wof-table-checkbox",
-                      type: "checkbox",
-                      "aria-label": (0, i.__)("Select all on this page", "wooptionsfic"),
-                      checked: K,
-                      onChange: (event) =>
-                        T(event.currentTarget.checked ? o.map((item) => item.uuid) : []),
-                    }),
-                  }),
-                  s.jsx("th", { children: (0, i.__)("Option set", "wooptionsfic") }),
-                  s.jsx("th", { children: (0, i.__)("Status", "wooptionsfic") }),
-                  s.jsx("th", { children: (0, i.__)("Options applied", "wooptionsfic") }),
-                  s.jsx("th", { children: (0, i.__)("Last edited", "wooptionsfic") }),
-                  s.jsx("th", {
-                    className: "wof-actions-heading",
-                    children: (0, i.__)("Actions", "wooptionsfic"),
-                  }),
-                ],
-              }),
-            }),
-            s.jsx("tbody", {
-              children: o.map((item) =>
-                s.jsxs(
-                  "tr",
-                  {
-                    children: [
-                      s.jsx("td", {
-                        className: "wof-check-cell",
-                        children: s.jsx("input", {
-                          className: "wof-table-checkbox",
-                          type: "checkbox",
-                          "aria-label": (0, i.sprintf)(
-                            (0, i.__)("Select %s", "wooptionsfic"),
-                            item.title
-                          ),
-                          checked: A.includes(item.uuid),
-                          onChange: (event) => Y(item.uuid, event.currentTarget.checked),
-                        }),
-                      }),
-                      s.jsx("td", {
-                        children: s.jsxs("button", {
-                          type: "button",
-                          className: "wof-set-title",
-                          onClick: () => e(`builder/${item.uuid}`),
-                          children: [
-                            s.jsx("span", {
-                              className: "wof-set-glyph",
-                              "aria-hidden": "true",
-                              children: s.jsx("span", {
-                                className: "dashicons dashicons-feedback",
-                              }),
-                            }),
-                            s.jsxs("span", {
-                              children: [
-                                s.jsx("strong", { children: item.title }),
-                                s.jsx("small", { children: item.uuid }),
-                              ],
-                            }),
-                          ],
-                        }),
-                      }),
-                      s.jsx("td", {
-                        children: s.jsxs("div", {
-                          className: "wof-set-lifecycle",
-                          children: [
-                            s.jsx(v, { status: lifecycleLabel(item.status) }),
-                            s.jsx("small", {
-                              children: item.publishedRevisionId
-                                ? (0, i.__)("Published", "wooptionsfic")
-                                : (0, i.__)("Draft", "wooptionsfic"),
-                            }),
-                          ],
-                        }),
-                      }),
-                      s.jsx("td", {
-                        children: s.jsx("strong", {
-                          className: "wof-field-count",
-                          children: Number(item.fieldCount ?? 0),
-                        }),
-                      }),
-                      s.jsx("td", {
-                        children: new Date(`${item.updatedAtGmt}Z`).toLocaleDateString(),
-                      }),
-                      s.jsx("td", {
-                        className: "wof-actions-cell",
-                        children: rowMenu(item),
-                      }),
-                    ],
-                  },
-                  item.uuid
-                )
-              ),
-            }),
-          ],
-        }),
-      })
-    : s.jsx(m, {
-        icon: a === "active" ? "✦" : "⌁",
-        title: c
-          ? (0, i.__)("No matching option sets", "wooptionsfic")
-          : a === "active"
-            ? (0, i.__)("Create something customers will love", "wooptionsfic")
-            : a === "inactive"
-              ? (0, i.__)("Nothing is deactivated", "wooptionsfic")
-              : (0, i.__)("Nothing is archived", "wooptionsfic"),
-        description: c
-          ? (0, i.__)("Try a shorter search or clear the filter.", "wooptionsfic")
-          : a === "active"
-            ? (0, i.__)("Start blank or adapt one of ten practical templates.", "wooptionsfic")
-            : a === "inactive"
-              ? (0, i.__)("Deactivated option sets will not appear on product pages.", "wooptionsfic")
-              : (0, i.__)("Archived option sets will wait safely here.", "wooptionsfic"),
-        action:
-          a === "active" && !c
-            ? s.jsx(n.Button, {
-                variant: "primary",
-                onClick: () => C(true),
-                children: (0, i.__)("Create an option set", "wooptionsfic"),
-              })
-            : undefined,
-      });
-
-  return s.jsxs("div", {
-    className: "wof-page",
-    children: [
-      s.jsx(f, {
-        eyebrow: (0, i.__)("Configuration library", "wooptionsfic"),
-        title: (0, i.__)("Option Sets", "wooptionsfic"),
-        description: (0, i.__)(
-          "Design once, assign precisely, and preserve every published revision.",
-          "wooptionsfic"
-        ),
-        actions: s.jsxs(s.Fragment, {
-          children: [
-            s.jsx(n.Button, {
-              variant: "secondary",
-              onClick: () => e("templates"),
-              children: (0, i.__)("Browse templates", "wooptionsfic"),
-            }),
-            s.jsxs(n.Button, {
-              variant: "primary",
-              onClick: () => C(true),
-              children: [
-                s.jsx("span", {
-                  className: "dashicons dashicons-plus-alt2",
-                  "aria-hidden": "true",
-                }),
-                (0, i.__)("New option set", "wooptionsfic"),
-              ],
-            }),
-          ],
-        }),
-      }),
-      D &&
-        s.jsxs("div", {
-          className: "wof-inline-notice is-error",
-          role: "alert",
-          children: [
-            s.jsx("span", { "aria-hidden": "true", children: "!" }),
-            D,
-            s.jsx("button", { type: "button", onClick: () => M(""), children: "×" }),
-          ],
-        }),
-      s.jsxs("section", {
-        className: "wof-panel wof-library-panel",
-        children: [
-          s.jsxs("div", {
-            className: "wof-library-toolbar",
-            children: [
-              s.jsx("div", {
-                className: "wof-segmented-tabs",
-                role: "tablist",
-                children: [
-                  { value: "active", label: (0, i.__)("Active", "wooptionsfic") },
-                  { value: "inactive", label: (0, i.__)("Deactivated", "wooptionsfic") },
-                  { value: "archived", label: (0, i.__)("Archived", "wooptionsfic") },
-                ].map((tab) =>
-                  s.jsx(
-                    "button",
-                    {
-                      type: "button",
-                      role: "tab",
-                      "aria-selected": a === tab.value,
-                      className: a === tab.value ? "is-active" : "",
-                      onClick: () => l(tab.value),
-                      children: tab.label,
-                    },
-                    tab.value
-                  )
-                ),
-              }),
-              s.jsxs("div", {
-                className: "wof-toolbar-controls",
-                children: [
-                  s.jsx(n.SearchControl, {
-                    label: (0, i.__)("Search option sets", "wooptionsfic"),
-                    value: c,
-                    onChange: y,
-                    placeholder: (0, i.__)("Search name or UUID…", "wooptionsfic"),
-                  }),
-                  s.jsx(n.SelectControl, {
-                    label: (0, i.__)("Sort option sets", "wooptionsfic"),
-                    hideLabelFromVision: true,
-                    value: x,
-                    onChange: b,
-                    options: [
-                      { label: (0, i.__)("Recently updated", "wooptionsfic"), value: "updated" },
-                      { label: (0, i.__)("Recently created", "wooptionsfic"), value: "created" },
-                      { label: (0, i.__)("Title A–Z", "wooptionsfic"), value: "title" },
-                    ],
-                  }),
-                ],
-              }),
-            ],
-          }),
-          A.length > 0 &&
-            s.jsxs("div", {
-              className: "wof-bulk-bar wof-bulk-bar--modern",
-              children: [
-                s.jsxs("strong", {
-                  children: [
-                    A.length,
-                    " ",
-                    A.length === 1
-                      ? (0, i.__)("item selected", "wooptionsfic")
-                      : (0, i.__)("items selected", "wooptionsfic"),
-                  ],
-                }),
-                a === "active" &&
-                  s.jsxs(n.Button, {
-                    variant: "tertiary",
-                    disabled: O !== null,
-                    onClick: () => J("inactive"),
-                    children: [
-                      s.jsx("span", { className: "dashicons dashicons-hidden" }),
-                      (0, i.__)("Deactivate", "wooptionsfic"),
-                    ],
-                  }),
-                a === "inactive" &&
-                  s.jsxs(n.Button, {
-                    variant: "tertiary",
-                    disabled: O !== null,
-                    onClick: () => J("active"),
-                    children: [
-                      s.jsx("span", { className: "dashicons dashicons-yes-alt" }),
-                      (0, i.__)("Activate", "wooptionsfic"),
-                    ],
-                  }),
-                a !== "archived" &&
-                  s.jsxs(n.Button, {
-                    variant: "tertiary",
-                    disabled: O !== null,
-                    onClick: () => I({ type: "archive", uuids: [...A] }),
-                    children: [
-                      s.jsx("span", { className: "dashicons dashicons-archive" }),
-                      (0, i.__)("Archive", "wooptionsfic"),
-                    ],
-                  }),
-                a === "archived" &&
-                  s.jsxs(n.Button, {
-                    variant: "tertiary",
-                    disabled: O !== null,
-                    onClick: () => J("active"),
-                    children: [
-                      s.jsx("span", { className: "dashicons dashicons-image-rotate" }),
-                      (0, i.__)("Restore", "wooptionsfic"),
-                    ],
-                  }),
-                s.jsxs(n.Button, {
-                  variant: "tertiary",
-                  disabled: O !== null,
-                  onClick: () => J("export"),
-                  children: [
-                    s.jsx("span", { className: "dashicons dashicons-download" }),
-                    (0, i.__)("Export", "wooptionsfic"),
-                  ],
-                }),
-                s.jsxs(n.Button, {
-                  variant: "tertiary",
-                  isDestructive: true,
-                  disabled: O !== null,
-                  onClick: () => I({ type: "delete", uuids: [...A] }),
-                  children: [
-                    s.jsx("span", { className: "dashicons dashicons-trash" }),
-                    (0, i.__)("Delete", "wooptionsfic"),
-                  ],
-                }),
-                s.jsx(n.Button, {
-                  variant: "tertiary",
-                  onClick: () => T([]),
-                  children: (0, i.__)("Clear", "wooptionsfic"),
-                }),
-              ],
-            }),
-          s.jsxs("div", {
-            className: "wof-option-set-results",
-            children: [
-              _ &&
-                o.length > 0 &&
-                s.jsxs("div", {
-                  className: "wof-table-loading-overlay",
-                  role: "status",
-                  children: [
-                    s.jsx("span", { className: "wof-loader", "aria-hidden": "true" }),
-                    s.jsx("small", {
-                      children: (0, i.__)("Refreshing option sets…", "wooptionsfic"),
-                    }),
-                  ],
-                }),
-              _ && !o.length
-                ? s.jsx(g, { label: (0, i.__)("Organizing option sets…", "wooptionsfic") })
-                : table,
-            ],
-          }),
-          s.jsxs("nav", {
-            className: "wof-pagination",
-            "aria-label": (0, i.__)("Option set pagination", "wooptionsfic"),
-            children: [
-              s.jsxs("label", {
-                className: "wof-pagination__length",
-                children: [
-                  s.jsx("span", { children: (0, i.__)("Show", "wooptionsfic") }),
-                  s.jsx("select", {
-                    value: V,
-                    disabled: _,
-                    onChange: (event) => {
-                      setPerPage(Number(event.currentTarget.value) || 10);
-                      R(1);
-                      T([]);
-                    },
-                    "aria-label": (0, i.__)("Option sets per page", "wooptionsfic"),
-                    children: [10, 25, 50, 100].map((size) =>
-                      s.jsx("option", { value: size, children: size }, size)
-                    ),
-                  }),
-                  s.jsx("span", { children: (0, i.__)("entries", "wooptionsfic") }),
-                ],
-              }),
-              s.jsx("span", {
-                className: "wof-pagination__summary",
-                children: (0, i.sprintf)(
-                  (0, i.__)("Showing %1$d–%2$d of %3$d", "wooptionsfic"),
-                  F ? (W - 1) * V + 1 : 0,
-                  F ? Math.min(W * V, F) : 0,
-                  F
-                ),
-              }),
-              s.jsxs("div", {
-                className: "wof-pagination__controls",
-                children: [
-                  s.jsx("button", {
-                    type: "button",
-                    className: "wof-pagination__direction",
-                    disabled: W <= 1 || _,
-                    onClick: () => R(Math.max(1, W - 1)),
-                    children: (0, i.__)("Previous", "wooptionsfic"),
-                  }),
-                  Z.map((page) =>
-                    s.jsx(
-                      "button",
-                      {
-                        type: "button",
-                        disabled: _,
-                        className: page === W ? "is-current" : "",
-                        onClick: () => R(page),
-                        "aria-current": page === W ? "page" : undefined,
-                        children: page,
-                      },
-                      page
-                    )
-                  ),
-                  s.jsx("button", {
-                    type: "button",
-                    className: "wof-pagination__direction",
-                    disabled: W >= H || _,
-                    onClick: () => R(Math.min(H, W + 1)),
-                    children: (0, i.__)("Next", "wooptionsfic"),
-                  }),
-                ],
-              }),
-            ],
-          }),
-        ],
-      }),
-      S &&
-        s.jsxs(n.Modal, {
-          title: (0, i.__)("Create an option set", "wooptionsfic"),
-          onRequestClose: () => C(false),
-          className: "wof-modal",
-          focusOnMount: "firstContentElement",
-          children: [
-            s.jsx("p", {
-              children: (0, i.__)(
-                "Give this option set a clear internal name. Customers can see a different heading later.",
-                "wooptionsfic"
-              ),
-            }),
-            s.jsx(n.TextControl, {
-              label: (0, i.__)("Option set name", "wooptionsfic"),
-              value: k,
-              onChange: N,
-              placeholder: (0, i.__)("Example: Premium gift personalization", "wooptionsfic"),
-              onKeyDown: (event) => {
-                if (event.key === "Enter") q();
-              },
-            }),
-            s.jsxs("div", {
-              className: "wof-modal__actions",
-              children: [
-                s.jsx(n.Button, {
-                  variant: "tertiary",
-                  onClick: () => C(false),
-                  children: (0, i.__)("Cancel", "wooptionsfic"),
-                }),
-                s.jsx(n.Button, {
-                  variant: "primary",
-                  disabled: !k.trim(),
-                  isBusy: O === "create",
-                  onClick: q,
-                  children: (0, i.__)("Open builder", "wooptionsfic"),
-                }),
-              ],
-            }),
-          ],
-        }),
-      P &&
-        s.jsx(w, {
-          title:
-            P.type === "delete"
-              ? (0, i.__)("Delete option sets permanently?", "wooptionsfic")
-              : (0, i.__)("Archive option sets?", "wooptionsfic"),
-          busy: O !== null,
-          confirmLabel:
-            P.type === "delete"
-              ? (0, i.__)("Delete permanently", "wooptionsfic")
-              : (0, i.__)("Archive", "wooptionsfic"),
-          cancelLabel: (0, i.__)("Cancel", "wooptionsfic"),
-          onCancel: () => I(null),
-          onConfirm: () => J(P.type, P.uuids),
-          message:
-            P.type === "delete"
-              ? (0, i.__)(
-                  "This permanently removes the selected option sets and their revision history. This action cannot be undone.",
-                  "wooptionsfic"
-                )
-              : (0, i.__)(
-                  "Archived option sets stop appearing on product pages, but their revision history remains safe.",
-                  "wooptionsfic"
-                ),
-        }),
-    ],
-  });
-}const b={"design-your-own-pizza":{glyph:"◉",color:"ember"},"personalized-apparel":{glyph:"A",color:"iris"},"custom-furniture":{glyph:"▰",color:"forest"},"gift-box":{glyph:"◇",color:"rose"},engraving:{glyph:"✎",color:"mono"},"made-to-measure-curtains":{glyph:"▥",color:"ocean"},"custom-computer":{glyph:"⌘",color:"night"},"rental-request":{glyph:"◷",color:"sky"},donation:{glyph:"♥",color:"forest"},"team-roster":{glyph:"♟",color:"iris"}};function _({navigate:e}){const[o,r]=(0,t.useState)([]),[a,l]=(0,t.useState)(""),[c,u]=(0,t.useState)(!0),[h,m]=(0,t.useState)(null),[v,w]=(0,t.useState)("");(0,t.useEffect)(()=>{d("/templates").then(e=>r(e.items)).catch(e=>w(p(e))).finally(()=>u(!1))},[]);const y=(0,t.useMemo)(()=>{const e=a.toLowerCase().trim();return e?o.filter(t=>`${t.name} ${t.description} ${t.category}`.toLowerCase().includes(e)):o},[a,o]);return(0,s.jsxs)("div",{className:"wof-page",children:[(0,s.jsx)(f,{eyebrow:(0,i.__)("Fast, practical starting points","wooptionsfic"),title:(0,i.__)("Template gallery","wooptionsfic"),description:(0,i.__)("Every template is an editable option set—not a locked demo or upsell teaser.","wooptionsfic")}),(0,s.jsxs)("div",{className:"wof-template-toolbar",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Original templates","wooptionsfic")}),(0,s.jsx)("span",{children:(0,i.__)("Schema-tested and ready to adapt","wooptionsfic")})]}),(0,s.jsx)(n.SearchControl,{label:(0,i.__)("Search templates","wooptionsfic"),value:a,onChange:l,placeholder:(0,i.__)("Search use cases…","wooptionsfic")})]}),v&&(0,s.jsx)("div",{className:"wof-inline-notice is-error",role:"alert",children:v}),c?(0,s.jsx)(g,{label:(0,i.__)("Unpacking the template gallery…","wooptionsfic")}):(0,s.jsx)("div",{className:"wof-template-grid",children:y.map(t=>{const o=b[t.slug]??{glyph:"✦",color:"iris"};return(0,s.jsxs)("article",{className:"wof-template-card",children:[(0,s.jsxs)("div",{className:`wof-template-art is-${o.color}`,children:[(0,s.jsx)("span",{children:o.glyph}),(0,s.jsx)("i",{}),(0,s.jsx)("i",{}),(0,s.jsx)("i",{})]}),(0,s.jsxs)("div",{className:"wof-template-card__body",children:[(0,s.jsxs)("div",{className:"wof-template-card__meta",children:[(0,s.jsx)("span",{children:t.category}),(0,s.jsxs)("small",{children:[t.fieldCount," ",(0,i.__)("fields","wooptionsfic")]})]}),(0,s.jsx)("h2",{children:t.name}),(0,s.jsx)("p",{children:t.description}),(0,s.jsx)(n.Button,{variant:"primary",isBusy:h===t.slug,disabled:null!==h,onClick:()=>(async t=>{m(t),w("");try{const n=await(e=>d("/templates",{method:"POST",data:{slug:e}}))(t);e(`builder/${n.uuid}`)}catch(e){w(p(e)),m(null)}})(t.slug),children:(0,i.__)("Use this template","wooptionsfic")})]})]},t.slug)})})]})}function j(){const[e,n]=(0,t.useState)([]),[o,r]=(0,t.useState)({}),[a,l]=(0,t.useState)(""),[c,u]=(0,t.useState)(!0),[h,v]=(0,t.useState)("");(0,t.useEffect)(()=>{d("/analytics").then(e=>{n(e.metrics),r(e.definitions),l(`${e.from} — ${e.to}`)}).catch(e=>v(p(e))).finally(()=>u(!1))},[]);const w=(0,t.useMemo)(()=>Object.fromEntries(e.map(e=>[e.metricKey,e])),[e]),y=w.view?.count??0,x=w.add_to_cart?.count??0,b=w.purchase?.count??0,_=y>0?b/y*100:0;return(0,s.jsxs)("div",{className:"wof-page",children:[(0,s.jsx)(f,{eyebrow:(0,i.__)("Privacy-safe signals","wooptionsfic"),title:(0,i.__)("Analytics","wooptionsfic"),description:(0,i.__)("See where customers engage without collecting their free text, files, or identities.","wooptionsfic"),actions:(0,s.jsxs)("span",{className:"wof-date-chip",children:["◷ ",a||(0,i.__)("Last 30 days","wooptionsfic")]})}),h&&(0,s.jsx)("div",{className:"wof-inline-notice is-error",role:"alert",children:h}),c?(0,s.jsx)(g,{label:(0,i.__)("Aggregating daily signals…","wooptionsfic")}):0===e.length?(0,s.jsx)(m,{icon:"↗",title:(0,i.__)("Your first insights will appear here","wooptionsfic"),description:(0,i.__)("Views, meaningful interactions, validation errors, and conversions are aggregated daily after an option set is assigned and published.","wooptionsfic")}):(0,s.jsxs)(s.Fragment,{children:[(0,s.jsxs)("div",{className:"wof-stat-grid",children:[(0,s.jsxs)("div",{className:"wof-stat",children:[(0,s.jsx)("span",{children:(0,i.__)("Configurator views","wooptionsfic")}),(0,s.jsx)("strong",{children:y.toLocaleString()}),(0,s.jsx)("small",{children:o.view})]}),(0,s.jsxs)("div",{className:"wof-stat",children:[(0,s.jsx)("span",{children:(0,i.__)("Add to carts","wooptionsfic")}),(0,s.jsx)("strong",{children:x.toLocaleString()}),(0,s.jsx)("small",{children:o.add_to_cart})]}),(0,s.jsxs)("div",{className:"wof-stat",children:[(0,s.jsx)("span",{children:(0,i.__)("Purchases","wooptionsfic")}),(0,s.jsx)("strong",{children:b.toLocaleString()}),(0,s.jsx)("small",{children:o.purchase})]}),(0,s.jsxs)("div",{className:"wof-stat is-accent",children:[(0,s.jsx)("span",{children:(0,i.__)("View conversion","wooptionsfic")}),(0,s.jsxs)("strong",{children:[_.toFixed(1),"%"]}),(0,s.jsx)("small",{children:(0,i.__)("Purchases ÷ configurator views","wooptionsfic")})]})]}),(0,s.jsxs)("section",{className:"wof-panel",children:[(0,s.jsx)("div",{className:"wof-panel__header",children:(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Metric ledger","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Transparent definitions, bounded dimensions, no raw personal entries.","wooptionsfic")})]})}),(0,s.jsx)("div",{className:"wof-metric-list",children:e.map(t=>{const n=Math.max(...e.map(e=>e.count),1);return(0,s.jsxs)("div",{children:[(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:t.metricKey.split("_").join(" ")}),(0,s.jsx)("small",{children:o[t.metricKey]??""})]}),(0,s.jsx)("div",{className:"wof-metric-bar",children:(0,s.jsx)("i",{style:{width:`${Math.max(3,t.count/n*100)}%`}})}),(0,s.jsx)("b",{children:t.count.toLocaleString()})]},`${t.metricKey}-${t.currency}`)})})]})]})]})}function S(){const[e,o]=(0,t.useState)(null),[r,a]=(0,t.useState)(!0),[l,c]=(0,t.useState)(""),u=(0,t.useCallback)(()=>{a(!0),d("/diagnostics").then(o).catch(e=>c(p(e))).finally(()=>a(!1))},[]);return(0,t.useEffect)(u,[u]),(0,s.jsxs)("div",{className:"wof-page",children:[(0,s.jsx)(f,{eyebrow:(0,i.__)("Release confidence","wooptionsfic"),title:(0,i.__)("Diagnostics","wooptionsfic"),description:(0,i.__)("Inspect the exact services WooOptionsFic depends on—without exposing server paths or private data.","wooptionsfic"),actions:(0,s.jsxs)(n.Button,{variant:"secondary",onClick:u,isBusy:r,children:["↻ ",(0,i.__)("Run checks again","wooptionsfic")]})}),l&&(0,s.jsx)("div",{className:"wof-inline-notice is-error",role:"alert",children:l}),r?(0,s.jsx)(g,{label:(0,i.__)("Inspecting the workshop…","wooptionsfic")}):e?(0,s.jsxs)("div",{className:"wof-diagnostics-layout",children:[(0,s.jsxs)("section",{className:"wof-panel",children:[(0,s.jsx)("div",{className:"wof-panel__header",children:(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Runtime checks","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Critical issues block reliable product configuration.","wooptionsfic")})]})}),(0,s.jsx)("div",{className:"wof-check-list",children:e.checks.map(e=>(0,s.jsxs)("div",{className:`is-${e.status}`,children:[(0,s.jsx)("span",{className:"wof-check-icon","aria-hidden":"true",children:"good"===e.status?"✓":"critical"===e.status?"!":"•"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:e.label}),(0,s.jsx)("small",{children:e.message})]}),(0,s.jsx)(v,{status:e.status})]},e.key))})]}),(0,s.jsxs)("aside",{className:"wof-panel wof-environment-card",children:[(0,s.jsx)("div",{className:"wof-panel__header",children:(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Environment","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Useful when requesting support.","wooptionsfic")})]})}),(0,s.jsx)("dl",{children:Object.entries(e.environment).map(([e,t])=>(0,s.jsxs)("div",{children:[(0,s.jsx)("dt",{children:e}),(0,s.jsx)("dd",{children:t??(0,i.__)("Not active","wooptionsfic")})]},e))}),(0,s.jsx)("a",{className:"components-button is-secondary",href:window.WooOptionsFicAdmin.urls.siteHealth,children:(0,i.__)("Open WordPress Site Health","wooptionsfic")})]})]}):null]})}function C(){const[e,n]=(0,t.useState)([]),[o,r]=(0,t.useState)(!0),[a,l]=(0,t.useState)("");return(0,t.useEffect)(()=>{d("/integrations").then(e=>n(e.items)).catch(e=>l(p(e))).finally(()=>r(!1))},[]),(0,s.jsxs)("div",{className:"wof-page",children:[(0,s.jsx)(f,{eyebrow:(0,i.__)("Evidence before badges","wooptionsfic"),title:(0,i.__)("Integrations","wooptionsfic"),description:(0,i.__)("See what is active, which fallback is in use, and what each adapter actually guarantees.","wooptionsfic")}),a&&(0,s.jsx)("div",{className:"wof-inline-notice is-error",role:"alert",children:a}),o?(0,s.jsx)(g,{label:(0,i.__)("Checking adapters…","wooptionsfic")}):(0,s.jsx)("div",{className:"wof-integration-grid",children:e.map(e=>(0,s.jsxs)("article",{className:"wof-integration-card",children:[(0,s.jsx)("div",{className:"wof-integration-logo","aria-hidden":"true",children:e.key.includes("woocommerce")?"woo":e.key.includes("upload")?"↥":"⌁"}),(0,s.jsxs)("div",{children:[(0,s.jsxs)("div",{className:"wof-integration-card__title",children:[(0,s.jsx)("h2",{children:e.name}),(0,s.jsx)(v,{status:e.status})]}),(0,s.jsx)("p",{children:e.evidence})]})]},e.key))}),(0,s.jsxs)("div",{className:"wof-guidance-card",children:[(0,s.jsx)("span",{"aria-hidden":"true",children:"i"}),(0,s.jsxs)("div",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Compatibility is earned","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("WooOptionsFic does not show “certified” labels merely because a class exists. Release notes record the versions and test date behind every compatibility claim.","wooptionsfic")})]})]})]})}function k(){const[e,o]=(0,t.useState)({}),[r,a]=(0,t.useState)(!0),[l,c]=(0,t.useState)(!1),[u,h]=(0,t.useState)(""),[m,v]=(0,t.useState)("");(0,t.useEffect)(()=>{d("/settings").then(o).catch(e=>v(p(e))).finally(()=>a(!1))},[]);const w=(e,t)=>o(n=>({...n,[e]:t})),y=async()=>{c(!0),v(""),h("");try{const t=await(e=>d("/settings",{method:"PATCH",data:e}))(e);o(t),h((0,i.__)("Settings saved.","wooptionsfic"))}catch(e){v(p(e))}finally{c(!1)}};return r?(0,s.jsx)(g,{label:(0,i.__)("Loading workshop settings…","wooptionsfic")}):(0,s.jsxs)("div",{className:"wof-page",children:[(0,s.jsx)(f,{eyebrow:(0,i.__)("Safe defaults, clear control","wooptionsfic"),title:(0,i.__)("Settings","wooptionsfic"),description:(0,i.__)("Configure privacy, uploads, retention, and bounded engine limits.","wooptionsfic"),actions:(0,s.jsx)(n.Button,{variant:"primary",isBusy:l,onClick:y,children:(0,i.__)("Save settings","wooptionsfic")})}),u&&(0,s.jsxs)("div",{className:"wof-inline-notice is-success",role:"status",children:["✓ ",u]}),m&&(0,s.jsx)("div",{className:"wof-inline-notice is-error",role:"alert",children:m}),(0,s.jsxs)("div",{className:"wof-settings-grid",children:[(0,s.jsxs)("section",{className:"wof-panel wof-settings-section",children:[(0,s.jsxs)("div",{className:"wof-settings-section__heading",children:[(0,s.jsx)("span",{"aria-hidden":"true",children:"↗"}),(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Privacy-safe analytics","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Daily aggregate counts only—never customer text, email, filenames, or identities.","wooptionsfic")})]})]}),(0,s.jsx)(n.ToggleControl,{__nextHasNoMarginBottom:!0,label:(0,i.__)("Collect aggregate product-option metrics","wooptionsfic"),checked:Boolean(e.analytics_enabled),onChange:e=>w("analytics_enabled",e)}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Analytics retention (days)","wooptionsfic"),value:String(e.analytics_retention_days??395),min:30,max:1095,onChange:e=>w("analytics_retention_days",Number(e))})]}),(0,s.jsxs)("section",{className:"wof-panel wof-settings-section",children:[(0,s.jsxs)("div",{className:"wof-settings-section__heading",children:[(0,s.jsx)("span",{"aria-hidden":"true",children:"↥"}),(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Private uploads","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Bounded files are detected, scanned, quarantined, and stored outside the Media Library.","wooptionsfic")})]})]}),(0,s.jsxs)("div",{className:"wof-two-column-controls",children:[(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Maximum file size (MB)","wooptionsfic"),value:String(e.upload_max_file_mb??5),min:1,max:50,onChange:e=>w("upload_max_file_mb",Number(e))}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Maximum total per configuration (MB)","wooptionsfic"),value:String(e.upload_max_total_mb??15),min:1,max:200,onChange:e=>w("upload_max_total_mb",Number(e))})]}),(0,s.jsx)(n.TextControl,{label:(0,i.__)("Allowed extensions","wooptionsfic"),help:(0,i.__)("Executables and active web content remain blocked regardless of this list.","wooptionsfic"),value:Array.isArray(e.upload_allowed_extensions)?e.upload_allowed_extensions.join(", "):String(e.upload_allowed_extensions??""),onChange:e=>w("upload_allowed_extensions",e)}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Purge abandoned uploads after (hours)","wooptionsfic"),value:String(e.abandoned_upload_hours??24),min:1,max:168,onChange:e=>w("abandoned_upload_hours",Number(e))})]}),(0,s.jsxs)("section",{className:"wof-panel wof-settings-section",children:[(0,s.jsxs)("div",{className:"wof-settings-section__heading",children:[(0,s.jsx)("span",{"aria-hidden":"true",children:"⌁"}),(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Saved configurations","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Share tokens are random, hashed in storage, revocable, and never contain raw selections.","wooptionsfic")})]})]}),(0,s.jsxs)("div",{className:"wof-two-column-controls",children:[(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Saved configuration retention (days)","wooptionsfic"),value:String(e.saved_config_expiry_days??90),min:1,max:3650,onChange:e=>w("saved_config_expiry_days",Number(e))}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Share link expiry (days)","wooptionsfic"),value:String(e.share_link_expiry_days??30),min:1,max:365,onChange:e=>w("share_link_expiry_days",Number(e))})]})]}),(0,s.jsxs)("section",{className:"wof-panel wof-settings-section",children:[(0,s.jsxs)("div",{className:"wof-settings-section__heading",children:[(0,s.jsx)("span",{"aria-hidden":"true",children:"⚙"}),(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Workshop behavior","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Appearance and conservative workload boundaries.","wooptionsfic")})]})]}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)("Admin appearance","wooptionsfic"),value:String(e.admin_theme??"system"),options:[{label:(0,i.__)("Follow system","wooptionsfic"),value:"system"},{label:(0,i.__)("Light","wooptionsfic"),value:"light"},{label:(0,i.__)("Dark","wooptionsfic"),value:"dark"}],onChange:e=>w("admin_theme",e)}),(0,s.jsxs)("div",{className:"wof-two-column-controls",children:[(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Maximum fields per set","wooptionsfic"),value:String(e.max_fields??200),min:10,max:500,onChange:e=>w("max_fields",Number(e))}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Quote requests per minute","wooptionsfic"),value:String(e.quote_rate_limit_per_minute??60),min:10,max:300,onChange:e=>w("quote_rate_limit_per_minute",Number(e))})]}),(0,s.jsx)(n.ToggleControl,{__nextHasNoMarginBottom:!0,label:(0,i.__)("Delete plugin data during uninstall","wooptionsfic"),help:(0,i.__)("Off by default. Turning this on makes uninstall destructive and permanent.","wooptionsfic"),checked:Boolean(e.delete_data_on_uninstall),onChange:e=>w("delete_data_on_uninstall",e)})]})]}),(0,s.jsxs)("div",{className:"wof-sticky-save",children:[(0,s.jsx)("span",{children:(0,i.__)("Changes apply to new requests after saving.","wooptionsfic")}),(0,s.jsx)(n.Button,{variant:"primary",isBusy:l,onClick:y,children:(0,i.__)("Save settings","wooptionsfic")})]})]})}function N({navigate:e}){const t=[{number:"01",title:(0,i.__)("Import a proven pattern","wooptionsfic"),text:(0,i.__)("Pick a template closest to your product. Every part remains editable.","wooptionsfic"),action:(0,i.__)("Open templates","wooptionsfic"),route:"templates"},{number:"02",title:(0,i.__)("Shape the customer journey","wooptionsfic"),text:(0,i.__)("Add fields from the palette, arrange them, and tune content, pricing, logic, and style.","wooptionsfic"),action:(0,i.__)("View option sets","wooptionsfic"),route:"option-sets"},{number:"03",title:(0,i.__)("Assign and publish","wooptionsfic"),text:(0,i.__)("Choose where the set appears, run preflight checks, then publish an immutable revision.","wooptionsfic"),action:(0,i.__)("Open diagnostics","wooptionsfic"),route:"diagnostics"}];return(0,s.jsxs)("div",{className:"wof-page",children:[(0,s.jsx)(f,{eyebrow:(0,i.__)("A calm first run","wooptionsfic"),title:(0,i.__)("Help & onboarding","wooptionsfic"),description:(0,i.__)("The shortest path from an idea to a safely priced product experience.","wooptionsfic")}),(0,s.jsx)("div",{className:"wof-onboarding-grid",children:t.map(t=>(0,s.jsxs)("article",{children:[(0,s.jsx)("span",{children:t.number}),(0,s.jsx)("h2",{children:t.title}),(0,s.jsx)("p",{children:t.text}),(0,s.jsxs)(n.Button,{variant:"secondary",onClick:()=>e(t.route),children:[t.action," →"]})]},t.number))}),(0,s.jsxs)("section",{className:"wof-panel wof-principles",children:[(0,s.jsx)("div",{className:"wof-panel__header",children:(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Built-in guardrails","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("The details that keep a beautiful form trustworthy at checkout.","wooptionsfic")})]})}),(0,s.jsxs)("div",{className:"wof-principle-grid",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("b",{"aria-hidden":"true",children:"◎"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Server-authoritative pricing","wooptionsfic")}),(0,s.jsx)("small",{children:(0,i.__)("Browser totals are previews; the server recalculates every accepted configuration.","wooptionsfic")})]})]}),(0,s.jsxs)("div",{children:[(0,s.jsx)("b",{"aria-hidden":"true",children:"⌘"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Immutable order history","wooptionsfic")}),(0,s.jsx)("small",{children:(0,i.__)("Published revisions and order snapshots preserve what the customer actually bought.","wooptionsfic")})]})]}),(0,s.jsxs)("div",{children:[(0,s.jsx)("b",{"aria-hidden":"true",children:"♿"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Keyboard-complete controls","wooptionsfic")}),(0,s.jsx)("small",{children:(0,i.__)("Visible move buttons complement drag and drop in the builder and repeaters.","wooptionsfic")})]})]}),(0,s.jsxs)("div",{children:[(0,s.jsx)("b",{"aria-hidden":"true",children:"◇"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Private by design","wooptionsfic")}),(0,s.jsx)("small",{children:(0,i.__)("Sensitive text is redacted and customer uploads live outside the public Media Library.","wooptionsfic")})]})]})]})]}),(0,s.jsxs)("div",{className:"wof-help-footer",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("strong",{children:(0,i.__)("Before your first live product","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Use a staging site, place a real test order, and review tax, shipping, email, refund, and mobile behavior with your theme and extensions.","wooptionsfic")})]}),(0,s.jsx)(n.Button,{variant:"primary",onClick:()=>e("templates"),children:(0,i.__)("Start with a template","wooptionsfic")})]})]})}const O=window.React;var E=Symbol.for("preact-signals");function D(){if(W>1)W--;else{var e,t=!1;for(function(){var e=L;for(L=void 0;void 0!==e;){var t=e.S;if(t.v===e.v)for(var n=t.t;void 0!==n;n=n.x)n.i===e.i&&(n.i=t.i);e=e.o}}();void 0!==I;){var n=I;for(I=void 0,R++;void 0!==n;){var i=n.u;if(n.u=void 0,n.f&=-3,!(8&n.f)&&q(n))try{n.c()}catch(n){t||(e=n,t=!0)}n=i}}if(R=0,W--,t)throw e}}function M(e){if(W>0)return e();$=++F,W++;try{return e()}finally{D()}}var A,T=void 0;function P(e){var t=T,n=A;T=void 0,A=void 0;try{return e()}finally{T=t,A=n}}var I=void 0,W=0,R=0,F=0,$=0,L=void 0,B=0;function z(e){if(void 0!==T){var t=e.n;if(void 0===t||t.t!==T)return t={i:0,S:e,p:T.s,n:void 0,t:T,e:void 0,x:void 0,r:t},void 0!==T.s&&(T.s.n=t),T.s=t,e.n=t,32&T.f&&e.S(t),t;if(-1===t.i)return t.i=0,void 0!==t.n&&(t.n.p=t.p,void 0!==t.p&&(t.p.n=t.n),t.p=T.s,t.n=void 0,T.s.n=t,T.s=t),t}}function U(e,t){this.v=e,this.i=0,this.n=void 0,this.t=void 0,this.l=0,this.W=null==t?void 0:t.watched,this.Z=null==t?void 0:t.unwatched,this.name=null==t?void 0:t.name}function V(e,t){return new U(e,t)}function q(e){for(var t=e.s;void 0!==t;t=t.n)if(t.S.i!==t.i||!t.S.h()||t.S.i!==t.i)return!0;return!1}function H(e){for(var t=e.s;void 0!==t;t=t.n){var n=t.S.n;if(void 0!==n&&(t.r=n),t.S.n=t,t.i=-1,void 0===t.n){e.s=t;break}}}function Y(e){for(var t=e.s,n=void 0;void 0!==t;){var i=t.p;-1===t.i?(t.S.U(t),void 0!==i&&(i.n=t.n),void 0!==t.n&&(t.n.p=i)):n=t,t.S.n=t.r,void 0!==t.r&&(t.r=void 0),t=i}e.s=n}function X(e,t){U.call(this,void 0,t),this.x=e,this.s=void 0,this.g=B-1,this.f=4}function K(e,t){return new X(e,t)}function G(e){var t=e.m;if(e.m=void 0,"function"==typeof t){W++;var n=T;T=void 0;try{t()}catch(t){throw e.f&=-2,e.f|=8,J(e),t}finally{T=n,D()}}}function J(e){for(var t=e.s;void 0!==t;t=t.n)t.S.U(t);e.x=void 0,e.s=void 0,G(e)}function Z(e){if(T!==this)throw new Error("Out-of-order effect");Y(this),T=e,this.f&=-2,8&this.f&&J(this),D()}function Q(e,t){this.x=e,this.m=void 0,this.s=void 0,this.u=void 0,this.f=32,this.name=null==t?void 0:t.name,A&&A.push(this)}function ee(e,t){var n=new Q(e,t);try{n.c()}catch(e){throw n.d(),e}var i=n.d.bind(n);return i[Symbol.dispose]=i,i}U.prototype.brand=E,U.prototype.h=function(){return!0},U.prototype.S=function(e){var t=this,n=this.t;n!==e&&void 0===e.e&&(e.x=n,this.t=e,void 0!==n?n.e=e:P(function(){var e;null==(e=t.W)||e.call(t)}))},U.prototype.U=function(e){var t=this;if(void 0!==this.t){var n=e.e,i=e.x;void 0!==n&&(n.x=i,e.e=void 0),void 0!==i&&(i.e=n,e.x=void 0),e===this.t&&(this.t=i,void 0===i&&P(function(){var e;null==(e=t.Z)||e.call(t)}))}},U.prototype.subscribe=function(e){var t=this;return ee(function(){var n=t.value;P(function(){return e(n)})},{name:"sub"})},U.prototype.valueOf=function(){return this.value},U.prototype.toString=function(){return this.value+""},U.prototype.toJSON=function(){return this.value},U.prototype.peek=function(){var e=this;return P(function(){return e.value})},Object.defineProperty(U.prototype,"value",{get:function(){var e=z(this);return void 0!==e&&(e.i=this.i),this.v},set:function(e){if(e!==this.v){if(R>100)throw new Error("Cycle detected");!function(e){0!==W&&0===R&&e.l!==$&&(e.l=$,L={S:e,v:e.v,i:e.i,o:L})}(this),this.v=e,this.i++,B++,W++;try{for(var t=this.t;void 0!==t;t=t.x)t.t.N()}finally{D()}}}}),X.prototype=new U,X.prototype.h=function(){if(this.f&=-3,1&this.f)return!1;if(32==(36&this.f))return!0;if(this.f&=-5,this.g===B)return!0;if(this.g=B,this.f|=1,this.i>0&&!q(this))return this.f&=-2,!0;var e=T;try{H(this),T=this;var t=this.x();(16&this.f||this.v!==t||0===this.i)&&(this.v=t,this.f&=-17,this.i++)}catch(e){this.v=e,this.f|=16,this.i++}return T=e,Y(this),this.f&=-2,!0},X.prototype.S=function(e){if(void 0===this.t){this.f|=36;for(var t=this.s;void 0!==t;t=t.n)t.S.S(t)}U.prototype.S.call(this,e)},X.prototype.U=function(e){if(void 0!==this.t&&(U.prototype.U.call(this,e),void 0===this.t)){this.f&=-33;for(var t=this.s;void 0!==t;t=t.n)t.S.U(t)}},X.prototype.N=function(){if(!(2&this.f)){this.f|=6;for(var e=this.t;void 0!==e;e=e.x)e.t.N()}},Object.defineProperty(X.prototype,"value",{get:function(){if(1&this.f)throw new Error("Cycle detected");var e=z(this);if(this.h(),void 0!==e&&(e.i=this.i),16&this.f)throw this.v;return this.v}}),Q.prototype.c=function(){var e=this.S();try{if(8&this.f)return;if(void 0===this.x)return;var t=this.x();"function"==typeof t&&(this.m=t)}finally{e()}},Q.prototype.S=function(){if(1&this.f)throw new Error("Cycle detected");this.f|=1,this.f&=-9,G(this),H(this),W++;var e=T;return T=this,Z.bind(this,e)},Q.prototype.N=function(){2&this.f||(this.f|=2,this.u=I,I=this)},Q.prototype.d=function(){this.f|=8,1&this.f||J(this)},Q.prototype.dispose=function(){this.d()};var te,ne,ie,se,oe,re,ae,le,ce,de,ue,he,pe,fe,ge,me,ve,we,ye,xe,be=Object.create,_e=Object.defineProperty,je=Object.defineProperties,Se=Object.getOwnPropertyDescriptor,Ce=Object.getOwnPropertyDescriptors,ke=Object.getOwnPropertySymbols,Ne=Object.prototype.hasOwnProperty,Oe=Object.prototype.propertyIsEnumerable,Ee=(e,t)=>(t=Symbol[e])?t:Symbol.for("Symbol."+e),De=e=>{throw TypeError(e)},Me=(e,t,n)=>t in e?_e(e,t,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[t]=n,Ae=(e,t)=>_e(e,"name",{value:t,configurable:!0}),Te=["class","method","getter","setter","accessor","field","value","get","set"],Pe=e=>void 0!==e&&"function"!=typeof e?De("Function expected"):e,Ie=(e,t,n,i,s)=>({kind:Te[e],name:t,metadata:i,addInitializer:e=>n._?De("Already initialized"):s.push(Pe(e||null))}),We=(e,t)=>Me(t,Ee("metadata"),e[3]),Re=(e,t,n,i)=>{for(var s=0,o=e[t>>1],r=o&&o.length;s<r;s++)1&t?o[s].call(n):i=o[s].call(n,i);return i},Fe=(e,t,n,i,s,o)=>{var r,a,l,c,d,u=7&t,h=!!(8&t),p=!!(16&t),f=u>3?e.length+1:u?h?1:2:0,g=Te[u+5],m=u>3&&(e[f-1]=[]),v=e[f]||(e[f]=[]),w=u&&(!p&&!h&&(s=s.prototype),u<5&&(u>3||!p)&&Se(u<4?s:{get[n](){return Be(this,o)},set[n](e){return Ue(this,o,e)}},n));u?p&&u<4&&Ae(o,(u>2?"set ":u>1?"get ":"")+n):Ae(s,n);for(var y=i.length-1;y>=0;y--)c=Ie(u,n,l={},e[3],v),u&&(c.static=h,c.private=p,d=c.access={has:p?e=>Le(s,e):e=>n in e},3^u&&(d.get=p?e=>(1^u?Be:Ve)(e,s,4^u?o:w.get):e=>e[n]),u>2&&(d.set=p?(e,t)=>Ue(e,s,t,4^u?o:w.set):(e,t)=>e[n]=t)),a=(0,i[y])(u?u<4?p?o:w[g]:u>4?void 0:{get:w.get,set:w.set}:s,c),l._=1,4^u||void 0===a?Pe(a)&&(u>4?m.unshift(a):u?p?o=a:w[g]=a:s=a):"object"!=typeof a||null===a?De("Object expected"):(Pe(r=a.get)&&(w.get=r),Pe(r=a.set)&&(w.set=r),Pe(r=a.init)&&m.unshift(r));return u||We(e,s),w&&_e(s,n,w),p?4^u?o:w:s},$e=(e,t,n)=>t.has(e)||De("Cannot "+n),Le=(e,t)=>Object(t)!==t?De('Cannot use the "in" operator on this value'):e.has(t),Be=(e,t,n)=>($e(e,t,"read from private field"),n?n.call(e):t.get(e)),ze=(e,t,n)=>t.has(e)?De("Cannot add the same private member more than once"):t instanceof WeakSet?t.add(e):t.set(e,n),Ue=(e,t,n,i)=>($e(e,t,"write to private field"),i?i.call(e,n):t.set(e,n),n),Ve=(e,t,n)=>($e(e,t,"access private method"),n);function qe(e,t){if(t){let n;return K(()=>{const i=e();return i&&n&&t(n,i)?n:(n=i,i)})}return K(e)}function He(e,t){if(Object.is(e,t))return!0;if(null===e||null===t)return!1;if("function"==typeof e&&"function"==typeof t)return e===t;if(e instanceof Set&&t instanceof Set){if(e.size!==t.size)return!1;for(const n of e)if(!t.has(n))return!1;return!0}if(Array.isArray(e))return!(!Array.isArray(t)||e.length!==t.length)&&!e.some((e,n)=>!He(e,t[n]));if("object"==typeof e&&"object"==typeof t){const n=Object.keys(e),i=Object.keys(t);return n.length===i.length&&!n.some(n=>!He(e[n],t[n]))}return!1}function Ye({get:e},t){return{init:e=>V(e),get(){return e.call(this).value},set(t){const n=e.call(this);n.peek()!==t&&(n.value=t)}}}function Xe(e,t){const n=new WeakMap;return function(){let t=n.get(this);return t||(t=qe(e.bind(this)),n.set(this,t)),t.value}}function Ke(e=!0){return function(t,n){n.addInitializer(function(){const t="field"===n.kind||n.static?this:Object.getPrototypeOf(this),i=Object.getOwnPropertyDescriptor(t,n.name);i&&Object.defineProperty(t,n.name,((e,t)=>je(e,Ce(t)))(((e,t)=>{for(var n in t||(t={}))Ne.call(t,n)&&Me(e,n,t[n]);if(ke)for(var n of ke(t))Oe.call(t,n)&&Me(e,n,t[n]);return e})({},i),{enumerable:e}))})}}function Ge(...e){const t=e.map(e=>ee(e));return()=>t.forEach(e=>e())}re=[Ye],oe=[Ye],se=[Ye],ie=[Ke()],ne=[Ke()],te=[Ke()];var Je,Ze=class{constructor(e,t=Object.is){this.defaultValue=e,this.equals=t,Re(ae,5,this),ze(this,he),ze(this,le,Re(ae,8,this)),Re(ae,11,this),ze(this,pe,Re(ae,12,this)),Re(ae,15,this),ze(this,ve,Re(ae,16,this)),Re(ae,19,this),this.reset=this.reset.bind(this),this.reset()}get current(){return Be(this,he,ye)}get initial(){return Be(this,he,de)}get previous(){return Be(this,he,ge)}set current(e){const t=P(()=>Be(this,he,ye));e&&t&&this.equals(t,e)||M(()=>{Be(this,he,de)||Ue(this,he,e,ue),Ue(this,he,t,me),Ue(this,he,e,xe)})}reset(e=this.defaultValue){M(()=>{Ue(this,he,void 0,me),Ue(this,he,e,ue),Ue(this,he,e,xe)})}};function Qe(e){return P(()=>{const t={};for(const n in e)t[n]=e[n];return t})}ae=[,,,be(null)],le=new WeakMap,he=new WeakSet,pe=new WeakMap,ve=new WeakMap,ce=Fe(ae,20,"#initial",re,he,le),de=ce.get,ue=ce.set,fe=Fe(ae,20,"#previous",oe,he,pe),ge=fe.get,me=fe.set,we=Fe(ae,20,"#current",se,he,ve),ye=we.get,xe=we.set,Fe(ae,2,"current",ie,Ze),Fe(ae,2,"initial",ne,Ze),Fe(ae,2,"previous",te,Ze),We(ae,Ze),Je=new WeakMap;var et,tt,nt,it,st,ot=Object.create,rt=Object.defineProperty,at=Object.getOwnPropertyDescriptor,lt=Object.getOwnPropertySymbols,ct=Object.prototype.hasOwnProperty,dt=Object.prototype.propertyIsEnumerable,ut=(e,t)=>(t=Symbol[e])?t:Symbol.for("Symbol."+e),ht=e=>{throw TypeError(e)},pt=Math.pow,ft=(e,t,n)=>t in e?rt(e,t,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[t]=n,gt=(e,t)=>rt(e,"name",{value:t,configurable:!0}),mt=["class","method","getter","setter","accessor","field","value","get","set"],vt=e=>void 0!==e&&"function"!=typeof e?ht("Function expected"):e,wt=(e,t,n,i,s)=>({kind:mt[e],name:t,metadata:i,addInitializer:e=>n._?ht("Already initialized"):s.push(vt(e||null))}),yt=(e,t)=>ft(t,ut("metadata"),e[3]),xt=(e,t,n,i,s,o)=>{var r,a,l,c,d,u=7&t,h=!!(8&t),p=!!(16&t),f=u>3?e.length+1:u?h?1:2:0,g=mt[u+5],m=u>3&&(e[f-1]=[]),v=e[f]||(e[f]=[]),w=u&&(!p&&!h&&(s=s.prototype),u<5&&(u>3||!p)&&at(u<4?s:{get[n](){return jt(this,o)},set[n](e){return St(this,o,e)}},n));u?p&&u<4&&gt(o,(u>2?"set ":u>1?"get ":"")+n):gt(s,n);for(var y=i.length-1;y>=0;y--)c=wt(u,n,l={},e[3],v),u&&(c.static=h,c.private=p,d=c.access={has:p?e=>_t(s,e):e=>n in e},3^u&&(d.get=p?e=>(1^u?jt:Ct)(e,s,4^u?o:w.get):e=>e[n]),u>2&&(d.set=p?(e,t)=>St(e,s,t,4^u?o:w.set):(e,t)=>e[n]=t)),a=(0,i[y])(u?u<4?p?o:w[g]:u>4?void 0:{get:w.get,set:w.set}:s,c),l._=1,4^u||void 0===a?vt(a)&&(u>4?m.unshift(a):u?p?o=a:w[g]=a:s=a):"object"!=typeof a||null===a?ht("Object expected"):(vt(r=a.get)&&(w.get=r),vt(r=a.set)&&(w.set=r),vt(r=a.init)&&m.unshift(r));return u||yt(e,s),w&&rt(s,n,w),p?4^u?o:w:s},bt=(e,t,n)=>t.has(e)||ht("Cannot "+n),_t=(e,t)=>Object(t)!==t?ht('Cannot use the "in" operator on this value'):e.has(t),jt=(e,t,n)=>(bt(e,t,"read from private field"),n?n.call(e):t.get(e)),St=(e,t,n,i)=>(bt(e,t,"write to private field"),i?i.call(e,n):t.set(e,n),n),Ct=(e,t,n)=>(bt(e,t,"access private method"),n),kt=class e{constructor(e,t){this.x=e,this.y=t}static delta(t,n){return new e(t.x-n.x,t.y-n.y)}static distance(e,t){return Math.hypot(e.x-t.x,e.y-t.y)}static equals(e,t){return e.x===t.x&&e.y===t.y}static from({x:t,y:n}){return new e(t,n)}},Nt=class e{constructor(e,t,n,i){this.left=e,this.top=t,this.width=n,this.height=i,this.scale={x:1,y:1}}get inverseScale(){return{x:1/this.scale.x,y:1/this.scale.y}}translate(t,n){const{top:i,left:s,width:o,height:r,scale:a}=this,l=new e(s+t,i+n,o,r);return l.scale=((e,t)=>{for(var n in t||(t={}))ct.call(t,n)&&ft(e,n,t[n]);if(lt)for(var n of lt(t))dt.call(t,n)&&ft(e,n,t[n]);return e})({},a),l}get boundingRectangle(){const{width:e,height:t,left:n,top:i,right:s,bottom:o}=this;return{width:e,height:t,left:n,top:i,right:s,bottom:o}}get center(){const{left:e,top:t,right:n,bottom:i}=this;return new kt((e+n)/2,(t+i)/2)}get area(){const{width:e,height:t}=this;return e*t}equals(t){if(!(t instanceof e))return!1;const{left:n,top:i,width:s,height:o}=this;return n===t.left&&i===t.top&&s===t.width&&o===t.height}containsPoint(e){const{top:t,left:n,bottom:i,right:s}=this;return t<=e.y&&e.y<=i&&n<=e.x&&e.x<=s}intersectionArea(t){return t instanceof e?function(e,t){const n=Math.max(t.top,e.top),i=Math.max(t.left,e.left),s=Math.min(t.left+t.width,e.left+e.width),o=Math.min(t.top+t.height,e.top+e.height);return i<s&&n<o?(s-i)*(o-n):0}(this,t):0}intersectionRatio(e){const{area:t}=this,n=this.intersectionArea(e);return n/(e.area+t-n)}get bottom(){const{top:e,height:t}=this;return e+t}get right(){const{left:e,width:t}=this;return e+t}get aspectRatio(){const{width:e,height:t}=this;return e/t}get corners(){return[{x:this.left,y:this.top},{x:this.right,y:this.top},{x:this.left,y:this.bottom},{x:this.right,y:this.bottom}]}static from({top:t,left:n,width:i,height:s}){return new e(n,t,i,s)}static delta(e,t,n={x:"center",y:"center"}){const i=(e,t)=>{const i=n[t],s="x"===t?e.left:e.top,o="x"===t?e.width:e.height;return"start"==i?s:"end"==i?s+o:s+o/2};return kt.delta({x:i(e,"x"),y:i(e,"y")},{x:i(t,"x"),y:i(t,"y")})}static intersectionRatio(t,n){return e.from(t).intersectionRatio(e.from(n))}},Ot=class extends(nt=Ze,tt=[Xe],et=[Xe],nt){constructor(e){var t,n;super(kt.from(e),(e,t)=>kt.equals(e,t)),((e,t,n)=>{for(var i=0,s=e[2],o=s&&s.length;i<o;i++)s[i].call(n)})(st,0,this),t=this,(n=it).has(t)?ht("Cannot add the same private member more than once"):n instanceof WeakSet?n.add(t):n.set(t,0),this.velocity={x:0,y:0}}get delta(){return kt.delta(this.current,this.initial)}get direction(){const{current:e,previous:t}=this;if(!t)return null;const n={x:e.x-t.x,y:e.y-t.y};return n.x||n.y?Math.abs(n.x)>Math.abs(n.y)?n.x>0?"right":"left":n.y>0?"down":"up":null}get current(){return super.current}set current(e){const{current:t}=this,n=kt.from(e),i={x:n.x-t.x,y:n.y-t.y},s=Date.now(),o=s-jt(this,it),r=e=>Math.round(e/o*100);M(()=>{St(this,it,s),this.velocity={x:r(i.x),y:r(i.y)},super.current=n})}reset(e=this.defaultValue){super.reset(kt.from(e)),this.velocity={x:0,y:0}}};function Et({x:e,y:t},n){const i=Math.abs(e),s=Math.abs(t);return"number"==typeof n?Math.sqrt(pt(i,2)+pt(s,2))>n:"x"in n&&"y"in n?i>n.x&&s>n.y:"x"in n?i>n.x:"y"in n&&s>n.y}st=(e=>{var t;return[,,,ot(null!=(t=null==e?void 0:e[ut("metadata")])?t:null)]})(nt),it=new WeakMap,xt(st,2,"delta",tt,Ot),xt(st,2,"direction",et,Ot),yt(st,Ot);var Dt,Mt,At,Tt,Pt=(e=>(e.Horizontal="x",e.Vertical="y",e))(Pt||{}),It=Object.values(Pt),Wt=Object.create,Rt=Object.defineProperty,Ft=Object.defineProperties,$t=Object.getOwnPropertyDescriptor,Lt=Object.getOwnPropertyDescriptors,Bt=Object.getOwnPropertySymbols,zt=Object.prototype.hasOwnProperty,Ut=Object.prototype.propertyIsEnumerable,Vt=(e,t)=>(t=Symbol[e])?t:Symbol.for("Symbol."+e),qt=e=>{throw TypeError(e)},Ht=(e,t,n)=>t in e?Rt(e,t,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[t]=n,Yt=(e,t)=>{for(var n in t||(t={}))zt.call(t,n)&&Ht(e,n,t[n]);if(Bt)for(var n of Bt(t))Ut.call(t,n)&&Ht(e,n,t[n]);return e},Xt=(e,t)=>Ft(e,Lt(t)),Kt=(e,t)=>Rt(e,"name",{value:t,configurable:!0}),Gt=(e,t)=>{var n={};for(var i in e)zt.call(e,i)&&t.indexOf(i)<0&&(n[i]=e[i]);if(null!=e&&Bt)for(var i of Bt(e))t.indexOf(i)<0&&Ut.call(e,i)&&(n[i]=e[i]);return n},Jt=e=>{var t;return[,,,Wt(null!=(t=null==e?void 0:e[Vt("metadata")])?t:null)]},Zt=["class","method","getter","setter","accessor","field","value","get","set"],Qt=e=>void 0!==e&&"function"!=typeof e?qt("Function expected"):e,en=(e,t,n,i,s)=>({kind:Zt[e],name:t,metadata:i,addInitializer:e=>n._?qt("Already initialized"):s.push(Qt(e||null))}),tn=(e,t)=>Ht(t,Vt("metadata"),e[3]),nn=(e,t,n,i)=>{for(var s=0,o=e[t>>1],r=o&&o.length;s<r;s++)1&t?o[s].call(n):i=o[s].call(n,i);return i},sn=(e,t,n,i,s,o)=>{var r,a,l,c,d,u=7&t,h=!!(8&t),p=!!(16&t),f=u>3?e.length+1:u?h?1:2:0,g=Zt[u+5],m=u>3&&(e[f-1]=[]),v=e[f]||(e[f]=[]),w=u&&(!p&&!h&&(s=s.prototype),u<5&&(u>3||!p)&&$t(u<4?s:{get[n](){return an(this,o)},set[n](e){return cn(this,o,e)}},n));u?p&&u<4&&Kt(o,(u>2?"set ":u>1?"get ":"")+n):Kt(s,n);for(var y=i.length-1;y>=0;y--)c=en(u,n,l={},e[3],v),u&&(c.static=h,c.private=p,d=c.access={has:p?e=>rn(s,e):e=>n in e},3^u&&(d.get=p?e=>(1^u?an:dn)(e,s,4^u?o:w.get):e=>e[n]),u>2&&(d.set=p?(e,t)=>cn(e,s,t,4^u?o:w.set):(e,t)=>e[n]=t)),a=(0,i[y])(u?u<4?p?o:w[g]:u>4?void 0:{get:w.get,set:w.set}:s,c),l._=1,4^u||void 0===a?Qt(a)&&(u>4?m.unshift(a):u?p?o=a:w[g]=a:s=a):"object"!=typeof a||null===a?qt("Object expected"):(Qt(r=a.get)&&(w.get=r),Qt(r=a.set)&&(w.set=r),Qt(r=a.init)&&m.unshift(r));return u||tn(e,s),w&&Rt(s,n,w),p?4^u?o:w:s},on=(e,t,n)=>t.has(e)||qt("Cannot "+n),rn=(e,t)=>Object(t)!==t?qt('Cannot use the "in" operator on this value'):e.has(t),an=(e,t,n)=>(on(e,t,"read from private field"),n?n.call(e):t.get(e)),ln=(e,t,n)=>t.has(e)?qt("Cannot add the same private member more than once"):t instanceof WeakSet?t.add(e):t.set(e,n),cn=(e,t,n,i)=>(on(e,t,"write to private field"),i?i.call(e,n):t.set(e,n),n),dn=(e,t,n)=>(on(e,t,"access private method"),n);function un(e,t){return{plugin:e,options:t}}function hn(e){return t=>un(e,t)}function pn(e){return"function"==typeof e?{plugin:e,options:void 0}:e}Dt=[Ye];var fn=class{constructor(e,t){this.manager=e,this.options=t,ln(this,At,nn(Mt,8,this,!1)),nn(Mt,11,this),ln(this,Tt,new Set)}enable(){this.disabled=!1}disable(){this.disabled=!0}isDisabled(){return P(()=>this.disabled)}configure(e){this.options=e}registerEffect(e){const t=ee(e.bind(this));return an(this,Tt).add(t),t}destroy(){an(this,Tt).forEach(e=>e())}static configure(e){return un(this,e)}};Mt=Jt(null),At=new WeakMap,Tt=new WeakMap,sn(Mt,4,"disabled",Dt,fn,At),tn(Mt,fn);var gn,mn=class extends fn{},vn=class{constructor(e){this.manager=e,this.instances=new Map,ln(this,gn,[])}get values(){return Array.from(this.instances.values())}set values(e){const t=e.map(pn).reduce((e,t)=>{const n=e.find(({plugin:e})=>e===t.plugin);return n?(n.options=t.options,e):[...e,t]},[]),n=t.map(({plugin:e})=>e);for(const e of an(this,gn))if(!n.includes(e)){if(e.prototype instanceof mn)continue;this.unregister(e)}for(const{plugin:e,options:n}of t)this.register(e,n);cn(this,gn,n)}get(e){return this.instances.get(e)}register(e,t){const n=this.instances.get(e);if(n)return n.options!==t&&(n.options=t),n;const i=new e(this.manager,t);return this.instances.set(e,i),i}unregister(e){const t=this.instances.get(e);t&&(t.destroy(),this.instances.delete(e))}destroy(){for(const e of this.instances.values())e.destroy();this.instances.clear()}};function wn(e,t){return e.priority===t.priority?e.type===t.type?t.value-e.value:t.type-e.type:t.priority-e.priority}gn=new WeakMap;var yn,xn,bn,jn,Sn,Cn,kn,Nn,On,En,Dn,Mn,An=[],Tn=class extends fn{constructor(e){super(e),ln(this,yn),ln(this,xn),this.computeCollisions=this.computeCollisions.bind(this),cn(this,xn,V(An)),this.destroy=Ge(()=>{const e=this.computeCollisions(),t=P(()=>this.manager.dragOperation.position.current);if(e!==An){const e=an(this,yn);if(cn(this,yn,t),e&&t.x==e.x&&t.y==e.y)return}else cn(this,yn,void 0);an(this,xn).value=e},()=>{const{dragOperation:e}=this.manager;e.status.initialized&&this.forceUpdate()})}forceUpdate(e=!0){P(()=>{e?an(this,xn).value=this.computeCollisions():cn(this,yn,void 0)})}computeCollisions(e,t){const{registry:n,dragOperation:i}=this.manager,{source:s,shape:o,status:r}=i;if(!r.initialized||!o)return An;const a=[],l=[];for(const o of null!=e?e:n.droppables){if(o.disabled)continue;if(s&&!o.accepts(s))continue;const e=null!=t?t:o.collisionDetector;if(!e)continue;l.push(o),o.shape;const n=P(()=>e({droppable:o,dragOperation:i}));n&&(null!=o.collisionPriority&&(n.priority=o.collisionPriority),a.push(n))}return 0===l.length?An:(a.sort(wn),a)}get collisions(){return an(this,xn).value}};yn=new WeakMap,xn=new WeakMap,Sn=[Ye],jn=[Ye],bn=[Ye];var Pn=class e{constructor(e,t){ln(this,On,nn(Nn,8,this)),nn(Nn,11,this),ln(this,En),ln(this,Dn,nn(Nn,12,this)),nn(Nn,15,this),ln(this,Mn,nn(Nn,16,this)),nn(Nn,19,this);const{effects:n,id:i,data:s={},disabled:o=!1,register:r=!0}=e;let a=i;cn(this,En,V(i)),this.manager=t,this.data=s,this.disabled=o,this.effects=()=>{var e;return[()=>{const{id:e,manager:t}=this;if(e!==a)return a=e,null==t||t.registry.register(this),()=>null==t?void 0:t.registry.unregister(this)},...null!=(e=null==n?void 0:n())?e:[]]},this.register=this.register.bind(this),this.unregister=this.unregister.bind(this),this.destroy=this.destroy.bind(this),t&&r&&queueMicrotask(this.register)}get id(){var t,n;const i=an(this,En).value;return null!=(n=null==(t=e.pendingIdChanges)?void 0:t.get(this))?n:i}set id(t){var n,i;t!==(null!=(i=null==(n=e.pendingIdChanges)?void 0:n.get(this))?i:an(this,En).peek())&&(e.pendingIdChanges||(e.pendingIdChanges=new Map,queueMicrotask(()=>{var t;return dn(t=e,Cn,kn).call(t)})),e.pendingIdChanges.set(this,t))}register(){var e;return null==(e=this.manager)?void 0:e.registry.register(this)}unregister(){var e;null==(e=this.manager)||e.registry.unregister(this)}destroy(){var e;null==(e=this.manager)||e.registry.unregister(this)}};Nn=Jt(null),Cn=new WeakSet,kn=function(){const e=Pn.pendingIdChanges;Pn.pendingIdChanges=null,e&&M(()=>{for(const[t,n]of e)an(t,En).value=n})},On=new WeakMap,En=new WeakMap,Dn=new WeakMap,Mn=new WeakMap,sn(Nn,4,"manager",Sn,Pn,On),sn(Nn,4,"data",jn,Pn,Dn),sn(Nn,4,"disabled",bn,Pn,Mn),ln(Pn,Cn),tn(Nn,Pn),Pn.pendingIdChanges=null;var In,Wn,Rn,Fn,$n,Ln,Bn,zn,Un,Vn,qn,Hn,Yn,Xn,Kn,Gn,Jn,Zn,Qn,ei,ti,ni,ii,si,oi=Pn,ri=class{constructor(){this.map=V(new Map),this.cleanupFunctions=new WeakMap,this.register=(e,t)=>{const n=this.map.peek(),i=n.get(e),s=()=>this.unregister(e,t);if(i===t)return s;if(i&&i.id===e){const e=this.cleanupFunctions.get(i);null==e||e(),this.cleanupFunctions.delete(i)}const o=new Map(n);for(const[i,s]of n)if(s===t&&i!==e){o.delete(i);break}o.set(e,t),this.map.value=o;const r=Ge(...t.effects());return this.cleanupFunctions.set(t,r),s},this.unregister=(e,t)=>{const n=this.map.peek();if(n.get(e)!==t)return;const i=this.cleanupFunctions.get(t);null==i||i(),this.cleanupFunctions.delete(t);const s=new Map(n);s.delete(e),this.map.value=s}}[Symbol.iterator](){return this.map.peek().values()}get value(){return this.map.value.values()}has(e){return this.map.value.has(e)}get(e){return this.map.value.get(e)}destroy(){for(const e of this){const t=this.cleanupFunctions.get(e);null==t||t(),e.destroy()}this.map.value=new Map}},ai=class extends(Bn=oi,Ln=[Ye],$n=[Ye],Fn=[Ye],Rn=[Xe],Wn=[Xe],In=[Xe],Bn){constructor(e,t){var n=e,{modifiers:i,type:s,sensors:o,plugins:r,effects:a}=n,l=Gt(n,["modifiers","type","sensors","plugins","effects"]);super(Xt(Yt({},l),{effects:()=>{var e;return[...null!=(e=null==a?void 0:a())?e:[],()=>{const{manager:e,plugins:t}=this;if(e&&t)for(const n of t){const{plugin:t}=pn(n);e.registry.plugins.register(t)}}]}}),t),nn(zn,5,this),ln(this,Un,nn(zn,8,this)),nn(zn,11,this),ln(this,Vn,nn(zn,12,this)),nn(zn,15,this),ln(this,qn,nn(zn,16,this,this.isDragSource?"dragging":"idle")),nn(zn,19,this),this.type=s,this.sensors=o,this.modifiers=i,this.alignment=l.alignment,this.plugins=r}pluginConfig(e){if(this.plugins)for(const t of this.plugins){const n=pn(t);if(n.plugin===e)return n.options}}get isDropping(){return"dropping"===this.status&&this.isDragSource}get isDragging(){return"dragging"===this.status&&this.isDragSource}get isDragSource(){var e,t;return(null==(t=null==(e=this.manager)?void 0:e.dragOperation.source)?void 0:t.id)===this.id}};zn=Jt(Bn),Un=new WeakMap,Vn=new WeakMap,qn=new WeakMap,sn(zn,4,"type",Ln,ai,Un),sn(zn,4,"modifiers",$n,ai,Vn),sn(zn,4,"status",Fn,ai,qn),sn(zn,2,"isDropping",Rn,ai),sn(zn,2,"isDragging",Wn,ai),sn(zn,2,"isDragSource",In,ai),tn(zn,ai);var li=class extends(Zn=oi,Jn=[Ye],Gn=[Ye],Kn=[Ye],Xn=[Ye],Yn=[Ye],Hn=[Xe],Zn){constructor(e,t){var n=e,{accept:i,collisionDetector:s,collisionPriority:o,type:r}=n;super(Gt(n,["accept","collisionDetector","collisionPriority","type"]),t),nn(Qn,5,this),ln(this,ei,nn(Qn,8,this)),nn(Qn,11,this),ln(this,ti,nn(Qn,12,this)),nn(Qn,15,this),ln(this,ni,nn(Qn,16,this)),nn(Qn,19,this),ln(this,ii,nn(Qn,20,this)),nn(Qn,23,this),ln(this,si,nn(Qn,24,this)),nn(Qn,27,this),this.accept=i,this.collisionDetector=s,this.collisionPriority=o,this.type=r}accepts(e){const{accept:t}=this;return!t||("function"==typeof t?t(e):!!e.type&&(Array.isArray(t)?t.includes(e.type):e.type===t))}get isDropTarget(){var e,t;return(null==(t=null==(e=this.manager)?void 0:e.dragOperation.target)?void 0:t.id)===this.id}};Qn=Jt(Zn),ei=new WeakMap,ti=new WeakMap,ni=new WeakMap,ii=new WeakMap,si=new WeakMap,sn(Qn,4,"accept",Jn,li,ei),sn(Qn,4,"type",Gn,li,ti),sn(Qn,4,"collisionDetector",Kn,li,ni),sn(Qn,4,"collisionPriority",Xn,li,ii),sn(Qn,4,"shape",Yn,li,si),sn(Qn,2,"isDropTarget",Hn,li),tn(Qn,li);var ci=class{constructor(){this.registry=new Map}addEventListener(e,t){const{registry:n}=this,i=new Set(n.get(e));return i.add(t),n.set(e,i),()=>this.removeEventListener(e,t)}removeEventListener(e,t){const{registry:n}=this,i=new Set(n.get(e));i.delete(t),n.set(e,i)}dispatch(e,...t){const{registry:n}=this,i=n.get(e);if(i)for(const e of i)e(...t)}},di=class extends ci{constructor(e){super(),this.manager=e}dispatch(e,t){const n=[t,this.manager];super.dispatch(e,...n)}};function ui(e,t=!0){let n=!1;return Xt(Yt({},e),{cancelable:t,get defaultPrevented(){return n},preventDefault(){t&&(n=!0)}})}var hi,pi,fi,gi,mi,vi,wi,yi,xi,bi=class extends mn{constructor(e){super(e);let t=[];this.destroy=Ge(()=>{const{dragOperation:n,collisionObserver:i}=e;n.status.initializing&&(t=[],i.enable())},()=>{const{collisionObserver:n,monitor:i}=e,{collisions:s}=n;if(n.isDisabled())return;if(oi.pendingIdChanges)return;const o=ui({collisions:s});if(i.dispatch("collision",o),o.defaultPrevented)return;if(((e,t)=>e.map(({id:e})=>e).join("")===t.map(({id:e})=>e).join(""))(s,t))return;t=s;const[r]=s;P(()=>{var t;(null==r?void 0:r.id)!==(null==(t=e.dragOperation.target)?void 0:t.id)&&(n.disable(),e.actions.setDropTarget(null==r?void 0:r.id).then(()=>{n.enable()}))})})}},_i=(e=>(e[e.Lowest=0]="Lowest",e[e.Low=1]="Low",e[e.Normal=2]="Normal",e[e.High=3]="High",e[e.Highest=4]="Highest",e))(_i||{}),ji=(e=>(e[e.Collision=0]="Collision",e[e.ShapeIntersection=1]="ShapeIntersection",e[e.PointerIntersection=2]="PointerIntersection",e))(ji||{});wi=[Ye],vi=[Xe],mi=[Xe],gi=[Xe],fi=[Xe],pi=[Xe],hi=[Xe];var Si=class{constructor(){nn(yi,5,this),ln(this,xi,nn(yi,8,this,"idle")),nn(yi,11,this)}get current(){return this.value}get idle(){return"idle"===this.value}get initializing(){return"initializing"===this.value}get initialized(){const{value:e}=this;return"idle"!==e&&"initialization-pending"!==e}get dragging(){return"dragging"===this.value}get dropped(){return"dropped"===this.value}set(e){this.value=e}};yi=Jt(null),xi=new WeakMap,sn(yi,4,"value",wi,Si,xi),sn(yi,2,"current",vi,Si),sn(yi,2,"idle",mi,Si),sn(yi,2,"initializing",gi,Si),sn(yi,2,"initialized",fi,Si),sn(yi,2,"dragging",pi,Si),sn(yi,2,"dropped",hi,Si),tn(yi,Si);var Ci,ki=class{constructor(e){this.manager=e}setDragSource(e){const{dragOperation:t}=this.manager;t.sourceIdentifier="string"==typeof e||"number"==typeof e?e:e.id}setDropTarget(e){return P(()=>{const{dragOperation:t}=this.manager,n=null!=e?e:null;if(t.targetIdentifier===n)return Promise.resolve(!1);t.targetIdentifier=n;const i=ui({operation:t.snapshot()});return t.status.dragging&&this.manager.monitor.dispatch("dragover",i),this.manager.renderer.rendering.then(()=>i.defaultPrevented)})}start(e){return P(()=>{const{dragOperation:t}=this.manager;if(null!=e.source&&this.setDragSource(e.source),!t.source)throw new Error("Cannot start a drag operation without a drag source");if(!t.status.idle)throw new Error("Cannot start a drag operation while another is active");const n=new AbortController,{event:i,coordinates:s}=e;M(()=>{t.status.set("initialization-pending"),t.shape=null,t.canceled=!1,t.activatorEvent=null!=i?i:null,t.position.reset(s)});const o=ui({operation:t.snapshot()});return this.manager.monitor.dispatch("beforedragstart",o),o.defaultPrevented?(t.reset(),n.abort(),n):(t.status.set("initializing"),t.controller=n,this.manager.renderer.rendering.then(()=>{if(n.signal.aborted)return;const{status:e}=t;"initializing"===e.current&&M(()=>{t.status.set("dragging"),this.manager.monitor.dispatch("dragstart",{nativeEvent:i,operation:t.snapshot(),cancelable:!1})})}),n)})}move(e){return P(()=>{var t,n;const{dragOperation:i}=this.manager,{status:s,controller:o}=i;if(!s.dragging||!o||o.signal.aborted)return;const r=ui({nativeEvent:e.event,operation:i.snapshot(),by:e.by,to:e.to},null==(t=e.cancelable)||t);(null==(n=e.propagate)||n)&&this.manager.monitor.dispatch("dragmove",r),queueMicrotask(()=>{var t,n,s,o,a;if(r.defaultPrevented)return;const l=null!=(a=e.to)?a:{x:i.position.current.x+(null!=(n=null==(t=e.by)?void 0:t.x)?n:0),y:i.position.current.y+(null!=(o=null==(s=e.by)?void 0:s.y)?o:0)};i.position.current=l})})}stop(e={}){return P(()=>{var t,n;const{dragOperation:i}=this.manager,{controller:s}=i;if(!s||s.signal.aborted)return;let o;s.abort();const r=()=>{this.manager.renderer.rendering.then(()=>{i.status.set("dropped");const e=P(()=>{var e;return"dropping"===(null==(e=i.source)?void 0:e.status)}),t=()=>{i.controller===s&&(i.controller=void 0),i.reset()};if(e){const{source:e}=i,n=ee(()=>{"idle"===(null==e?void 0:e.status)&&(n(),t())})}else this.manager.renderer.rendering.then(t)})};i.canceled=null!=(t=e.canceled)&&t,this.manager.monitor.dispatch("dragend",{nativeEvent:e.event,operation:i.snapshot(),canceled:null!=(n=e.canceled)&&n,suspend:()=>{const e={resume:()=>{},abort:()=>{}};return o=new Promise((t,n)=>{e.resume=t,e.abort=n}),e}}),o?o.then(r).catch(()=>i.reset()):r()})}},Ni=class extends fn{constructor(e,t){super(e,t),this.manager=e,this.options=t}},Oi=class extends AbortController{constructor(e,t){super(),this.constraints=e,this.onActivate=t,this.activated=!1;for(const t of null!=e?e:[])t.controller=this}onEvent(e){var t;if(!this.activated)if(null==(t=this.constraints)?void 0:t.length)for(const t of this.constraints)t.onEvent(e);else this.activate(e)}activate(e){this.activated||(this.activated=!0,this.onActivate(e))}abort(e){this.activated=!1,super.abort(e)}},Ei=class{constructor(e){this.options=e,ln(this,Ci)}set controller(e){cn(this,Ci,e),e.signal.addEventListener("abort",()=>this.abort())}activate(e){var t;null==(t=an(this,Ci))||t.activate(e)}};Ci=new WeakMap;var Di,Mi,Ai,Ti,Pi,Ii,Wi,Ri,Fi,$i,Li,Bi,zi,Ui,Vi,qi,Hi,Yi,Xi,Ki=class extends fn{constructor(e,t){super(e,t),this.manager=e,this.options=t}apply(e){return e.transform}},Gi=class{constructor(e){this.draggables=new ri,this.droppables=new ri,this.plugins=new vn(e),this.sensors=new vn(e),this.modifiers=new vn(e)}register(e,t){if(e instanceof ai)return this.draggables.register(e.id,e);if(e instanceof li)return this.droppables.register(e.id,e);if(e.prototype instanceof Ki)return this.modifiers.register(e,t);if(e.prototype instanceof Ni)return this.sensors.register(e,t);if(e.prototype instanceof fn)return this.plugins.register(e,t);throw new Error("Invalid instance type")}unregister(e){if(e instanceof oi)return e instanceof ai?this.draggables.unregister(e.id,e):e instanceof li?this.droppables.unregister(e.id,e):()=>{};if(e.prototype instanceof Ki)return this.modifiers.unregister(e);if(e.prototype instanceof Ni)return this.sensors.unregister(e);if(e.prototype instanceof fn)return this.plugins.unregister(e);throw new Error("Invalid instance type")}destroy(){this.draggables.destroy(),this.droppables.destroy(),this.plugins.destroy(),this.sensors.destroy(),this.modifiers.destroy()}};Fi=[Xe],Ri=[Ye],Wi=[Ye],Ii=[Ye],Pi=[Ye],Ti=[Ye],Ai=[Xe],Mi=[Xe],Di=[Xe];var Ji=class{constructor(e){nn(zi,5,this),ln(this,$i),ln(this,Li),ln(this,Bi,new Ze(void 0,(e,t)=>e&&t?e.equals(t):e===t)),this.status=new Si,ln(this,Ui,nn(zi,8,this,!1)),nn(zi,11,this),ln(this,Vi,nn(zi,12,this,null)),nn(zi,15,this),ln(this,qi,nn(zi,16,this,null)),nn(zi,19,this),ln(this,Hi,nn(zi,20,this,null)),nn(zi,23,this),ln(this,Yi,nn(zi,24,this,[])),nn(zi,27,this),this.position=new Ot({x:0,y:0}),ln(this,Xi,{x:0,y:0}),cn(this,$i,e)}get shape(){const{current:e,initial:t,previous:n}=an(this,Bi);return e&&t?{current:e,initial:t,previous:n}:null}set shape(e){e?an(this,Bi).current=e:an(this,Bi).reset()}get source(){var e;const t=this.sourceIdentifier;if(null==t)return null;const n=an(this,$i).registry.draggables.get(t);return n&&cn(this,Li,n),null!=(e=null!=n?n:an(this,Li))?e:null}get target(){var e;const t=this.targetIdentifier;return null!=t&&null!=(e=an(this,$i).registry.droppables.get(t))?e:null}get transform(){const{x:e,y:t}=this.position.delta;let n={x:e,y:t};for(const e of this.modifiers)n=e.apply(Xt(Yt({},this.snapshot()),{transform:n}));return cn(this,Xi,n),n}snapshot(){return P(()=>({source:this.source,target:this.target,activatorEvent:this.activatorEvent,transform:an(this,Xi),shape:this.shape?Qe(this.shape):null,position:Qe(this.position),status:Qe(this.status),canceled:this.canceled}))}reset(){M(()=>{this.status.set("idle"),this.sourceIdentifier=null,this.targetIdentifier=null,an(this,Bi).reset(),this.position.reset({x:0,y:0}),cn(this,Xi,{x:0,y:0}),this.modifiers=[]})}};zi=Jt(null),$i=new WeakMap,Li=new WeakMap,Bi=new WeakMap,Ui=new WeakMap,Vi=new WeakMap,qi=new WeakMap,Hi=new WeakMap,Yi=new WeakMap,Xi=new WeakMap,sn(zi,2,"shape",Fi,Ji),sn(zi,4,"canceled",Ri,Ji,Ui),sn(zi,4,"activatorEvent",Wi,Ji,Vi),sn(zi,4,"sourceIdentifier",Ii,Ji,qi),sn(zi,4,"targetIdentifier",Pi,Ji,Hi),sn(zi,4,"modifiers",Ti,Ji,Yi),sn(zi,2,"source",Ai,Ji),sn(zi,2,"target",Mi,Ji),sn(zi,2,"transform",Di,Ji),tn(zi,Ji);var Zi={get rendering(){return Promise.resolve()}};function Qi(e,t){return"function"==typeof e?e(t):null!=e?e:t}var es=class{constructor(e){var t;this.destroy=()=>{this.dragOperation.status.idle||this.actions.stop({canceled:!0}),this.dragOperation.modifiers.forEach(e=>e.destroy()),this.registry.destroy(),this.collisionObserver.destroy()};const n=null!=e?e:{},i=Qi(n.plugins,[]),s=Qi(n.sensors,[]),o=Qi(n.modifiers,[]),r=null!=(t=n.renderer)?t:Zi,a=new di(this),l=new Gi(this);this.registry=l,this.monitor=a,this.renderer=r,this.actions=new ki(this),this.dragOperation=new Ji(this),this.collisionObserver=new Tn(this),this.plugins=[bi,...i],this.modifiers=o,this.sensors=s;const{destroy:c}=this,d=Ge(()=>{var e,t,n;const i=P(()=>this.dragOperation.modifiers),s=this.modifiers;for(const e of i)s.includes(e)||e.destroy();this.dragOperation.modifiers=null!=(n=null==(t=null==(e=this.dragOperation.source)?void 0:e.modifiers)?void 0:t.map(e=>{const{plugin:t,options:n}=pn(e);return new t(this,n)}))?n:s});this.destroy=()=>{d(),c()}}get plugins(){return this.registry.plugins.values}set plugins(e){this.registry.plugins.values=e}get modifiers(){return this.registry.modifiers.values}set modifiers(e){this.registry.modifiers.values=e}get sensors(){return this.registry.sensors.values}set sensors(e){this.registry.sensors.values=e}},ts=e=>{throw TypeError(e)},ns=(e,t,n)=>t.has(e)||ts("Cannot "+n),is=(e,t,n)=>(ns(e,t,"read from private field"),t.get(e)),ss=(e,t,n)=>t.has(e)?ts("Cannot add the same private member more than once"):t instanceof WeakSet?t.add(e):t.set(e,n),os=(e,t,n,i)=>(ns(e,t,"write to private field"),t.set(e,n),n),rs=(e,t,n)=>(ns(e,t,"access private method"),n);function as(e){return!!e&&(e instanceof KeyframeEffect||"getKeyframes"in e&&"function"==typeof e.getKeyframes)}function ls(e,t){const n=e.getAnimations();let i=null;for(const e of n){if("running"!==e.playState)continue;const{effect:n}=e,s=(as(n)?n.getKeyframes():[]).filter(t);s.length>0&&(i=[s[s.length-1],e])}return i}function cs(e){const{width:t,height:n,top:i,left:s,bottom:o,right:r}=e.getBoundingClientRect();return{width:t,height:n,top:i,left:s,bottom:o,right:r}}function ds(e){const t=Object.prototype.toString.call(e);return"[object Window]"===t||"[object global]"===t}function us(e){return"nodeType"in e}function hs(e){var t,n,i;return e?ds(e)?e:us(e)?"defaultView"in e?null!=(t=e.defaultView)?t:window:null!=(i=null==(n=e.ownerDocument)?void 0:n.defaultView)?i:window:window:window}function ps(e){const{Document:t}=hs(e);return e instanceof t||"nodeType"in e&&e.nodeType===Node.DOCUMENT_NODE}function fs(e){return!(!e||ds(e))&&(e instanceof hs(e).HTMLElement||"namespaceURI"in e&&"string"==typeof e.namespaceURI&&e.namespaceURI.endsWith("html"))}function gs(e){return e instanceof hs(e).SVGElement||"namespaceURI"in e&&"string"==typeof e.namespaceURI&&e.namespaceURI.endsWith("svg")}function ms(e){return e?ds(e)?e.document:us(e)?ps(e)?e:fs(e)||gs(e)?e.ownerDocument:document:document:document}function vs(e,t){if(function(e){return"DETAILS"===e.tagName}(e)&&!1===e.open)return!1;const{overflow:n,overflowX:i,overflowY:s}=getComputedStyle(e);return"visible"===n&&"visible"===i&&"visible"===s}function ws(e,t=e.getBoundingClientRect(),n=0){var i,s,o,r,a;let l=t;const{ownerDocument:c}=e,d=null!=(i=c.defaultView)?i:window;let u=e.parentElement;for(;u&&u!==c.documentElement;){if(!vs(u)){const e=u.getBoundingClientRect(),t=n*(e.bottom-e.top),i=n*(e.right-e.left),s=n*(e.bottom-e.top),o=n*(e.right-e.left);l={top:Math.max(l.top,e.top-t),right:Math.min(l.right,e.right+i),bottom:Math.min(l.bottom,e.bottom+s),left:Math.max(l.left,e.left-o),width:0,height:0},l.width=l.right-l.left,l.height=l.bottom-l.top}u=u.parentElement}const h=d.visualViewport,p=null!=(s=null==h?void 0:h.offsetTop)?s:0,f=null!=(o=null==h?void 0:h.offsetLeft)?o:0,g=null!=(r=null==h?void 0:h.width)?r:d.innerWidth,m=null!=(a=null==h?void 0:h.height)?a:d.innerHeight,v=n*m,w=n*g;return l={top:Math.max(l.top,p-v),right:Math.min(l.right,f+g+w),bottom:Math.min(l.bottom,p+m+v),left:Math.max(l.left,f-w),width:0,height:0},l.width=l.right-l.left,l.height=l.bottom-l.top,l.width<0&&(l.width=0),l.height<0&&(l.height=0),l}function ys(e){return{x:e.clientX,y:e.clientY}}var xs="undefined"!=typeof window&&void 0!==window.document&&void 0!==window.document.createElement;function bs(e=document,t=new Set){if(t.has(e))return[];t.add(e);const n=[e];for(const i of Array.from(e.querySelectorAll("iframe, frame")))try{const e=i.contentDocument;e&&!t.has(e)&&n.push(...bs(e,t))}catch(e){}try{const i=e.defaultView;if(i&&i!==window.top){const s=i.parent;s&&s.document&&s.document!==e&&n.push(...bs(s.document,t))}}catch(e){}return n}function _s(){return/^((?!chrome|android).)*safari/i.test(navigator.userAgent)}function js(){var e,t;const n=_s()?window.visualViewport:null;return{x:null!=(e=null==n?void 0:n.offsetLeft)?e:0,y:null!=(t=null==n?void 0:n.offsetTop)?t:0}}function Ss(e){return!(!e||!us(e))&&e instanceof hs(e).ShadowRoot}function Cs(e){if(e&&us(e)){let t=e.getRootNode();if(Ss(t))return t;if(t instanceof Document)return t}return ms(e)}function ks(e){return e.matchMedia("(prefers-reduced-motion: reduce)").matches}function Ns(e){return"value"in e}function Os(e){return"CANVAS"===e.tagName}function Es(e,{x:t,y:n}){const i=e.elementFromPoint(t,n);if(function(e){return"IFRAME"===(null==e?void 0:e.tagName)}(i)){const{contentDocument:e}=i;if(e){const{left:s,top:o}=i.getBoundingClientRect();return Es(e,{x:t-s,y:n-o})}}return i}var Ds=new WeakMap;var Ms=class{constructor(){this.entries=new Set,this.clear=()=>{for(const e of this.entries){const[t,{type:n,listener:i,options:s}]=e;t.removeEventListener(n,i,s)}this.entries.clear()}}bind(e,t){const n=Array.isArray(e)?e:[e],i=Array.isArray(t)?t:[t],s=[];for(const e of n)for(const t of i){const{type:n,listener:i,options:o}=t,r=[e,t];e.addEventListener(n,i,o),this.entries.add(r),s.push(r)}const o=this.entries;return function(){for(const e of s){const[t,{type:n,listener:i,options:s}]=e;t.removeEventListener(n,i,s),o.delete(e)}}}};function As(e){const t=null==e?void 0:e.ownerDocument.defaultView;if(t&&t.self!==t.parent)return t.frameElement}function Ts(e,t){const n=()=>performance.now();let i,s;return function(...o){const r=this;s?(null==i||i(),i=function(t,i){const a=setTimeout(()=>{e.apply(r,o),s=n()},i);return()=>clearTimeout(a)}(0,t-(n()-s))):(e.apply(r,o),s=n())}}var Ps,Is=xs?ResizeObserver:class{observe(){}unobserve(){}disconnect(){}},Ws=class extends Is{constructor(e){super(t=>{is(this,Ps)?e(t,this):os(this,Ps,!0)}),ss(this,Ps,!1)}};Ps=new WeakMap;var Rs,Fs,$s,Ls,Bs,zs,Us,Vs,qs,Hs,Ys,Xs=Array.from({length:100},(e,t)=>t/100),Ks=class{constructor(e,t,n={debug:!1,skipInitial:!1}){this.element=e,this.callback=t,ss(this,qs),this.disconnect=()=>{var e,t,n;os(this,Us,!0),null==(e=is(this,$s))||e.disconnect(),null==(t=is(this,Ls))||t.disconnect(),is(this,Bs).disconnect(),null==(n=is(this,zs))||n.remove()},ss(this,Rs,!0),ss(this,Fs),ss(this,$s),ss(this,Ls),ss(this,Bs),ss(this,zs),ss(this,Us,!1),ss(this,Vs,Ts(()=>{var e,t,n;const{element:i}=this;if(null==(e=is(this,Ls))||e.disconnect(),is(this,Us)||!is(this,Rs)||!i.isConnected)return;const s=null!=(t=i.ownerDocument)?t:document,{innerHeight:o,innerWidth:r}=null!=(n=s.defaultView)?n:window,a=i.getBoundingClientRect(),l=ws(i,a),{top:c,left:d,bottom:u,right:h}=l,p=-Math.floor(c),f=-Math.floor(d),g=`${p}px ${-Math.floor(r-h)}px ${-Math.floor(o-u)}px ${f}px`;this.boundingClientRect=a,os(this,Ls,new IntersectionObserver(e=>{const[t]=e,{intersectionRect:n}=t;1!==(1!==t.intersectionRatio?t.intersectionRatio:Nt.intersectionRatio(n,ws(i)))&&is(this,Vs).call(this)},{threshold:Xs,rootMargin:g,root:s})),is(this,Ls).observe(i),rs(this,qs,Hs).call(this)},75)),this.boundingClientRect=e.getBoundingClientRect(),os(this,Rs,function(e,t=e.getBoundingClientRect()){const{width:n,height:i}=ws(e,t);return n>0&&i>0}(e,this.boundingClientRect));let i=!0;this.callback=e=>{i&&(i=!1,n.skipInitial)||t(e)};const s=e.ownerDocument;(null==n?void 0:n.debug)&&(os(this,zs,document.createElement("div")),is(this,zs).style.background="rgba(0,0,0,0.15)",is(this,zs).style.position="fixed",is(this,zs).style.pointerEvents="none",s.body.appendChild(is(this,zs))),os(this,Bs,new IntersectionObserver(t=>{var n,i;const s=t[t.length-1],{boundingClientRect:o,isIntersecting:r}=s,{width:a,height:l}=o,c=is(this,Rs);os(this,Rs,r),(a||l)&&(c&&!r?(null==(n=is(this,Ls))||n.disconnect(),this.callback(null),null==(i=is(this,$s))||i.disconnect(),os(this,$s,void 0),is(this,zs)&&(is(this,zs).style.visibility="hidden")):is(this,Vs).call(this),r&&!is(this,$s)&&(os(this,$s,new Ws(is(this,Vs))),is(this,$s).observe(e)))},{threshold:Xs,root:s})),is(this,Rs)&&!n.skipInitial&&this.callback(this.boundingClientRect),is(this,Bs).observe(e)}};Rs=new WeakMap,Fs=new WeakMap,$s=new WeakMap,Ls=new WeakMap,Bs=new WeakMap,zs=new WeakMap,Us=new WeakMap,Vs=new WeakMap,qs=new WeakSet,Hs=function(){is(this,Us)||(rs(this,qs,Ys).call(this),function(e,t){return e===t||!(!e||!t)&&e.top==t.top&&e.left==t.left&&e.right==t.right&&e.bottom==t.bottom}(this.boundingClientRect,is(this,Fs))||(this.callback(this.boundingClientRect),os(this,Fs,this.boundingClientRect)))},Ys=function(){if(is(this,zs)){const{top:e,left:t,width:n,height:i}=ws(this.element);is(this,zs).style.overflow="hidden",is(this,zs).style.visibility="visible",is(this,zs).style.top=`${Math.floor(e)}px`,is(this,zs).style.left=`${Math.floor(t)}px`,is(this,zs).style.width=`${Math.floor(n)}px`,is(this,zs).style.height=`${Math.floor(i)}px`}};var Gs,Js,Zs,Qs,eo=new WeakMap,to=new WeakMap;function no(e,t){let n=eo.get(e);if(!n){const t=new Ks(e,t=>{const n=eo.get(e);n&&n.callbacks.forEach(e=>e(t))},{skipInitial:!0});n={disconnect:t.disconnect,callbacks:new Set}}return n.callbacks.add(t),eo.set(e,n),()=>{n.callbacks.delete(t),0===n.callbacks.size&&(eo.delete(e),n.disconnect())}}var io=class{constructor(e,t,n){this.callback=t,ss(this,Gs),ss(this,Js,!1),ss(this,Zs),ss(this,Qs,Ts(e=>{if(!is(this,Js)&&e.target&&"contains"in e.target&&"function"==typeof e.target.contains)for(const t of is(this,Zs))if(e.target.contains(t)){this.callback(is(this,Gs).boundingClientRect);break}},75));const i=function(e){const t=new Set;let n=As(e);for(;n;)t.add(n),n=As(n);return t}(e),s=function(e,t){const n=new Set;for(const i of e){const e=no(i,t);n.add(e)}return()=>n.forEach(e=>e())}(i,t),o=function(e,t){var n;const i=e.ownerDocument;if(!to.has(i)){const e=new AbortController,t=new Set;document.addEventListener("scroll",e=>t.forEach(t=>t(e)),{capture:!0,passive:!0,signal:e.signal}),to.set(i,{disconnect:()=>e.abort(),listeners:t})}const{listeners:s,disconnect:o}=null!=(n=to.get(i))?n:{};return s&&o?(s.add(t),()=>{s.delete(t),0===s.size&&(o(),to.delete(i))}):()=>{}}(e,is(this,Qs));os(this,Zs,i),os(this,Gs,new Ks(e,t,n)),this.disconnect=()=>{is(this,Js)||(os(this,Js,!0),s(),o(),is(this,Gs).disconnect())}}};function so(e){return"showPopover"in e&&"hidePopover"in e&&"function"==typeof e.showPopover&&"function"==typeof e.hidePopover}function oo(e){try{so(e)&&e.isConnected&&e.hasAttribute("popover")&&!e.matches(":popover-open")&&e.showPopover()}catch(e){}}function ro(e){return!(!xs||!e)&&e===ms(e).scrollingElement}function ao(e){var t,n;const i=hs(e),s=ro(e)?function(e){var t,n,i,s;const{documentElement:o}=ms(e),r=hs(e).visualViewport,a=null!=(t=null==r?void 0:r.width)?t:o.clientWidth,l=null!=(n=null==r?void 0:r.height)?n:o.clientHeight,c=null!=(i=null==r?void 0:r.offsetTop)?i:0,d=null!=(s=null==r?void 0:r.offsetLeft)?s:0;return{top:c,left:d,right:d+a,bottom:c+l,width:a,height:l}}(e):cs(e),o=i.visualViewport,r=ro(e)?{height:null!=(t=null==o?void 0:o.height)?t:i.innerHeight,width:null!=(n=null==o?void 0:o.width)?n:i.innerWidth}:{height:e.clientHeight,width:e.clientWidth},a={current:{x:e.scrollLeft,y:e.scrollTop},max:{x:e.scrollWidth-r.width,y:e.scrollHeight-r.height}};return{rect:s,position:a,isTop:a.current.y<=0,isLeft:a.current.x<=0,isBottom:a.current.y>=a.max.y,isRight:a.current.x>=a.max.x}}function lo(e,t){const{isTop:n,isBottom:i,isLeft:s,isRight:o,position:r}=ao(e),{x:a,y:l}=null!=t?t:{x:0,y:0},c=!n&&r.current.y+l>0,d=!i&&r.current.y+l<r.max.y,u=!s&&r.current.x+a>0,h=!o&&r.current.x+a<r.max.x;return{top:c,bottom:d,left:u,right:h,x:u||h,y:c||d}}Gs=new WeakMap,Js=new WeakMap,Zs=new WeakMap,Qs=new WeakMap;var co=class{constructor(e){this.scheduler=e,this.pending=!1,this.tasks=new Set,this.resolvers=new Set,this.flush=()=>{const{tasks:e,resolvers:t}=this;this.pending=!1,this.tasks=new Set,this.resolvers=new Set;for(const t of e)t();for(const e of t)e()}}schedule(e){return this.tasks.add(e),this.pending||(this.pending=!0,this.scheduler(this.flush)),new Promise(e=>this.resolvers.add(e))}},uo=new co(e=>{"function"==typeof requestAnimationFrame?requestAnimationFrame(e):e()}),ho=new co(e=>setTimeout(e,50)),po=new Map,fo=po.clear.bind(po);function go(e,t=!1){if(!t)return mo(e);let n=po.get(e);return n||(n=mo(e),po.set(e,n),ho.schedule(fo),n)}function mo(e){return hs(e).getComputedStyle(e)}var vo={excludeElement:!0,escapeShadowDOM:!0};function wo(e,t=vo){const{limit:n,excludeElement:i,escapeShadowDOM:s}=t,o=new Set;return e?function t(r){if(null!=n&&o.size>=n)return o;if(!r)return o;if(ps(r)&&null!=r.scrollingElement&&!o.has(r.scrollingElement))return o.add(r.scrollingElement),o;if(s&&Ss(r))return t(r.host);if(!fs(r))return gs(r)?t(r.parentElement):o;if(o.has(r))return o;const a=go(r,!0);if(i&&r===e||function(e,t=go(e,!0)){const n=/(auto|scroll|overlay)/;return["overflow","overflowX","overflowY"].some(e=>{const i=t[e];return"string"==typeof i&&n.test(i)})}(r,a)&&o.add(r),function(e,t=go(e,!0)){return"fixed"===t.position||"sticky"===t.position}(r,a)){const{scrollingElement:e}=r.ownerDocument;return e&&o.add(e),o}return t(r.parentNode)}(e):o}function yo(e,t=window.frameElement){const n={x:0,y:0,scaleX:1,scaleY:1};if(!e)return n;let i=As(e);for(;i;){if(i===t)return n;const e=cs(i),{x:s,y:o}=xo(i,e);n.x=n.x+e.left,n.y=n.y+e.top,n.scaleX=n.scaleX*s,n.scaleY=n.scaleY*o,i=As(i)}return n}function xo(e,t=cs(e)){const n=Math.round(t.width),i=Math.round(t.height);if(fs(e))return{x:n/e.offsetWidth,y:i/e.offsetHeight};const s=go(e,!0);return{x:(parseFloat(s.width)||n)/n,y:(parseFloat(s.height)||i)/i}}function bo(e){if(!e||"none"===e)return null;const[t,n,i="0"]=e.split(" "),s={x:parseFloat(t),y:parseFloat(n),z:parseInt(i,10)};return isNaN(s.x)&&isNaN(s.y)?null:{x:isNaN(s.x)?0:s.x,y:isNaN(s.y)?0:s.y,z:isNaN(s.z)?0:s.z}}function _o(e){var t,n,i,s,o,r,a,l,c;const{scale:d,transform:u,translate:h}=e,p=function(e){if(!e||"none"===e)return null;const t=e.split(" "),n=parseFloat(t[0]),i=parseFloat(t[1]);return isNaN(n)&&isNaN(i)?null:{x:isNaN(n)?i:n,y:isNaN(i)?n:i}}(d),f=bo(h),g=function(e){if(e.startsWith("matrix3d(")){const t=e.slice(9,-1).split(/, /);return{x:+t[12],y:+t[13],scaleX:+t[0],scaleY:+t[5]}}if(e.startsWith("matrix(")){const t=e.slice(7,-1).split(/, /);return{x:+t[4],y:+t[5],scaleX:+t[0],scaleY:+t[3]}}return null}(u);if(!g&&!p&&!f)return null;const m=null!=(t=null==p?void 0:p.x)?t:1,v=null!=(n=null==p?void 0:p.y)?n:1,w=null!=(i=null==f?void 0:f.x)?i:0,y=null!=(s=null==f?void 0:f.y)?s:0,x=null!=(o=null==g?void 0:g.x)?o:0,b=null!=(r=null==g?void 0:g.y)?r:0,_=null!=(a=null==g?void 0:g.scaleX)?a:1,j=null!=(l=null==g?void 0:g.scaleY)?l:1;return{x:w+x,y:y+b,z:null!=(c=null==f?void 0:f.z)?c:0,scaleX:m*_,scaleY:v*j}}var jo=(e=>(e[e.Idle=0]="Idle",e[e.Forward=1]="Forward",e[e.Reverse=-1]="Reverse",e))(jo||{}),So={x:.2,y:.2},Co={x:10,y:10};function ko(e,t,n,i=25,s=So,o=Co){const{x:r,y:a}=t,{rect:l,isTop:c,isBottom:d,isLeft:u,isRight:h}=ao(e),p=yo(e),f=_o(go(e,!0)),g=null!==f&&(null==f?void 0:f.scaleX)<0,m=null!==f&&(null==f?void 0:f.scaleY)<0,v=new Nt(l.left*p.scaleX+p.x,l.top*p.scaleY+p.y,l.width*p.scaleX,l.height*p.scaleY),w={x:0,y:0},y={x:0,y:0},x=v.height*s.y,b=v.width*s.x;return x>0&&(!c||m&&!d)&&a<=v.top+x&&1!==(null==n?void 0:n.y)&&r>=v.left-o.x&&r<=v.right+o.x?(w.y=m?1:-1,y.y=i*Math.abs((v.top+x-a)/x)):x>0&&(!d||m&&!c)&&a>=v.bottom-x&&-1!==(null==n?void 0:n.y)&&r>=v.left-o.x&&r<=v.right+o.x&&(w.y=m?-1:1,y.y=i*Math.abs((v.bottom-x-a)/x)),b>0&&(!h||g&&!u)&&r>=v.right-b&&-1!==(null==n?void 0:n.x)&&a>=v.top-o.y&&a<=v.bottom+o.y?(w.x=g?-1:1,y.x=i*Math.abs((v.right-b-r)/b)):b>0&&(!u||g&&!h)&&r<=v.left+b&&1!==(null==n?void 0:n.x)&&a>=v.top-o.y&&a<=v.bottom+o.y&&(w.x=g?1:-1,y.x=i*Math.abs((v.left+b-r)/b)),{direction:w,speed:y}}function No(e,{block:t="nearest",inline:n="nearest"}={}){if(!fs(e))return;const i=wo(e),s=[];for(const o of i){if(!fs(o))continue;const{top:i,left:r}=Eo(e,o);let a=i,l=r;for(const e of s)a-=e.scrollTop,l-=e.scrollLeft;if("none"!==t){const n=a<o.scrollTop;n!==a+e.offsetHeight>o.scrollTop+o.clientHeight&&(o.scrollTop="center"===t?a-o.clientHeight/2+e.offsetHeight/2:n?a:a+e.offsetHeight-o.clientHeight)}if("none"!==n){const t=l<o.scrollLeft;t!==l+e.offsetWidth>o.scrollLeft+o.clientWidth&&(o.scrollLeft="center"===n?l-o.clientWidth/2+e.offsetWidth/2:t?l:l+e.offsetWidth-o.clientWidth)}s.push(o)}}function Oo(e){let t=0,n=0,i=e;for(;i;){t+=i.offsetTop,n+=i.offsetLeft;const e=i.offsetParent;if(!fs(e))break;t+=e.clientTop,n+=e.clientLeft,i=e}return{top:t,left:n}}function Eo(e,t){const n=Oo(e),i=Oo(t);return{top:n.top-i.top-t.clientTop,left:n.left-i.left-t.clientLeft}}function Do({element:e,keyframes:t,options:n}){return e.animate(t,n).finished}function Mo(e,t=go(e).translate,n=!0){if(n){const t=ls(e,e=>"translate"in e);if(t){const{translate:e=""}=t[0];if("string"==typeof e){const t=bo(e);if(t)return t}}}if(t){const e=bo(t);if(e)return e}return{x:0,y:0,z:0}}var Ao=new co(e=>setTimeout(e,0)),To=new Map,Po=To.clear.bind(To);var Io=class extends Nt{constructor(e,t={}){var n,i,s,o;const{frameTransform:r=yo(e),ignoreTransforms:a,getBoundingClientRect:l=cs}=t,c=function(e,t){const n=function(e){const t=e.ownerDocument;let n=To.get(t);if(n)return n;n=t.getAnimations(),To.set(t,n),Ao.schedule(Po);const i=n.filter(t=>as(t.effect)&&t.effect.target===e);return To.set(e,i),n}(e).filter(e=>{var n,i;if(as(e.effect)){const{target:s}=e.effect;if(null==(i=s&&(null==(n=t.isValidTarget)?void 0:n.call(t,s)))||i)return e.effect.getKeyframes().some(e=>{for(const n of t.properties)if(e[n])return!0})}}).map(e=>{const{effect:t,currentTime:n}=e,i=null==t?void 0:t.getComputedTiming().duration;if(!e.pending&&"finished"!==e.playState)return"number"==typeof i&&"number"==typeof n&&n<i?(e.currentTime=i,()=>{e.currentTime=n}):void 0});if(n.length>0)return()=>n.forEach(e=>null==e?void 0:e())}(e,{properties:["transform","translate","scale","width","height"],isValidTarget:t=>(t!==e||_s())&&t.contains(e)}),d=l(e);let u,{top:h,left:p,width:f,height:g}=d;const m=go(e),v=_o(m),w={x:null!=(n=null==v?void 0:v.scaleX)?n:1,y:null!=(i=null==v?void 0:v.scaleY)?i:1},y=function(e,t){const n=e.getAnimations();if(!n.length)return null;let i,s,o,r=!1;for(const e of n){if("running"!==e.playState)continue;const t=as(e.effect)?e.effect.getKeyframes():[],n=t[t.length-1];if(!n)continue;const{transform:a,translate:l,scale:c}=n;"string"==typeof a&&a&&(i=a,r=!0),"string"==typeof l&&l&&(s=l,r=!0),"string"==typeof c&&c&&(o=c,r=!0)}return r?_o({transform:null!=i?i:t.transform,translate:null!=s?s:t.translate,scale:null!=o?o:t.scale}):null}(e,m);null==c||c(),v&&(u=function(e,t,n){const{scaleX:i,scaleY:s,x:o,y:r}=t,a=e.left-o-(1-i)*parseFloat(n),l=e.top-r-(1-s)*parseFloat(n.slice(n.indexOf(" ")+1)),c=i?e.width/i:e.width,d=s?e.height/s:e.height;return{width:c,height:d,top:l,right:a+c,bottom:l+d,left:a}}(d,v,m.transformOrigin),(a||y)&&(h=u.top,p=u.left,f=u.width,g=u.height));const x={width:null!=(s=null==u?void 0:u.width)?s:f,height:null!=(o=null==u?void 0:u.height)?o:g};if(y&&!a&&u){const e=function(e,t,n){const{scaleX:i,scaleY:s,x:o,y:r}=t,a=e.left+o+(1-i)*parseFloat(n),l=e.top+r+(1-s)*parseFloat(n.slice(n.indexOf(" ")+1)),c=i?e.width*i:e.width,d=s?e.height*s:e.height;return{width:c,height:d,top:l,right:a+c,bottom:l+d,left:a}}(u,y,m.transformOrigin);h=e.top,p=e.left,f=e.width,g=e.height,w.x=y.scaleX,w.y=y.scaleY}r&&(a||(p*=r.scaleX,f*=r.scaleX,h*=r.scaleY,g*=r.scaleY),p+=r.x,h+=r.y),super(p,h,f,g),this.scale=w,this.intrinsicWidth=x.width,this.intrinsicHeight=x.height}};function Wo(e){return"style"in e&&"object"==typeof e.style&&null!==e.style&&"setProperty"in e.style&&"removeProperty"in e.style&&"function"==typeof e.style.setProperty&&"function"==typeof e.style.removeProperty}var Ro=class{constructor(e){this.element=e,this.initial=new Map}set(e,t=""){const{element:n}=this;if(Wo(n))for(const[i,s]of Object.entries(e)){const e=`${t}${i}`;this.initial.has(e)||this.initial.set(e,n.style.getPropertyValue(e)),n.style.setProperty(e,"string"==typeof s?s:`${s}px`)}}remove(e,t=""){const{element:n}=this;if(Wo(n))for(const i of e){const e=`${t}${i}`;n.style.removeProperty(e)}}reset(){const{element:e}=this;if(Wo(e)){for(const[t,n]of this.initial)e.style.setProperty(t,n);""===e.getAttribute("style")&&e.removeAttribute("style")}}};function Fo(e){return!!e&&(e instanceof hs(e).Element||us(e)&&e.nodeType===Node.ELEMENT_NODE)}function $o(e){if(!e)return!1;const{KeyboardEvent:t}=hs(e.target);return e instanceof t}var Lo={};function Bo(e){const t=null==Lo[e]?0:Lo[e]+1;return Lo[e]=t,`${e}-${t}`}var zo=e=>{var t;return null!=(t=(({dragOperation:e,droppable:t})=>{const n=e.position.current;if(!n)return null;const{id:i}=t;return t.shape&&t.shape.containsPoint(n)?{id:i,value:1/kt.distance(t.shape.center,n),type:ji.PointerIntersection,priority:_i.High}:null})(e))?t:(({dragOperation:e,droppable:t})=>{const{shape:n}=e;if(!t.shape||!(null==n?void 0:n.current))return null;const i=n.current.intersectionArea(t.shape);if(i){const{position:s}=e,o=kt.distance(t.shape.center,s.current),r=i/(n.current.area+t.shape.area-i)/o;return{id:t.id,value:r,type:ji.ShapeIntersection,priority:_i.Normal}}return null})(e)},Uo=e=>{const{dragOperation:t,droppable:n}=e,{shape:i,position:s}=t;if(!n.shape)return null;const o=i?Nt.from(i.current.boundingRectangle).corners:void 0,r=Nt.from(n.shape.boundingRectangle).corners.reduce((e,t,n)=>{var i;return e+kt.distance(kt.from(t),null!=(i=null==o?void 0:o[n])?i:s.current)},0),a=r/4;return{id:n.id,value:1/a,type:ji.Collision,priority:_i.Normal}},Vo=Object.create,qo=Object.defineProperty,Ho=Object.defineProperties,Yo=Object.getOwnPropertyDescriptor,Xo=Object.getOwnPropertyDescriptors,Ko=Object.getOwnPropertySymbols,Go=Object.prototype.hasOwnProperty,Jo=Object.prototype.propertyIsEnumerable,Zo=(e,t)=>(t=Symbol[e])?t:Symbol.for("Symbol."+e),Qo=e=>{throw TypeError(e)},er=(e,t,n)=>t in e?qo(e,t,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[t]=n,tr=(e,t)=>{for(var n in t||(t={}))Go.call(t,n)&&er(e,n,t[n]);if(Ko)for(var n of Ko(t))Jo.call(t,n)&&er(e,n,t[n]);return e},nr=(e,t)=>Ho(e,Xo(t)),ir=(e,t)=>qo(e,"name",{value:t,configurable:!0}),sr=(e,t)=>{var n={};for(var i in e)Go.call(e,i)&&t.indexOf(i)<0&&(n[i]=e[i]);if(null!=e&&Ko)for(var i of Ko(e))t.indexOf(i)<0&&Jo.call(e,i)&&(n[i]=e[i]);return n},or=e=>{var t;return[,,,Vo(null!=(t=null==e?void 0:e[Zo("metadata")])?t:null)]},rr=["class","method","getter","setter","accessor","field","value","get","set"],ar=e=>void 0!==e&&"function"!=typeof e?Qo("Function expected"):e,lr=(e,t,n,i,s)=>({kind:rr[e],name:t,metadata:i,addInitializer:e=>n._?Qo("Already initialized"):s.push(ar(e||null))}),cr=(e,t)=>er(t,Zo("metadata"),e[3]),dr=(e,t,n,i)=>{for(var s=0,o=e[t>>1],r=o&&o.length;s<r;s++)1&t?o[s].call(n):i=o[s].call(n,i);return i},ur=(e,t,n,i,s,o)=>{var r,a,l,c,d,u=7&t,h=!!(8&t),p=!!(16&t),f=u>3?e.length+1:u?h?1:2:0,g=rr[u+5],m=u>3&&(e[f-1]=[]),v=e[f]||(e[f]=[]),w=u&&(!p&&!h&&(s=s.prototype),u<5&&(u>3||!p)&&Yo(u<4?s:{get[n](){return fr(this,o)},set[n](e){return mr(this,o,e)}},n));u?p&&u<4&&ir(o,(u>2?"set ":u>1?"get ":"")+n):ir(s,n);for(var y=i.length-1;y>=0;y--)c=lr(u,n,l={},e[3],v),u&&(c.static=h,c.private=p,d=c.access={has:p?e=>pr(s,e):e=>n in e},3^u&&(d.get=p?e=>(1^u?fr:vr)(e,s,4^u?o:w.get):e=>e[n]),u>2&&(d.set=p?(e,t)=>mr(e,s,t,4^u?o:w.set):(e,t)=>e[n]=t)),a=(0,i[y])(u?u<4?p?o:w[g]:u>4?void 0:{get:w.get,set:w.set}:s,c),l._=1,4^u||void 0===a?ar(a)&&(u>4?m.unshift(a):u?p?o=a:w[g]=a:s=a):"object"!=typeof a||null===a?Qo("Object expected"):(ar(r=a.get)&&(w.get=r),ar(r=a.set)&&(w.set=r),ar(r=a.init)&&m.unshift(r));return u||cr(e,s),w&&qo(s,n,w),p?4^u?o:w:s},hr=(e,t,n)=>t.has(e)||Qo("Cannot "+n),pr=(e,t)=>Object(t)!==t?Qo('Cannot use the "in" operator on this value'):e.has(t),fr=(e,t,n)=>(hr(e,t,"read from private field"),n?n.call(e):t.get(e)),gr=(e,t,n)=>t.has(e)?Qo("Cannot add the same private member more than once"):t instanceof WeakSet?t.add(e):t.set(e,n),mr=(e,t,n,i)=>(hr(e,t,"write to private field"),i?i.call(e,n):t.set(e,n),n),vr=(e,t,n)=>(hr(e,t,"access private method"),n),wr="dnd-kit-description",yr="dnd-kit-announcement",xr={draggable:"To pick up a draggable item, press the space bar. While dragging, use the arrow keys to move the item in a given direction. Press space again to drop the item in its new position, or press escape to cancel."},br={dragstart({operation:{source:e}}){if(e)return`Picked up draggable item ${e.id}.`},dragover({operation:{source:e,target:t}}){if(e&&e.id!==(null==t?void 0:t.id))return t?`Draggable item ${e.id} was moved over droppable target ${t.id}.`:`Draggable item ${e.id} is no longer over a droppable target.`},dragend({operation:{source:e,target:t},canceled:n}){if(e)return n?`Dragging was cancelled. Draggable item ${e.id} was dropped.`:t?`Draggable item ${e.id} was dropped over droppable target ${t.id}`:`Draggable item ${e.id} was dropped.`}};function _r(e){const t=e.tagName.toLowerCase();return["input","select","textarea","a","button"].includes(t)}var jr,Sr,Cr,kr,Nr,Or,Er,Dr,Mr,Ar,Tr,Pr,Ir,Wr=["dragover","dragmove"],Rr=new Map,Fr=class extends(Nr=mn,kr=[Ye],Cr=[Xe],Sr=[Xe],jr=[Xe],Nr){constructor(e,t){super(e,t),dr(Er,5,this),gr(this,Mr),gr(this,Or,new Set),gr(this,Dr,dr(Er,8,this,new Set)),dr(Er,11,this),this.registerEffect(vr(this,Mr,Ar))}register(e){return fr(this,Or).add(e),()=>{fr(this,Or).delete(e)}}addRoot(e){return P(()=>{const t=new Set(this.additionalRoots);t.add(e),this.additionalRoots=t}),()=>{P(()=>{const t=new Set(this.additionalRoots);t.delete(e),this.additionalRoots=t})}}get sourceRoot(){var e;const{source:t}=this.manager.dragOperation;return Cs(null!=(e=null==t?void 0:t.element)?e:null)}get targetRoot(){var e;const{target:t}=this.manager.dragOperation;return Cs(null!=(e=null==t?void 0:t.element)?e:null)}get roots(){const{status:e}=this.manager.dragOperation;if(e.initializing||e.initialized){const e=[this.sourceRoot,this.targetRoot].filter(e=>null!=e);return new Set([...e,...this.additionalRoots])}return new Set}};Er=or(Nr),Or=new WeakMap,Dr=new WeakMap,Mr=new WeakSet,Ar=function(){const{roots:e}=this,t=[];for(const n of e)for(const e of fr(this,Or))t.push(vr(this,Mr,Tr).call(this,n,e));return()=>{for(const e of t)e()}},Tr=function(e,t){let n=Rr.get(e);n||(n=new Map,Rr.set(e,n));let i=n.get(t);if(!i){const s=ps(e)?vr(this,Mr,Pr).call(this,e,n,t):vr(this,Mr,Ir).call(this,e,n,t);if(!s)return()=>{};i=s,n.set(t,i)}i.refCount++;let s=!1;return()=>{s||(s=!0,i.refCount--,0===i.refCount&&i.cleanup())}},Pr=function(e,t,n){var i;const s=e.createElement("style"),{nonce:o}=null!=(i=this.options)?i:{};o&&s.setAttribute("nonce",o),s.textContent=n,e.head.prepend(s);const r=new MutationObserver(t=>{for(const n of t)for(const t of Array.from(n.removedNodes))if(t===s)return void e.head.prepend(s)});return r.observe(e.head,{childList:!0}),{refCount:0,cleanup:()=>{r.disconnect(),s.remove(),t.delete(n),0===t.size&&Rr.delete(e)}}},Ir=function(e,t,n){!("adoptedStyleSheets"in e)||Array.isArray(e.adoptedStyleSheets);const i=e.ownerDocument.defaultView,{CSSStyleSheet:s}=null!=i?i:{};if(!s)return null;const o=new s;return o.replaceSync(n),e.adoptedStyleSheets.push(o),{refCount:0,cleanup:()=>{var i;if(Ss(e)&&(null==(i=e.host)?void 0:i.isConnected)){const t=e.adoptedStyleSheets.indexOf(o);-1!==t&&e.adoptedStyleSheets.splice(t,1)}t.delete(n),0===t.size&&Rr.delete(e)}}},ur(Er,4,"additionalRoots",kr,Fr,Dr),ur(Er,2,"sourceRoot",Cr,Fr),ur(Er,2,"targetRoot",Sr,Fr),ur(Er,2,"roots",jr,Fr),cr(Er,Fr),Fr.configure=hn(Fr);var $r=Fr,Lr="data-dnd-",Br=`${Lr}dropping`,zr="--dnd-",Ur=`${Lr}dragging`,Vr=`${Lr}placeholder`,qr=[Ur,Vr,"popover","aria-pressed","aria-grabbing"],Hr=["view-transition-name"],Yr=`\n  :is(:root,:host) [${Ur}] {\n    position: fixed !important;\n    pointer-events: none !important;\n    touch-action: none;\n    z-index: calc(infinity);\n    will-change: translate;\n    top: var(${zr}top, 0px) !important;\n    left: var(${zr}left, 0px) !important;\n    right: unset !important;\n    bottom: unset !important;\n    width: var(${zr}width, auto);\n    max-width: var(${zr}width, auto);\n    height: var(${zr}height, auto);\n    max-height: var(${zr}height, auto);\n    transform: var(${zr}transform, none) !important;\n    transition: var(${zr}transition) !important;\n  }\n\n  :is(:root,:host) [${Vr}] {\n    transition: none;\n  }\n\n  :is(:root,:host) [${Vr}='hidden'] {\n    visibility: hidden;\n  }\n\n  [${Ur}] * {\n    pointer-events: none !important;\n  }\n\n  [${Ur}]:not([${Br}]) {\n    translate: var(${zr}translate) !important;\n  }\n\n  [${Ur}][style*='${zr}scale'] {\n    scale: var(${zr}scale) !important;\n    transform-origin: var(${zr}transform-origin) !important;\n  }\n\n  @layer dnd-kit {\n    :where([${Ur}][popover]) {\n      overflow: visible;\n      background: unset;\n      border: unset;\n      margin: unset;\n      padding: unset;\n      color: inherit;\n\n      &:is(input, button) {\n        border: revert;\n        background: revert;\n      }\n    }\n  }\n  [${Ur}]::backdrop, [${Lr}overlay]:not([${Ur}]) {\n    display: none;\n    visibility: hidden;\n  }\n`.replace(/\n+/g," ").replace(/\s+/g," ").trim();function Xr(e,t){return e===t||As(e)===As(t)}function Kr(e){const{target:t}=e;"newState"in e&&"closed"===e.newState&&Fo(t)&&t.hasAttribute("popover")&&requestAnimationFrame(()=>oo(t))}function Gr(e){return"TR"===e.tagName}var Jr,Zr,Qr,ea,ta,na,ia,sa=250,oa="ease",ra=class extends(Zr=fn,Jr=[Ye],Zr){constructor(e,t){super(e,t),gr(this,ta),gr(this,ea,dr(Qr,8,this)),dr(Qr,11,this),this.state={initial:{},current:{}};const n=e.registry.plugins.get($r),i=null==n?void 0:n.register(Yr);if(i){const e=this.destroy.bind(this);this.destroy=()=>{i(),e()}}this.registerEffect(vr(this,ta,na).bind(this,n)),this.registerEffect(vr(this,ta,ia))}};Qr=or(Zr),ea=new WeakMap,ta=new WeakSet,na=function(e){const{overlay:t}=this;if(!t||!e)return;const n=Cs(t);return n?e.addRoot(n):void 0},ia=function(){var e,t,n,i,s,o,r;const{state:a,manager:l,options:c}=this,{dragOperation:d}=l,{position:u,source:h,status:p}=d;if(p.idle)return a.current={},void(a.initial={});if(!h)return;const{element:f}=h,g=h.pluginConfig(ra),m=null!=(t=null!=(e=null==g?void 0:g.feedback)?e:null==c?void 0:c.feedback)?t:"default",v="function"==typeof m?m(h,l):m;if(!f||"none"===v||!p.initialized||p.initializing)return;const{initial:w}=a,y=null!=(n=this.overlay)?n:f,x=yo(y),b=yo(f),_=!Xr(f,y),j=new Io(f,{frameTransform:_?b:null,ignoreTransforms:!_}),S=b.scaleX/x.scaleX,C=b.scaleY/x.scaleY;let{width:k,height:N,top:O,left:E}=j;_&&(k/=S,N/=C);const D=new Ro(y),M=go(f),{transition:A,translate:T,boxSizing:I,paddingBlockStart:W,paddingBlockEnd:R,paddingInlineStart:F,paddingInlineEnd:$,borderInlineStartWidth:L,borderInlineEndWidth:B,borderBlockStartWidth:z,borderBlockEndWidth:U}=M,V=A.split(",").filter(e=>!/^\s*(transform|translate|scale)\b/.test(e)).join(","),q=_o(M),H=M.transform,Y="clone"===v,X="content-box"===I,K=X?parseInt(F)+parseInt($)+parseInt(L)+parseInt(B):0,G=X?parseInt(W)+parseInt(R)+parseInt(z)+parseInt(U):0,J="move"===v||this.overlay?null:function(e,t="hidden"){return P(()=>{const{element:n,manager:i}=e;if(!n||!i)return;const s=function(e,t){const n=new Map;for(const i of t)if(i.element&&(e===i.element||e.contains(i.element))){const e=`${Lr}${Bo("dom-id")}`;i.element.setAttribute(e,""),n.set(i,e)}return n}(n,i.registry.droppables),o=[],r=function(e){const t="input, textarea, select, canvas, [contenteditable]",n=e.cloneNode(!0),i=Array.from(e.querySelectorAll(t));return Array.from(n.querySelectorAll(t)).forEach((e,t)=>{const n=i[t];if(Ns(e)&&Ns(n)&&("file"!==e.type&&(e.value=n.value),"radio"===e.type&&e.name&&(e.name=`Cloned__${e.name}`)),Os(e)&&Os(n)&&n.width>0&&n.height>0){const t=e.getContext("2d");null==t||t.drawImage(n,0,0)}}),n}(n),{remove:a}=r;return function(e,t,n){for(const[i,s]of e){if(!i.element)continue;const e=`[${s}]`,o=t.matches(e)?t:t.querySelector(e);if(i.element.removeAttribute(s),!o)continue;const r=i.element;i.proxy=o,o.removeAttribute(s),Ds.set(r,o),n.push(()=>{Ds.delete(r),i.proxy=void 0})}}(s,r,o),function(e,t="hidden"){e.setAttribute("inert","true"),e.setAttribute("tab-index","-1"),e.setAttribute("aria-hidden","true"),e.setAttribute(Vr,t)}(r,t),r.remove=()=>{o.forEach(e=>e()),a.call(r)},r})}(h,Y?"clone":"hidden"),Z=P(()=>$o(l.dragOperation.activatorEvent));if(!w.translate)if(this.overlay&&q)w.translate={x:q.x,y:q.y};else if("none"!==T){const e=bo(T);e&&(w.translate=e)}if(!w.transformOrigin){const e=P(()=>u.current),t=E+(null!=(i=null==q?void 0:q.x)?i:0),n=O+(null!=(s=null==q?void 0:q.y)?s:0);w.transformOrigin={x:(e.x-t*x.scaleX-x.x)/(k*x.scaleX),y:(e.y-n*x.scaleY-x.y)/(N*x.scaleY)}}const{transformOrigin:Q}=w,ee=O*x.scaleY+x.y,te=E*x.scaleX+x.x;if(!w.coordinates&&(w.coordinates={x:te,y:ee},1!==S||1!==C)){const{scaleX:e,scaleY:t}=b,{x:n,y:i}=Q;w.coordinates.x+=(k*e-k)*n,w.coordinates.y+=(N*t-N)*i}w.dimensions||(w.dimensions={width:k,height:N}),w.frameTransform||(w.frameTransform=x);const ne=w.coordinates.x-te,ie=w.coordinates.y-ee,se=(w.dimensions.width*w.frameTransform.scaleX-k*x.scaleX)*Q.x,oe=(w.dimensions.height*w.frameTransform.scaleY-N*x.scaleY)*Q.y,re={x:ne/x.scaleX+se,y:ie/x.scaleY+oe},ae=E+re.x,le=O+re.y;y.setAttribute(Ur,"true");const ce=P(()=>d.transform),de=null!=(o=w.translate)?o:{x:0,y:0},ue=ce.x*x.scaleX+de.x,he=ce.y*x.scaleY+de.y,pe=js();let fe,ge,me;D.set({width:k-K,height:N-G,top:le+pe.y,left:ae+pe.x,translate:`${ue}px ${he}px 0`,transform:this.overlay?"none":H,transition:V?`${V}, translate 0ms linear`:"translate 0ms linear",scale:_?`${S} ${C}`:"","transform-origin":`${100*Q.x}% ${100*Q.y}%`},zr),J&&(f.insertAdjacentElement("afterend",J),null==c?void 0:c.rootElement)&&("function"==typeof c.rootElement?c.rootElement(h):c.rootElement).appendChild(f),so(y)&&(y.hasAttribute("popover")||y.setAttribute("popover","manual"),oo(y),y.addEventListener("beforetoggle",Kr));const ve=(we={placeholder:J,element:f,feedbackElement:y,frameTransform:x,transformOrigin:Q,width:k,height:N,top:O,left:E,widthOffset:K,heightOffset:G,delta:re,styles:D,dragOperation:d,getTranslate:()=>a.current.translate,getElementMutationObserver:()=>fe,getSavedCellWidths:()=>me,setSavedCellWidths:e=>{me=e}},new ResizeObserver(()=>{var e,t,n;const i=new Io(we.placeholder,{frameTransform:we.frameTransform,ignoreTransforms:!0}),s=null!=(e=we.transformOrigin)?e:{x:1,y:1},o=(we.width-i.width)*s.x+we.delta.x,r=(we.height-i.height)*s.y+we.delta.y,a=js();if(we.styles.set({width:i.width-we.widthOffset,height:i.height-we.heightOffset,top:we.top+r+a.y,left:we.left+o+a.x},zr),null==(t=we.getElementMutationObserver())||t.takeRecords(),Gr(we.element)&&Gr(we.placeholder)){const e=Array.from(we.element.cells),t=Array.from(we.placeholder.cells);we.getSavedCellWidths()||we.setSavedCellWidths(e.map(e=>e.style.width));for(const[n,i]of e.entries()){const e=t[n];i.style.width=`${e.getBoundingClientRect().width}px`}}const l=null!=(n=we.getTranslate())?n:{x:0,y:0},c=we.left+o+a.x+l.x,d=we.top+r+a.y+l.y,u=i.width-we.widthOffset,h=i.height-we.heightOffset,p=we.frameTransform;we.dragOperation.shape=new Nt(c*p.scaleX+p.x,d*p.scaleY+p.y,u*p.scaleX,h*p.scaleY)}));var we;const ye=new Io(y);P(()=>d.shape=ye);const xe=hs(y),be=e=>{this.manager.actions.stop({event:e})},_e=ks(xe);Z&&xe.addEventListener("resize",be),"idle"===P(()=>h.status)&&requestAnimationFrame(()=>h.status="dragging"),J&&(ve.observe(J),fe=function(e,t,n){const i=new MutationObserver(i=>{let s=!1;for(const n of i){if(n.target!==e){s=!0;continue}if("attributes"!==n.type)continue;const i=n.attributeName;if(i.startsWith("aria-")||qr.includes(i))continue;const o=e.getAttribute(i);if("style"===i){if(Wo(e)&&Wo(t)){const n=e.style;for(const e of Array.from(t.style))""===n.getPropertyValue(e)&&t.style.removeProperty(e);for(const e of Array.from(n)){if(Hr.includes(e)||e.startsWith(zr))continue;const i=n.getPropertyValue(e);t.style.setProperty(e,i)}}}else null!==o?t.setAttribute(i,o):t.removeAttribute(i)}s&&n&&t.replaceChildren(...e.cloneNode(!0).childNodes)});return i.observe(e,{attributes:!0,subtree:!0,childList:!0}),i}(f,J,Y),ge=function(e,t,n){const i=new MutationObserver(i=>{for(const s of i)if(0!==s.addedNodes.length)for(const i of Array.from(s.addedNodes)){if(i.contains(e)&&e.nextElementSibling!==t)return e.insertAdjacentElement("afterend",t),void oo(n);if(i.contains(t)&&t.previousElementSibling!==e)return t.insertAdjacentElement("beforebegin",e),void oo(n)}e.isConnected&&t.isConnected&&e.nextElementSibling!==t&&(e.insertAdjacentElement("afterend",t),oo(n))});return i.observe(e.ownerDocument.body,{childList:!0,subtree:!0}),i}(f,J,y));const je=null==(r=l.dragOperation.source)?void 0:r.id,Se=()=>{var e;if(!Z||null==je)return;const t=l.registry.draggables.get(je),n=null!=(e=null==t?void 0:t.handle)?e:null==t?void 0:t.element;fs(n)&&n.focus()},Ce=()=>{null==fe||fe.disconnect(),null==ge||ge.disconnect(),ve.disconnect(),xe.removeEventListener("resize",be),so(y)&&(y.removeEventListener("beforetoggle",Kr),y.removeAttribute("popover")),y.removeAttribute(Ur),D.reset();const e=()=>{var e;if(me&&Gr(f)){const t=Array.from(f.cells);for(const[n,i]of t.entries())i.style.width=null!=(e=me[n])?e:""}h.status="idle";const t=null!=a.current.translate,n=d.status.dragging;J&&(!n&&t||J.parentElement!==y.parentElement)&&y.isConnected&&J.replaceWith(y),null==J||J.remove()};y===this.overlay?setTimeout(e,0):e()},ke=null==c?void 0:c.dropAnimation,Ne=this,Oe=Ge(()=>{var e,t,n;const{transform:i,status:s}=d;if((i.x||i.y||a.current.translate)&&s.dragging){const s=null!=(e=w.translate)?e:{x:0,y:0},o={x:i.x/x.scaleX+s.x,y:i.y/x.scaleY+s.y},r=a.current.translate,l=P(()=>d.modifiers),u=P(()=>{var e;return null==(e=d.shape)?void 0:e.current}),h=null==c?void 0:c.keyboardTransition,p=Z&&!_e&&null!==h?`${null!=(t=null==h?void 0:h.duration)?t:250}ms ${null!=(n=null==h?void 0:h.easing)?n:"cubic-bezier(0.25, 1, 0.5, 1)"}`:"0ms linear";if(D.set({transition:V?`${V}, translate ${p}`:`translate ${p}`,translate:`${o.x}px ${o.y}px 0`},zr),null==fe||fe.takeRecords(),u&&u!==ye&&r&&!l.length){const e=kt.delta(o,r);d.shape=Nt.from(u.boundingRectangle).translate(e.x*x.scaleX,e.y*x.scaleY)}else d.shape=new Io(y);a.current.translate=o}},function(){if(d.status.dropped){this.dispose(),h.status="dropping";const e=void 0!==(null==g?void 0:g.dropAnimation)?g.dropAnimation:void 0!==Ne.dropAnimation?Ne.dropAnimation:ke;let t=a.current.translate;const n=null!=t;if(t||f===y||(t={x:0,y:0}),!t||null===e)return void Ce();l.renderer.rendering.then(()=>{!function(e){var t,n,i,s;const{animation:o}=e;if("function"==typeof o){const t=o({source:e.source,element:e.element,feedbackElement:e.feedbackElement,placeholder:e.placeholder,translate:e.translate,moved:e.moved});return void Promise.resolve(t).then(()=>{e.cleanup(),requestAnimationFrame(e.restoreFocus)})}const{duration:r=sa,easing:a=oa}=null!=o?o:{};oo(e.feedbackElement);const[,l]=null!=(t=ls(e.feedbackElement,e=>"translate"in e))?t:[];null==l||l.pause();const c=null!=(n=e.placeholder)?n:e.element,d={frameTransform:Xr(e.feedbackElement,c)?null:void 0},u=new Io(e.feedbackElement,d),h=null!=(i=bo(go(e.feedbackElement).translate))?i:e.translate,p=new Io(c,d),f=Nt.delta(u,p,e.alignment),g=h.x-f.x,m=h.y-f.y,v=Math.round(u.intrinsicHeight)!==Math.round(p.intrinsicHeight)?{minHeight:[`${u.intrinsicHeight}px`,`${p.intrinsicHeight}px`],maxHeight:[`${u.intrinsicHeight}px`,`${p.intrinsicHeight}px`]}:{},w=Math.round(u.intrinsicWidth)!==Math.round(p.intrinsicWidth)?{minWidth:[`${u.intrinsicWidth}px`,`${p.intrinsicWidth}px`],maxWidth:[`${u.intrinsicWidth}px`,`${p.intrinsicWidth}px`]}:{};e.styles.set({transition:e.transition},zr),e.feedbackElement.setAttribute(Br,""),null==(s=e.getElementMutationObserver())||s.takeRecords(),Do({element:e.feedbackElement,keyframes:nr(tr(tr({},v),w),{translate:[`${h.x}px ${h.y}px 0`,`${g}px ${m}px 0`]}),options:{duration:ks(hs(e.feedbackElement))?0:e.moved||e.feedbackElement!==e.element?r:0,easing:a}}).then(()=>{e.feedbackElement.removeAttribute(Br),null==l||l.finish(),e.cleanup(),requestAnimationFrame(e.restoreFocus)})}({source:h,element:f,feedbackElement:y,placeholder:J,translate:t,moved:n,transition:A,alignment:h.alignment,styles:D,animation:null!=e?e:void 0,getElementMutationObserver:()=>fe,cleanup:Ce,restoreFocus:Se})})}});return()=>{Ce(),Oe()}},ur(Qr,4,"overlay",Jr,ra,ea),cr(Qr,ra),ra.configure=hn(ra);var aa,la,ca,da,ua,ha,pa,fa=ra,ga=!0;ca=[Ye],da=jo.Forward,aa=[Ye],la=jo.Reverse;var ma=class{constructor(){gr(this,ha,dr(ua,8,this,ga)),dr(ua,11,this),gr(this,pa,dr(ua,12,this,ga)),dr(ua,15,this)}isLocked(e){return e!==jo.Idle&&(null==e?this[jo.Forward]===ga&&this[jo.Reverse]===ga:this[e]===ga)}unlock(e){e!==jo.Idle&&(this[e]=!1)}};ua=or(null),ha=new WeakMap,pa=new WeakMap,ur(ua,4,da,ca,ma,ha),ur(ua,4,la,aa,ma,pa),cr(ua,ma);var va,wa,ya,xa,ba,_a,ja=[jo.Forward,jo.Reverse],Sa=class{constructor(){this.x=new ma,this.y=new ma}isLocked(){return this.x.isLocked()&&this.y.isLocked()}},Ca=class extends fn{constructor(e){super(e);const t=V(new Sa);let n=null;this.signal=t,ee(()=>{const{status:i}=e.dragOperation;if(!i.initialized)return n=null,void(t.value=new Sa);const{delta:s}=e.dragOperation.position;if(n){const e={x:ka(s.x,n.x),y:ka(s.y,n.y)},i=t.peek();M(()=>{for(const t of It)for(const n of ja)e[t]===n&&i[t].unlock(n);t.value=i})}n=s})}get current(){return this.signal.peek()}};function ka(e,t){return Math.sign(e-t)}var Na=class extends(wa=mn,va=[Ye],wa){constructor(e){super(e),gr(this,xa,dr(ya,8,this,!1)),dr(ya,11,this),gr(this,ba),gr(this,_a,()=>{if(!fr(this,ba))return;const{element:e,by:t}=fr(this,ba);t.y&&(e.scrollTop+=t.y),t.x&&(e.scrollLeft+=t.x)}),this.scroll=(e,t)=>{var n;if(this.disabled)return!1;const i=this.getScrollableElements();if(!i)return mr(this,ba,void 0),!1;const{position:s}=this.manager.dragOperation,o=null==s?void 0:s.current;if(o){const{by:s}=null!=e?e:{},r=s?{x:Oa(s.x),y:Oa(s.y)}:void 0,a=r?void 0:this.scrollIntentTracker.current;if(null==a?void 0:a.isLocked())return!1;for(const e of i){const i=lo(e,s);if(i.x||i.y){const{speed:i,direction:l}=ko(e,o,r,null==t?void 0:t.acceleration,null==t?void 0:t.threshold);if(a)for(const e of It)a[e].isLocked(l[e])&&(i[e]=0,l[e]=0);if(l.x||l.y){const{x:t,y:o}=null!=s?s:l,r=t*i.x,a=o*i.y;if(r||a){const t=null==(n=fr(this,ba))?void 0:n.by;if(this.autoScrolling&&t&&(t.x&&!r||t.y&&!a))continue;return mr(this,ba,{element:e,by:{x:r,y:a}}),uo.schedule(fr(this,_a)),!0}}}}}return mr(this,ba,void 0),!1};let t=null,n=null;const i=qe(()=>{const{position:n,source:i}=e.dragOperation;if(!n)return null;const s=Es(Cs(null==i?void 0:i.element),n.current);return s&&(t=s),null!=s?s:t}),s=qe(()=>{const t=i.value,{documentElement:s}=ms(t);if(!t||t===s){const{target:t}=e.dragOperation,i=null==t?void 0:t.element;if(i){const e=wo(i,{excludeElement:!1});return n=e,e}}if(t){const e=wo(t,{excludeElement:!1});return this.autoScrolling&&n&&e.size<(null==n?void 0:n.size)?n:(n=e,e)}return n=null,null},He);this.getScrollableElements=()=>s.value,this.scrollIntentTracker=new Ca(e),this.destroy=e.monitor.addEventListener("dragmove",t=>{!this.disabled&&!t.defaultPrevented&&$o(e.dragOperation.activatorEvent)&&t.by&&this.scroll({by:t.by})&&t.preventDefault()})}};function Oa(e){return e>0?jo.Forward:e<0?jo.Reverse:jo.Idle}ya=or(wa),xa=new WeakMap,ba=new WeakMap,_a=new WeakMap,ur(ya,4,"autoScrolling",va,Na,xa),cr(ya,Na);var Ea=new class{constructor(e){this.scheduler=e,this.pending=!1,this.tasks=new Set,this.resolvers=new Set,this.flush=()=>{const{tasks:e,resolvers:t}=this;this.pending=!1,this.tasks=new Set,this.resolvers=new Set;for(const t of e)t();for(const e of t)e()}}schedule(e){return this.tasks.add(e),this.pending||(this.pending=!0,this.scheduler(this.flush)),new Promise(e=>this.resolvers.add(e))}}(e=>{"function"==typeof requestAnimationFrame?requestAnimationFrame(e):e()}),Da=class extends fn{constructor(e,t){super(e,t);const n=e.registry.plugins.get(Na);if(!n)throw new Error("AutoScroller plugin depends on Scroller plugin");this.destroy=ee(()=>{var t,i,s;if(this.disabled)return;const{position:o,status:r}=e.dragOperation;if(r.dragging){const e={acceleration:null==(t=this.options)?void 0:t.acceleration,threshold:"number"==typeof(null==(i=this.options)?void 0:i.threshold)?{x:this.options.threshold,y:this.options.threshold}:null==(s=this.options)?void 0:s.threshold};if(n.scroll(void 0,e)){n.autoScrolling=!0;const t=setInterval(()=>Ea.schedule(()=>n.scroll(void 0,e)),10);return()=>{clearInterval(t)}}n.autoScrolling=!1}})}};Da.configure=hn(Da);var Ma,Aa=Da,Ta={capture:!0,passive:!0},Pa=class extends mn{constructor(e){super(e),gr(this,Ma),this.handleScroll=()=>{null==fr(this,Ma)&&mr(this,Ma,setTimeout(()=>{this.manager.collisionObserver.forceUpdate(!1),mr(this,Ma,void 0)},50))};const{dragOperation:t}=this.manager;this.destroy=ee(()=>{var e,n,i;if(t.status.dragging){const s=null!=(i=null==(n=null==(e=t.source)?void 0:e.element)?void 0:n.ownerDocument)?i:document;return s.addEventListener("scroll",this.handleScroll,Ta),()=>{s.removeEventListener("scroll",this.handleScroll,Ta)}}})}};function Ia(){var e;null==(e=document.getSelection())||e.removeAllRanges()}Ma=new WeakMap;var Wa,Ra=Object.freeze({offset:10,keyboardCodes:{start:["Space","Enter"],cancel:["Escape"],end:["Space","Enter","Tab"],up:["ArrowUp"],down:["ArrowDown"],left:["ArrowLeft"],right:["ArrowRight"]},preventActivation(e,t){var n;const i=null!=(n=t.handle)?n:t.element;return e.target!==i}}),Fa=class extends Ni{constructor(e,t){super(e),this.manager=e,this.options=t,gr(this,Wa,[]),this.listeners=new Ms,this.handleSourceKeyDown=(e,t,n)=>{if(this.disabled||e.defaultPrevented)return;if(!Fo(e.target))return;if(t.disabled)return;const{keyboardCodes:i=Ra.keyboardCodes,preventActivation:s=Ra.preventActivation}=null!=n?n:{};i.start.includes(e.code)&&this.manager.dragOperation.status.idle&&((null==s?void 0:s(e,t))||this.handleStart(e,t,n))}}bind(e,t=this.options){return ee(()=>{var n;const i=null!=(n=e.handle)?n:e.element,s=n=>{$o(n)&&this.handleSourceKeyDown(n,e,t)};if(i)return i.addEventListener("keydown",s),()=>{i.removeEventListener("keydown",s)}})}handleStart(e,t,n){const{element:i}=t;if(!i)throw new Error("Source draggable does not have an associated element");e.preventDefault(),e.stopImmediatePropagation(),No(i);const{center:s}=new Io(i);if(this.manager.actions.start({event:e,coordinates:{x:s.x,y:s.y},source:t}).signal.aborted)return this.cleanup();this.sideEffects();const o=ms(i),r=[this.listeners.bind(o,[{type:"keydown",listener:e=>this.handleKeyDown(e,t,n),options:{capture:!0}}])];fr(this,Wa).push(...r)}handleKeyDown(e,t,n){const{keyboardCodes:i=Ra.keyboardCodes}=null!=n?n:{};if(Ua(e,[...i.end,...i.cancel])){e.preventDefault();const t=Ua(e,i.cancel);return void this.handleEnd(e,t)}Ua(e,i.up)?this.handleMove("up",e):Ua(e,i.down)&&this.handleMove("down",e),Ua(e,i.left)?this.handleMove("left",e):Ua(e,i.right)&&this.handleMove("right",e)}handleEnd(e,t){this.manager.actions.stop({event:e,canceled:t}),this.cleanup()}handleMove(e,t){var n,i;const{shape:s}=this.manager.dragOperation,o=t.shiftKey?5:1;let r={x:0,y:0},a=null!=(i=null==(n=this.options)?void 0:n.offset)?i:Ra.offset;if("number"==typeof a&&(a={x:a,y:a}),s){switch(e){case"up":r={x:0,y:-a.y*o};break;case"down":r={x:0,y:a.y*o};break;case"left":r={x:-a.x*o,y:0};break;case"right":r={x:a.x*o,y:0}}(r.x||r.y)&&(t.preventDefault(),this.manager.actions.move({event:t,by:r}))}}sideEffects(){const e=this.manager.registry.plugins.get(Aa);!1===(null==e?void 0:e.disabled)&&(e.disable(),fr(this,Wa).push(()=>{e.enable()}))}cleanup(){fr(this,Wa).forEach(e=>e()),mr(this,Wa,[])}destroy(){this.cleanup(),this.listeners.clear()}};Wa=new WeakMap,Fa.configure=hn(Fa),Fa.defaults=Ra;var $a,La,Ba,za=Fa;function Ua(e,t){return t.includes(e.code)}$a=new WeakMap,La=new WeakMap,Ba=new WeakMap;var Va=class{};Va.Delay=class extends Ei{constructor(){super(...arguments),gr(this,La),gr(this,Ba)}onEvent(e){switch(e.type){case"pointerdown":mr(this,Ba,ys(e)),mr(this,La,setTimeout(()=>this.activate(e),this.options.value));break;case"pointermove":if(!fr(this,Ba))return;const{x:t,y:n}=ys(e);Et({x:t-fr(this,Ba).x,y:n-fr(this,Ba).y},this.options.tolerance)&&this.abort();break;case"pointerup":this.abort()}}abort(){fr(this,La)&&(clearTimeout(fr(this,La)),mr(this,Ba,void 0),mr(this,La,void 0))}},Va.Distance=class extends Ei{constructor(){super(...arguments),gr(this,$a)}onEvent(e){switch(e.type){case"pointerdown":mr(this,$a,ys(e));break;case"pointermove":if(!fr(this,$a))return;const{x:t,y:n}=ys(e),i={x:t-fr(this,$a).x,y:n-fr(this,$a).y},{tolerance:s}=this.options;if(s&&Et(i,s))return void this.abort();Et(i,this.options.value)&&this.activate(e);break;case"pointerup":this.abort()}}abort(){mr(this,$a,void 0)}};var qa,Ha=Object.freeze({activationConstraints(e,t){var n;const{pointerType:i,target:s}=e;if("mouse"!==i||!Fo(s)||t.handle!==s&&!(null==(n=t.handle)?void 0:n.contains(s)))return"touch"===i?[new Va.Delay({value:250,tolerance:5})]:function(e){if(!Fo(e))return!1;const{tagName:t}=e;return"INPUT"===t||"TEXTAREA"===t||(n=e).hasAttribute("contenteditable")&&"false"!==n.getAttribute("contenteditable");var n}(s)&&!e.defaultPrevented?[new Va.Delay({value:200,tolerance:0})]:[new Va.Delay({value:200,tolerance:10}),new Va.Distance({value:5})]},preventActivation(e,t){var n;const{target:i}=e;if(i===t.element)return!1;if(i===t.handle)return!1;if(!Fo(i))return!1;if(null==(n=t.handle)?void 0:n.contains(i))return!1;const s=i.closest('\n    input:not([disabled]),\n    select:not([disabled]),\n    textarea:not([disabled]),\n    button:not([disabled]),\n    a[href],\n    [contenteditable]:not([contenteditable="false"])\n  ');return s!==t.element&&Boolean(s)}}),Ya=class extends Ni{constructor(e,t){super(e),this.manager=e,this.options=t,gr(this,qa,new Set),this.listeners=new Ms,this.latest={event:void 0,coordinates:void 0},this.handleMove=()=>{const{event:e,coordinates:t}=this.latest;e&&t&&this.manager.actions.move({event:e,to:t})},this.handleCancel=this.handleCancel.bind(this),this.handlePointerUp=this.handlePointerUp.bind(this),this.handleKeyDown=this.handleKeyDown.bind(this)}activationConstraints(e,t,n=this.options){const{activationConstraints:i=Ha.activationConstraints}=null!=n?n:{};return"function"==typeof i?i(e,t):i}bind(e,t=this.options){return ee(()=>{var n;const i=new AbortController,{signal:s}=i,o=n=>{(function(e){if(!e)return!1;const{PointerEvent:t}=hs(e.target);return e instanceof t})(n)&&this.handlePointerDown(n,e,t)};let r=[null!=(n=e.handle)?n:e.element];(null==t?void 0:t.activatorElements)&&(r=Array.isArray(t.activatorElements)?t.activatorElements:t.activatorElements(e));for(const e of r)e&&(Za(e.ownerDocument.defaultView),e.addEventListener("pointerdown",o,{signal:s}));return()=>i.abort()})}handlePointerDown(e,t,n){if(this.disabled||!e.isPrimary||0!==e.button||!Fo(e.target)||t.disabled||function(e){return"sensor"in e}(e)||!this.manager.dragOperation.status.idle)return;const{preventActivation:i=Ha.preventActivation}=null!=n?n:{};if(null==i?void 0:i(e,t))return;const{target:s}=e,o=fs(s)&&s.draggable&&"true"===s.getAttribute("draggable"),r=yo(t.element),{x:a,y:l}=ys(e);this.initialCoordinates={x:a*r.scaleX+r.x,y:l*r.scaleY+r.y};const c=this.activationConstraints(e,t,n);e.sensor=this;const d=new Oi(c,e=>this.handleStart(t,e));d.signal.onabort=()=>this.handleCancel(e),d.onEvent(e),this.controller=d;const u=bs(),h=this.listeners.bind(u,[{type:"pointermove",listener:e=>this.handlePointerMove(e,t)},{type:"pointerup",listener:this.handlePointerUp,options:{capture:!0}},{type:"pointercancel",listener:this.handleCancel},{type:"dragstart",listener:o?this.handleCancel:Ka,options:{capture:!0}}]);fr(this,qa).add(()=>{h(),this.initialCoordinates=void 0})}handlePointerMove(e,t){var n,i;if(!1!==(null==(n=this.controller)?void 0:n.activated)){if(this.manager.dragOperation.status.dragging){const n=ys(e),i=yo(t.element);n.x=n.x*i.scaleX+i.x,n.y=n.y*i.scaleY+i.y,e.preventDefault(),e.stopPropagation(),this.latest.event=e,this.latest.coordinates=n,uo.schedule(this.handleMove)}}else null==(i=this.controller)||i.onEvent(e)}handlePointerUp(e){const{status:t}=this.manager.dragOperation;if(!t.idle){e.preventDefault(),e.stopPropagation();const n=!t.initialized;this.manager.actions.stop({event:e,canceled:n})}this.cleanup()}handleKeyDown(e){"Escape"===e.key&&(e.preventDefault(),this.handleCancel(e))}handleStart(e,t){const{manager:n,initialCoordinates:i}=this;if(!i||!n.dragOperation.status.idle)return;if(t.defaultPrevented)return;if(n.actions.start({coordinates:i,event:t,source:e}).signal.aborted)return this.cleanup();t.preventDefault();const s=ms(t.target).body;try{s.setPointerCapture(t.pointerId)}catch(e){return void this.handleCancel(t)}const o=Fo(t.target)?[t.target,s]:s,r=this.listeners.bind(o,[{type:"touchmove",listener:Ka,options:{passive:!1}},{type:"click",listener:Ka},{type:"contextmenu",listener:Ka},{type:"keydown",listener:this.handleKeyDown}]);fr(this,qa).add(r)}handleCancel(e){const{dragOperation:t}=this.manager;t.status.initialized&&this.manager.actions.stop({event:e,canceled:!0}),this.cleanup()}cleanup(){const{controller:e}=this;this.controller=void 0,e&&!e.signal.aborted&&e.abort(),this.latest={event:void 0,coordinates:void 0},fr(this,qa).forEach(e=>e()),fr(this,qa).clear()}destroy(){this.cleanup(),this.listeners.clear()}};qa=new WeakMap,Ya.configure=hn(Ya),Ya.defaults=Ha;var Xa=Ya;function Ka(e){e.preventDefault()}function Ga(){}var Ja=new WeakSet;function Za(e){e&&!Ja.has(e)&&(e.addEventListener("touchmove",Ga,{capture:!1,passive:!1}),Ja.add(e))}var Qa,el,tl,nl,il,sl,ol,rl,al,ll,cl,dl,ul,hl,pl,fl,gl={modifiers:[],plugins:[class extends fn{constructor(e,t){super(e);const{id:n,idPrefix:{description:i=wr,announcement:s=yr}={},announcements:o=br,screenReaderInstructions:r=xr,debounce:a=500}=null!=t?t:{},l=n?`${i}-${n}`:Bo(i),c=n?`${s}-${n}`:Bo(s);let d,u,h,p;const f=(e=p)=>{h&&e&&(null==h?void 0:h.nodeValue)!==e&&(h.nodeValue=e)},g=()=>uo.schedule(f),m=function(e,t){let n;const i=()=>{clearTimeout(n),n=setTimeout(e,t)};return i.cancel=()=>clearTimeout(n),i}(g,a),v=Object.entries(o).map(([e,t])=>this.manager.monitor.addEventListener(e,(n,i)=>{const s=h;if(!s)return;const o=null==t?void 0:t(n,i);o&&s.nodeValue!==o&&(p=o,Wr.includes(e)?m():(g(),m.cancel()))})),w=()=>{let e=[];(null==d?void 0:d.isConnected)||(d=function(e,t){const n=document.createElement("div");return n.id=e,n.style.setProperty("display","none"),n.textContent=t,n}(l,r.draggable),e.push(d)),(null==u?void 0:u.isConnected)||(u=function(e){const t=document.createElement("div");return t.id=e,t.setAttribute("role","status"),t.setAttribute("aria-live","polite"),t.setAttribute("aria-atomic","true"),t.style.setProperty("position","fixed"),t.style.setProperty("width","1px"),t.style.setProperty("height","1px"),t.style.setProperty("margin","-1px"),t.style.setProperty("border","0"),t.style.setProperty("padding","0"),t.style.setProperty("overflow","hidden"),t.style.setProperty("clip","rect(0 0 0 0)"),t.style.setProperty("clip-path","inset(100%)"),t.style.setProperty("white-space","nowrap"),t}(c),h=document.createTextNode(""),u.appendChild(h),e.push(u)),e.length>0&&document.body.append(...e)},y=new Set;function x(){for(const e of y)e()}this.registerEffect(()=>{var e;y.clear();for(const t of this.manager.registry.draggables.value){const n=null!=(e=t.handle)?e:t.element;if(n){d&&u||y.add(w),_r(n)&&!_s()||n.hasAttribute("tabindex")||y.add(()=>n.setAttribute("tabindex","0")),n.hasAttribute("role")||"button"===n.tagName.toLowerCase()||y.add(()=>n.setAttribute("role","button")),n.hasAttribute("aria-roledescription")||y.add(()=>n.setAttribute("aria-roledescription","draggable")),n.hasAttribute("aria-describedby")||y.add(()=>n.setAttribute("aria-describedby",l));for(const e of["aria-pressed","aria-grabbed"]){const i=String(t.isDragging);n.getAttribute(e)!==i&&y.add(()=>n.setAttribute(e,i))}const e=String(t.disabled);n.getAttribute("aria-disabled")!==e&&y.add(()=>n.setAttribute("aria-disabled",e))}}y.size>0&&uo.schedule(x)}),this.destroy=()=>{super.destroy(),null==d||d.remove(),null==u||u.remove(),v.forEach(e=>e())}}},Aa,class extends fn{constructor(e,t){super(e,t),this.manager=e;const{cursor:n="grabbing"}=null!=t?t:{},i=e.registry.plugins.get($r),s=null==i?void 0:i.register(`* { cursor: ${n} !important; }`);if(s){const e=this.destroy.bind(this);this.destroy=()=>{s(),e()}}}},fa,class extends fn{constructor(e){super(e),this.manager=e;const t=e.registry.plugins.get($r),n=null==t?void 0:t.register("* { user-select: none !important; -webkit-user-select: none !important; }");if(this.destroy=ee(()=>{const{dragOperation:e}=this.manager;if(e.status.initialized)return Ia(),document.addEventListener("selectionchange",Ia,{capture:!0}),()=>{document.removeEventListener("selectionchange",Ia,{capture:!0})}}),n){const e=this.destroy.bind(this);this.destroy=()=>{n(),e()}}}}],sensors:[Xa,za]},ml=class extends es{constructor(e={}){const t=Qi(e.plugins,gl.plugins),n=Qi(e.sensors,gl.sensors),i=Qi(e.modifiers,gl.modifiers);super(nr(tr({},e),{plugins:[Pa,Na,$r,...t],sensors:n,modifiers:i}))}},vl=class extends(tl=ai,el=[Ye],Qa=[Ye],tl){constructor(e,t){var n=e,{element:i,effects:s=()=>[],handle:o}=n,r=sr(n,["element","effects","handle"]);super(tr({effects:()=>[...s(),()=>{var e,t;const{manager:n}=this;if(!n)return;const i=(null!=(t=null==(e=this.sensors)?void 0:e.map(pn))?t:[...n.sensors]).map(e=>{const t=e instanceof Ni?e:n.registry.register(e.plugin),i=e instanceof Ni?void 0:e.options;return t.bind(this,i)});return function(){i.forEach(e=>e())}}]},r),t),gr(this,il,dr(nl,8,this)),dr(nl,11,this),gr(this,sl,dr(nl,12,this)),dr(nl,15,this),this.element=i,this.handle=o}};nl=or(tl),il=new WeakMap,sl=new WeakMap,ur(nl,4,"handle",el,vl,il),ur(nl,4,"element",Qa,vl,sl),cr(nl,vl);var wl=class extends(al=li,rl=[Ye],ol=[Ye],al){constructor(e,t){var n=e,{element:i,effects:s=()=>[]}=n,o=sr(n,["element","effects"]);const{collisionDetector:r=zo}=o,a=e=>{const{manager:t,element:n}=this;if(!n||null===e)return void(this.shape=void 0);if(!t)return;const i=new Io(n),s=P(()=>this.shape);return i&&(null==s?void 0:s.equals(i))?s:(this.shape=i,i)},l=V(!1);super(nr(tr({},o),{collisionDetector:r,effects:()=>[...s(),()=>{const{element:e,manager:t}=this;if(!t)return;const{dragOperation:n}=t,{source:i}=n;l.value=Boolean(i&&n.status.initialized&&e&&!this.disabled&&this.accepts(i))},()=>{const{element:e}=this;if(l.value&&e){const t=new io(e,a);return()=>{t.disconnect(),this.shape=void 0}}},()=>{var e;if(null==(e=this.manager)?void 0:e.dragOperation.status.initialized)return()=>{this.shape=void 0}}]}),t),gr(this,pl),gr(this,cl,dr(ll,8,this)),dr(ll,11,this),gr(this,fl,dr(ll,12,this)),dr(ll,15,this),this.element=i,this.refreshShape=()=>a()}set element(e){mr(this,pl,e,hl)}get element(){var e;return null!=(e=this.proxy)?e:fr(this,pl,ul)}};ll=or(al),cl=new WeakMap,pl=new WeakSet,fl=new WeakMap,dl=ur(ll,20,"#element",rl,pl,cl),ul=dl.get,hl=dl.set,ur(ll,4,"proxy",ol,wl,fl),cr(ll,wl);const yl=window.ReactDOM;function xl(e){var t;if(null!=e)return function(e){return null!=e&&"object"==typeof e&&"current"in e}(e)?null!=(t=e.current)?t:void 0:e}var bl="undefined"!=typeof window&&void 0!==window.document&&void 0!==window.document.createElement?O.useLayoutEffect:O.useEffect;function _l(e,t){const n=(0,O.useRef)(new Map),i=function(){const e=(0,O.useState)(0)[1];return(0,O.useCallback)(()=>{e(e=>e+1)},[e])}();return bl(()=>{if(e)return ee(()=>{var s;let o=!1,r=!1;for(const i of n.current){const[a]=i,l=P(()=>i[1]),c=e[a];l!==c&&(o=!0,n.current.set(a,c),r=null!=(s=null==t?void 0:t(a,l,c))&&s)}o&&(r?queueMicrotask(()=>(0,yl.flushSync)(i)):i())});n.current.clear()},[e]),(0,O.useMemo)(()=>e?new Proxy(e,{get(e,t){const i=e[t];return n.current.set(t,i),i}}):e,[e])}function jl(e,t){e()}function Sl(e){const t=(0,O.useRef)(e);return bl(()=>{t.current=e},[e]),t}function Cl(e,t,n=O.useEffect,i=Object.is){const s=(0,O.useRef)(e);n(()=>{const n=s.current;i(e,n)||(s.current=e,t(e,n))},[t,e])}function kl(e,t){const n=(0,O.useRef)(xl(e));bl(()=>{const i=xl(e);i!==n.current&&(n.current=i,t(i))})}var Nl=Object.defineProperty,Ol=Object.defineProperties,El=Object.getOwnPropertyDescriptors,Dl=Object.getOwnPropertySymbols,Ml=Object.prototype.hasOwnProperty,Al=Object.prototype.propertyIsEnumerable,Tl=(e,t,n)=>t in e?Nl(e,t,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[t]=n,Pl=(e,t)=>{for(var n in t||(t={}))Ml.call(t,n)&&Tl(e,n,t[n]);if(Dl)for(var n of Dl(t))Al.call(t,n)&&Tl(e,n,t[n]);return e},Il=(e,t)=>Ol(e,El(t)),Wl=new ml,Rl=(0,O.createContext)(Wl),Fl=(0,O.memo)((0,O.forwardRef)(({children:e},t)=>{const[n,i]=(0,O.useState)(0),s=(0,O.useRef)(null),o=(0,O.useRef)(null),r=(0,O.useMemo)(()=>({renderer:{get rendering(){var e;return null!=(e=s.current)?e:Promise.resolve()}},trackRendering(e){s.current||(s.current=new Promise(e=>{o.current=e})),(0,O.startTransition)(()=>{e(),i(e=>e+1)})}}),[]);return bl(()=>{var e;null==(e=o.current)||e.call(o),s.current=null},[e,n]),(0,O.useImperativeHandle)(t,()=>r),null})),$l=[void 0,He];function Ll(e){var t=e,{children:n,onCollision:i,onBeforeDragStart:o,onDragStart:r,onDragMove:a,onDragOver:l,onDragEnd:c}=t,d=((e,t)=>{var n={};for(var i in e)Ml.call(e,i)&&t.indexOf(i)<0&&(n[i]=e[i]);if(null!=e&&Dl)for(var i of Dl(e))t.indexOf(i)<0&&Al.call(e,i)&&(n[i]=e[i]);return n})(t,["children","onCollision","onBeforeDragStart","onDragStart","onDragMove","onDragOver","onDragEnd"]);const u=(0,O.useRef)(null),{plugins:h,modifiers:p,sensors:f}=d,g=Qi(h,gl.plugins),m=Qi(f,gl.sensors),v=Qi(p,gl.modifiers),w=Sl(o),y=Sl(r),x=Sl(l),b=Sl(a),_=Sl(c),j=Sl(i),S=function(){const e=(0,O.useRef)(null);return e.current||(e.current=(()=>{var e;return null!=(e=d.manager)?e:new ml(d)})()),(0,O.useInsertionEffect)(()=>()=>{var t;return null==(t=e.current)?void 0:t.destroy()},[]),e.current}();return(0,O.useEffect)(()=>{if(!u.current)throw new Error("Renderer not found");const{renderer:e,trackRendering:t}=u.current,{monitor:n}=S;S.renderer=e;const i=[n.addEventListener("beforedragstart",e=>{const n=w.current;n&&t(()=>n(e,S))}),n.addEventListener("dragstart",e=>{var t;return null==(t=y.current)?void 0:t.call(y,e,S)}),n.addEventListener("dragover",e=>{const n=x.current;n&&t(()=>n(e,S))}),n.addEventListener("dragmove",e=>{const n=b.current;n&&t(()=>n(e,S))}),n.addEventListener("dragend",e=>{const n=_.current;n&&t(()=>n(e,S))}),n.addEventListener("collision",e=>{var t;return null==(t=j.current)?void 0:t.call(j,e,S)})];return()=>i.forEach(e=>e())},[S]),Cl(g,()=>S&&(S.plugins=g),...$l),Cl(m,()=>S&&(S.sensors=m),...$l),Cl(v,()=>S&&(S.modifiers=v),...$l),(0,s.jsxs)(Rl.Provider,{value:S,children:[(0,s.jsx)(Fl,{ref:u,children:n}),n]})}function Bl(e){var t;const n=null!=(t=(0,O.useContext)(Rl))?t:void 0,[i]=(0,O.useState)(()=>e(n));return i.manager!==n&&(i.manager=n),bl(i.register,[n,i]),i}function zl(e,t,n){return!("isDragSource"!==e||n||!t)}var Ul,Vl,ql,Hl,Yl,Xl,Kl,Gl,Jl,Zl=Object.create,Ql=Object.defineProperty,ec=Object.getOwnPropertyDescriptor,tc=(e,t)=>(t=Symbol[e])?t:Symbol.for("Symbol."+e),nc=e=>{throw TypeError(e)},ic=["class","method","getter","setter","accessor","field","value","get","set"],sc=e=>void 0!==e&&"function"!=typeof e?nc("Function expected"):e,oc=(e,t,n,i,s)=>({kind:ic[e],name:t,metadata:i,addInitializer:e=>n._?nc("Already initialized"):s.push(sc(e||null))}),rc=(e,t,n,i,s,o)=>{for(var r,a,l,c,d=7&t,u=ic[d+5],h=e[2]||(e[2]=[]),p=(s=s.prototype,ec(s,n)),f=i.length-1;f>=0;f--)(l=oc(d,n,a={},e[3],h)).static=!1,l.private=!1,c=l.access={has:e=>n in e},c.get=e=>e[n],r=(0,i[f])(p[u],l),a._=1,sc(r)&&(p[u]=r);return p&&Ql(s,n,p),s},ac=(e,t,n)=>t.has(e)||nc("Cannot "+n),lc=class e{constructor(e,t){this.x=e,this.y=t}static delta(t,n){return new e(t.x-n.x,t.y-n.y)}static distance(e,t){return Math.hypot(e.x-t.x,e.y-t.y)}static equals(e,t){return e.x===t.x&&e.y===t.y}static from({x:t,y:n}){return new e(t,n)}},cc=class extends(ql=Ze,Vl=[Xe],Ul=[Xe],ql){constructor(e){var t,n;super(lc.from(e),(e,t)=>lc.equals(e,t)),((e,t,n)=>{for(var i=0,s=e[2],o=s&&s.length;i<o;i++)s[i].call(n)})(Yl,0,this),t=this,(n=Hl).has(t)?nc("Cannot add the same private member more than once"):n instanceof WeakSet?n.add(t):n.set(t,0),this.velocity={x:0,y:0}}get delta(){return lc.delta(this.current,this.initial)}get direction(){const{current:e,previous:t}=this;if(!t)return null;const n={x:e.x-t.x,y:e.y-t.y};return n.x||n.y?Math.abs(n.x)>Math.abs(n.y)?n.x>0?"right":"left":n.y>0?"down":"up":null}get current(){return super.current}set current(e){const{current:t}=this,n=lc.from(e),i={x:n.x-t.x,y:n.y-t.y},s=Date.now(),o=s-(ac(this,r=Hl,"read from private field"),r.get(this));var r;const a=e=>Math.round(e/o*100);M(()=>{((e,t,n)=>{ac(e,t,"write to private field"),t.set(e,n)})(this,Hl,s),this.velocity={x:a(i.x),y:a(i.y)},super.current=n})}reset(e=this.defaultValue){super.reset(lc.from(e)),this.velocity={x:0,y:0}}};Yl=(e=>{var t;return[,,,Zl(null!=(t=null==e?void 0:e[tc("metadata")])?t:null)]})(ql),Hl=new WeakMap,rc(Yl,2,"delta",Vl,cc),rc(Yl,2,"direction",Ul,cc),Xl=Yl,Kl=cc,Gl=tc("metadata"),Jl=Xl[3],Gl in Kl?Ql(Kl,Gl,{enumerable:!0,configurable:!0,writable:!0,value:Jl}):Kl[Gl]=Jl;var dc=(e=>(e.Horizontal="x",e.Vertical="y",e))(dc||{});Object.values(dc);var uc=e=>{var t;return null!=(t=(({dragOperation:e,droppable:t})=>{const n=e.position.current;if(!n)return null;const{id:i}=t;return t.shape&&t.shape.containsPoint(n)?{id:i,value:1/lc.distance(t.shape.center,n),type:ji.PointerIntersection,priority:_i.High}:null})(e))?t:(({dragOperation:e,droppable:t})=>{const{shape:n}=e;if(!t.shape||!(null==n?void 0:n.current))return null;const i=n.current.intersectionArea(t.shape);if(i){const{position:s}=e,o=lc.distance(t.shape.center,s.current),r=i/(n.current.area+t.shape.area-i)/o;return{id:t.id,value:r,type:ji.ShapeIntersection,priority:_i.Normal}}return null})(e)};const hc=window.wp.data,pc="wooptionsfic/builder",fc={optionSet:null,document:null,selectedUuid:null,history:[],future:[],dirty:!1,saveStatus:"idle",errors:[],warnings:[],device:"desktop"},gc=e=>structuredClone(e);function mc(e,t){if(!e.document)return e;const n=t(gc(e.document));return{...e,document:n,history:[...e.history.slice(-49),e.document],future:[],dirty:!0,saveStatus:"dirty"}}const vc=(0,hc.createReduxStore)(pc,{reducer:(e=fc,t)=>{switch(t.type){case"LOAD_SET":{const e=t.optionSet;return{...fc,optionSet:e,document:gc(e.currentRevision.definition),saveStatus:"saved"}}case"SELECT_FIELD":return{...e,selectedUuid:t.uuid};case"ADD_FIELD":return mc(e,e=>(e.fields.push(t.field),e));case"UPDATE_FIELD":return mc(e,e=>{const n=t.uuid;return e.fields=e.fields.map(e=>e.uuid===n?{...e,...t.changes}:e),e});case"DELETE_FIELD":return{...mc(e,e=>(e.fields=e.fields.filter(e=>e.uuid!==t.uuid),e)),selectedUuid:e.selectedUuid===t.uuid?null:e.selectedUuid};case"MOVE_FIELD":return mc(e,e=>{const n=Number(t.from),i=Number(t.to);if(!Number.isInteger(n)||!Number.isInteger(i)||n<0||i<0||n>=e.fields.length||i>=e.fields.length||n===i)return e;const[s]=e.fields.splice(n,1);return s&&e.fields.splice(i,0,s),e});case"UPDATE_DOCUMENT":return mc(e,e=>({...e,...t.changes}));case"UNDO":{const t=e.history.at(-1);return t&&e.document?{...e,document:t,history:e.history.slice(0,-1),future:[e.document,...e.future.slice(0,49)],dirty:!0,saveStatus:"dirty"}:e}case"REDO":{const t=e.future[0];return t&&e.document?{...e,document:t,history:[...e.history.slice(-49),e.document],future:e.future.slice(1),dirty:!0,saveStatus:"dirty"}:e}case"SAVE_STATUS":return{...e,saveStatus:t.status};case"SAVED":{const n=t.optionSet,i=t.savedDocument;return i&&e.document!==i?{...e,optionSet:n,dirty:!0,saveStatus:"dirty"}:{...e,optionSet:n,document:gc(n.currentRevision.definition),dirty:!1,saveStatus:"saved"}}case"VALIDATION":return{...e,errors:t.errors,warnings:t.warnings};case"SET_DEVICE":return{...e,device:t.device};default:return e}},actions:{loadSet:e=>({type:"LOAD_SET",optionSet:e}),selectField:e=>({type:"SELECT_FIELD",uuid:e}),addField:e=>({type:"ADD_FIELD",field:e}),updateField:(e,t)=>({type:"UPDATE_FIELD",uuid:e,changes:t}),deleteField:e=>({type:"DELETE_FIELD",uuid:e}),moveField:(e,t)=>({type:"MOVE_FIELD",from:e,to:t}),updateDocument:e=>({type:"UPDATE_DOCUMENT",changes:e}),undo:()=>({type:"UNDO"}),redo:()=>({type:"REDO"}),setSaveStatus:e=>({type:"SAVE_STATUS",status:e}),saved:(e,t)=>({type:"SAVED",optionSet:e,savedDocument:t}),setValidation:(e,t)=>({type:"VALIDATION",errors:e,warnings:t}),setDevice:e=>({type:"SET_DEVICE",device:e})},selectors:{getState:e=>e,getDocument:e=>e.document,getOptionSet:e=>e.optionSet,getSelectedField:e=>e.document?.fields.find(t=>t.uuid===e.selectedUuid)??null}});(0,hc.register)(vc);var wc=Object.create,yc=Object.defineProperty,xc=Object.defineProperties,bc=Object.getOwnPropertyDescriptor,_c=Object.getOwnPropertyDescriptors,jc=Object.getOwnPropertySymbols,Sc=Object.prototype.hasOwnProperty,Cc=Object.prototype.propertyIsEnumerable,kc=e=>{throw TypeError(e)},Nc=(e,t,n)=>t in e?yc(e,t,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[t]=n,Oc=(e,t)=>{for(var n in t||(t={}))Sc.call(t,n)&&Nc(e,n,t[n]);if(jc)for(var n of jc(t))Cc.call(t,n)&&Nc(e,n,t[n]);return e},Ec=(e,t)=>xc(e,_c(t)),Dc=["class","method","getter","setter","accessor","field","value","get","set"],Mc=e=>void 0!==e&&"function"!=typeof e?kc("Function expected"):e,Ac=(e,t,n,i,s)=>({kind:Dc[e],name:t,metadata:i,addInitializer:e=>n._?kc("Already initialized"):s.push(Mc(e||null))}),Tc=(e,t,n,i)=>{for(var s=0,o=e[t>>1],r=o&&o.length;s<r;s++)1&t?o[s].call(n):i=o[s].call(n,i);return i},Pc=(e,t,n,i,s,o)=>{for(var r,a,l,c,d,u=7&t,h=e.length+1,p=Dc[u+5],f=e[h-1]=[],g=e[h]||(e[h]=[]),m=(s=s.prototype,bc({get[n](){return Wc(this,o)},set[n](e){return Fc(this,o,e)}},n)),v=i.length-1;v>=0;v--)(c=Ac(u,n,l={},e[3],g)).static=!1,c.private=!1,d=c.access={has:e=>n in e},d.get=e=>e[n],d.set=(e,t)=>e[n]=t,a=(0,i[v])({get:m.get,set:m.set},c),l._=1,void 0===a?Mc(a)&&(m[p]=a):"object"!=typeof a||null===a?kc("Object expected"):(Mc(r=a.get)&&(m.get=r),Mc(r=a.set)&&(m.set=r),Mc(r=a.init)&&f.unshift(r));return m&&yc(s,n,m),s},Ic=(e,t,n)=>t.has(e)||kc("Cannot "+n),Wc=(e,t,n)=>(Ic(e,t,"read from private field"),t.get(e)),Rc=(e,t,n)=>t.has(e)?kc("Cannot add the same private member more than once"):t instanceof WeakSet?t.add(e):t.set(e,n),Fc=(e,t,n,i)=>(Ic(e,t,"write to private field"),t.set(e,n),n);function $c(e){return e instanceof yd||e instanceof wd}var Lc=Object.defineProperty,Bc=Object.defineProperties,zc=Object.getOwnPropertyDescriptors,Uc=Object.getOwnPropertySymbols,Vc=Object.prototype.hasOwnProperty,qc=Object.prototype.propertyIsEnumerable,Hc=(e,t,n)=>t in e?Lc(e,t,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[t]=n,Yc=(e,t)=>{for(var n in t||(t={}))Vc.call(t,n)&&Hc(e,n,t[n]);if(Uc)for(var n of Uc(t))qc.call(t,n)&&Hc(e,n,t[n]);return e},Xc=(e,t)=>Bc(e,zc(t));function Kc(e,t,n){if(t===n)return e;const i=e.slice();return i.splice(n,0,i.splice(t,1)[0]),i}function Gc(e,t){const n=String(t);return Object.prototype.hasOwnProperty.call(e,n)?n:void 0}function Jc(e){return"initialIndex"in e&&"number"==typeof e.initialIndex&&"index"in e&&"number"==typeof e.index}function Zc(e){const t=new Map;for(const[,n]of e)for(const e of n)t.set(e.id,e.index);return t}function Qc(e,t,n){var i;for(const[s,o]of t)for(const t of o){const o=e.get(t.id);if(t.index!==o||t.group!==s||!(null==(i=n.get(s))?void 0:i.has(t)))return!0}return!1}var ed="__default__";function td(e,t,n,i){const s=i<t?"afterend":"beforebegin";n.insertAdjacentElement(s,e)}function nd(e,t){return e.index-t.index}function id(e,t){return e.initialIndex-t.initialIndex}function sd(e,t=nd){return Array.from(e).sort(t)}var od=[class extends fn{constructor(e){super(e);const t=ee(()=>{const{dragOperation:t}=e;if($o(t.activatorEvent)&&$c(t.source)&&t.status.initialized){const t=e.registry.plugins.get(Na);if(t)return t.disable(),()=>t.enable()}}),n=e.monitor.addEventListener("dragmove",(e,t)=>{queueMicrotask(()=>{if(this.disabled||e.defaultPrevented||!e.nativeEvent)return;const{dragOperation:n}=t;if(!$o(e.nativeEvent))return;if(!$c(n.source))return;if(!n.shape)return;const{actions:i,collisionObserver:s,registry:o}=t,{by:r}=e;if(!r)return;const a=function(e){const{x:t,y:n}=e;return t>0?"right":t<0?"left":n>0?"down":n<0?"up":void 0}(r),{source:l,target:c}=n,{center:d}=n.shape.current,u=[],h=[];M(()=>{for(const e of o.droppables){const{id:t}=e;if(!e.accepts(l)||t===(null==c?void 0:c.id)&&$c(e)||!e.element)continue;let n=e.shape;const i=new Io(e.element,{getBoundingClientRect:e=>ws(e,void 0,.2)});i.height&&i.width&&("down"==a&&d.y+10<i.center.y||"up"==a&&d.y-10>i.center.y||"left"==a&&d.x-10>i.center.x||"right"==a&&d.x+10<i.center.x)&&(u.push(e),e.shape=i,h.push(()=>e.shape=n))}}),e.preventDefault(),s.disable();const p=s.computeCollisions(u,Uo);M(()=>h.forEach(e=>e()));const[f]=p;if(!f)return;const{id:g}=f,{index:m,group:v}=l.sortable;i.setDropTarget(g).then(()=>{const{source:e,target:t,shape:o}=n;if(!e||!$c(e)||!o)return;const{index:r,group:a,target:l}=e.sortable,c=m!==r||v!==a,d=c?l:null==t?void 0:t.element;if(!d)return;No(d);const u=new Io(d);if(!u)return;const h=Nt.delta(u,Nt.from(o.current.boundingRectangle),e.alignment);i.move({by:h}),c?i.setDropTarget(e.id).then(()=>s.enable()):s.enable()})})});this.destroy=()=>{n(),t()}}},class extends fn{constructor(e){super(e);const t=()=>{const t=new Map;for(const n of e.registry.droppables)if(n instanceof yd){const{sortable:e}=n,{group:i}=e;let s=t.get(i);s||(s=new Set,t.set(i,s)),s.add(e)}return t},n=[e.monitor.addEventListener("dragover",(e,n)=>{if(this.disabled)return;const{dragOperation:i}=n,{source:s,target:o}=i;if(!$c(s)||!$c(o))return;if(s.sortable===o.sortable)return;const r=t(),a=Zc(r),l=s.sortable.group===o.sortable.group,c=r.get(s.sortable.group),d=l?c:r.get(o.sortable.group);c&&d&&queueMicrotask(()=>{e.defaultPrevented||n.renderer.rendering.then(()=>{var i,u;const h=t();if(Qc(a,r,h))return;const p=s.sortable.element,f=o.sortable.element;if(!f||!p)return;if(!l&&o.id===s.sortable.group)return;const g=sd(c),m=l?g:sd(d),v=null!=(i=s.sortable.group)?i:ed,w=null!=(u=o.sortable.group)?u:ed,y={[v]:g,[w]:m},x=function(e,t){return function(e,t,n){var i,s;const{source:o,target:r,canceled:a}=t.operation;if(!o||!r||a)return"preventDefault"in t&&t.preventDefault(),e;const l=(e,t)=>e===t||null!==e&&"object"==typeof e&&"id"in e&&e.id===t;if(Array.isArray(e)){const i=e.findIndex(e=>l(e,o.id)),s=e.findIndex(e=>l(e,r.id));if(-1===i||-1===s){if(Jc(o)){const i=o.initialIndex,s=o.index;return i===s||i<0||i>=e.length?("preventDefault"in t&&t.preventDefault(),e):n(e,i,s)}return e}if(!a&&"index"in o&&"number"==typeof o.index){const t=o.index;if(t!==i)return n(e,i,t)}return n(e,i,s)}const c=Object.entries(e);let d,u,h=-1,p=-1;for(const[e,t]of c)if(-1===h&&(h=t.findIndex(e=>l(e,o.id)),-1!==h&&(d=e)),-1===p&&(p=t.findIndex(e=>l(e,r.id)),-1!==p&&(u=e)),-1!==h&&-1!==p)break;if(-1===h&&Jc(o)){const i=null==o.initialGroup?void 0:Gc(e,o.initialGroup),s=o.initialIndex,r=null==o.group?void 0:Gc(e,o.group),a=o.index;if(null==i||null==r)return"preventDefault"in t&&t.preventDefault(),e;if(i===r&&s===a)return"preventDefault"in t&&t.preventDefault(),e;if(i===r)return Xc(Yc({},e),{[i]:n(e[i],s,a)});const l=e[i][s];return Xc(Yc({},e),{[i]:[...e[i].slice(0,s),...e[i].slice(s+1)],[r]:[...e[r].slice(0,a),l,...e[r].slice(a)]})}if(!o.manager)return e;const{dragOperation:f}=o.manager,g=null!=(s=null==(i=f.shape)?void 0:i.current.center)?s:f.position.current;if(null==u){const t=Gc(e,r.id);null!=t&&(u=t,p=r.shape&&g.y>r.shape.center.y?e[t].length:0)}if(null==d||null==u||d===u&&h===p){if(null!=d&&d===u&&h===p&&Jc(o)){const t=null==o.group?void 0:Gc(e,o.group),i=null!=o.group&&t!==d,s=o.index!==h;if(i||s){const i=null==o.group?d:t;if(null!=i){if(d===i)return Xc(Yc({},e),{[d]:n(e[d],h,o.index)});const t=e[d][h];return Xc(Yc({},e),{[d]:[...e[d].slice(0,h),...e[d].slice(h+1)],[i]:[...e[i].slice(0,o.index),t,...e[i].slice(o.index)]})}}}return"preventDefault"in t&&t.preventDefault(),e}if(d===u)return Xc(Yc({},e),{[d]:n(e[d],h,p)});const m=r.shape&&Math.round(g.y)>Math.round(r.shape.center.y)?1:0,v=e[d][h];return Xc(Yc({},e),{[d]:[...e[d].slice(0,h),...e[d].slice(h+1)],[u]:[...e[u].slice(0,p+m),v,...e[u].slice(p+m)]})}(e,t,Kc)}(y,e);if(y===x)return;const b=x[w].indexOf(s.sortable),_=x[w].indexOf(o.sortable);n.collisionObserver.disable(),td(p,b,f,_),M(()=>{for(const[e,t]of x[v].entries())t.index=e;if(!l)for(const[e,t]of x[w].entries())t.group=o.sortable.group,t.index=e}),n.actions.setDropTarget(s.id).then(()=>n.collisionObserver.enable())})})}),e.monitor.addEventListener("dragend",(e,n)=>{if(!e.canceled)return;const{dragOperation:i}=n,{source:s}=i;$c(s)&&(s.sortable.initialIndex===s.sortable.index&&s.sortable.initialGroup===s.sortable.group||queueMicrotask(()=>{const e=t(),i=Zc(e),o=e.get(s.sortable.initialGroup);o&&n.renderer.rendering.then(()=>{const n=t();if(Qc(i,e,n))return;const r=sd(o),a=sd(o,id),l=s.sortable.element,c=r[a.indexOf(s.sortable)],d=null==c?void 0:c.element;c&&d&&l&&(td(l,c.index,d,s.index),M(()=>{for(const t of e.values()){const e=Array.from(t).values();for(const t of e)t.index=t.initialIndex,t.group=t.initialGroup}}))})}))})];this.destroy=()=>{for(const e of n)e()}}}],rd={duration:250,easing:"cubic-bezier(0.25, 1, 0.5, 1)",idle:!1};function ad(e){var t,n;return"boolean"==typeof e?{draggable:e,droppable:e}:{draggable:null!=(t=null==e?void 0:e.draggable)&&t,droppable:null!=(n=null==e?void 0:e.droppable)&&n}}var ld,cd,dd,ud,hd,pd,fd,gd,md=new class{constructor(){ze(this,Je,new WeakMap)}get(e,t){var n;return e?null==(n=Be(this,Je).get(e))?void 0:n.get(t):void 0}set(e,t,n){var i;if(e)return Be(this,Je).has(e)||Be(this,Je).set(e,new Map),null==(i=Be(this,Je).get(e))?void 0:i.set(t,n)}clear(e){var t;return e?null==(t=Be(this,Je).get(e))?void 0:t.clear():void 0}};cd=[Ye],ld=[Ye];var vd=class{constructor(e,t){Rc(this,ud,Tc(dd,8,this)),Tc(dd,11,this),Rc(this,hd),Rc(this,pd),Rc(this,fd,Tc(dd,12,this)),Tc(dd,15,this),Rc(this,gd),this.register=()=>(M(()=>{var e,t;null==(e=this.manager)||e.registry.register(this.droppable),null==(t=this.manager)||t.registry.register(this.draggable)}),()=>this.unregister()),this.unregister=()=>{M(()=>{var e,t;null==(e=this.manager)||e.registry.unregister(this.droppable),null==(t=this.manager)||t.registry.unregister(this.draggable)})},this.destroy=()=>{M(()=>{this.droppable.destroy(),this.draggable.destroy()})};var n=e,{effects:i=()=>[],disabled:s,group:o,index:r,sensors:a,type:l,transition:c=rd,plugins:d}=n,u=((e,t)=>{var n={};for(var i in e)Sc.call(e,i)&&t.indexOf(i)<0&&(n[i]=e[i]);if(null!=e&&jc)for(var i of jc(e))t.indexOf(i)<0&&Cc.call(e,i)&&(n[i]=e[i]);return n})(n,["effects","disabled","group","index","sensors","type","transition","plugins"]);const h=Qi(d,od),p=ad(s);this.droppable=new yd(Ec(Oc({},u),{disabled:p.droppable}),t,this),this.draggable=new wd(Ec(Oc({},u),{disabled:p.draggable,plugins:h,effects:()=>[()=>{var e,t,n;const i=null==(e=this.manager)?void 0:e.dragOperation.status;(null==i?void 0:i.initializing)&&this.id===(null==(n=null==(t=this.manager)?void 0:t.dragOperation.source)?void 0:n.id)&&md.clear(this.manager),(null==i?void 0:i.dragging)&&md.set(this.manager,this.id,P(()=>({initialIndex:this.index,initialGroup:this.group})))},()=>{const{index:e,group:t,manager:n}=this,i=Wc(this,pd),s=Wc(this,hd);e===i&&t===s||(Fc(this,pd,e),Fc(this,hd,t),this.animate())},()=>{var e,t;const{target:n}=this,{isDragSource:i}=this.draggable;"move"===(null!=(t=null==(e=this.draggable.pluginConfig(fa))?void 0:e.feedback)?t:"default")&&i&&(this.droppable.disabled=!n)},...i()],type:l,sensors:a}),t,this),Fc(this,gd,u.element),this.manager=t,this.index=r,Fc(this,pd,r),this.group=o,Fc(this,hd,o),this.type=l,this.transition=c}get initialIndex(){var e,t;return null!=(t=null==(e=md.get(this.manager,this.id))?void 0:e.initialIndex)?t:this.index}get initialGroup(){var e,t;return null!=(t=null==(e=md.get(this.manager,this.id))?void 0:e.initialGroup)?t:this.group}animate(){P(()=>{const{manager:e,transition:t}=this,{shape:n}=this.droppable;if(!e)return;const{idle:i}=e.dragOperation.status;n&&t&&(!i||t.idle)&&e.renderer.rendering.then(()=>{const{element:i}=this;if(!i)return;for(const e of i.getAnimations())!("transitionProperty"in e)||"transform"!==e.transitionProperty&&"translate"!==e.transitionProperty&&"scale"!==e.transitionProperty||e.cancel();const s=this.refreshShape();if(!s)return;const o=n.boundingRectangle.left-s.boundingRectangle.left,r=n.boundingRectangle.top-s.boundingRectangle.top,{translate:a}=go(i),l=Mo(i,a,!1),c=Mo(i,a);if(o||r){const n=ks(hs(i))?Ec(Oc({},t),{duration:0}):t;Do({element:i,keyframes:{translate:[`${l.x+o}px ${l.y+r}px ${l.z}`,`${c.x}px ${c.y}px ${c.z}`]},options:n}).then(()=>{e.dragOperation.status.dragging||(this.droppable.shape=void 0)})}})})}get manager(){return this.draggable.manager}set manager(e){M(()=>{this.draggable.manager=e,this.droppable.manager=e})}set element(e){M(()=>{const t=Wc(this,gd),n=this.droppable.element,i=this.draggable.element;n&&n!==t||(this.droppable.element=e),i&&i!==t||(this.draggable.element=e),Fc(this,gd,e)})}get element(){var e,t;const n=Wc(this,gd);if(n)return null!=(t=null!=(e=Ds.get(n))?e:n)?t:this.droppable.element}set target(e){this.droppable.element=e}get target(){return this.droppable.element}set source(e){this.draggable.element=e}get source(){return this.draggable.element}get disabled(){const{disabled:e}=this.draggable,{disabled:t}=this.droppable;return e===t?e:{draggable:e,droppable:t}}set plugins(e){this.draggable.plugins=Qi(e,od)}set disabled(e){const t=ad(e);M(()=>{this.droppable.disabled=t.droppable,this.draggable.disabled=t.draggable})}set data(e){M(()=>{this.droppable.data=e,this.draggable.data=e})}set handle(e){this.draggable.handle=e}set id(e){this.droppable.id=e,this.draggable.id=e}get id(){return this.droppable.id}set sensors(e){this.draggable.sensors=e}set modifiers(e){this.draggable.modifiers=e}set collisionPriority(e){this.droppable.collisionPriority=e}set collisionDetector(e){this.droppable.collisionDetector=null!=e?e:zo}set alignment(e){this.draggable.alignment=e}get alignment(){return this.draggable.alignment}set type(e){M(()=>{this.droppable.type=e,this.draggable.type=e})}get type(){return this.draggable.type}set accept(e){this.droppable.accept=e}get accept(){return this.droppable.accept}get isDropTarget(){return this.droppable.isDropTarget}get isDragSource(){return this.draggable.isDragSource}get isDragging(){return this.draggable.isDragging}get isDropping(){return this.draggable.isDropping}get status(){return this.draggable.status}refreshShape(){return this.droppable.refreshShape()}accepts(e){return this.droppable.accepts(e)}};dd=[,,,wc(null)],ud=new WeakMap,hd=new WeakMap,pd=new WeakMap,fd=new WeakMap,gd=new WeakMap,Pc(dd,4,"index",cd,vd,ud),Pc(dd,4,"group",ld,vd,fd),((e,t)=>{return Nc(t,(n="metadata",(i=Symbol[n])?i:Symbol.for("Symbol."+n)),e[3]);var n,i})(dd,vd);var wd=class extends vl{constructor(e,t,n){super(e,t),this.sortable=n}get index(){return this.sortable.index}get initialIndex(){return this.sortable.initialIndex}get group(){return this.sortable.group}get initialGroup(){return this.sortable.initialGroup}},yd=class extends wl{constructor(e,t,n){super(e,t),this.sortable=n}get index(){return this.sortable.index}get group(){return this.sortable.group}},xd=Object.defineProperty,bd=Object.defineProperties,_d=Object.getOwnPropertyDescriptors,jd=Object.getOwnPropertySymbols,Sd=Object.prototype.hasOwnProperty,Cd=Object.prototype.propertyIsEnumerable,kd=(e,t,n)=>t in e?xd(e,t,{enumerable:!0,configurable:!0,writable:!0,value:n}):e[t]=n,Nd=(e,t)=>{for(var n in t||(t={}))Sd.call(t,n)&&kd(e,n,t[n]);if(jd)for(var n of jd(t))Cd.call(t,n)&&kd(e,n,t[n]);return e};function Od(e,t,n){return!("isDragSource"!==e||n||!t)}function Ed(){if("function"==typeof crypto.randomUUID)return crypto.randomUUID();const e=crypto.getRandomValues(new Uint8Array(16));e[6]=15&e[6]|64,e[8]=63&e[8]|128;const t=Array.from(e,e=>e.toString(16).padStart(2,"0")).join("");return`${t.slice(0,8)}-${t.slice(8,12)}-${t.slice(12,16)}-${t.slice(16,20)}-${t.slice(20)}`}function Dd(e="New choice"){return{uuid:Ed(),label:e,description:"",color:"#5B4FF5",default:!1,disabled:!1,pricing:{strategy:"none",amount:"0"}}}function Md(e){const t=window.WooOptionsFicAdmin.fieldTypes[e],n={uuid:Ed(),type:e,label:t?.label??"New field",description:"",required:!1,disabled:!1,pricing:{strategy:"none",amount:"0"},conditions:{},style:{},preview:{},help:""};return["select","radio","checkbox_group","segmented","color_swatch","image_swatch","product","font"].includes(e)&&(n.choices=[{...Dd("Option one"),default:!0},Dd("Option two")],n.multiple=["checkbox_group","product"].includes(e)),["text","textarea","email","tel","url"].includes(e)&&(n.maxLength="textarea"===e?500:120,n.placeholder=""),["number","range","quantity","customer_defined_price"].includes(e)&&(n.min="customer_defined_price"===e?"1":"0",n.max="customer_defined_price"===e?"10000":"100",n.step="quantity"===e?"1":"0.01"),"file"===e&&(n.allowedExtensions=["jpg","jpeg","png","webp","pdf"],n.maxFileMb=5,n.maxFiles=1),"repeater"===e&&(n.minRows=1,n.defaultRows=1,n.maxRows=10,n.rowTitle="Item {index}",n.children=[{...Md("text"),label:"Item name",required:!0}]),["heading","paragraph","help"].includes(e)&&(n.content="heading"===e?"A helpful section heading":"Add concise, useful guidance for your customer."),["formula","calculated"].includes(e)&&(n.expression="0",n.pricing="formula"===e?{strategy:"formula",expression:"0",mode:"adjustment"}:{strategy:"none"}),n}function Ad(e){const t=structuredClone(e),n=new Map,i=e=>{e&&"object"==typeof e&&("uuid"in e&&"string"==typeof e.uuid&&n.set(e.uuid,Ed()),Object.values(e).forEach(i))};i(t);const s=e=>"string"==typeof e&&n.has(e)?n.get(e):Array.isArray(e)?e.map(s):e&&"object"==typeof e?Object.fromEntries(Object.entries(e).map(([e,t])=>[e,s(t)])):e,o=s(t);return o.label=`${o.label} copy`,o}const Td={select:"⌄",radio:"◉",checkbox_group:"☑",checkbox:"✓",toggle:"↔",segmented:"▦",color_swatch:"●",image_swatch:"▧",product:"◇",text:"T",textarea:"¶",password:"••",tel:"☎",email:"@",url:"↗",number:"#",range:"━",quantity:"±",date:"◷",date_range:"↔",time:"◴",datetime:"◷",customer_defined_price:"$",color_picker:"◐",file:"↥",font:"Aa",formula:"ƒ",calculated:"=",repeater:"⟳",heading:"H",paragraph:"¶",help:"?",separator:"—",spacer:"↕"};const WofPaletteIconMap={select:"list-view",radio:"marker",checkbox_group:"yes-alt",checkbox:"yes",toggle:"controls-repeat",segmented:"screenoptions",color_swatch:"art",image_swatch:"format-image",product:"products",text:"editor-textcolor",textarea:"editor-alignleft",password:"lock",tel:"phone",email:"email",url:"admin-links",number:"editor-ol",range:"controls-volumeon",quantity:"plus-alt2",date:"calendar-alt",date_range:"calendar",time:"clock",datetime:"schedule",customer_defined_price:"money-alt",color_picker:"admin-appearance",file:"media-document",font:"editor-textcolor",formula:"editor-code",calculated:"calculator",repeater:"update",heading:"heading",paragraph:"editor-paragraph",help:"editor-help",separator:"minus",spacer:"image-flip-vertical"};function Pd(e){return e.choices?.length?(0,i.sprintf)(/* translators: %d: number of choices. */ /* translators: %d: number of choices. */
-(0,i.__)("%d choices","wooptionsfic"),e.choices.length):"repeater"===e.type?(0,i.sprintf)(/* translators: %d: maximum rows. */ /* translators: %d: maximum rows. */
-(0,i.__)("Up to %d rows","wooptionsfic"),e.maxRows??10):e.pricing?.strategy&&"none"!==e.pricing.strategy?e.pricing.strategy.split("_").join(" "):window.WooOptionsFicAdmin.fieldTypes[e.type]?.label??e.type}function Id({field:e}){const t=e.choices?.slice(0,3)??[],n=t[0]?.label??(0,i.__)("Choose an option","wooptionsfic");return"heading"===e.type?(0,s.jsx)("h4",{children:e.content||e.label}):"paragraph"===e.type||"help"===e.type?(0,s.jsx)("p",{children:e.content||e.description||(0,i.__)("Helpful customer-facing content.","wooptionsfic")}):"separator"===e.type?(0,s.jsx)("hr",{}):"spacer"===e.type?(0,s.jsx)("span",{className:"wof-preview-spacer"}):["formula","calculated"].includes(e.type)?(0,s.jsxs)("div",{className:"wof-preview-calculated",children:[(0,s.jsx)("span",{children:(0,i.__)("Server-calculated result","wooptionsfic")}),(0,s.jsx)("strong",{children:"—"})]}):"select"===e.type||"font"===e.type?(0,s.jsxs)("div",{className:"wof-preview-select",children:[(0,s.jsx)("span",{children:n}),(0,s.jsx)("b",{"aria-hidden":"true",children:"⌄"})]}):["radio","checkbox_group","segmented","color_swatch","image_swatch","product"].includes(e.type)?(0,s.jsxs)("div",{className:`wof-preview-choices is-${e.type}`,children:[t.map((t,n)=>(0,s.jsxs)("span",{className:t.default||0===n?"is-selected":"",children:["color_swatch"===e.type&&(0,s.jsx)("i",{style:{"--wof-preview-swatch":t.color||"#5B4FF5"}}),"image_swatch"===e.type&&(0,s.jsx)("i",{className:"is-image",children:"▧"}),t.label]},t.uuid)),0===t.length&&(0,s.jsx)("span",{children:n})]}):"checkbox"===e.type||"toggle"===e.type?(0,s.jsxs)("div",{className:"wof-preview-toggle",children:[(0,s.jsx)("i",{className:e.default?"is-on":""}),(0,s.jsx)("span",{children:e.label})]}):"file"===e.type?(0,s.jsxs)("div",{className:"wof-preview-upload",children:[(0,s.jsxs)("div",{className:"wof-preview-upload__picker",children:[(0,s.jsxs)("span",{className:"wof-preview-upload__button",children:[(0,s.jsx)("span",{className:"dashicons dashicons-upload","aria-hidden":"true"}),(0,i.__)("Upload","wooptionsfic")]}),(0,s.jsx)("span",{children:(0,i.__)("Click or drag and drop","wooptionsfic")})]}),(0,s.jsxs)("div",{className:"wof-preview-upload__item",children:[(0,s.jsx)("span",{className:"dashicons dashicons-no-alt wof-preview-upload__remove","aria-hidden":"true"}),(0,s.jsx)("span",{className:"dashicons dashicons-format-image wof-preview-upload__file-icon","aria-hidden":"true"}),(0,s.jsxs)("span",{className:"wof-preview-upload__copy",children:[(0,s.jsx)("strong",{children:(0,i.__)("Uploaded product name","wooptionsfic")}),(0,s.jsx)("span",{className:"wof-preview-upload__progress",children:(0,s.jsx)("i",{})})]}),(0,s.jsx)("small",{children:"0.20 MB"})]})]}):"repeater"===e.type?(0,s.jsxs)("div",{className:"wof-preview-repeater",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("strong",{children:(e.rowTitle||(0,i.__)("Item {index}","wooptionsfic")).replace("{index}","1")}),(0,s.jsx)("small",{children:(0,i.sprintf)(/* translators: %d: number of child fields. */ /* translators: %d: number of child fields. */
-(0,i.__)("%d nested fields","wooptionsfic"),e.children?.length??0)})]}),(0,s.jsxs)("button",{type:"button",tabIndex:-1,disabled:!0,children:["＋ ",(0,i.__)("Add another","wooptionsfic")]})]}):"textarea"===e.type?(0,s.jsx)("div",{className:"wof-preview-input is-textarea",children:e.placeholder||(0,i.__)("Enter your details…","wooptionsfic")}):"range"===e.type?(0,s.jsxs)("div",{className:"wof-preview-range",children:[(0,s.jsx)("span",{children:(0,s.jsx)("i",{})}),(0,s.jsx)("b",{children:e.default?String(e.default):e.min||"0"})]}):"color_picker"===e.type?(0,s.jsxs)("div",{className:"wof-preview-color",children:[(0,s.jsx)("i",{}),(0,s.jsx)("span",{children:String(e.default||"#5B4FF5")})]}):(0,s.jsx)("div",{className:"wof-preview-input",children:e.placeholder||e.description||(0,i.__)("Customer value","wooptionsfic")})}function Wd({field:e,index:t,count:n,selected:o,onSelect:r,onMove:a,onDuplicate:l,onDelete:c}){const{ref:d,handleRef:u,isDragging:h,isDropTarget:p}=function(e){const{accept:t,collisionDetector:n,collisionPriority:i,id:s,data:o,element:r,handle:a,index:l,group:c,disabled:d,modifiers:u,sensors:h,target:p,type:f,plugins:g}=e,m=Nd(Nd({},rd),e.transition),v=Bl(t=>new vd(((e,t)=>bd(e,_d(t)))(Nd({},e),{transition:m,register:!1,handle:xl(a),element:xl(r),target:xl(p)}),t)),w=_l(v,Od);return Cl(s,()=>v.id=s),bl(()=>{M(()=>{v.group=c,v.index=l})},[v,c,l]),Cl(f,()=>v.type=f),Cl(t,()=>v.accept=t,void 0,He),Cl(o,()=>o&&(v.data=o)),Cl(l,()=>{var e;(null==(e=v.manager)?void 0:e.dragOperation.status.idle)&&(null==m?void 0:m.idle)&&v.refreshShape()},jl),kl(a,e=>v.handle=e),kl(r,e=>v.element=e),kl(p,e=>v.target=e),Cl(d,()=>v.disabled=null!=d&&d,void 0,He),Cl(h,()=>v.sensors=h,void 0,He),Cl(n,()=>v.collisionDetector=n),Cl(i,()=>v.collisionPriority=i),Cl(g,()=>v.plugins=g,void 0,He),Cl(m,()=>v.transition=m,void 0,He),Cl(u,()=>v.modifiers=u,void 0,He),Cl(e.alignment,()=>v.alignment=e.alignment),{sortable:w,get isDragging(){return w.isDragging},get isDropping(){return w.isDropping},get isDragSource(){return w.isDragSource},get isDropTarget(){return w.isDropTarget},handleRef:(0,O.useCallback)(e=>{v.handle=null!=e?e:void 0},[v]),ref:(0,O.useCallback)(e=>{var t,n;(e||!(null==(t=v.element)?void 0:t.isConnected)||(null==(n=v.manager)?void 0:n.dragOperation.status.idle))&&(v.element=null!=e?e:void 0)},[v]),sourceRef:(0,O.useCallback)(e=>{var t,n;(e||!(null==(t=v.source)?void 0:t.isConnected)||(null==(n=v.manager)?void 0:n.dragOperation.status.idle))&&(v.source=null!=e?e:void 0)},[v]),targetRef:(0,O.useCallback)(e=>{var t,n;(e||!(null==(t=v.target)?void 0:t.isConnected)||(null==(n=v.manager)?void 0:n.dragOperation.status.idle))&&(v.target=null!=e?e:void 0)},[v])}}({id:e.uuid,index:t,group:"builder-fields",data:{kind:"canvas",index:t,uuid:e.uuid}});return(0,s.jsxs)("article",{ref:d,className:["wof-canvas-field",o?"is-selected":"",h?"is-dragging":"",p?"is-drop-target":""].filter(Boolean).join(" "),children:[(0,s.jsx)("button",{type:"button",className:"wof-canvas-field__select",onClick:r,"aria-label":(0,i.sprintf)(/* translators: 1: field label, 2: position, 3: total fields. */ /* translators: 1: field label, 2: position, 3: total fields. */
-(0,i.__)("%1$s, field %2$d of %3$d","wooptionsfic"),e.label,t+1,n)}),(0,s.jsxs)("div",{className:"wof-canvas-field__toolbar",children:[(0,s.jsx)("button",{type:"button",className:"wof-canvas-field__drag-control",ref:u,"aria-label":(0,i.sprintf)(/* translators: %s: field label. */ /* translators: %s: field label. */
-(0,i.__)("Drag %s","wooptionsfic"),e.label),title:(0,i.__)("Drag to reorder","wooptionsfic"),children:(0,s.jsx)("span",{className:"wof-drag-grip","aria-hidden":"true"})}),(0,s.jsx)("button",{type:"button",onClick:l,"aria-label":(0,i.__)("Duplicate field","wooptionsfic"),title:(0,i.__)("Duplicate field","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-admin-page","aria-hidden":"true"})}),(0,s.jsx)("button",{type:"button",className:"is-destructive",onClick:c,"aria-label":(0,i.__)("Delete field","wooptionsfic"),title:(0,i.__)("Delete field","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-trash","aria-hidden":"true"})})]}),(0,s.jsxs)("div",{className:"wof-canvas-field__copy",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("strong",{children:e.label||(0,i.__)("Untitled field","wooptionsfic")}),e.required&&(0,s.jsx)("span",{children:(0,i.__)("Required","wooptionsfic")})]}),(0,s.jsx)("small",{children:Pd(e)})]}),(0,s.jsx)("div",{className:"wof-canvas-field__preview","aria-hidden":"true",children:(0,s.jsx)(Id,{field:e})})]})}function Rd({fields:e,document:t,selectedUuid:n,device:o,onSelect:r,onMove:a,onDuplicate:l,onDelete:c}){
-const{ref:d,isDropTarget:u}=function(e){const{collisionDetector:t,data:n,disabled:i,element:s,id:o,accept:r,type:a}=e,l=Bl(t=>new wl(Il(Pl({},e),{register:!1,element:xl(s)}),t)),c=_l(l);return Cl(o,()=>l.id=o),kl(s,e=>l.element=e),Cl(r,()=>l.accept=r,void 0,He),Cl(t,()=>l.collisionDetector=null!=t?t:uc),Cl(n,()=>n&&(l.data=n)),Cl(i,()=>l.disabled=!0===i),Cl(a,()=>l.type=a),{droppable:c,get isDropTarget(){return c.isDropTarget},ref:(0,O.useCallback)(e=>{var t,n;(e||!(null==(t=l.element)?void 0:t.isConnected)||(null==(n=l.manager)?void 0:n.dragOperation.status.idle))&&(l.element=null!=e?e:void 0)},[l])}}({id:"canvas-end",data:{kind:"canvas-end",index:e.length}}),h=window.WooOptionsFicAdmin.palettes[t.style.palette]??window.WooOptionsFicAdmin.palettes["iris-studio"],p={...h?.tokens??{},...t.style.overrides},f=t.style.typography,m={inherit:"inherit","system-ui":'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',Inter:'"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',Manrope:'"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',Poppins:'"Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',Outfit:'"Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',"Plus Jakarta Sans":'"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',Roboto:'"Roboto", Arial, sans-serif'},g={"--wof-preview-primary":p.primary||"#5B4FF5","--wof-preview-background":p.background||"#F7F7FC","--wof-preview-surface":p.surface||"#FFFFFF","--wof-preview-text":p.text||"#172033","--wof-preview-muted":p.muted||"#5E6A7D","--wof-preview-border":p.border||"#D8DEEA","--wof-preview-font":m[f.family]??"inherit","--wof-preview-label-weight":String(f.labelWeight??650)};const[v,y]=(0,O.useState)(!1),[x,b]=(0,O.useState)(100);return(0,s.jsxs)("section",{className:"wof-builder-canvas "+(v?"is-preview-mode":"is-edit-mode"),children:[(0,s.jsxs)("div",{className:"wof-canvas-toolbar",children:[(0,s.jsxs)("div",{className:"wof-canvas-toolbar__copy",children:[(0,s.jsx)("h2",{children:(0,i.__)("Live storefront canvas","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("The builder and product page use the same component stylesheet.","wooptionsfic")})]}),(0,s.jsxs)("div",{className:"wof-canvas-toolbar__controls",children:[(0,s.jsxs)("div",{className:"wof-zoom-control",children:[(0,s.jsx)("button",{type:"button",disabled:x<=75,onClick:()=>b(Math.max(75,x-10)),"aria-label":(0,i.__)("Zoom out","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-minus","aria-hidden":"true"})}),(0,s.jsxs)("output",{children:[x,"%"]}),(0,s.jsx)("button",{type:"button",disabled:x>=125,onClick:()=>b(Math.min(125,x+10)),"aria-label":(0,i.__)("Zoom in","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-plus-alt2","aria-hidden":"true"})})]}),(0,s.jsxs)("span",{className:"wof-interactive-status",children:[(0,s.jsx)("i",{"aria-hidden":"true"}),(0,i.__)("Interactive","wooptionsfic")]}),(0,s.jsxs)("div",{className:"wof-mode-switcher",children:[(0,s.jsxs)("button",{type:"button",className:v?"":"is-active",onClick:()=>y(!1),children:[(0,s.jsx)("span",{className:"dashicons dashicons-edit","aria-hidden":"true"}),(0,i.__)("Edit","wooptionsfic")]}),(0,s.jsxs)("button",{type:"button",className:v?"is-active":"",onClick:()=>y(!0),children:[(0,s.jsx)("span",{className:"dashicons dashicons-visibility","aria-hidden":"true"}),(0,i.__)("Preview","wooptionsfic")]})]})]})]}),(0,s.jsxs)("div",{className:`wof-canvas-device is-${o}`,style:{...g,zoom:x/100},children:[(0,s.jsxs)("div",{className:"wof-canvas-device__chrome",children:[(0,s.jsx)("span",{children:(0,i.__)("Live customer preview","wooptionsfic")}),(0,s.jsxs)("small",{children:[o," · ",t.layout.type]})]}),(0,s.jsx)("div",{className:"wof-canvas-frame",children:(0,s.jsxs)("div",{className:"wof-canvas-sheet "+(u?"is-drop-target":""),ref:d,children:[(0,s.jsxs)("div",{className:"wof-product-shell",children:[(0,s.jsxs)("aside",{className:"wof-product-shell__media",children:[(0,s.jsx)("div",{className:"wof-product-gallery__hero","aria-hidden":"true",children:(0,s.jsx)("span",{className:"dashicons dashicons-format-image"})}),(0,s.jsxs)("div",{className:"wof-product-gallery__thumbs","aria-hidden":"true",children:[(0,s.jsx)("div",{className:"wof-product-gallery__thumb",children:(0,s.jsx)("span",{className:"dashicons dashicons-format-image"})}),(0,s.jsx)("div",{className:"wof-product-gallery__thumb",children:(0,s.jsx)("span",{className:"dashicons dashicons-format-image"})}),(0,s.jsx)("div",{className:"wof-product-gallery__thumb",children:(0,s.jsx)("span",{className:"dashicons dashicons-format-image"})})]})]}),(0,s.jsxs)("div",{className:"wof-product-shell__content",children:[(0,s.jsxs)("div",{className:"wof-product-preview-meta",children:[(0,s.jsx)("span",{className:"wof-product-preview-meta__eyebrow",children:(0,i.__)("Live product preview","wooptionsfic")}),(0,s.jsx)("h1",{children:(0,i.__)("WowAddon Product (Preview)","wooptionsfic")}),(0,s.jsx)("strong",{className:"wof-product-preview-meta__price",children:"20.00 USD"})]}),e.length?(0,s.jsxs)("div",{className:`wof-canvas-fields is-${t.layout.type}`,children:[e.map((t,i)=>(0,s.jsx)(Wd,{field:t,index:i,count:e.length,selected:t.uuid===n,onSelect:()=>r(t.uuid),onMove:e=>a(i,i+e),onDuplicate:()=>l(t),onDelete:()=>c(t.uuid)},t.uuid)),(0,s.jsxs)("div",{className:"wof-canvas-drop-end",children:[(0,s.jsx)("span",{className:"dashicons dashicons-plus-alt2","aria-hidden":"true"}),(0,i.__)("Drop a field here","wooptionsfic")]})]}):(0,s.jsxs)("div",{className:"wof-canvas-empty",children:[(0,s.jsx)("div",{"aria-hidden":"true",children:(0,s.jsx)("span",{className:"dashicons dashicons-layout"})}),(0,s.jsx)("h3",{children:(0,i.__)("Your canvas is ready","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Choose a field from the palette or drag one into this product page preview.","wooptionsfic")})]})]})]})]})})]})]})}function Fd({type:e,label:t,onAdd:n}){const{ref:i,handleRef:o,isDragging:r}=function(e){const{disabled:t,data:n,element:i,handle:s,id:o,modifiers:r,sensors:a,plugins:l}=e,c=Bl(t=>new vl(Il(Pl({},e),{register:!1,handle:xl(s),element:xl(i)}),t)),d=_l(c,zl);return Cl(o,()=>c.id=o),kl(s,e=>c.handle=e),kl(i,e=>c.element=e),Cl(n,()=>n&&(c.data=n)),Cl(t,()=>c.disabled=!0===t),Cl(a,()=>c.sensors=a,void 0,He),Cl(r,()=>c.modifiers=r,void 0,He),Cl(l,()=>c.plugins=l,void 0,He),Cl(e.alignment,()=>c.alignment=e.alignment),{draggable:d,get isDragging(){return d.isDragging},get isDropping(){return d.isDropping},get isDragSource(){return d.isDragSource},handleRef:(0,O.useCallback)(e=>{c.handle=null!=e?e:void 0},[c]),ref:(0,O.useCallback)(e=>{var t,n;(e||!(null==(t=c.element)?void 0:t.isConnected)||(null==(n=c.manager)?void 0:n.dragOperation.status.idle))&&(c.element=null!=e?e:void 0)},[c])}}({id:`palette:${e}`,data:{kind:"palette",type:e}});return(0,s.jsxs)("button",{type:"button",ref:e=>{i(e),o(e)},className:"wof-palette-item "+(r?"is-dragging":""),onClick:()=>n(Md(e)),children:[(0,s.jsx)("span",{className:"wof-palette-item__grip","aria-hidden":"true"}),(0,s.jsx)("span",{className:"wof-palette-item__icon","aria-hidden":"true",children:(0,s.jsx)("span",{className:`dashicons dashicons-${WofPaletteIconMap[e]??"admin-generic"}`})}),(0,s.jsx)("strong",{children:t})]})}function $d({onAdd:e,onOpenStyle:q}){const[o,r]=(0,t.useState)(""),a=(0,t.useMemo)(()=>{const e=o.trim().toLowerCase(),t=new Map;return Object.entries(window.WooOptionsFicAdmin.fieldTypes).forEach(([n,i])=>{if(e&&!`${n} ${i.label} ${i.group}`.toLowerCase().includes(e))return;const s=t.get(i.group)??[];s.push({type:n,label:i.label}),t.set(i.group,s)}),t},[o]),l={choice:(0,i.__)("Choices","wooptionsfic"),boolean:(0,i.__)("Yes / no","wooptionsfic"),scalar:(0,i.__)("Inputs","wooptionsfic"),upload:(0,i.__)("Assets","wooptionsfic"),calculated:(0,i.__)("Pricing & outputs","wooptionsfic"),repeater:(0,i.__)("Structure","wooptionsfic"),content:(0,i.__)("Content","wooptionsfic")};return(0,s.jsxs)("aside",{className:"wof-builder-palette",children:[(0,s.jsxs)("div",{className:"wof-builder-pane__heading wof-palette-heading",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("h2",{children:(0,i.__)("Elements","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Drag or click to add to the live product form","wooptionsfic")})]}),(0,s.jsx)("button",{type:"button",className:"wof-pane-action",onClick:q,"aria-label":(0,i.__)("Open style studio","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-ellipsis","aria-hidden":"true"})})]}),(0,s.jsx)(n.SearchControl,{label:(0,i.__)("Search field types","wooptionsfic"),value:o,onChange:r,placeholder:(0,i.__)("Find a field…","wooptionsfic")}),(0,s.jsxs)("div",{className:"wof-palette-groups",children:[Array.from(a.entries()).map(([t,n])=>(0,s.jsxs)("section",{children:[(0,s.jsx)("h3",{children:l[t]??t}),(0,s.jsx)("div",{children:n.map(t=>(0,s.jsx)(Fd,{type:t.type,label:t.label,onAdd:e},t.type))})]},t)),0===a.size&&(0,s.jsx)("p",{className:"wof-palette-empty",children:(0,i.__)("No fields match that search.","wooptionsfic")})]}),(0,s.jsxs)("p",{className:"wof-palette-tip",children:[(0,s.jsx)("span",{"aria-hidden":"true",children:"⌘"}),(0,i.__)("Click to add, or drag a field onto the canvas.","wooptionsfic")]})]})}const Ld=[["content",(0,i.__)("Content","wooptionsfic")],["choices",(0,i.__)("Choices","wooptionsfic")],["pricing",(0,i.__)("Pricing","wooptionsfic")],["validation",(0,i.__)("Validation","wooptionsfic")],["logic",(0,i.__)("Logic","wooptionsfic")],["style",(0,i.__)("Style","wooptionsfic")],["advanced",(0,i.__)("Advanced","wooptionsfic")]];function Bd({imageId:e,required:o,onChange:r}){const[a,l]=(0,t.useState)("");(0,t.useEffect)(()=>{let c=!0;if(!e)return l(""),()=>{c=!1};const d=window.wp?.media?.attachment?.(e);if(!d)return()=>{c=!1};const u=()=>{if(!c)return;const e=d.toJSON?.()??{},t=e.sizes?.thumbnail?.url??e.sizes?.medium?.url??e.url??"";l(t)};u();const h=d.fetch?.();return h&&Promise.resolve(h).then(u).catch(()=>{c&&l("")}),()=>{c=!1}},[e]);return(0,s.jsxs)("div",{className:"wof-media-control",children:[(0,s.jsx)("div",{className:"wof-media-control__preview "+(e?"has-image":""),children:a?(0,s.jsx)("img",{src:a,alt:""}):(0,s.jsx)("span",{"aria-hidden":"true",children:"▧"})}),(0,s.jsxs)("div",{children:[(0,s.jsx)("strong",{children:o?(0,i.__)("Swatch image","wooptionsfic"):(0,i.__)("Choice image (optional)","wooptionsfic")}),(0,s.jsx)("small",{children:e?`Media #${e}`:(0,i.__)("No image selected","wooptionsfic")}),(0,s.jsxs)("div",{className:"wof-media-control__actions",children:[(0,s.jsx)(n.Button,{variant:"secondary",onClick:()=>{const e=window.wp?.media;if(!e)return;const t=e({title:(0,i.__)("Choose a choice image","wooptionsfic"),button:{text:(0,i.__)("Use this image","wooptionsfic")},library:{type:"image"},multiple:!1});t.on("select",()=>{const e=t.state().get("selection").first().toJSON(),n=Math.max(0,Number(e.id??0));n&&(r(n),l(e.sizes?.thumbnail?.url??e.url??""))}),t.open()},children:e?(0,i.__)("Replace","wooptionsfic"):(0,i.__)("Choose image","wooptionsfic")}),e>0&&(0,s.jsx)(n.Button,{variant:"tertiary",isDestructive:!0,onClick:()=>{r(0),l("")},children:(0,i.__)("Remove","wooptionsfic")})]})]})]})}function zd({field:e,allFields:o,onChange:r,onDuplicate:a,onDelete:l,document:m,onDocumentChange:c}){const[d,u]=(0,t.useState)("content"),g=(0,t.useRef)(null),[canScrollLeft,setCanScrollLeft]=(0,t.useState)(!1),[canScrollRight,setCanScrollRight]=(0,t.useState)(!1),updateTabOverflow=()=>{const e=g.current;if(!e)return;const t=Math.max(0,e.scrollWidth-e.clientWidth),n="rtl"===window.getComputedStyle(e).direction,i=e.scrollLeft,s=n?i<=0?-i:t-i:i;setCanScrollLeft(t>2&&(n?s<t-2:s>2)),setCanScrollRight(t>2&&(n?s>2:s<t-2))},scrollTabs=e=>{g.current?.scrollBy({left:e,behavior:"smooth"}),window.setTimeout(updateTabOverflow,260)},h=Boolean(e.choices),p=!["heading","paragraph","help","separator","spacer","formula","calculated"].includes(e.type),f=Ld.filter(e=>"choices"!==e[0]||h);(0,t.useEffect)(()=>{const e=g.current;if(!e)return;const n=()=>updateTabOverflow();window.requestAnimationFrame(n),e.addEventListener("scroll",n,{passive:!0}),window.addEventListener("resize",n);const i="ResizeObserver"in window?new ResizeObserver(n):null;return i?.observe(e),()=>{e.removeEventListener("scroll",n),window.removeEventListener("resize",n),i?.disconnect()}},[f.length]);return(0,s.jsxs)("aside",{className:"wof-builder-inspector",children:[(0,s.jsxs)("div",{className:"wof-builder-pane__heading wof-inspector-heading",children:[(0,s.jsx)("span",{className:"wof-inspector-heading__icon","aria-hidden":"true",children:"heading"===e.type?"H":String(e.label||e.type||"F").charAt(0).toUpperCase()}),(0,s.jsxs)("div",{className:"wof-inspector-heading__copy",children:[(0,s.jsx)("h2",{children:e.label||(0,i.__)("Untitled field","wooptionsfic")}),(0,s.jsx)("small",{children:e.type.split("_").join(" ")})]}),(0,s.jsxs)("div",{className:"wof-inspector-heading__actions",children:[(0,s.jsx)("button",{type:"button",onClick:a,"aria-label":(0,i.__)("Duplicate field","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-admin-page","aria-hidden":"true"})}),(0,s.jsx)("button",{type:"button",className:"is-destructive",onClick:l,"aria-label":(0,i.__)("Delete field","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-trash","aria-hidden":"true"})})]})]}),(0,s.jsxs)("div",{className:"wof-inspector-tabs-shell "+(canScrollLeft?"has-left ":"")+(canScrollRight?"has-right":""),children:[canScrollLeft&&(0,s.jsx)("button",{type:"button",className:"wof-inspector-tabs-arrow is-left",onClick:()=>scrollTabs(-180),"aria-label":(0,i.__)("Scroll settings tabs left","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-arrow-left-alt2","aria-hidden":"true"})}),(0,s.jsx)("div",{ref:g,className:"wof-inspector-tabs",role:"tablist","aria-label":(0,i.__)("Field settings","wooptionsfic"),children:f.map(([e,t])=>(0,s.jsx)("button",{type:"button",role:"tab","aria-selected":d===e,className:d===e?"is-active":"",onClick:n=>{u(e),n.currentTarget.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"}),window.setTimeout(updateTabOverflow,260)},children:t},e))}),canScrollRight&&(0,s.jsx)("button",{type:"button",className:"wof-inspector-tabs-arrow is-right",onClick:()=>scrollTabs(180),"aria-label":(0,i.__)("Scroll settings tabs right","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-arrow-right-alt2","aria-hidden":"true"})})]}),(0,s.jsxs)("div",{className:"wof-inspector-body",children:["content"===d&&(0,s.jsx)(Ud,{field:e,onChange:r}),"choices"===d&&e.choices&&(0,s.jsx)(qd,{field:e,onChange:r}),"pricing"===d&&(0,s.jsx)(Hd,{field:e,onChange:r}),"validation"===d&&(0,s.jsx)(Yd,{field:e,supportsValue:p,onChange:r}),"logic"===d&&(0,s.jsx)(Xd,{field:e,allFields:o,onChange:r}),"style"===d&&(0,s.jsx)(WofStyleControls,{document:m,onChange:c,embedded:!0}),"advanced"===d&&(0,s.jsxs)("div",{className:"wof-inspector-section",children:[(0,s.jsx)(n.TextControl,{label:(0,i.__)("Stable field UUID","wooptionsfic"),value:e.uuid,readOnly:!0,onChange:()=>{},help:(0,i.__)("Formulas, conditions, analytics, and order snapshots use this ID even when the label changes.","wooptionsfic")}),(0,s.jsx)(n.ToggleControl,{__nextHasNoMarginBottom:!0,label:(0,i.__)("Disable this field","wooptionsfic"),checked:Boolean(e.disabled),onChange:e=>r({disabled:e})}),(0,s.jsxs)("div",{className:"wof-inspector-actions",children:[(0,s.jsxs)(n.Button,{variant:"secondary",onClick:a,children:["⧉ ",(0,i.__)("Duplicate field","wooptionsfic")]}),(0,s.jsxs)(n.Button,{variant:"secondary",isDestructive:!0,onClick:l,children:["× ",(0,i.__)("Delete field","wooptionsfic")]})]})]})]})]})}function Ud({field:e,onChange:t}){const o=["heading","paragraph","help"].includes(e.type);return(0,s.jsxs)("div",{className:"wof-inspector-section",children:[(0,s.jsx)(n.TextControl,{label:(0,i.__)("Field label","wooptionsfic"),value:e.label,onChange:e=>t({label:e})}),o?(0,s.jsx)(n.TextareaControl,{label:(0,i.__)("Content","wooptionsfic"),value:e.content??"",rows:6,onChange:e=>t({content:e}),help:(0,i.__)("Safe emphasis, links, and simple formatting are sanitized on output.","wooptionsfic")}):(0,s.jsxs)(s.Fragment,{children:[(0,s.jsx)(n.TextareaControl,{label:(0,i.__)("Customer-facing description","wooptionsfic"),value:e.description??"",rows:3,onChange:e=>t({description:e})}),["text","textarea","tel","email","url","number"].includes(e.type)&&(0,s.jsx)(n.TextControl,{label:(0,i.__)("Placeholder","wooptionsfic"),value:e.placeholder??"",onChange:e=>t({placeholder:e})}),(0,s.jsx)(n.TextControl,{label:(0,i.__)("Contextual help","wooptionsfic"),value:e.help??"",onChange:e=>t({help:e})})]}),"file"===e.type&&(0,s.jsxs)(s.Fragment,{children:[(0,s.jsx)(n.TextControl,{label:(0,i.__)("Allowed extensions","wooptionsfic"),value:(e.allowedExtensions??[]).join(", "),onChange:e=>t({allowedExtensions:e.split(/[\s,]+/).map(e=>e.toLowerCase()).filter(Boolean)})}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Maximum file size (MB)","wooptionsfic"),value:String(e.maxFileMb??5),min:1,max:50,onChange:e=>t({maxFileMb:Number(e)})}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Maximum files","wooptionsfic"),value:String(e.maxFiles??1),min:1,max:10,onChange:e=>t({maxFiles:Number(e)})})]}),"repeater"===e.type&&(0,s.jsx)(Vd,{field:e,onChange:t})]})}function Vd({field:e,onChange:t}){const o=e.children??[];return(0,s.jsxs)("div",{className:"wof-repeater-editor",children:[(0,s.jsxs)("div",{className:"wof-three-column-controls",children:[(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Minimum","wooptionsfic"),value:String(e.minRows??0),min:0,max:25,onChange:e=>t({minRows:Number(e)})}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Default","wooptionsfic"),value:String(e.defaultRows??1),min:0,max:25,onChange:e=>t({defaultRows:Number(e)})}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Maximum","wooptionsfic"),value:String(e.maxRows??10),min:1,max:100,onChange:e=>t({maxRows:Number(e)})})]}),(0,s.jsx)(n.TextControl,{label:(0,i.__)("Row title","wooptionsfic"),value:e.rowTitle??"Item {index}",onChange:e=>t({rowTitle:e}),help:(0,i.__)("Use {index} for the row number.","wooptionsfic")}),(0,s.jsx)("h3",{children:(0,i.__)("Fields inside each row","wooptionsfic")}),o.map((e,r)=>(0,s.jsxs)("div",{className:"wof-child-field",children:[(0,s.jsx)("span",{children:r+1}),(0,s.jsx)(n.TextControl,{label:(0,i.__)("Child field label","wooptionsfic"),hideLabelFromVision:!0,value:e.label,onChange:n=>{const i=[...o];i[r]={...e,label:n},t({children:i})}}),(0,s.jsx)("small",{children:e.type}),(0,s.jsx)("button",{type:"button",onClick:()=>t({children:o.filter(t=>t.uuid!==e.uuid)}),"aria-label":(0,i.__)("Remove child field","wooptionsfic"),children:"×"})]},e.uuid)),(0,s.jsxs)("div",{className:"wof-child-add",children:[(0,s.jsxs)(n.Button,{variant:"secondary",onClick:()=>t({children:[...o,Md("text")]}),children:["＋ ",(0,i.__)("Text field","wooptionsfic")]}),(0,s.jsxs)(n.Button,{variant:"secondary",onClick:()=>t({children:[...o,Md("number")]}),children:["＋ ",(0,i.__)("Number field","wooptionsfic")]}),(0,s.jsxs)(n.Button,{variant:"secondary",onClick:()=>t({children:[...o,Md("select")]}),children:["＋ ",(0,i.__)("Choice field","wooptionsfic")]})]})]})}function qd({field:e,onChange:t}){const o=e.choices??[],r=(e,n)=>{const i=[...o];i[e]={...i[e],...n},t({choices:i})};return(0,s.jsxs)("div",{className:"wof-inspector-section",children:[(0,s.jsxs)("div",{className:"wof-inspector-section__intro",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("h3",{children:(0,i.__)("Choice library","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Stable IDs keep rules and order history intact when choices move or change names.","wooptionsfic")})]}),(0,s.jsxs)(n.Button,{variant:"secondary",onClick:()=>t({choices:[...o,Dd(`Option ${o.length+1}`)]}),children:["＋ ",(0,i.__)("Add","wooptionsfic")]})]}),(0,s.jsx)("div",{className:"wof-choice-editor-list",children:o.map((a,l)=>(0,s.jsxs)("article",{children:[(0,s.jsxs)("header",{children:[(0,s.jsx)("span",{"aria-hidden":"true",children:"⠿"}),(0,s.jsx)("strong",{children:l+1}),(0,s.jsx)("button",{type:"button",onClick:()=>t({choices:o.filter(e=>e.uuid!==a.uuid)}),"aria-label":(0,i.__)("Delete choice","wooptionsfic"),children:"×"})]}),(0,s.jsx)(n.TextControl,{label:(0,i.__)("Label","wooptionsfic"),value:a.label,onChange:e=>r(l,{label:e})}),(0,s.jsx)(n.TextControl,{label:(0,i.__)("Description","wooptionsfic"),value:a.description??"",onChange:e=>r(l,{description:e})}),"color_swatch"===e.type&&(0,s.jsxs)("label",{className:"wof-color-control",htmlFor:`wof-choice-color-${a.uuid}`,children:[(0,s.jsx)("span",{children:(0,i.__)("Swatch color","wooptionsfic")}),(0,s.jsx)("input",{id:`wof-choice-color-${a.uuid}`,type:"color",value:a.color||"#5B4FF5",onChange:e=>r(l,{color:e.currentTarget.value.toUpperCase()})}),(0,s.jsx)("code",{children:a.color||"#5B4FF5"})]}),["image_swatch","color_swatch","radio","checkbox_group","segmented","product"].includes(e.type)&&(0,s.jsx)(Bd,{imageId:a.imageId??0,required:"image_swatch"===e.type,onChange:e=>r(l,{imageId:e})}),"product"===e.type&&(0,s.jsxs)("div",{className:"wof-three-column-controls",children:[(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Product ID","wooptionsfic"),value:String(a.linkedProductId??""),min:1,onChange:e=>r(l,{linkedProductId:Math.max(0,Number(e))})}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Variation ID","wooptionsfic"),value:String(a.linkedVariationId??""),min:0,onChange:e=>r(l,{linkedVariationId:Math.max(0,Number(e))}),help:(0,i.__)("Optional; it must belong to the selected product.","wooptionsfic")}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Quantity","wooptionsfic"),value:String(a.linkedQuantity??1),min:1,max:100,onChange:e=>r(l,{linkedQuantity:Math.max(1,Math.min(100,Number(e)))})})]}),(0,s.jsxs)("div",{className:"wof-two-column-controls",children:[(0,s.jsx)(n.SelectControl,{label:(0,i.__)("Choice price","wooptionsfic"),value:a.pricing?.strategy??"none",options:[{label:(0,i.__)("No adjustment","wooptionsfic"),value:"none"},{label:(0,i.__)("Fixed adjustment","wooptionsfic"),value:"fixed"},{label:(0,i.__)("Percentage","wooptionsfic"),value:"percentage"}],onChange:e=>r(l,{pricing:{...a.pricing,strategy:e}})}),"none"!==a.pricing?.strategy&&(0,s.jsx)(n.TextControl,{type:"number",label:"percentage"===a.pricing?.strategy?(0,i.__)("Percent","wooptionsfic"):(0,i.__)("Amount","wooptionsfic"),value:"percentage"===a.pricing?.strategy?a.pricing?.percent??"0":a.pricing?.amount??"0",onChange:e=>r(l,{pricing:{...a.pricing,strategy:a.pricing?.strategy??"fixed",..."percentage"===a.pricing?.strategy?{percent:e}:{amount:e}}})})]}),(0,s.jsx)(n.ToggleControl,{__nextHasNoMarginBottom:!0,label:(0,i.__)("Default choice","wooptionsfic"),checked:Boolean(a.default),onChange:n=>{const i=o.map((t,i)=>({...t,default:e.multiple?i===l?n:t.default:i===l&&n}));t({choices:i})}})]},a.uuid))})]})}function Hd({field:e,onChange:t}){const o=e.pricing??{strategy:"none"};return(0,s.jsxs)("div",{className:"wof-inspector-section",children:[(0,s.jsxs)("div",{className:"wof-info-strip",children:[(0,s.jsx)("span",{"aria-hidden":"true",children:"◎"}),(0,s.jsx)("p",{children:(0,i.__)("All totals are recalculated on the server. Browser previews never become commerce truth.","wooptionsfic")})]}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)("Price strategy","wooptionsfic"),value:o.strategy,options:[{label:(0,i.__)("No price change","wooptionsfic"),value:"none"},{label:(0,i.__)("Fixed adjustment","wooptionsfic"),value:"fixed"},{label:(0,i.__)("Percentage of base price","wooptionsfic"),value:"percentage"},{label:(0,i.__)("Per character","wooptionsfic"),value:"per_character"},{label:(0,i.__)("Per unit","wooptionsfic"),value:"per_unit"},{label:(0,i.__)("One-time setup fee","wooptionsfic"),value:"setup"},{label:(0,i.__)("Advanced formula","wooptionsfic"),value:"formula"}],onChange:e=>t({pricing:{...o,strategy:e}})}),["fixed","per_character","per_unit","setup"].includes(o.strategy)&&(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Amount","wooptionsfic"),value:o.amount??"0",step:"0.01",onChange:e=>t({pricing:{...o,amount:e}})}),"percentage"===o.strategy&&(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Percentage","wooptionsfic"),value:o.percent??"0",step:"0.01",onChange:e=>t({pricing:{...o,percent:e}})}),"formula"===o.strategy&&(0,s.jsxs)(s.Fragment,{children:[(0,s.jsx)(n.TextareaControl,{label:(0,i.__)("Formula","wooptionsfic"),value:o.expression??"0",rows:7,onChange:e=>t({pricing:{...o,expression:e}}),help:(0,i.__)('Use FIELD("uuid"), base_price, quantity, IF, MIN, MAX, ROUND, ABS, CEIL, FLOOR, and POW.',"wooptionsfic")}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)("Formula result","wooptionsfic"),value:o.mode??"adjustment",options:[{label:(0,i.__)("Add as an adjustment","wooptionsfic"),value:"adjustment"},{label:(0,i.__)("Set the configured unit price","wooptionsfic"),value:"unit_price"}],onChange:e=>t({pricing:{...o,mode:e}})})]})]})}function Yd({field:e,supportsValue:t,onChange:o}){return t?(0,s.jsxs)("div",{className:"wof-inspector-section",children:[(0,s.jsx)(n.ToggleControl,{__nextHasNoMarginBottom:!0,label:(0,i.__)("Customer must complete this field","wooptionsfic"),checked:Boolean(e.required),onChange:e=>o({required:e})}),["number","range","quantity","customer_defined_price"].includes(e.type)&&(0,s.jsxs)("div",{className:"wof-three-column-controls",children:[(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Minimum","wooptionsfic"),value:e.min??"",onChange:e=>o({min:e})}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Maximum","wooptionsfic"),value:e.max??"",onChange:e=>o({max:e})}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Step","wooptionsfic"),value:e.step??"",onChange:e=>o({step:e})})]}),["text","textarea","password","tel","email","url"].includes(e.type)&&(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Maximum characters","wooptionsfic"),value:String(e.maxLength??0),min:0,max:1e4,onChange:e=>o({maxLength:Number(e)})}),e.choices&&e.multiple&&(0,s.jsxs)("div",{className:"wof-two-column-controls",children:[(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Minimum choices","wooptionsfic"),value:String(e.minChoices??0),min:0,onChange:e=>o({minChoices:Number(e)})}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Maximum choices","wooptionsfic"),value:String(e.maxChoices??0),min:0,onChange:e=>o({maxChoices:Number(e)})})]})]}):(0,s.jsx)("div",{className:"wof-inspector-section",children:(0,s.jsxs)("div",{className:"wof-inherit-card",children:[(0,s.jsx)("span",{"aria-hidden":"true",children:"✓"}),(0,s.jsx)("h3",{children:(0,i.__)("No customer value to validate","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("This block displays content or a calculated result.","wooptionsfic")})]})})}function Xd({field:e,allFields:o,onChange:r}){
-const a=(0,t.useMemo)(()=>o.filter(t=>t.uuid!==e.uuid&&!['heading','paragraph','help','separator','spacer','formula','calculated'].includes(t.type)),[o,e.uuid]),l=e.conditions?.visible,c=(0,t.useMemo)(()=>{let t='show',n=l;if(n?.logic==='not'){t='hide';n=n.not??n.condition??{}}let i='and',s=[];if(n?.wofRoot&&Array.isArray(n.conditions))i=['and','or'].includes(n.logic)?n.logic:'and',s=n.conditions;else if(['and','or'].includes(n?.logic)&&Array.isArray(n.conditions)){const e=n.conditions.some(e=>e&&['and','or'].includes(e.logic)&&Array.isArray(e.conditions));e?(i=n.logic,s=n.conditions):s=[n]}else n&&(n.left||n.field)&&(s=[{logic:'and',conditions:[n]}]);const o=s.map(e=>({logic:['and','or'].includes(e?.logic)?e.logic:'and',conditions:(Array.isArray(e?.conditions)?e.conditions:[e]).filter(Boolean).map(e=>({field:e?.left?.field??e?.field??'',operator:e?.operator??'equals',value:String(e?.right?.literal??e?.value??'')}))})).filter(e=>e.conditions.length);return{enabled:Boolean(l),effect:t,rootLogic:i,groups:o.length?o:[{logic:'and',conditions:[{field:a[0]?.uuid??'',operator:'equals',value:String(a[0]?.choices?.[0]?.uuid??'')}]}]}},[l,a]),d=[{label:(0,i.__)('equals','wooptionsfic'),value:'equals'},{label:(0,i.__)('does not equal','wooptionsfic'),value:'not_equals'},{label:(0,i.__)('contains / is selected','wooptionsfic'),value:'contains'},{label:(0,i.__)('does not contain','wooptionsfic'),value:'not_contains'},{label:(0,i.__)('is greater than','wooptionsfic'),value:'greater_than'},{label:(0,i.__)('is less than','wooptionsfic'),value:'less_than'},{label:(0,i.__)('is empty','wooptionsfic'),value:'empty'},{label:(0,i.__)('is not empty','wooptionsfic'),value:'not_empty'}],u=e=>{const t=a.find(t=>t.uuid===e),n=t?.multiple||['checkbox_group','product'].includes(t?.type)?'contains':'equals';return{field:e,operator:n,value:String(t?.choices?.[0]?.uuid??'')}},h=()=>c.groups.map(e=>({...e,conditions:e.conditions.map(e=>({...e}))})),p=l=>{const t={...c,...l},n={...e.conditions??{}};if(!t.enabled){delete n.visible,r({conditions:n});return}const i=t.groups.map(e=>({logic:e.logic,conditions:e.conditions.filter(e=>e.field).map(e=>({left:{field:e.field},operator:e.operator,right:{literal:e.value}})),wofGroup:!0})).filter(e=>e.conditions.length);if(!i.length){delete n.visible,r({conditions:n});return}let s=1===i.length?i[0]:{logic:t.rootLogic,conditions:i,wofRoot:!0};'hide'===t.effect&&(s={logic:'not',condition:s,wofEffect:'hide'}),n.visible=s,r({conditions:n})},f=(e,t)=>{const n=h();n[e]={...n[e],...t},p({groups:n})},g=(e,t,n)=>{const i=h();i[e].conditions[t]={...i[e].conditions[t],...n},p({groups:i})},m=(e,t)=>{const n=h(),i=u(t);n[e].conditions.push(i),p({groups:n})},v=e=>{const t=h();t.splice(e,1),p({groups:t.length?t:[{logic:'and',conditions:[u(a[0]?.uuid??'')]}]})},w=(e,t)=>{const n=h();n[e].conditions.splice(t,1),n[e].conditions.length||n[e].conditions.push(u(a[0]?.uuid??'')),p({groups:n})};return(0,s.jsxs)('div',{className:'wof-inspector-section wof-logic-builder',children:[(0,s.jsx)('div',{className:'wof-inspector-section__intro',children:(0,s.jsxs)('div',{children:[(0,s.jsx)('h3',{children:(0,i.__)('Conditional logic','wooptionsfic')}),(0,s.jsx)('p',{children:(0,i.__)('Show or hide this field using multiple grouped conditions. Rules are rechecked securely on the storefront.','wooptionsfic')})]})}),(0,s.jsx)(n.ToggleControl,{__nextHasNoMarginBottom:!0,label:(0,i.__)('Enable conditional logic','wooptionsfic'),checked:c.enabled,disabled:!a.length,onChange:e=>e?p({enabled:!0,groups:[{logic:'and',conditions:[u(a[0]?.uuid??'')]}]}):p({enabled:!1})}),!a.length&&(0,s.jsx)('div',{className:'wof-logic-empty',children:(0,i.__)('Add another customer-input field before creating a condition.','wooptionsfic')}),c.enabled&&a.length>0&&(0,s.jsxs)(s.Fragment,{children:[(0,s.jsxs)('div',{className:'wof-logic-behavior',children:[(0,s.jsx)(n.SelectControl,{label:(0,i.__)('Action','wooptionsfic'),value:c.effect,options:[{label:(0,i.__)('Show this field','wooptionsfic'),value:'show'},{label:(0,i.__)('Hide this field','wooptionsfic'),value:'hide'}],onChange:e=>p({effect:e})}),c.groups.length>1&&(0,s.jsx)(n.SelectControl,{label:(0,i.__)('Match rule groups','wooptionsfic'),value:c.rootLogic,options:[{label:(0,i.__)('All groups must match','wooptionsfic'),value:'and'},{label:(0,i.__)('Any group may match','wooptionsfic'),value:'or'}],onChange:e=>p({rootLogic:e})})]}),(0,s.jsx)('div',{className:'wof-logic-groups',children:c.groups.map((e,o)=>(0,s.jsxs)('article',{className:'wof-logic-group',children:[(0,s.jsxs)('header',{children:[(0,s.jsxs)('div',{children:[(0,s.jsx)('span',{children:o+1}),(0,s.jsxs)('div',{children:[(0,s.jsx)('strong',{children:(0,i.sprintf)((0,i.__)('Rule group %d','wooptionsfic'),o+1)}),(0,s.jsx)('small',{children:(0,i.__)('Conditions inside this group','wooptionsfic')})]})]}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)('Group matching','wooptionsfic'),hideLabelFromVision:!0,value:e.logic,options:[{label:(0,i.__)('Match all (AND)','wooptionsfic'),value:'and'},{label:(0,i.__)('Match any (OR)','wooptionsfic'),value:'or'}],onChange:t=>f(o,{logic:t})}),c.groups.length>1&&(0,s.jsx)('button',{type:'button',className:'wof-logic-delete',onClick:()=>v(o),'aria-label':(0,i.__)('Delete rule group','wooptionsfic'),children:(0,s.jsx)('span',{className:'dashicons dashicons-trash','aria-hidden':'true'})})]}),(0,s.jsx)('div',{className:'wof-logic-conditions',children:e.conditions.map((e,t)=>{const l=a.find(t=>t.uuid===e.field),q=Array.isArray(l?.choices)&&l.choices.length>0,b=!['empty','not_empty'].includes(e.operator);return(0,s.jsxs)('div',{className:'wof-logic-condition',children:[(0,s.jsx)('span',{className:'wof-logic-condition__number',children:t+1}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)('Source field','wooptionsfic'),hideLabelFromVision:!0,value:e.field,options:a.map(e=>({label:e.label||e.type,value:e.uuid})),onChange:n=>{const i=u(n);g(o,t,i)}}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)('Operator','wooptionsfic'),hideLabelFromVision:!0,value:e.operator,options:d,onChange:n=>g(o,t,{operator:n})}),b&&(q?(0,s.jsx)(n.SelectControl,{label:(0,i.__)('Value','wooptionsfic'),hideLabelFromVision:!0,value:e.value,options:[{label:(0,i.__)('Choose a value…','wooptionsfic'),value:''},...l.choices.map(e=>({label:e.label,value:e.uuid}))],onChange:n=>g(o,t,{value:n})}):['checkbox','toggle'].includes(l?.type)?(0,s.jsx)(n.SelectControl,{label:(0,i.__)('Value','wooptionsfic'),hideLabelFromVision:!0,value:e.value,options:[{label:(0,i.__)('Checked / Yes','wooptionsfic'),value:'1'},{label:(0,i.__)('Unchecked / No','wooptionsfic'),value:''}],onChange:n=>g(o,t,{value:n})}):(0,s.jsx)(n.TextControl,{label:(0,i.__)('Comparison value','wooptionsfic'),hideLabelFromVision:!0,value:e.value,placeholder:(0,i.__)('Enter a value','wooptionsfic'),onChange:n=>g(o,t,{value:n})})),(0,s.jsx)('button',{type:'button',className:'wof-logic-condition__remove',disabled:1===c.groups[o].conditions.length&&1===c.groups.length,onClick:()=>w(o,t),'aria-label':(0,i.__)('Remove condition','wooptionsfic'),children:(0,s.jsx)('span',{className:'dashicons dashicons-no-alt','aria-hidden':'true'})})]},`condition-${o}-${t}`)} )}),(0,s.jsxs)('button',{type:'button',className:'wof-logic-add-condition',onClick:()=>m(o,a[0]?.uuid??''),children:[(0,s.jsx)('span',{className:'dashicons dashicons-plus-alt2','aria-hidden':'true'}),(0,i.__)('Add condition','wooptionsfic')]})]},`group-${o}`))}),(0,s.jsxs)('button',{type:'button',className:'wof-logic-add-group',onClick:()=>p({groups:[...h(),{logic:'and',conditions:[u(a[0]?.uuid??'')]}]}),children:[(0,s.jsx)('span',{className:'dashicons dashicons-plus-alt2','aria-hidden':'true'}),(0,i.__)('Add rule group','wooptionsfic')]}),(0,s.jsx)('p',{className:'wof-muted-note',children:(0,i.__)('Use groups to combine AND and OR rules. Choice-based comparisons store stable choice IDs, so renaming labels will not break the logic.','wooptionsfic')})]})]})}
-function WofStyleControls({document:e,onChange:t,embedded:o=!1}){const r=e.style,a=r.typography,l=o=>t({style:{...r,...o}});return(0,s.jsxs)("div",{className:"wof-inspector-section "+(o?"wof-embedded-style-studio":""),children:[o&&(0,s.jsx)("div",{className:"wof-inspector-section__intro",children:(0,s.jsxs)("div",{children:[(0,s.jsx)("h3",{children:(0,i.__)("Style Studio","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("This field inherits these global option-set styles. Changes update the complete storefront form.","wooptionsfic")})]})}),(0,s.jsx)("div",{className:"wof-inspector-section__intro",children:(0,s.jsxs)("div",{children:[(0,s.jsx)("h3",{children:(0,i.__)("Palette","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Accessible semantic color systems for every storefront control and state.","wooptionsfic")})]})}),(0,s.jsx)("div",{className:"wof-palette-picker",children:Object.entries(window.WooOptionsFicAdmin.palettes).map(([e,t])=>(0,s.jsxs)("button",{type:"button",className:r.palette===e?"is-selected":"",onClick:()=>l({palette:e,overrides:{}}),children:[(0,s.jsxs)("span",{className:"wof-palette-dots",children:[(0,s.jsx)("i",{style:{background:t.tokens.primary}}),(0,s.jsx)("i",{style:{background:t.tokens.accent}}),(0,s.jsx)("i",{style:{background:t.tokens.surface}})]}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:t.name}),(0,s.jsx)("small",{children:e})]}),(0,s.jsx)("b",{"aria-hidden":"true",children:"✓"})]},e))}),(0,s.jsx)("div",{className:"wof-style-divider"}),(0,s.jsx)("h3",{children:(0,i.__)("Typography","wooptionsfic")}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)("Font family","wooptionsfic"),value:a.family??"inherit",options:[{label:(0,i.__)("Theme native","wooptionsfic"),value:"inherit"},{label:(0,i.__)("System UI","wooptionsfic"),value:"system-ui"},{label:"Inter",value:"Inter"},{label:"Manrope",value:"Manrope"},{label:"Poppins",value:"Poppins"},{label:"Outfit",value:"Outfit"},{label:"Plus Jakarta Sans",value:"Plus Jakarta Sans"},{label:"Roboto",value:"Roboto"}],onChange:e=>l({typography:{...a,family:e}}),help:(0,i.__)("The selected font is loaded in the builder and on the storefront. The live canvas updates as soon as the font is ready.","wooptionsfic")}),(0,s.jsxs)("div",{className:"wof-two-column-controls",children:[(0,s.jsx)(n.SelectControl,{label:(0,i.__)("Label weight","wooptionsfic"),value:String(a.labelWeight??650),options:[400,500,600,650,700,800].map(e=>({label:String(e),value:String(e)})),onChange:e=>l({typography:{...a,labelWeight:Number(e)}})}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)("Body weight","wooptionsfic"),value:String(a.bodyWeight??450),options:[300,400,450,500,600,700].map(e=>({label:String(e),value:String(e)})),onChange:e=>l({typography:{...a,bodyWeight:Number(e)}})})]}),(0,s.jsx)("div",{className:"wof-style-divider"}),(0,s.jsx)("h3",{children:(0,i.__)("Layout & summary","wooptionsfic")}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)("Layout preset","wooptionsfic"),value:["stack","inline","grid"].includes(e.layout.type)?e.layout.type:"stack",options:[{label:(0,i.__)("Stacked form","wooptionsfic"),value:"stack"},{label:(0,i.__)("Inline","wooptionsfic"),value:"inline"},{label:(0,i.__)("Responsive grid","wooptionsfic"),value:"grid"}],onChange:o=>t({layout:{...e.layout,type:o}}),help:(0,i.__)("Stacked, inline, and responsive grid layouts are fully supported in this beta.","wooptionsfic")}),(0,s.jsx)(n.ToggleControl,{__nextHasNoMarginBottom:!0,label:(0,i.__)("Show itemized price breakdown","wooptionsfic"),checked:e.settings.showPriceBreakdown,onChange:o=>t({settings:{...e.settings,showPriceBreakdown:o}})}),(0,s.jsx)(n.ToggleControl,{__nextHasNoMarginBottom:!0,label:(0,i.__)("Keep configuration summary visible","wooptionsfic"),checked:e.settings.stickySummary??!0,onChange:o=>t({settings:{...e.settings,stickySummary:o}})}),(0,s.jsx)(n.ToggleControl,{__nextHasNoMarginBottom:!0,label:(0,i.__)("Allow saved configurations","wooptionsfic"),checked:e.settings.saveEnabled,onChange:o=>t({settings:{...e.settings,saveEnabled:o}})})]})}function Kd({document:e,onChange:t}){return(0,s.jsxs)("aside",{className:"wof-builder-inspector wof-style-studio",children:[(0,s.jsxs)("div",{className:"wof-builder-pane__heading wof-inspector-heading",children:[(0,s.jsx)("span",{className:"wof-inspector-heading__icon","aria-hidden":"true",children:(0,s.jsx)("span",{className:"dashicons dashicons-admin-appearance"})}),(0,s.jsxs)("div",{className:"wof-inspector-heading__copy",children:[(0,s.jsx)("h2",{children:(0,i.__)("Style Studio","wooptionsfic")}),(0,s.jsx)("small",{children:(0,i.__)("Global option-set styling","wooptionsfic")})]})]}),(0,s.jsx)("div",{className:"wof-inspector-body",children:(0,s.jsx)(WofStyleControls,{document:e,onChange:t})})]})}function Gd({uuid:e,navigate:o}){const r=(0,hc.useSelect)(e=>e(pc).getState(),[]),a=(0,hc.useDispatch)(pc),[l,c]=(0,t.useState)(!0),[u,h]=(0,t.useState)(""),[f,m]=(0,t.useState)(""),[v,y]=(0,t.useState)("field"),[x,b]=(0,t.useState)(!1),[_,j]=(0,t.useState)(!1),[S,C]=(0,t.useState)(!1),[k,N]=(0,t.useState)([]),[O,E]=(0,t.useState)([]),[D,M]=(0,t.useState)(!1),[A,T]=(0,t.useState)(null),P=(0,t.useRef)(!1);(0,t.useEffect)(()=>{let t=!0;return c(!0),(e=>d(`/option-sets/${e}`))(e).then(e=>{t&&a.loadSet(e)}).catch(e=>t&&h(p(e))).finally(()=>t&&c(!1)),()=>{t=!1}},[a,e]);const I=(0,t.useCallback)(async(e,t,n="Builder autosave")=>{if(P.current){await new Promise(e=>{const t=()=>{P.current?window.setTimeout(t,40):e()};t()});const o=hc.select(pc).getState().optionSet??t;return I(e,o,n)}P.current=!0,a.setSaveStatus("saving");try{const i=await((e,t,n,i="Builder autosave")=>d(`/option-sets/${e}/revisions`,{method:"POST",data:{definition:t,expectedHash:n,versionNote:i}}))(t.uuid,e,t.currentRevision.contentHash,n);return a.saved(i,e),i}catch(e){const t=p(e);throw"object"==typeof e&&null!==e&&"code"in e&&"wooptionsfic_revision_conflict"===e.code?a.setSaveStatus("conflict"):a.setSaveStatus("error"),m(t),e}finally{P.current=!1}},[a]);(0,t.useEffect)(()=>{if(!r.dirty||!r.document||!r.optionSet)return;const e=r.document,t=r.optionSet,n=window.setTimeout(()=>{I(e,t).catch(()=>{})},1600);return()=>window.clearTimeout(n)},[I,r.dirty,r.document,r.optionSet]),(0,t.useEffect)(()=>{if(!r.document||!r.optionSet)return;const e=window.setTimeout(()=>{((e,t)=>d(`/option-sets/${e}/validate`,{method:"POST",data:{definition:t}}))(r.optionSet.uuid,r.document).then(e=>a.setValidation(e.errors,e.warnings)).catch(()=>{})},500);return()=>window.clearTimeout(e)},[a,r.document,r.optionSet]);const W=e=>{a.addField(e),a.selectField(e.uuid),y("field")};if(l)return(0,s.jsx)(g,{label:(0,i.__)("Opening the Precision Workshop…","wooptionsfic")});if(u||!r.optionSet||!r.document)return(0,s.jsxs)("div",{className:"wof-fatal",children:[(0,s.jsx)("h1",{children:(0,i.__)("This option set could not be opened","wooptionsfic")}),(0,s.jsx)("p",{children:u}),(0,s.jsx)(n.Button,{variant:"primary",onClick:()=>o("option-sets"),children:(0,i.__)("Back to option sets","wooptionsfic")})]});const R=r.document.fields.find(e=>e.uuid===r.selectedUuid)??null,F={idle:(0,i.__)("Ready","wooptionsfic"),dirty:(0,i.__)("Unsaved changes","wooptionsfic"),saving:(0,i.__)("Saving…","wooptionsfic"),saved:(0,i.__)("All changes saved","wooptionsfic"),error:(0,i.__)("Save failed","wooptionsfic"),conflict:(0,i.__)("Editing conflict","wooptionsfic")};return(0,s.jsxs)("div",{className:"wof-builder",children:[(0,s.jsxs)("header",{className:"wof-builder-topbar",children:[(0,s.jsxs)("div",{className:"wof-builder-context",children:[(0,s.jsxs)("button",{type:"button",className:"wof-builder-brand",onClick:()=>o("dashboard"),"aria-label":(0,i.__)("WooOptionsFic dashboard","wooptionsfic"),children:[(0,s.jsx)("span",{className:"wof-builder-brand-mark","aria-hidden":"true",children:(0,s.jsx)("span",{className:"dashicons dashicons-admin-generic"})}),(0,s.jsx)("strong",{children:"WooOptionsFic"})]}),(0,s.jsx)("span",{className:"wof-builder-divider","aria-hidden":"true"}),(0,s.jsx)("button",{type:"button",className:"wof-builder-back",onClick:()=>o("option-sets"),"aria-label":(0,i.__)("Back to option sets","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-arrow-left-alt2","aria-hidden":"true"})}),(0,s.jsxs)("div",{className:"wof-builder-breadcrumb",children:[(0,s.jsx)("button",{type:"button",onClick:()=>o("option-sets"),children:(0,i.__)("Option Sets","wooptionsfic")}),(0,s.jsx)("span",{"aria-hidden":"true",children:"/"}),(0,s.jsxs)("div",{className:"wof-builder-title-editor",children:[(0,s.jsx)(n.TextControl,{label:(0,i.__)("Option set title","wooptionsfic"),hideLabelFromVision:!0,value:r.document.title,onChange:e=>a.updateDocument({title:e})}),(0,s.jsx)("span",{className:"dashicons dashicons-edit","aria-hidden":"true"})]}),(0,s.jsxs)("span",{className:`wof-save-state is-${r.saveStatus}`,role:"status",children:[(0,s.jsx)("i",{"aria-hidden":"true"}),F[r.saveStatus]]})]})]}),(0,s.jsxs)("div",{className:"wof-builder-tools",children:[(0,s.jsxs)("div",{className:"wof-tool-group wof-history-tools",children:[(0,s.jsx)("button",{type:"button",disabled:!r.history.length,onClick:a.undo,"aria-label":(0,i.__)("Undo","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-undo","aria-hidden":"true"})}),(0,s.jsx)("button",{type:"button",disabled:!r.future.length,onClick:a.redo,"aria-label":(0,i.__)("Redo","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-redo","aria-hidden":"true"})})]}),(0,s.jsx)("div",{className:"wof-tool-group wof-device-switcher","aria-label":(0,i.__)("Preview device","wooptionsfic"),children:["desktop","tablet","mobile"].map(e=>(0,s.jsx)("button",{type:"button",className:r.device===e?"is-active":"",onClick:()=>a.setDevice(e),"aria-label":e,children:(0,s.jsx)("span",{className:`dashicons dashicons-${"desktop"===e?"desktop":"tablet"===e?"tablet":"smartphone"}`,"aria-hidden":"true"})},e))}),(0,s.jsxs)(n.Button,{variant:"tertiary",className:"wof-header-action",onClick:async()=>{if(r.optionSet){j(!0),M(!0);try{N(await(e=>d(`/option-sets/${e}/revisions`))(r.optionSet.uuid))}finally{M(!1)}}},children:[(0,s.jsx)("span",{className:"dashicons dashicons-backup","aria-hidden":"true"}),(0,i.__)("Version history","wooptionsfic")]}),(0,s.jsxs)(n.Button,{variant:"tertiary",className:"wof-header-action",onClick:async()=>{if(r.optionSet){C(!0),M(!0);try{const e=await(e=>d(`/option-sets/${e}/assignments`))(r.optionSet.uuid);E(e.items)}finally{M(!1)}}},children:[(0,s.jsx)("span",{className:"dashicons dashicons-admin-links","aria-hidden":"true"}),(0,i.__)("Assignments","wooptionsfic")]}),(0,s.jsx)(n.Button,{variant:"secondary",isBusy:"saving"===r.saveStatus,onClick:()=>{I(r.document,r.optionSet,"Manual save").catch(()=>{})},children:(0,i.__)("Save draft","wooptionsfic")}),(0,s.jsx)(n.Button,{variant:"primary",disabled:r.errors.length>0||"saving"===r.saveStatus,onClick:async()=>{if(r.document&&r.optionSet&&!r.errors.length){m("");try{const e=r.dirty?await I(r.document,r.optionSet,"Pre-publish save"):r.optionSet;a.setSaveStatus("saving");const t=await((e,t)=>d(`/option-sets/${e}/publish`,{method:"POST",data:{expectedHash:t,versionNote:"Published from Precision Workshop"}}))(e.uuid,e.currentRevision.contentHash);a.saved(t),m((0,i.__)("Published. This live revision is now immutable.","wooptionsfic"))}catch(e){m(p(e))}}else b(!0)},children:(0,i.__)("Publish","wooptionsfic")})]})]}),f&&(0,s.jsxs)("div",{className:"wof-builder-notice "+("error"===r.saveStatus||"conflict"===r.saveStatus?"is-error":"is-success"),role:"status",children:[f,(0,s.jsx)("button",{type:"button",onClick:()=>m(""),children:"×"})]}),(0,s.jsx)(Ll,{onDragEnd:e=>{if(e.canceled)return;const t=e.operation.source,n=e.operation.target,i=t?.data??{},s=n?.data??{};if("palette"!==i.kind||"string"!=typeof i.type){if("canvas"===i.kind&&"number"==typeof i.index&&("canvas"===s.kind||"canvas-end"===s.kind)&&"number"==typeof s.index){const e=Math.min(Math.max(0,s.index),Math.max(0,(r.document?.fields.length??1)-1));a.moveField(i.index,e)}}else W(Md(i.type))},children:(0,s.jsxs)("div",{className:"wof-builder-workspace",children:[(0,s.jsx)($d,{onAdd:W,onOpenStyle:()=>{y("style"),a.selectField(null)}}),(0,s.jsx)(Rd,{fields:r.document.fields,document:r.document,selectedUuid:r.selectedUuid,device:r.device,onSelect:e=>{a.selectField(e),y("field")},onMove:a.moveField,onDuplicate:e=>W(Ad(e)),onDelete:e=>{T(e)}}),"style"!==v&&R?(0,s.jsx)(zd,{field:R,allFields:r.document.fields,onChange:e=>a.updateField(R.uuid,e),onDuplicate:()=>W(Ad(R)),onDelete:()=>{T(R.uuid)},document:r.document,onDocumentChange:a.updateDocument}):(0,s.jsx)(Kd,{document:r.document,onChange:a.updateDocument})]})}),(0,s.jsxs)("div",{className:"wof-diagnostics-drawer "+(x?"is-open":""),children:[(0,s.jsxs)("button",{type:"button",className:"wof-diagnostics-toggle",onClick:()=>b(!x),"aria-expanded":x,children:[(0,s.jsx)("span",{className:r.errors.length?"is-error":"is-good",children:r.errors.length?"!":"✓"}),(0,s.jsx)("strong",{children:(0,i.__)("Preflight diagnostics","wooptionsfic")}),(0,s.jsxs)("small",{children:[r.errors.length?(0,i.sprintf)(/* translators: %d: error count. */ /* translators: %d: error count. */
-(0,i.__)("%d errors","wooptionsfic"),r.errors.length):(0,i.__)("Ready to publish","wooptionsfic"),r.warnings.length?` · ${r.warnings.length} ${(0,i.__)("warnings","wooptionsfic")}`:""]}),(0,s.jsx)("b",{"aria-hidden":"true",children:x?"⌄":"⌃"})]}),x&&(0,s.jsxs)("div",{className:"wof-diagnostics-content",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("h3",{children:(0,i.__)("Errors","wooptionsfic")}),r.errors.length?(0,s.jsx)("ul",{children:r.errors.map((e,t)=>(0,s.jsxs)("li",{children:[(0,s.jsx)("span",{children:"!"}),(0,s.jsx)("code",{children:e.code}),(0,s.jsx)("small",{children:e.path??e.fieldUuid??""})]},`${e.code}-${t}`))}):(0,s.jsxs)("p",{children:["✓"," ",(0,i.__)("No blocking errors.","wooptionsfic")]})]}),(0,s.jsxs)("div",{children:[(0,s.jsx)("h3",{children:(0,i.__)("Warnings","wooptionsfic")}),r.warnings.length?(0,s.jsx)("ul",{children:r.warnings.map((e,t)=>(0,s.jsxs)("li",{children:[(0,s.jsx)("span",{children:"•"}),(0,s.jsx)("code",{children:e.code}),(0,s.jsx)("small",{children:e.path??e.fieldUuid??""})]},`${e.code}-${t}`))}):(0,s.jsxs)("p",{children:["✓ ",(0,i.__)("No warnings.","wooptionsfic")]})]}),(0,s.jsxs)("div",{className:"wof-config-size",children:[(0,s.jsx)("h3",{children:(0,i.__)("Configuration size","wooptionsfic")}),(0,s.jsxs)("strong",{children:[new Blob([JSON.stringify(r.document)]).size.toLocaleString()," ","B"]}),(0,s.jsxs)("small",{children:[r.document.fields.length," ",(0,i.__)("top-level fields","wooptionsfic")]})]})]})]}),_&&(0,s.jsx)(Jd,{revisions:k,busy:D,onClose:()=>j(!1),onRollback:async e=>{M(!0);try{const t=await((e,t)=>d(`/option-sets/${e}/rollback`,{method:"POST",data:{revisionUuid:t}}))(r.optionSet.uuid,e);a.loadSet(t),j(!1),m((0,i.__)("A new draft was created from that revision.","wooptionsfic"))}finally{M(!1)}}}),S&&(0,s.jsx)(Zd,{assignments:O,busy:D,onChange:E,onClose:()=>C(!1),onSave:async()=>{M(!0);try{await((e,t)=>d(`/option-sets/${e}/assignments`,{method:"PUT",data:{assignments:t}}))(r.optionSet.uuid,O),C(!1),m((0,i.__)("Product assignments saved.","wooptionsfic"))}catch(e){m(p(e))}finally{M(!1)}}}),A&&(0,s.jsx)(w,{title:(0,i.__)("Delete field?","wooptionsfic"),confirmLabel:(0,i.__)("Delete field","wooptionsfic"),cancelLabel:(0,i.__)("Keep field","wooptionsfic"),message:(0,i.__)("Delete this field and its configuration? This can be undone until you leave the builder.","wooptionsfic"),onCancel:()=>T(null),onConfirm:()=>{a.deleteField(A),T(null)}})]})}function WofAssignmentTypeLabel(e){return{global:(0,i.__)("All products","wooptionsfic"),product:(0,i.__)("Product","wooptionsfic"),category:(0,i.__)("Category","wooptionsfic"),tag:(0,i.__)("Tag","wooptionsfic"),variation:(0,i.__)("Variation","wooptionsfic"),product_type:(0,i.__)("Product type","wooptionsfic")}[e]??e}
-function WofAssignmentTypeIcon(e){return{global:"dashicons-admin-site-alt3",product:"dashicons-products",category:"dashicons-category",tag:"dashicons-tag",variation:"dashicons-image-rotate",product_type:"dashicons-filter"}[e]??"dashicons-marker"}
-function WofTargetSearch({type:e,assignments:o,onAdd:r}){const[a,l]=(0,t.useState)(""),[c,u]=(0,t.useState)([]),[h,p]=(0,t.useState)(!1),[f,m]=(0,t.useState)(!1),[v,w]=(0,t.useState)("");const y=(0,t.useMemo)(()=>new Set(o.filter(t=>t.targetType===e).map(e=>String(e.targetId??"global"))),[o,e]);(0,t.useEffect)(()=>{l(""),u([]),w("")},[e]);(0,t.useEffect)(()=>{if(!f||"global"===e)return;let t=!0;const n=window.setTimeout(()=>{p(!0),w(""),d(`/assignment-targets?type=${encodeURIComponent(e)}&search=${encodeURIComponent(a)}&perPage=20`).then(e=>{t&&u(Array.isArray(e.items)?e.items:[])}).catch(e=>{t&&w(e?.message??(0,i.__)("Could not load matching items.","wooptionsfic"))}).finally(()=>{t&&p(!1)})},220);return()=>{t=!1,window.clearTimeout(n)}},[a,e,f]);if("global"===e){const t=y.has("global");return(0,s.jsxs)("button",{type:"button",className:"wof-assignment-global "+(t?"is-selected":""),disabled:t,onClick:()=>r({id:null,label:(0,i.__)("All WooCommerce products","wooptionsfic"),meta:(0,i.__)("Every product in the store","wooptionsfic"),image:""}),children:[(0,s.jsx)("span",{className:"dashicons dashicons-admin-site-alt3","aria-hidden":"true"}),(0,s.jsxs)("span",{children:[(0,s.jsx)("strong",{children:(0,i.__)("All products","wooptionsfic")}),(0,s.jsx)("small",{children:t?(0,i.__)("Already assigned","wooptionsfic"):(0,i.__)("Apply this option set store-wide","wooptionsfic")})]}),(0,s.jsx)("span",{className:"dashicons "+(t?"dashicons-yes-alt":"dashicons-plus-alt2"),"aria-hidden":"true"})]})}return(0,s.jsxs)("div",{className:"wof-target-search",children:[(0,s.jsxs)("div",{className:"wof-target-search__input",children:[(0,s.jsx)("span",{className:"dashicons dashicons-search","aria-hidden":"true"}),(0,s.jsx)("input",{type:"search",value:a,placeholder:"product"===e?(0,i.__)("Search products by name, ID, or SKU…","wooptionsfic"):"category"===e?(0,i.__)("Search product categories…","wooptionsfic"):"tag"===e?(0,i.__)("Search product tags…","wooptionsfic"):(0,i.__)("Search variations by name, ID, or SKU…","wooptionsfic"),onChange:e=>l(e.target.value),onFocus:()=>m(!0),onBlur:()=>window.setTimeout(()=>m(!1),160),"aria-label":(0,i.__)("Search assignment targets","wooptionsfic")}),(h||a)&&(0,s.jsx)("button",{type:"button",className:"wof-target-search__clear",onMouseDown:e=>e.preventDefault(),onClick:()=>l(""),"aria-label":(0,i.__)("Clear search","wooptionsfic"),children:h?(0,s.jsx)("span",{className:"wof-mini-spinner","aria-hidden":"true"}):(0,s.jsx)("span",{className:"dashicons dashicons-no-alt","aria-hidden":"true"})})]}),f&&(0,s.jsxs)("div",{className:"wof-target-results",children:[v&&(0,s.jsx)("p",{className:"wof-target-results__message is-error",children:v}),!v&&!h&&0===c.length&&(0,s.jsx)("p",{className:"wof-target-results__message",children:a?(0,i.__)("No matching items found.","wooptionsfic"):(0,i.__)("Start typing or choose from recent items.","wooptionsfic")}),c.map(t=>{const n=y.has(String(t.id));return(0,s.jsxs)("button",{type:"button",className:n?"is-selected":"",disabled:n,onMouseDown:e=>e.preventDefault(),onClick:()=>r(t),children:[t.image?(0,s.jsx)("img",{src:t.image,alt:""}):(0,s.jsx)("span",{className:`wof-target-result__icon dashicons ${WofAssignmentTypeIcon(e)}`,"aria-hidden":"true"}),(0,s.jsxs)("span",{className:"wof-target-result__copy",children:[(0,s.jsx)("strong",{children:t.label}),(0,s.jsx)("small",{children:t.meta||`${WofAssignmentTypeLabel(e)} #${t.id}`})]}),(0,s.jsx)("span",{className:"dashicons "+(n?"dashicons-yes-alt":"dashicons-plus-alt2"),"aria-hidden":"true"})]},`${e}-${t.id}`)})]})]})}
-function Jd({revisions:e,busy:t,onClose:o,onRollback:r}){const a=[...e].sort((e,t)=>(Number(t.revisionNumber)||0)-(Number(e.revisionNumber)||0)),l=a.filter(e=>"published"===e.state).length,c=a.reduce((e,t)=>Math.max(e,Number(t.revisionNumber)||0),0);return(0,s.jsxs)(n.Modal,{title:(0,i.__)("Version history","wooptionsfic"),onRequestClose:o,className:"wof-modal wof-history-modal",children:[(0,s.jsxs)("section",{className:"wof-version-header",children:[(0,s.jsxs)("div",{className:"wof-version-header__copy",children:[(0,s.jsx)("span",{className:"wof-version-header__icon dashicons dashicons-backup","aria-hidden":"true"}),(0,s.jsxs)("div",{children:[(0,s.jsx)("h3",{children:(0,i.__)("A clear record of every saved version","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Published versions stay immutable. Restoring creates a new draft, so the current live configuration remains protected.","wooptionsfic")})]})]}),(0,s.jsxs)("div",{className:"wof-version-overview",children:[(0,s.jsxs)("span",{children:[(0,s.jsx)("small",{children:(0,i.__)("Versions","wooptionsfic")}),(0,s.jsx)("strong",{children:e.length})]}),(0,s.jsxs)("span",{children:[(0,s.jsx)("small",{children:(0,i.__)("Published","wooptionsfic")}),(0,s.jsx)("strong",{children:l})]}),(0,s.jsxs)("span",{children:[(0,s.jsx)("small",{children:(0,i.__)("Latest","wooptionsfic")}),(0,s.jsxs)("strong",{children:["#",c||"—"]})]})]})]}),t&&!a.length?(0,s.jsx)(g,{label:(0,i.__)("Loading version history…","wooptionsfic")}):a.length?(0,s.jsx)("div",{className:"wof-version-list",children:a.map((e,o)=>{const a="published"===e.state,l=0===o;return(0,s.jsxs)("article",{className:`wof-version-row ${a?"is-published":"is-draft"} ${l?"is-latest":""}`,children:[(0,s.jsxs)("div",{className:"wof-version-number",children:[(0,s.jsx)("small",{children:(0,i.__)("Version","wooptionsfic")}),(0,s.jsxs)("strong",{children:["#",e.revisionNumber]})]}),(0,s.jsxs)("div",{className:"wof-version-details",children:[(0,s.jsxs)("div",{className:"wof-version-details__top",children:[(0,s.jsxs)("div",{className:"wof-version-badges",children:[(0,s.jsx)("span",{className:`wof-version-state is-${e.state}`,children:a?(0,i.__)("Published","wooptionsfic"):(0,i.__)("Draft","wooptionsfic")}),l&&(0,s.jsx)("span",{className:"wof-version-latest",children:(0,i.__)("Latest","wooptionsfic")})]}),(0,s.jsx)("time",{dateTime:e.createdAtGmt,children:new Date(`${e.createdAtGmt}Z`).toLocaleString()})]}),(0,s.jsx)("p",{children:e.versionNote||(0,i.__)("No version note was added for this save.","wooptionsfic")})]}),(0,s.jsx)(n.Button,{variant:"secondary",disabled:t,className:"wof-version-restore",onClick:()=>r(e.uuid),children:[(0,s.jsx)("span",{className:"dashicons dashicons-image-rotate","aria-hidden":"true"}),(0,i.__)("Restore","wooptionsfic")]})]},e.uuid)})}):(0,s.jsxs)("div",{className:"wof-history-empty",children:[(0,s.jsx)("span",{className:"dashicons dashicons-backup","aria-hidden":"true"}),(0,s.jsx)("h3",{children:(0,i.__)("No saved versions yet","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Save a draft or publish this option set to create the first version.","wooptionsfic")})]})]})}function Zd({assignments:e,busy:q,onChange:o,onClose:r,onSave:a}){const[l,c]=(0,t.useState)("product"),[u,h]=(0,t.useState)({});const f=(0,t.useMemo)(()=>e.map(e=>`${e.targetType}:${e.targetId??"global"}`).sort().join("|"),[e]);(0,t.useEffect)(()=>{let t=!0;const n={};e.forEach(e=>{"global"!==e.targetType&&null!=e.targetId&&(n[e.targetType]??=[],n[e.targetType].push(Number(e.targetId)))});const i=Object.entries(n).map(([e,t])=>d(`/assignment-targets?type=${encodeURIComponent(e)}&include=${encodeURIComponent([...new Set(t)].join(","))}&perPage=50`).then(t=>(t.items??[]).map(t=>[`${e}:${t.id}`,t])).catch(()=>[]));Promise.all(i).then(e=>{if(!t)return;const n={};e.flat().forEach(([e,t])=>{n[e]=t}),h(n)});return()=>{t=!1}},[f]);const m=(t,n)=>{const i=[...e];i[t]={...i[t],...n},o(i)},v=(t,n=l)=>{const i="global"===n?"global":String(t.id);if(e.some(e=>e.targetType===n&&String(e.targetId??"global")===i))return;const s={uuid:Ed(),targetType:n,targetId:"global"===n?null:Number(t.id),mode:"include",priority:10,context:{},targetLabel:t.label,targetMeta:t.meta,targetImage:t.image};o([...e,s]),h(e=>({...e,[`${n}:${i}`]:t}))},w=[{type:"product",label:(0,i.__)("Products","wooptionsfic"),icon:"dashicons-products"},{type:"category",label:(0,i.__)("Categories","wooptionsfic"),icon:"dashicons-category"},{type:"tag",label:(0,i.__)("Tags","wooptionsfic"),icon:"dashicons-tag"},{type:"variation",label:(0,i.__)("Variations","wooptionsfic"),icon:"dashicons-image-rotate"},{type:"global",label:(0,i.__)("All products","wooptionsfic"),icon:"dashicons-admin-site-alt3"}];return(0,s.jsxs)(n.Modal,{title:(0,i.__)("Product assignments","wooptionsfic"),onRequestClose:r,className:"wof-modal wof-assignment-modal",children:[(0,s.jsxs)("div",{className:"wof-assignment-hero",children:[(0,s.jsx)("span",{className:"dashicons dashicons-admin-links","aria-hidden":"true"}),(0,s.jsxs)("div",{children:[(0,s.jsx)("h3",{children:(0,i.__)("Choose exactly where this option set appears","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Search and select multiple products, categories, tags, or variations. Product-specific rules take priority over broader category rules.","wooptionsfic")})]})]}),(0,s.jsxs)("section",{className:"wof-assignment-picker",children:[(0,s.jsx)("div",{className:"wof-assignment-type-tabs",role:"tablist",children:w.map(e=>(0,s.jsxs)("button",{type:"button",role:"tab","aria-selected":l===e.type,className:l===e.type?"is-active":"",onClick:()=>c(e.type),children:[(0,s.jsx)("span",{className:`dashicons ${e.icon}`,"aria-hidden":"true"}),e.label]},e.type))}),(0,s.jsx)(WofTargetSearch,{type:l,assignments:e,onAdd:t=>v(t,l)})]}),(0,s.jsxs)("div",{className:"wof-assignment-section-head",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("h3",{children:(0,i.__)("Assigned targets","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Adjust inclusion mode or priority for each selected target.","wooptionsfic")})]}),(0,s.jsxs)("span",{children:[e.length," ",1===e.length?(0,i.__)("rule","wooptionsfic"):(0,i.__)("rules","wooptionsfic")]})]}),e.length?(0,s.jsx)("div",{className:"wof-assignment-cards",children:e.map((t,r)=>{const a=`${t.targetType}:${t.targetId??"global"}`,l=u[a]??{},c=t.targetLabel??l.label??("global"===t.targetType?(0,i.__)("All WooCommerce products","wooptionsfic"):`${WofAssignmentTypeLabel(t.targetType)} #${t.targetId}`),d=t.targetMeta??l.meta??("global"===t.targetType?(0,i.__)("Store-wide assignment","wooptionsfic"):`ID: ${t.targetId}`),p=t.targetImage??l.image??"";return(0,s.jsxs)("article",{className:"wof-assignment-card",children:[(0,s.jsx)("div",{className:"wof-assignment-card__visual",children:p?(0,s.jsx)("img",{src:p,alt:""}):(0,s.jsx)("span",{className:`dashicons ${WofAssignmentTypeIcon(t.targetType)}`,"aria-hidden":"true"})}),(0,s.jsxs)("div",{className:"wof-assignment-card__identity",children:[(0,s.jsxs)("div",{children:[(0,s.jsx)("strong",{children:c}),(0,s.jsx)("span",{children:WofAssignmentTypeLabel(t.targetType)})]}),(0,s.jsx)("small",{children:d})]}),(0,s.jsx)(n.SelectControl,{label:(0,i.__)("Mode","wooptionsfic"),value:t.mode,options:[{label:(0,i.__)("Include","wooptionsfic"),value:"include"},{label:(0,i.__)("Exclude","wooptionsfic"),value:"exclude"}],onChange:e=>m(r,{mode:e})}),(0,s.jsx)(n.TextControl,{type:"number",label:(0,i.__)("Priority","wooptionsfic"),value:String(t.priority),min:-1e3,max:1e3,onChange:e=>m(r,{priority:Number(e)})}),(0,s.jsx)("button",{type:"button",className:"wof-assignment-card__remove",onClick:()=>o(e.filter(e=>e.uuid!==t.uuid)),"aria-label":(0,i.__)("Remove assignment","wooptionsfic"),children:(0,s.jsx)("span",{className:"dashicons dashicons-trash","aria-hidden":"true"})})]},t.uuid)})}):(0,s.jsxs)("div",{className:"wof-assignment-empty",children:[(0,s.jsx)("span",{className:"dashicons dashicons-admin-links","aria-hidden":"true"}),(0,s.jsx)("h3",{children:(0,i.__)("No products assigned yet","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Use the search above to select one or more targets.","wooptionsfic")})]}),(0,s.jsxs)("div",{className:"wof-modal__actions wof-assignment-actions",children:[(0,s.jsx)(n.Button,{variant:"tertiary",onClick:r,children:(0,i.__)("Cancel","wooptionsfic")}),(0,s.jsx)(n.Button,{variant:"primary",isBusy:q,onClick:()=>a(),children:[(0,s.jsx)("span",{className:"dashicons dashicons-saved","aria-hidden":"true"}),(0,i.__)("Save assignments","wooptionsfic")]})]})]})}
-function Qd(){return window.location.hash.replace(/^#\/?/,"")||window.WooOptionsFicAdmin.initialRoute||"dashboard"}class eu extends t.Component{state={failed:!1};static getDerivedStateFromError(){return{failed:!0}}componentDidCatch(e,t){window.console.error("WooOptionsFic admin error",e,t)}render(){return this.state.failed?(0,s.jsxs)("div",{className:"wof-fatal",children:[(0,s.jsx)("span",{className:"wof-brand-mark","aria-hidden":"true",children:"W"}),(0,s.jsx)("h1",{children:(0,i.__)("The workshop hit a snag","wooptionsfic")}),(0,s.jsx)("p",{children:(0,i.__)("Your saved configuration is safe. Reload the page to restart the builder.","wooptionsfic")}),(0,s.jsx)(n.Button,{variant:"primary",onClick:()=>window.location.reload(),children:(0,i.__)("Reload WooOptionsFic","wooptionsfic")})]}):this.props.children}}function tu(){const[e,n]=(0,t.useState)(Qd);(0,t.useEffect)(()=>{const e=()=>n(Qd());return window.addEventListener("hashchange",e),()=>window.removeEventListener("hashchange",e)},[]);const i=(0,t.useCallback)(e=>{const t=`#/${e}`;window.location.hash===t?n(e):window.location.hash=t},[]),[o,...a]=e.split("/");let l;switch(o){case"option-sets":l=(0,s.jsx)(x,{navigate:i});break;case"builder":l=(0,s.jsx)(Gd,{uuid:a[0]??"",navigate:i});break;case"templates":l=(0,s.jsx)(_,{navigate:i});break;case"analytics":l=(0,s.jsx)(j,{});break;case"integrations":l=(0,s.jsx)(C,{});break;case"diagnostics":l=(0,s.jsx)(S,{});break;case"settings":l=(0,s.jsx)(k,{});break;case"help":l=(0,s.jsx)(N,{navigate:i});break;default:l=(0,s.jsx)(y,{navigate:i})}return(0,s.jsx)(eu,{children:(0,s.jsx)(r,{route:o??"dashboard",navigate:i,children:l})})}const nu=document.getElementById("wooptionsfic-admin-root");nu&&(0,t.createRoot)(nu).render((0,s.jsx)(tu,{}))})();
+                }, 220);
+                return () => {
+                    active = false;
+                    window.clearTimeout(timeout);
+                };
+            }, [query, props.type, focused]);
+            if (props.type === 'global') {
+                const selected = selectedIds.has('global');
+                return (wp.element.createElement("button", { type: "button", className: `wof-assignment-global ${selected ? 'is-selected' : ''}`, disabled: selected, onClick: () => props.onAdd({
+                        id: null,
+                        type: 'global',
+                        label: __('All WooCommerce products', 'wooptionsfic'),
+                        meta: __('Every product in the store', 'wooptionsfic'),
+                        image: '',
+                    }) },
+                    wp.element.createElement("span", { className: "dashicons dashicons-admin-site-alt3", "aria-hidden": "true" }),
+                    wp.element.createElement("span", null,
+                        wp.element.createElement("strong", null, __('All products', 'wooptionsfic')),
+                        wp.element.createElement("small", null, selected ? __('Already assigned', 'wooptionsfic') : __('Apply this option set store-wide', 'wooptionsfic'))),
+                    wp.element.createElement("span", { className: `dashicons ${selected ? 'dashicons-yes-alt' : 'dashicons-plus-alt2'}`, "aria-hidden": "true" })));
+            }
+            const placeholder = props.type === 'product'
+                ? __('Search products by name, ID, or SKU…', 'wooptionsfic')
+                : props.type === 'category'
+                    ? __('Search product categories…', 'wooptionsfic')
+                    : props.type === 'tag'
+                        ? __('Search product tags…', 'wooptionsfic')
+                        : __('Search variations by name, ID, or SKU…', 'wooptionsfic');
+            return (wp.element.createElement("div", { className: "wof-target-search" },
+                wp.element.createElement("div", { className: "wof-target-search__input" },
+                    wp.element.createElement("span", { className: "dashicons dashicons-search", "aria-hidden": "true" }),
+                    wp.element.createElement("input", { type: "search", value: query, placeholder: placeholder, onChange: (event) => setQuery(event.target.value), onFocus: () => setFocused(true), onBlur: () => window.setTimeout(() => setFocused(false), 160), "aria-label": __('Search assignment targets', 'wooptionsfic') }),
+                    loading || query ? (wp.element.createElement("button", { type: "button", className: "wof-target-search__clear", onMouseDown: (event) => event.preventDefault(), onClick: () => setQuery(''), "aria-label": __('Clear search', 'wooptionsfic') }, loading ? wp.element.createElement("span", { className: "wof-mini-spinner", "aria-hidden": "true" }) : wp.element.createElement("span", { className: "dashicons dashicons-no-alt", "aria-hidden": "true" }))) : null),
+                focused ? (wp.element.createElement("div", { className: "wof-target-results" },
+                    error ? wp.element.createElement("p", { className: "wof-target-results__message is-error" }, error) : null,
+                    !error && !loading && !results.length ? (wp.element.createElement("p", { className: "wof-target-results__message" }, query ? __('No matching items found.', 'wooptionsfic') : __('Start typing or choose from recent items.', 'wooptionsfic'))) : null,
+                    results.map((target) => {
+                        const selected = selectedIds.has(String(target.id));
+                        return (wp.element.createElement("button", { type: "button", key: `${props.type}-${target.id}`, className: selected ? 'is-selected' : '', disabled: selected, onMouseDown: (event) => event.preventDefault(), onClick: () => props.onAdd({ ...target, type: props.type }) },
+                            target.image ? wp.element.createElement("img", { src: target.image, alt: "" }) : wp.element.createElement("span", { className: `wof-target-result__icon dashicons ${assignmentTypeIcon(props.type)}`, "aria-hidden": "true" }),
+                            wp.element.createElement("span", { className: "wof-target-result__copy" },
+                                wp.element.createElement("strong", null, target.label),
+                                wp.element.createElement("small", null, target.meta || `${assignmentTypeLabel(props.type)} #${target.id}`)),
+                            wp.element.createElement("span", { className: `dashicons ${selected ? 'dashicons-yes-alt' : 'dashicons-plus-alt2'}`, "aria-hidden": "true" })));
+                    }))) : null));
+        }
+        function AssignmentsModal(props) {
+            const [type, setType] = useState('product');
+            const [draft, setDraft] = useState(() => WooOptionsFic.Utils.clone(props.assignments));
+            const [targetDetails, setTargetDetails] = useState({});
+            const [saving, setSaving] = useState(false);
+            const assignmentKey = useMemo(() => draft.map((assignment) => `${assignment.targetType}:${assignment.targetId ?? 'global'}`).sort().join('|'), [draft]);
+            useEffect(() => {
+                let active = true;
+                const grouped = new Map();
+                draft.forEach((assignment) => {
+                    if (!['product', 'variation', 'category', 'tag'].includes(assignment.targetType) || assignment.targetId === null)
+                        return;
+                    const targetType = assignment.targetType;
+                    grouped.set(targetType, [...(grouped.get(targetType) ?? []), Number(assignment.targetId)]);
+                });
+                Promise.all(Array.from(grouped.entries()).map(async ([targetType, ids]) => {
+                    try {
+                        const response = await WooOptionsFic.Api.searchAssignmentTargets(targetType, '', [...new Set(ids)]);
+                        return response.items.map((item) => [`${targetType}:${item.id}`, item]);
+                    }
+                    catch {
+                        return [];
+                    }
+                })).then((groups) => {
+                    if (!active)
+                        return;
+                    const next = {};
+                    groups.flat().forEach(([key, item]) => { next[key] = item; });
+                    setTargetDetails(next);
+                });
+                return () => { active = false; };
+            }, [assignmentKey]);
+            const updateAssignment = (index, patch) => {
+                setDraft((current) => current.map((assignment, assignmentIndex) => assignmentIndex === index ? { ...assignment, ...patch } : assignment));
+            };
+            const addTarget = (target) => {
+                const targetId = target.type === 'global' ? null : Number(target.id);
+                if (draft.some((assignment) => assignment.targetType === target.type && assignment.targetId === targetId))
+                    return;
+                const assignment = {
+                    uuid: WooOptionsFic.Utils.uuid(),
+                    targetType: target.type,
+                    targetId,
+                    mode: 'include',
+                    priority: 10,
+                    context: {},
+                    targetLabel: target.label,
+                    targetMeta: target.meta,
+                    targetImage: target.image,
+                };
+                setDraft((current) => [...current, assignment]);
+                if (target.type !== 'global' && target.id !== null) {
+                    setTargetDetails((current) => ({
+                        ...current,
+                        [`${target.type}:${target.id}`]: {
+                            id: Number(target.id),
+                            type: target.type,
+                            label: target.label,
+                            meta: target.meta,
+                            image: target.image,
+                        },
+                    }));
+                }
+            };
+            const save = async () => {
+                setSaving(true);
+                try {
+                    await props.onSave(draft);
+                }
+                finally {
+                    setSaving(false);
+                }
+            };
+            return (wp.element.createElement(Modal, { title: __('Product assignments', 'wooptionsfic'), onRequestClose: props.onClose, className: "wof-modal wof-assignment-modal" },
+                wp.element.createElement("div", { className: "wof-assignment-hero" },
+                    wp.element.createElement("span", { className: "dashicons dashicons-admin-links", "aria-hidden": "true" }),
+                    wp.element.createElement("div", null,
+                        wp.element.createElement("h3", null, __('Choose exactly where this option set appears', 'wooptionsfic')),
+                        wp.element.createElement("p", null, __('Search and select multiple products, categories, tags, or variations. Product-specific rules take priority over broader category rules.', 'wooptionsfic')))),
+                wp.element.createElement("section", { className: "wof-assignment-picker" },
+                    wp.element.createElement("div", { className: "wof-assignment-type-tabs", role: "tablist" }, assignmentTypes.map((assignmentType) => (wp.element.createElement("button", { type: "button", role: "tab", key: assignmentType.type, "aria-selected": type === assignmentType.type, className: type === assignmentType.type ? 'is-active' : '', onClick: () => setType(assignmentType.type) },
+                        wp.element.createElement("span", { className: `dashicons ${assignmentType.icon}`, "aria-hidden": "true" }),
+                        assignmentType.label)))),
+                    wp.element.createElement(TargetSearch, { type: type, assignments: draft, onAdd: addTarget })),
+                wp.element.createElement("div", { className: "wof-assignment-section-head" },
+                    wp.element.createElement("div", null,
+                        wp.element.createElement("h3", null, __('Assigned targets', 'wooptionsfic')),
+                        wp.element.createElement("p", null, __('Adjust inclusion mode or priority for each selected target.', 'wooptionsfic'))),
+                    wp.element.createElement("span", null,
+                        draft.length,
+                        " ",
+                        draft.length === 1 ? __('rule', 'wooptionsfic') : __('rules', 'wooptionsfic'))),
+                draft.length ? (wp.element.createElement("div", { className: "wof-assignment-cards" }, draft.map((assignment, index) => {
+                    const key = `${assignment.targetType}:${assignment.targetId ?? 'global'}`;
+                    const target = targetDetails[key];
+                    const label = assignment.targetLabel
+                        || target?.label
+                        || (assignment.targetType === 'global'
+                            ? __('All WooCommerce products', 'wooptionsfic')
+                            : `${assignmentTypeLabel(assignment.targetType)} #${assignment.targetId}`);
+                    const meta = assignment.targetMeta
+                        || target?.meta
+                        || (assignment.targetType === 'global' ? __('Store-wide assignment', 'wooptionsfic') : `ID: ${assignment.targetId}`);
+                    const image = assignment.targetImage || target?.image || '';
+                    return (wp.element.createElement("article", { className: "wof-assignment-card", key: assignment.uuid || key },
+                        wp.element.createElement("div", { className: "wof-assignment-card__visual" }, image ? wp.element.createElement("img", { src: image, alt: "" }) : wp.element.createElement("span", { className: `dashicons ${assignmentTypeIcon(assignment.targetType)}`, "aria-hidden": "true" })),
+                        wp.element.createElement("div", { className: "wof-assignment-card__identity" },
+                            wp.element.createElement("div", null,
+                                wp.element.createElement("strong", null, label),
+                                wp.element.createElement("span", null, assignmentTypeLabel(assignment.targetType))),
+                            wp.element.createElement("small", null, meta)),
+                        wp.element.createElement(SelectControl, { label: __('Mode', 'wooptionsfic'), value: assignment.mode, options: [
+                                { label: __('Include', 'wooptionsfic'), value: 'include' },
+                                { label: __('Exclude', 'wooptionsfic'), value: 'exclude' },
+                            ], onChange: (mode) => updateAssignment(index, { mode }) }),
+                        wp.element.createElement(TextControl, { type: "number", label: __('Priority', 'wooptionsfic'), value: String(assignment.priority), min: -1000, max: 1000, onChange: (priority) => updateAssignment(index, { priority: Number(priority) }) }),
+                        wp.element.createElement("button", { type: "button", className: "wof-assignment-card__remove", onClick: () => setDraft((current) => current.filter((candidate) => candidate !== assignment)), "aria-label": __('Remove assignment', 'wooptionsfic') },
+                            wp.element.createElement("span", { className: "dashicons dashicons-trash", "aria-hidden": "true" }))));
+                }))) : (wp.element.createElement("div", { className: "wof-assignment-empty" },
+                    wp.element.createElement("span", { className: "dashicons dashicons-admin-links", "aria-hidden": "true" }),
+                    wp.element.createElement("h3", null, __('No products assigned yet', 'wooptionsfic')),
+                    wp.element.createElement("p", null, __('Use the search above to select one or more targets.', 'wooptionsfic')))),
+                wp.element.createElement("div", { className: "wof-modal__actions wof-assignment-actions" },
+                    wp.element.createElement(Button, { variant: "tertiary", onClick: props.onClose }, __('Cancel', 'wooptionsfic')),
+                    wp.element.createElement(Button, { variant: "primary", isBusy: saving || props.busy, onClick: save },
+                        wp.element.createElement("span", { className: "dashicons dashicons-saved", "aria-hidden": "true" }),
+                        __('Save assignments', 'wooptionsfic')))));
+        }
+        Builder.AssignmentsModal = AssignmentsModal;
+    })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    var Builder;
+    (function (Builder) {
+        const { Button, TextControl } = wp.components;
+        const { __ } = wp.i18n;
+        const { useCallback, useEffect, useRef, useState } = wp.element;
+        const statusLabels = {
+            idle: __('Ready', 'wooptionsfic'),
+            dirty: __('Unsaved changes', 'wooptionsfic'),
+            saving: __('Saving…', 'wooptionsfic'),
+            saved: __('All changes saved', 'wooptionsfic'),
+            error: __('Save failed', 'wooptionsfic'),
+            conflict: __('Editing conflict', 'wooptionsfic'),
+        };
+        function BuilderPage(props) {
+            const state = wp.data.useSelect((select) => select(WooOptionsFic.BuilderStore.STORE_KEY).getState(), []);
+            const actions = wp.data.useDispatch(WooOptionsFic.BuilderStore.STORE_KEY);
+            const [loading, setLoading] = useState(true);
+            const [fatal, setFatal] = useState('');
+            const [notice, setNotice] = useState('');
+            const [historyOpen, setHistoryOpen] = useState(false);
+            const [assignmentOpen, setAssignmentOpen] = useState(false);
+            const [revisions, setRevisions] = useState([]);
+            const [assignments, setAssignments] = useState([]);
+            const [modalBusy, setModalBusy] = useState(false);
+            const [deleteUuid, setDeleteUuid] = useState(null);
+            const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
+            const savePromise = useRef(null);
+            useEffect(() => {
+                let active = true;
+                setLoading(true);
+                WooOptionsFic.Api.getOptionSet(props.uuid)
+                    .then((optionSet) => active && actions.loadSet(optionSet))
+                    .catch((reason) => active && setFatal(WooOptionsFic.Utils.errorMessage(reason)))
+                    .finally(() => active && setLoading(false));
+                return () => { active = false; };
+            }, [props.uuid]);
+            const saveNow = useCallback(async (note = 'Builder autosave') => {
+                if (savePromise.current)
+                    return savePromise.current;
+                if (!state.optionSet || !state.document)
+                    throw new Error(__('The builder is not ready.', 'wooptionsfic'));
+                actions.setSaveStatus('saving');
+                const expectedHash = state.optionSet.currentRevision?.contentHash ?? '';
+                savePromise.current = WooOptionsFic.Api.saveRevision(state.optionSet.uuid, state.document, expectedHash, note);
+                try {
+                    const result = await savePromise.current;
+                    actions.saved(result, result.currentRevision?.definition ?? state.document);
+                    return result;
+                }
+                catch (reason) {
+                    actions.setSaveStatus(reason?.code === 'wooptionsfic_revision_conflict' ? 'conflict' : 'error');
+                    setNotice(WooOptionsFic.Utils.errorMessage(reason));
+                    throw reason;
+                }
+                finally {
+                    savePromise.current = null;
+                }
+            }, [state.optionSet, state.document]);
+            useEffect(() => {
+                if (!state.dirty || !state.document || !state.optionSet)
+                    return;
+                const timeout = window.setTimeout(() => { saveNow().catch(() => undefined); }, 1600);
+                return () => window.clearTimeout(timeout);
+            }, [state.dirty, state.document, state.optionSet, saveNow]);
+            useEffect(() => {
+                if (!state.document || !state.optionSet)
+                    return;
+                const timeout = window.setTimeout(() => {
+                    WooOptionsFic.Api.validateDefinition(state.optionSet.uuid, state.document)
+                        .then((result) => actions.setValidation(result.errors, result.warnings))
+                        .catch(() => undefined);
+                }, 500);
+                return () => window.clearTimeout(timeout);
+            }, [state.document, state.optionSet]);
+            const publish = async () => {
+                if (!state.optionSet || !state.document || state.errors.length) {
+                    setDiagnosticsOpen(true);
+                    return;
+                }
+                setNotice('');
+                try {
+                    const saved = state.dirty ? await saveNow('Pre-publish save') : state.optionSet;
+                    actions.setSaveStatus('saving');
+                    const result = await WooOptionsFic.Api.publishOptionSet(saved.uuid, saved.currentRevision?.contentHash ?? '');
+                    actions.saved(result, result.currentRevision?.definition ?? state.document);
+                    setNotice(__('Published. This live revision is now immutable.', 'wooptionsfic'));
+                }
+                catch (reason) {
+                    setNotice(WooOptionsFic.Utils.errorMessage(reason));
+                }
+            };
+            const openHistory = async () => {
+                if (!state.optionSet)
+                    return;
+                setHistoryOpen(true);
+                setModalBusy(true);
+                try {
+                    setRevisions(await WooOptionsFic.Api.listRevisions(state.optionSet.uuid));
+                }
+                finally {
+                    setModalBusy(false);
+                }
+            };
+            const openAssignments = async () => {
+                if (!state.optionSet)
+                    return;
+                setAssignmentOpen(true);
+                setModalBusy(true);
+                try {
+                    setAssignments((await WooOptionsFic.Api.getAssignments(state.optionSet.uuid)).items);
+                }
+                finally {
+                    setModalBusy(false);
+                }
+            };
+            if (loading)
+                return wp.element.createElement(WooOptionsFic.Components.Loading, { label: __('Opening the Precision Workshop…', 'wooptionsfic') });
+            if (fatal || !state.optionSet || !state.document)
+                return wp.element.createElement("div", { className: "wof-fatal" },
+                    wp.element.createElement("h1", null, __('This option set could not be opened', 'wooptionsfic')),
+                    wp.element.createElement("p", null, fatal),
+                    wp.element.createElement(Button, { variant: "primary", onClick: () => props.navigate('option-sets') }, __('Back to option sets', 'wooptionsfic')));
+            const selectedField = WooOptionsFic.Utils.fieldByUuid(state.document, state.selectedUuid);
+            const addField = (field, index) => { actions.addField(field, index); actions.selectField(field.uuid); actions.setInspectorTab('content'); };
+            const duplicateSelected = () => selectedField && addField(WooOptionsFic.FieldFactory.duplicate(selectedField));
+            return wp.element.createElement("div", { className: "wof-builder" },
+                wp.element.createElement("header", { className: "wof-builder-topbar" },
+                    wp.element.createElement("div", { className: "wof-builder-context" },
+                        wp.element.createElement("button", { type: "button", className: "wof-builder-brand", onClick: () => props.navigate('dashboard') },
+                            wp.element.createElement("span", { className: "wof-builder-brand-mark" },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "screenoptions" })),
+                            wp.element.createElement("strong", null, "WooOptionsFic")),
+                        wp.element.createElement("span", { className: "wof-builder-divider" }),
+                        wp.element.createElement("button", { type: "button", className: "wof-builder-back", onClick: () => props.navigate('option-sets') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-left-alt2" })),
+                        wp.element.createElement("div", { className: "wof-builder-breadcrumb" },
+                            wp.element.createElement("button", { type: "button", onClick: () => props.navigate('option-sets') }, __('Option Sets', 'wooptionsfic')),
+                            wp.element.createElement("span", null, "/"),
+                            wp.element.createElement("div", { className: "wof-builder-title-editor" },
+                                wp.element.createElement(TextControl, { label: __('Option set title', 'wooptionsfic'), hideLabelFromVision: true, value: state.document.title, onChange: (title) => actions.updateDocument({ title }) }),
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "edit" })),
+                            wp.element.createElement("span", { className: `wof-save-state is-${state.saveStatus}` },
+                                wp.element.createElement("i", null),
+                                statusLabels[state.saveStatus]))),
+                    wp.element.createElement("div", { className: "wof-builder-tools" },
+                        wp.element.createElement("div", { className: "wof-tool-group wof-history-tools" },
+                            wp.element.createElement("button", { type: "button", disabled: !state.history.length, onClick: actions.undo },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "undo" })),
+                            wp.element.createElement("button", { type: "button", disabled: !state.future.length, onClick: actions.redo },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "redo" }))),
+                        wp.element.createElement("div", { className: "wof-tool-group wof-device-switcher" }, ['desktop', 'tablet', 'mobile'].map((device) => wp.element.createElement("button", { type: "button", key: device, className: state.device === device ? 'is-active' : '', onClick: () => actions.setDevice(device) },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: device === 'desktop' ? 'desktop' : device === 'tablet' ? 'tablet' : 'smartphone' })))),
+                        wp.element.createElement(Button, { variant: "tertiary", className: "wof-header-action", onClick: openHistory },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "backup" }),
+                            __('Version history', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "tertiary", className: "wof-header-action", onClick: openAssignments },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-links" }),
+                            __('Assignments', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "secondary", isBusy: state.saveStatus === 'saving', onClick: () => saveNow('Manual save').catch(() => undefined) }, __('Save draft', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "primary", disabled: state.errors.length > 0, onClick: publish }, __('Publish', 'wooptionsfic')))),
+                notice ? wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-builder-notice', state.saveStatus === 'error' || state.saveStatus === 'conflict' ? 'is-error' : 'is-success') },
+                    wp.element.createElement("span", null, notice),
+                    wp.element.createElement("button", { type: "button", onClick: () => setNotice('') }, "\u00D7")) : null,
+                wp.element.createElement("div", { className: "wof-builder-workspace" },
+                    wp.element.createElement(Builder.ElementsPanel, { onAdd: addField, onOpenStyle: () => { actions.selectField(null); actions.setInspectorTab('style'); } }),
+                    wp.element.createElement(Builder.Canvas, { document: state.document, selectedUuid: state.selectedUuid, device: state.device, onSelect: (uuid) => { actions.selectField(uuid); actions.setInspectorTab('content'); }, onAdd: addField, onMove: actions.moveField, onDuplicate: (field) => addField(WooOptionsFic.FieldFactory.duplicate(field)), onDelete: setDeleteUuid }),
+                    wp.element.createElement(Builder.Inspector, { field: selectedField, document: state.document, tab: state.inspectorTab, onTabChange: actions.setInspectorTab, onFieldChange: (field) => actions.replaceField(field.uuid, field), onDocumentChange: actions.updateDocument, onDuplicate: duplicateSelected, onDelete: () => selectedField && setDeleteUuid(selectedField.uuid) })),
+                wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-diagnostics-drawer', diagnosticsOpen && 'is-open') },
+                    wp.element.createElement("button", { type: "button", className: "wof-diagnostics-toggle", onClick: () => setDiagnosticsOpen(!diagnosticsOpen) },
+                        wp.element.createElement("span", { className: state.errors.length ? 'is-error' : 'is-good' }, state.errors.length ? '!' : '✓'),
+                        wp.element.createElement("strong", null, __('Preflight diagnostics', 'wooptionsfic')),
+                        wp.element.createElement("small", null,
+                            state.errors.length ? `${state.errors.length} ${__('errors', 'wooptionsfic')}` : __('Ready to publish', 'wooptionsfic'),
+                            state.warnings.length ? ` · ${state.warnings.length} ${__('warnings', 'wooptionsfic')}` : ''),
+                        wp.element.createElement("b", null, diagnosticsOpen ? '⌄' : '⌃')),
+                    diagnosticsOpen ? wp.element.createElement("div", { className: "wof-diagnostics-content" },
+                        wp.element.createElement("div", null,
+                            wp.element.createElement("h3", null, __('Errors', 'wooptionsfic')),
+                            state.errors.length ? wp.element.createElement("ul", null, state.errors.map((issue, index) => wp.element.createElement("li", { key: `${issue.code}-${index}` },
+                                wp.element.createElement("span", null, "!"),
+                                wp.element.createElement("code", null, issue.code),
+                                wp.element.createElement("small", null, issue.path ?? issue.fieldUuid ?? '')))) : wp.element.createElement("p", null,
+                                "\u2713 ",
+                                __('No blocking errors.', 'wooptionsfic'))),
+                        wp.element.createElement("div", null,
+                            wp.element.createElement("h3", null, __('Warnings', 'wooptionsfic')),
+                            state.warnings.length ? wp.element.createElement("ul", null, state.warnings.map((issue, index) => wp.element.createElement("li", { key: `${issue.code}-${index}` },
+                                wp.element.createElement("span", null, "\u2022"),
+                                wp.element.createElement("code", null, issue.code),
+                                wp.element.createElement("small", null, issue.path ?? issue.fieldUuid ?? '')))) : wp.element.createElement("p", null,
+                                "\u2713 ",
+                                __('No warnings.', 'wooptionsfic'))),
+                        wp.element.createElement("div", { className: "wof-config-size" },
+                            wp.element.createElement("h3", null, __('Configuration size', 'wooptionsfic')),
+                            wp.element.createElement("strong", null,
+                                new Blob([JSON.stringify(state.document)]).size.toLocaleString(),
+                                " B"),
+                            wp.element.createElement("small", null,
+                                state.document.fields.length,
+                                " ",
+                                __('top-level fields', 'wooptionsfic')))) : null),
+                historyOpen ? wp.element.createElement(Builder.HistoryModal, { revisions: revisions, busy: modalBusy, onClose: () => setHistoryOpen(false), onRollback: async (revisionUuid) => { setModalBusy(true); try {
+                        const result = await WooOptionsFic.Api.rollback(state.optionSet.uuid, revisionUuid);
+                        actions.loadSet(result);
+                        setHistoryOpen(false);
+                        setNotice(__('A new draft was created from that revision.', 'wooptionsfic'));
+                    }
+                    finally {
+                        setModalBusy(false);
+                    } } }) : null,
+                assignmentOpen ? wp.element.createElement(Builder.AssignmentsModal, { assignments: assignments, busy: modalBusy, onClose: () => setAssignmentOpen(false), onSave: async (nextAssignments) => { setModalBusy(true); try {
+                        const response = await WooOptionsFic.Api.saveAssignments(state.optionSet.uuid, nextAssignments);
+                        setAssignments(response.items);
+                        setAssignmentOpen(false);
+                        setNotice(__('Product assignments saved.', 'wooptionsfic'));
+                    }
+                    finally {
+                        setModalBusy(false);
+                    } } }) : null,
+                deleteUuid ? wp.element.createElement(WooOptionsFic.Components.ConfirmModal, { title: __('Delete field?', 'wooptionsfic'), message: __('Delete this field and its configuration? This can be undone until you leave the builder.', 'wooptionsfic'), confirmLabel: __('Delete field', 'wooptionsfic'), destructive: true, onCancel: () => setDeleteUuid(null), onConfirm: () => { actions.deleteField(deleteUuid); setDeleteUuid(null); } }) : null);
+        }
+        Builder.BuilderPage = BuilderPage;
+    })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
+    const { useEffect, useState } = wp.element;
+    const { __ } = wp.i18n;
+    function routeFromLocation() {
+        const hash = window.location.hash.replace(/^#\/?/, '').trim();
+        return hash || window.WooOptionsFicAdmin.initialRoute || 'dashboard';
+    }
+    function App() {
+        const [route, setRoute] = useState(routeFromLocation());
+        useEffect(() => {
+            const update = () => setRoute(routeFromLocation());
+            window.addEventListener('hashchange', update);
+            return () => window.removeEventListener('hashchange', update);
+        }, []);
+        const navigate = (nextRoute) => {
+            const nextHash = `#/${nextRoute}`;
+            if (window.location.hash === nextHash)
+                setRoute(nextRoute);
+            else
+                window.location.hash = nextHash;
+        };
+        let page;
+        if (route.startsWith('builder/')) {
+            page = wp.element.createElement(WooOptionsFic.Builder.BuilderPage, { uuid: route.slice('builder/'.length), navigate: navigate });
+        }
+        else {
+            switch (route) {
+                case 'dashboard':
+                    page = wp.element.createElement(WooOptionsFic.Pages.Dashboard, { navigate: navigate });
+                    break;
+                case 'option-sets':
+                    page = wp.element.createElement(WooOptionsFic.Pages.OptionSets, { navigate: navigate });
+                    break;
+                case 'templates':
+                    page = wp.element.createElement(WooOptionsFic.Pages.Templates, { navigate: navigate });
+                    break;
+                case 'analytics':
+                    page = wp.element.createElement(WooOptionsFic.Pages.Analytics, null);
+                    break;
+                case 'integrations':
+                    page = wp.element.createElement(WooOptionsFic.Pages.Integrations, null);
+                    break;
+                case 'diagnostics':
+                    page = wp.element.createElement(WooOptionsFic.Pages.Diagnostics, null);
+                    break;
+                case 'settings':
+                    page = wp.element.createElement(WooOptionsFic.Pages.Settings, null);
+                    break;
+                case 'help':
+                    page = wp.element.createElement(WooOptionsFic.Pages.Help, { navigate: navigate });
+                    break;
+                default: page = wp.element.createElement("div", { className: "wof-fatal" },
+                    wp.element.createElement("h1", null, __('Page not found', 'wooptionsfic')),
+                    wp.element.createElement("p", null, __('This WooOptionsFic route does not exist.', 'wooptionsfic')),
+                    wp.element.createElement("button", { type: "button", onClick: () => navigate('dashboard') }, __('Open dashboard', 'wooptionsfic')));
+            }
+        }
+        return wp.element.createElement(WooOptionsFic.Components.AdminShell, { route: route, navigate: navigate }, page);
+    }
+    WooOptionsFic.App = App;
+})(WooOptionsFic || (WooOptionsFic = {}));
+(() => {
+    const rootElement = document.getElementById('wooptionsfic-admin-root');
+    if (!rootElement)
+        return;
+    try {
+        wp.element.createRoot(rootElement).render(wp.element.createElement(WooOptionsFic.App, null));
+    }
+    catch (error) {
+        window.console.error('WooOptionsFic admin failed to initialize.', error);
+        rootElement.innerHTML = '<div class="wof-fatal"><h1>The workshop hit a snag</h1><p>Your saved configuration is safe. Reload the page to restart the builder.</p><button type="button" onclick="window.location.reload()">Reload WooOptionsFic</button></div>';
+    }
+})();
+//# sourceMappingURL=admin.js.map

@@ -1,0 +1,117 @@
+namespace WooOptionsFic.Utils {
+  export const i18n = wp.i18n;
+
+  export function clone<T>(value: T): T {
+    if (typeof structuredClone === 'function') {
+      return structuredClone(value);
+    }
+    return JSON.parse(JSON.stringify(value)) as T;
+  }
+
+  export function uuid(): string {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+      const random = Math.floor(Math.random() * 16);
+      const value = character === 'x' ? random : (random & 0x3) | 0x8;
+      return value.toString(16);
+    });
+  }
+
+  export function errorMessage(error: unknown): string {
+    if (error && typeof error === 'object' && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
+      return (error as { message: string }).message;
+    }
+    return i18n.__('Something went wrong. Please try again.', 'wooptionsfic');
+  }
+
+  export function formatDate(value: string): string {
+    if (!value) return '—';
+    const normalized = /Z$/.test(value) ? value : `${value}Z`;
+    const date = new Date(normalized);
+    if (Number.isNaN(date.getTime())) return value;
+    return new Intl.DateTimeFormat(undefined, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    }).format(date);
+  }
+
+  export function downloadJson(filename: string, payload: unknown): void {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  export function slug(value: string): string {
+    return value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  export function fieldByUuid(document: WooOptionsFic.OptionSetDefinition | null, uuidValue: string | null): WooOptionsFic.FieldDefinition | null {
+    if (!document || !uuidValue) return null;
+    const walk = (fields: WooOptionsFic.FieldDefinition[]): WooOptionsFic.FieldDefinition | null => {
+      for (const field of fields) {
+        if (field.uuid === uuidValue) return field;
+        if (field.children?.length) {
+          const child = walk(field.children);
+          if (child) return child;
+        }
+      }
+      return null;
+    };
+    return walk(document.fields);
+  }
+
+  export function updateFieldTree(
+    fields: WooOptionsFic.FieldDefinition[],
+    uuidValue: string,
+    updater: (field: WooOptionsFic.FieldDefinition) => WooOptionsFic.FieldDefinition,
+  ): WooOptionsFic.FieldDefinition[] {
+    return fields.map((field) => {
+      if (field.uuid === uuidValue) return updater(field);
+      if (field.children?.length) {
+        return { ...field, children: updateFieldTree(field.children, uuidValue, updater) };
+      }
+      return field;
+    });
+  }
+
+  export function removeFieldTree(fields: WooOptionsFic.FieldDefinition[], uuidValue: string): WooOptionsFic.FieldDefinition[] {
+    return fields
+      .filter((field) => field.uuid !== uuidValue)
+      .map((field) => ({
+        ...field,
+        children: field.children ? removeFieldTree(field.children, uuidValue) : field.children,
+      }));
+  }
+
+  export function allFields(fields: WooOptionsFic.FieldDefinition[]): WooOptionsFic.FieldDefinition[] {
+    const result: WooOptionsFic.FieldDefinition[] = [];
+    const walk = (items: WooOptionsFic.FieldDefinition[]) => {
+      items.forEach((field) => {
+        result.push(field);
+        if (field.children?.length) walk(field.children);
+      });
+    };
+    walk(fields);
+    return result;
+  }
+
+  export function countChoices(fields: WooOptionsFic.FieldDefinition[]): number {
+    return allFields(fields).reduce((count, field) => count + (field.choices?.length ?? 0), 0);
+  }
+
+  export function classNames(...values: Array<string | false | null | undefined>): string {
+    return values.filter(Boolean).join(' ');
+  }
+}

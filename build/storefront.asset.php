@@ -1,1 +1,1 @@
-<?php return array('dependencies' => array(), 'version' => 'b22-storefront-palette-fonts');
+<?php return array('dependencies' => array(), 'version' => '3e425a8527a82b625db0');
