@@ -1,0 +1,27 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {"slug": "custom-furniture", "version": 1},
+  "optionSet": {
+    "title": "Custom furniture",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "30000000-0000-4000-8000-000000000001",
+      "revisionUuid": "30000000-0000-4000-8000-000000000002",
+      "title": "Tailor the details",
+      "layout": {"type": "grid", "settings": {}},
+      "fields": [
+        {"uuid": "30000000-0000-4000-8000-000000000010", "type": "image_swatch", "label": "Finish", "required": true, "choices": [
+          {"uuid": "30000000-0000-4000-8000-000000000011", "label": "Natural oak", "default": true},
+          {"uuid": "30000000-0000-4000-8000-000000000012", "label": "Smoked walnut", "pricing": {"strategy": "fixed", "amount": "60"}},
+          {"uuid": "30000000-0000-4000-8000-000000000013", "label": "Matte black", "pricing": {"strategy": "fixed", "amount": "35"}}
+        ]},
+        {"uuid": "30000000-0000-4000-8000-000000000020", "type": "number", "label": "Width in centimetres", "required": true, "min": "80", "max": "240", "step": "1", "default": "120", "pricing": {"strategy": "per_unit", "amount": "0.80"}},
+        {"uuid": "30000000-0000-4000-8000-000000000030", "type": "toggle", "label": "White-glove assembly", "description": "Delivery team assembly and packaging removal.", "pricing": {"strategy": "fixed", "amount": "79"}}
+      ],
+      "rules": [],
+      "preview": {"assets": [], "layers": [], "bindings": []},
+      "style": {"palette": "forest-atelier", "overrides": {}, "typography": {"family": "system-ui"}},
+      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+    }
+  }
+}

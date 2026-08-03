@@ -1,0 +1,28 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {"slug": "made-to-measure-curtains", "version": 1},
+  "optionSet": {
+    "title": "Made-to-measure curtains",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "60000000-0000-4000-8000-000000000001",
+      "revisionUuid": "60000000-0000-4000-8000-000000000002",
+      "title": "Made for your window",
+      "layout": {"type": "grid", "settings": {}},
+      "fields": [
+        {"uuid": "60000000-0000-4000-8000-000000000010", "type": "number", "label": "Finished width (cm)", "required": true, "min": "40", "max": "800", "step": "0.5", "default": "180"},
+        {"uuid": "60000000-0000-4000-8000-000000000020", "type": "number", "label": "Finished drop (cm)", "required": true, "min": "40", "max": "500", "step": "0.5", "default": "220"},
+        {"uuid": "60000000-0000-4000-8000-000000000030", "type": "select", "label": "Fabric collection", "required": true, "choices": [
+          {"uuid": "60000000-0000-4000-8000-000000000031", "label": "Everyday linen", "default": true},
+          {"uuid": "60000000-0000-4000-8000-000000000032", "label": "Blackout velvet", "pricing": {"strategy": "fixed", "amount": "45"}},
+          {"uuid": "60000000-0000-4000-8000-000000000033", "label": "Organic cotton", "pricing": {"strategy": "fixed", "amount": "25"}}
+        ]},
+        {"uuid": "60000000-0000-4000-8000-000000000040", "type": "formula", "label": "Made-to-measure area charge", "pricing": {"strategy": "formula", "expression": "ROUND(FIELD(\"60000000-0000-4000-8000-000000000010\") * FIELD(\"60000000-0000-4000-8000-000000000020\") * 0.0025, 2)", "mode": "adjustment"}}
+      ],
+      "rules": [],
+      "preview": {"assets": [], "layers": [], "bindings": []},
+      "style": {"palette": "ocean-commerce", "overrides": {}, "typography": {"family": "Manrope"}},
+      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+    }
+  }
+}

@@ -1,0 +1,58 @@
+<?php
+/**
+ * Storefront asset registration.
+ *
+ * @package WooOptionsFic
+ */
+
+declare(strict_types=1);
+
+namespace WooOptionsFic\Presentation\Storefront;
+
+final class Assets {
+	public function register(): void {
+		$asset = WOOPTIONSFIC_PATH . 'build/storefront.asset.php';
+		$meta  = is_readable($asset) ? require $asset : ['dependencies' => [], 'version' => WOOPTIONSFIC_VERSION];
+		wp_register_script(
+			'wooptionsfic-storefront',
+			WOOPTIONSFIC_URL . 'build/storefront.js',
+			(array) ($meta['dependencies'] ?? []),
+			(string) ($meta['version'] ?? WOOPTIONSFIC_VERSION),
+			true
+		);
+		wp_register_style(
+			'wooptionsfic-storefront',
+			WOOPTIONSFIC_URL . 'build/storefront.css',
+			[],
+			(string) ($meta['version'] ?? WOOPTIONSFIC_VERSION)
+		);
+		wp_add_inline_script(
+			'wooptionsfic-storefront',
+			'window.WooOptionsFicStorefront=' . wp_json_encode(
+				[
+					'restRoot' => esc_url_raw(rest_url('wooptionsfic/v1/')),
+					'locale'   => determine_locale(),
+					'i18n'     => [
+						'checking'       => __('Checking your configuration…', 'wooptionsfic'),
+						'confirmed'      => __('Price confirmed', 'wooptionsfic'),
+						'couldNotQuote'  => __('We could not confirm this configuration. Check the highlighted options and try again.', 'wooptionsfic'),
+						'uploading'      => __('Uploading securely…', 'wooptionsfic'),
+						'uploadComplete' => __('Upload ready', 'wooptionsfic'),
+						'addRow'         => __('Add another', 'wooptionsfic'),
+						'removeRow'      => __('Remove', 'wooptionsfic'),
+					],
+				],
+				JSON_UNESCAPED_SLASHES
+			) . ';',
+			'before'
+		);
+	}
+
+	public function enqueue_on_product_pages(): void {
+		if (! function_exists('is_product') || ! is_product()) {
+			return;
+		}
+		wp_enqueue_script('wooptionsfic-storefront');
+		wp_enqueue_style('wooptionsfic-storefront');
+	}
+}

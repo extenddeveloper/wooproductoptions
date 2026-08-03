@@ -1,0 +1,691 @@
+<?php
+/**
+ * Capability-protected administration REST API.
+ *
+ * @package WooOptionsFic
+ */
+
+declare(strict_types=1);
+
+namespace WooOptionsFic\Presentation\Rest;
+
+use WooOptionsFic\Application\AnalyticsService;
+use WooOptionsFic\Application\AssignmentService;
+use WooOptionsFic\Application\DiagnosticsService;
+use WooOptionsFic\Application\OptionSetService;
+use WooOptionsFic\Application\TemplateService;
+use WooOptionsFic\Bootstrap\Settings;
+use WooOptionsFic\Domain\Definition\Compiler;
+use WooOptionsFic\Domain\Pricing\Formula\Evaluator;
+use WooOptionsFic\Domain\Pricing\Formula\Parser;
+use WooOptionsFic\Domain\Rule\RuleEngine;
+use WooOptionsFic\Domain\Style\ContrastValidator;
+
+final class AdminController {
+	use Responder;
+
+	private const NAMESPACE = 'wooptionsfic/v1';
+	private const UUID_PATTERN = '[0-9a-fA-F-]{36}';
+
+	public function __construct(
+		private readonly OptionSetService $option_sets,
+		private readonly AssignmentService $assignments,
+		private readonly Compiler $compiler,
+		private readonly Parser $formula_parser,
+		private readonly Evaluator $formula_evaluator,
+		private readonly RuleEngine $rules,
+		private readonly ContrastValidator $contrast,
+		private readonly TemplateService $templates,
+		private readonly AnalyticsService $analytics,
+		private readonly DiagnosticsService $diagnostics
+	) {
+	}
+
+	public function register(): void {
+		register_rest_route(
+			self::NAMESPACE,
+			'/option-sets',
+			[
+				[
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => [$this, 'list_option_sets'],
+					'permission_callback' => [$this, 'can_edit'],
+					'args'                => $this->collection_args(),
+				],
+				[
+					'methods'             => \WP_REST_Server::CREATABLE,
+					'callback'            => [$this, 'create_option_set'],
+					'permission_callback' => [$this, 'can_edit'],
+					'args'                => [
+						'title' => ['type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field'],
+					],
+				],
+			]
+		);
+
+		$this->register_set_routes();
+		$this->register_tool_routes();
+	}
+
+	private function register_set_routes(): void {
+		$set_route = '/option-sets/(?P<uuid>' . self::UUID_PATTERN . ')';
+		register_rest_route(
+			self::NAMESPACE,
+			$set_route,
+			[
+				[
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => [$this, 'get_option_set'],
+					'permission_callback' => [$this, 'can_edit'],
+				],
+				[
+					'methods'             => \WP_REST_Server::EDITABLE,
+					'callback'            => [$this, 'update_option_set'],
+					'permission_callback' => [$this, 'can_edit'],
+				],
+				[
+					'methods'             => \WP_REST_Server::DELETABLE,
+					'callback'            => [$this, 'archive_option_set'],
+					'permission_callback' => [$this, 'can_edit'],
+				],
+			]
+		);
+
+		$actions = [
+			'duplicate' => ['POST', 'duplicate_option_set', 'can_edit'],
+			'delete-permanently' => ['POST', 'delete_option_set_permanently', 'can_edit'],
+			'publish'   => ['POST', 'publish_option_set', 'can_publish'],
+			'rollback'  => ['POST', 'rollback_option_set', 'can_edit'],
+			'validate'  => ['POST', 'validate_option_set', 'can_edit'],
+			'test-rules'=> ['POST', 'test_rules', 'can_edit'],
+			'test-formula'=> ['POST', 'test_formula', 'can_edit'],
+		];
+		foreach ($actions as $action => [$method, $callback, $permission]) {
+			register_rest_route(
+				self::NAMESPACE,
+				$set_route . '/' . $action,
+				[
+					'methods'             => $method,
+					'callback'            => [$this, $callback],
+					'permission_callback' => [$this, $permission],
+				]
+			);
+		}
+
+		register_rest_route(
+			self::NAMESPACE,
+			$set_route . '/revisions',
+			[
+				[
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => [$this, 'list_revisions'],
+					'permission_callback' => [$this, 'can_edit'],
+				],
+				[
+					'methods'             => \WP_REST_Server::CREATABLE,
+					'callback'            => [$this, 'save_revision'],
+					'permission_callback' => [$this, 'can_edit'],
+				],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			$set_route . '/revisions/(?P<revision_uuid>' . self::UUID_PATTERN . ')',
+			[
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => [$this, 'get_revision'],
+				'permission_callback' => [$this, 'can_edit'],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			$set_route . '/diff',
+			[
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => [$this, 'diff_revisions'],
+				'permission_callback' => [$this, 'can_edit'],
+				'args'                => [
+					'from' => ['type' => 'string', 'required' => true, 'pattern' => '^[0-9a-fA-F-]{36}$'],
+					'to'   => ['type' => 'string', 'required' => true, 'pattern' => '^[0-9a-fA-F-]{36}$'],
+				],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			$set_route . '/assignments',
+			[
+				[
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => [$this, 'get_assignments'],
+					'permission_callback' => [$this, 'can_edit'],
+				],
+				[
+					'methods'             => 'PUT',
+					'callback'            => [$this, 'put_assignments'],
+					'permission_callback' => [$this, 'can_edit'],
+				],
+			]
+		);
+	}
+
+	private function register_tool_routes(): void {
+		register_rest_route(
+			self::NAMESPACE,
+			'/assignment-targets',
+			[
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => [$this, 'search_assignment_targets'],
+				'permission_callback' => [$this, 'can_edit'],
+				'args'                => [
+					'type'    => ['type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_key'],
+					'search'  => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field'],
+					'include' => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field'],
+					'perPage' => ['type' => 'integer', 'default' => 20, 'minimum' => 1, 'maximum' => 50],
+				],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/styles/contrast-check',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [$this, 'contrast_check'],
+				'permission_callback' => [$this, 'can_edit'],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/templates',
+			[
+				[
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => [$this, 'list_templates'],
+					'permission_callback' => [$this, 'can_edit'],
+				],
+				[
+					'methods'             => \WP_REST_Server::CREATABLE,
+					'callback'            => [$this, 'import_template'],
+					'permission_callback' => [$this, 'can_edit'],
+				],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/imports/preview',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [$this, 'preview_import'],
+				'permission_callback' => [$this, 'can_edit'],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/imports/commit',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [$this, 'commit_import'],
+				'permission_callback' => [$this, 'can_edit'],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/exports/(?P<uuid>' . self::UUID_PATTERN . ')',
+			[
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => [$this, 'export_option_set'],
+				'permission_callback' => [$this, 'can_edit'],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/analytics',
+			[
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => [$this, 'analytics'],
+				'permission_callback' => [$this, 'can_analytics'],
+				'args'                => [
+					'from' => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+					'to'   => ['type' => 'string', 'sanitize_callback' => 'sanitize_text_field'],
+					'productId' => ['type' => 'integer', 'minimum' => 0],
+				],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/integrations',
+			[
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => [$this, 'integrations'],
+				'permission_callback' => [$this, 'can_manage'],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/diagnostics',
+			[
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => [$this, 'diagnostics'],
+				'permission_callback' => [$this, 'can_manage'],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
+			'/settings',
+			[
+				[
+					'methods'             => \WP_REST_Server::READABLE,
+					'callback'            => [$this, 'get_settings'],
+					'permission_callback' => [$this, 'can_settings'],
+				],
+				[
+					'methods'             => \WP_REST_Server::EDITABLE,
+					'callback'            => [$this, 'update_settings'],
+					'permission_callback' => [$this, 'can_settings'],
+				],
+			]
+		);
+	}
+
+	public function list_option_sets(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->option_sets->list([
+			'page'     => (int) $request['page'],
+			'perPage'  => (int) $request['perPage'],
+			'status'   => (string) $request['status'],
+			'search'   => (string) $request['search'],
+			'orderBy'  => (string) $request['orderBy'],
+			'order'    => (string) $request['order'],
+		]));
+	}
+
+	public function create_option_set(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(
+			fn (): array => $this->option_sets->create((string) $request['title'], get_current_user_id()),
+			201
+		);
+	}
+
+	public function get_option_set(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->option_sets->get((string) $request['uuid']));
+	}
+
+	public function update_option_set(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$set  = $this->option_sets->get((string) $request['uuid']);
+			$body = $this->body($request);
+			if ('archived' === ($body['status'] ?? '')) {
+				return $this->option_sets->archive((string) $set['uuid'], get_current_user_id());
+			}
+			if ('active' === ($body['status'] ?? '')) {
+				return $this->option_sets->activate((string) $set['uuid'], get_current_user_id());
+			}
+			if ('inactive' === ($body['status'] ?? '')) {
+				return $this->option_sets->deactivate((string) $set['uuid'], get_current_user_id());
+			}
+			$definition          = (array) $set['currentRevision']['definition'];
+			$definition['title'] = (string) ($body['title'] ?? $set['title']);
+			return $this->option_sets->save_draft(
+				(string) $set['uuid'],
+				$definition,
+				(string) ($body['expectedHash'] ?? $set['currentRevision']['contentHash']),
+				(string) ($body['versionNote'] ?? __('Renamed option set', 'wooptionsfic')),
+				get_current_user_id()
+			);
+		});
+	}
+
+	public function archive_option_set(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->option_sets->archive((string) $request['uuid'], get_current_user_id()));
+	}
+
+	public function duplicate_option_set(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->option_sets->duplicate((string) $request['uuid'], get_current_user_id()), 201);
+	}
+
+	public function delete_option_set_permanently(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->option_sets->delete_permanently((string) $request['uuid']));
+	}
+
+	public function list_revisions(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->option_sets->revisions((string) $request['uuid']));
+	}
+
+	public function save_revision(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body = $this->body($request);
+			return $this->option_sets->save_draft(
+				(string) $request['uuid'],
+				(array) ($body['definition'] ?? []),
+				(string) ($body['expectedHash'] ?? ''),
+				(string) ($body['versionNote'] ?? __('Autosaved draft', 'wooptionsfic')),
+				get_current_user_id()
+			);
+		}, 201);
+	}
+
+	public function get_revision(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->option_sets->revision((string) $request['uuid'], (string) $request['revision_uuid']));
+	}
+
+	public function publish_option_set(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body = $this->body($request);
+			return $this->option_sets->publish(
+				(string) $request['uuid'],
+				(string) ($body['expectedHash'] ?? ''),
+				(string) ($body['versionNote'] ?? __('Published from the builder', 'wooptionsfic')),
+				get_current_user_id()
+			);
+		});
+	}
+
+	public function rollback_option_set(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body = $this->body($request);
+			return $this->option_sets->rollback(
+				(string) $request['uuid'],
+				(string) ($body['revisionUuid'] ?? ''),
+				get_current_user_id()
+			);
+		}, 201);
+	}
+
+	public function diff_revisions(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => [
+			'changes' => $this->option_sets->diff((string) $request['uuid'], (string) $request['from'], (string) $request['to']),
+		]);
+	}
+
+	public function search_assignment_targets(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$type     = sanitize_key((string) $request->get_param('type'));
+			$search   = sanitize_text_field((string) $request->get_param('search'));
+			$per_page = max(1, min(50, (int) $request->get_param('perPage')));
+			$include  = array_values(array_unique(array_filter(array_map('absint', explode(',', (string) $request->get_param('include'))))));
+			$items    = [];
+
+			if (in_array($type, ['category', 'tag'], true)) {
+				$taxonomy = 'category' === $type ? 'product_cat' : 'product_tag';
+				$args = [
+					'taxonomy'   => $taxonomy,
+					'hide_empty' => false,
+					'number'     => $include ? count($include) : $per_page,
+					'orderby'    => $include ? 'include' : 'name',
+					'order'      => 'ASC',
+				];
+				if ($include) {
+					$args['include'] = $include;
+				} elseif ('' !== $search) {
+					$args['search'] = $search;
+				}
+				$terms = get_terms($args);
+				if (! is_wp_error($terms)) {
+					foreach ($terms as $term) {
+						$parent = '';
+						if ((int) $term->parent > 0) {
+							$parent_term = get_term((int) $term->parent, $taxonomy);
+							if ($parent_term && ! is_wp_error($parent_term)) {
+								$parent = (string) $parent_term->name;
+							}
+						}
+						$items[] = [
+							'id'    => (int) $term->term_id,
+							'type'  => $type,
+							'label' => (string) $term->name,
+							'meta'  => $parent ? sprintf(__('Under %s', 'wooptionsfic'), $parent) : sprintf(_n('%d product', '%d products', (int) $term->count, 'wooptionsfic'), (int) $term->count),
+							'image' => '',
+						];
+					}
+				}
+				return ['items' => $items];
+			}
+
+			if (! in_array($type, ['product', 'variation'], true)) {
+				return ['items' => []];
+			}
+
+			$post_type = 'variation' === $type ? 'product_variation' : 'product';
+			$query_args = [
+				'post_type'      => $post_type,
+				'post_status'    => ['publish', 'private', 'draft', 'pending'],
+				'posts_per_page' => $include ? count($include) : $per_page,
+				'fields'         => 'ids',
+				'no_found_rows'  => true,
+				'orderby'        => $include ? 'post__in' : 'title',
+				'order'          => 'ASC',
+			];
+			if ($include) {
+				$query_args['post__in'] = $include;
+			} elseif ('' !== $search) {
+				$query_args['s'] = $search;
+			}
+			$ids = (new \WP_Query($query_args))->posts;
+
+			if (! $include && '' !== $search) {
+				$sku_ids = get_posts([
+					'post_type'      => $post_type,
+					'post_status'    => ['publish', 'private', 'draft', 'pending'],
+					'posts_per_page' => $per_page,
+					'fields'         => 'ids',
+					'no_found_rows'  => true,
+					'meta_query'     => [[
+						'key'     => '_sku',
+						'value'   => $search,
+						'compare' => 'LIKE',
+					]],
+				]);
+				$ids = array_values(array_unique(array_merge(array_map('intval', $ids), array_map('intval', $sku_ids))));
+				if (ctype_digit($search)) {
+					$exact = absint($search);
+					if ($exact && $post_type === get_post_type($exact)) {
+						array_unshift($ids, $exact);
+						$ids = array_values(array_unique($ids));
+					}
+				}
+				$ids = array_slice($ids, 0, $per_page);
+			}
+
+			foreach ($ids as $id) {
+				$product = function_exists('wc_get_product') ? wc_get_product((int) $id) : null;
+				$label   = $product ? $product->get_name() : get_the_title((int) $id);
+				if (! $label) {
+					$label = sprintf(__('Item #%d', 'wooptionsfic'), (int) $id);
+				}
+				$sku = $product ? (string) $product->get_sku() : '';
+				$meta = $sku ? sprintf(__('SKU: %s', 'wooptionsfic'), $sku) : sprintf(__('ID: %d', 'wooptionsfic'), (int) $id);
+				if ('variation' === $type && $product && method_exists($product, 'get_parent_id')) {
+					$parent_id = (int) $product->get_parent_id();
+					if ($parent_id > 0) {
+						$meta .= ' · ' . get_the_title($parent_id);
+					}
+				}
+				$image = get_the_post_thumbnail_url((int) $id, 'thumbnail');
+				if (! $image && 'variation' === $type && $product && method_exists($product, 'get_parent_id')) {
+					$image = get_the_post_thumbnail_url((int) $product->get_parent_id(), 'thumbnail');
+				}
+				$items[] = [
+					'id'    => (int) $id,
+					'type'  => $type,
+					'label' => wp_strip_all_tags((string) $label),
+					'meta'  => wp_strip_all_tags($meta),
+					'image' => $image ? esc_url_raw($image) : '',
+				];
+			}
+			return ['items' => $items];
+		});
+	}
+
+	public function get_assignments(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => ['items' => $this->assignments->for_set((string) $request['uuid'])]);
+	}
+
+	public function put_assignments(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body = $this->body($request);
+			return ['items' => $this->assignments->replace((string) $request['uuid'], (array) ($body['assignments'] ?? []))];
+		});
+	}
+
+	public function validate_option_set(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body = $this->body($request);
+			$result = $this->compiler->compile((array) ($body['definition'] ?? []));
+			return [
+				'valid'       => $result['valid'],
+				'errors'      => $result['errors'],
+				'warnings'    => $result['warnings'],
+				'contentHash' => $result['contentHash'],
+				'compiled'    => $result['valid'] ? $result['compiled'] : null,
+			];
+		});
+	}
+
+	public function test_rules(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body = $this->body($request);
+			return $this->rules->trace(
+				(array) ($body['condition'] ?? []),
+				(array) ($body['values'] ?? []),
+				(array) ($body['context'] ?? [])
+			);
+		});
+	}
+
+	public function test_formula(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body       = $this->body($request);
+			$expression = substr((string) ($body['expression'] ?? ''), 0, 2000);
+			$ast        = $this->formula_parser->parse($expression);
+			$result     = $this->formula_evaluator->evaluate(
+				$expression,
+				(array) ($body['variables'] ?? []),
+				(array) ($body['rows'] ?? [])
+			);
+			return ['valid' => true, 'ast' => $ast, 'result' => $result->to_string(false)];
+		});
+	}
+
+	public function contrast_check(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body       = $this->body($request);
+			$foreground = strtoupper((string) ($body['foreground'] ?? ''));
+			$background = strtoupper((string) ($body['background'] ?? ''));
+			$minimum    = max(3.0, min(7.0, (float) ($body['minimum'] ?? 4.5)));
+			$ratio      = $this->contrast->ratio($foreground, $background);
+			return [
+				'ratio'      => null === $ratio ? null : round($ratio, 2),
+				'minimum'    => $minimum,
+				'passes'     => null !== $ratio && $ratio >= $minimum,
+				'suggestion' => $this->contrast->suggested_on_color($background),
+			];
+		});
+	}
+
+	public function list_templates(): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => ['items' => $this->templates->list()]);
+	}
+
+	public function import_template(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body = $this->body($request);
+			return $this->templates->import((string) ($body['slug'] ?? ''), get_current_user_id());
+		}, 201);
+	}
+
+	public function preview_import(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body       = $this->body($request);
+			$definition = (array) ($body['optionSet']['definition'] ?? $body['definition'] ?? []);
+			$result     = $this->compiler->compile($definition);
+			return [
+				'valid'       => $result['valid'],
+				'errors'      => $result['errors'],
+				'warnings'    => $result['warnings'],
+				'title'       => $result['definition']['title'],
+				'fieldCount'  => count((array) $result['definition']['fields']),
+				'contentHash' => $result['contentHash'],
+			];
+		});
+	}
+
+	public function commit_import(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$body       = $this->body($request);
+			$definition = (array) ($body['optionSet']['definition'] ?? $body['definition'] ?? []);
+			return $this->option_sets->import($definition, (string) ($body['title'] ?? ''), get_current_user_id());
+		}, 201);
+	}
+
+	public function export_option_set(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->option_sets->export((string) $request['uuid']));
+	}
+
+	public function analytics(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->analytics->summary(
+			(string) ($request['from'] ?? ''),
+			(string) ($request['to'] ?? ''),
+			(int) ($request['productId'] ?? 0)
+		));
+	}
+
+	public function integrations(): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => ['items' => $this->diagnostics->integrations()]);
+	}
+
+	public function diagnostics(): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => $this->diagnostics->report());
+	}
+
+	public function get_settings(): \WP_REST_Response|\WP_Error {
+		return $this->respond(fn (): array => Settings::all());
+	}
+
+	public function update_settings(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
+		return $this->respond(function () use ($request): array {
+			$settings = Settings::sanitize($this->body($request));
+			update_option(Settings::OPTION, $settings, false);
+			return $settings;
+		});
+	}
+
+	public function can_edit(): bool {
+		return current_user_can('edit_wooptionsfic_sets');
+	}
+
+	public function can_publish(): bool {
+		return current_user_can('publish_wooptionsfic_sets');
+	}
+
+	public function can_manage(): bool {
+		return current_user_can('manage_wooptionsfic');
+	}
+
+	public function can_settings(): bool {
+		return current_user_can('manage_wooptionsfic_settings');
+	}
+
+	public function can_analytics(): bool {
+		return current_user_can('view_wooptionsfic_analytics');
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private function body(\WP_REST_Request $request): array {
+		$body = $request->get_json_params();
+		return is_array($body) ? $body : [];
+	}
+
+	/**
+	 * @return array<string,array<string,mixed>>
+	 */
+	private function collection_args(): array {
+		return [
+			'page'    => ['type' => 'integer', 'default' => 1, 'minimum' => 1],
+			'perPage' => ['type' => 'integer', 'default' => 20, 'minimum' => 1, 'maximum' => 100],
+			'status'  => ['type' => 'string', 'default' => 'active', 'enum' => ['active', 'inactive', 'archived']],
+			'search'  => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field'],
+			'orderBy' => ['type' => 'string', 'default' => 'updated_at_gmt', 'enum' => ['title', 'updated_at_gmt', 'created_at_gmt', 'priority']],
+			'order'   => ['type' => 'string', 'default' => 'DESC', 'enum' => ['ASC', 'DESC']],
+		];
+	}
+}

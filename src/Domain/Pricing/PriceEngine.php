@@ -1,0 +1,329 @@
+<?php
+/**
+ * Deterministic price engine.
+ *
+ * @package WooOptionsFic
+ */
+
+declare(strict_types=1);
+
+namespace WooOptionsFic\Domain\Pricing;
+
+use RuntimeException;
+use WooOptionsFic\Domain\Pricing\Formula\Evaluator;
+use WooOptionsFic\Domain\Rule\RuleEngine;
+
+final class PriceEngine {
+	public function __construct(
+		private readonly RuleEngine $rules,
+		private readonly Evaluator $formulas
+	) {
+	}
+
+	/**
+	 * @param array<string, mixed> $compiled Configuration.
+	 * @param array<string, mixed> $values Normalized values.
+	 * @param array<string, mixed> $context Price context.
+	 * @return array<string, mixed>
+	 */
+	public function calculate(array $compiled, array $values, array $context): array {
+		$currency   = strtoupper((string) ($context['currency'] ?? 'USD'));
+		$scale      = max(0, min(6, (int) ($context['currencyScale'] ?? 2)));
+		$base       = Money::from_decimal((string) ($context['basePrice'] ?? '0'), $currency, $scale);
+		$quantity   = max(1, (int) ($context['quantity'] ?? 1));
+		$states     = $this->rules->resolve_field_states($compiled, $values, $context);
+		$lines      = [];
+		$adjustment = Money::from_minor(0, $currency, $scale);
+		$supplemental_adjustment = Money::from_minor(0, $currency, $scale);
+		$override   = null;
+		$warnings   = [];
+
+		foreach ((array) ($compiled['fields'] ?? []) as $field) {
+			$uuid  = (string) ($field['uuid'] ?? '');
+			$state = $states[$uuid] ?? ['visible' => true, 'enabled' => true];
+			if (empty($state['visible']) || empty($state['enabled'])) {
+				continue;
+			}
+
+			$value   = $values[$uuid] ?? null;
+			$result  = $this->field_contributions($field, $value, $base, $quantity, $values, $context, $currency, $scale);
+			foreach ($result['lines'] as $line) {
+				$applies_to_adjustment = ! isset($line['_applyToAdjustment']) || ! empty($line['_applyToAdjustment']);
+				unset($line['_applyToAdjustment']);
+				$lines[] = $line;
+				$line_money = Money::from_minor((int) $line['rounded']['minor'], $currency, $scale);
+				$adjustment = $adjustment->add($line_money);
+				if ($applies_to_adjustment) {
+					$supplemental_adjustment = $supplemental_adjustment->add($line_money);
+				}
+			}
+			if (isset($result['override'])) {
+				if (null !== $override) {
+					throw new RuntimeException('wooptionsfic_multiple_price_overrides');
+				}
+				$override = $result['override'];
+			}
+			$warnings = array_merge($warnings, $result['warnings']);
+		}
+
+		$unit = $override instanceof Money
+			? $override->add($supplemental_adjustment)
+			: $base->add($adjustment);
+		if ($unit->minor() < 0 && empty($context['allowNegativeTotal'])) {
+			$warnings[] = ['code' => 'negative_total_clamped', 'params' => []];
+			$unit       = Money::from_minor(0, $currency, $scale);
+		}
+
+		return [
+			'base'          => $base->to_array(),
+			'contributions' => $lines,
+			'adjustment'    => $adjustment->to_array(),
+			'unitPrice'     => $unit->to_array(),
+			'quantity'      => $quantity,
+			'extendedTotal' => $unit->multiply_integer($quantity)->to_array(),
+			'warnings'      => $warnings,
+			'revisionUuid'  => (string) ($compiled['revisionUuid'] ?? ''),
+			'revisionHash'  => (string) ($compiled['contentHash'] ?? ''),
+		];
+	}
+
+	/**
+	 * @param array<string, mixed> $field Field.
+	 * @param array<string, mixed> $values Values.
+	 * @param array<string, mixed> $context Context.
+	 * @return array{lines:list<array<string,mixed>>,override:?Money,warnings:list<array<string,mixed>>}
+	 */
+	private function field_contributions(
+		array $field,
+		mixed $value,
+		Money $base,
+		int $quantity,
+		array $values,
+		array $context,
+		string $currency,
+		int $scale
+	): array {
+		$lines    = [];
+		$warnings = [];
+		$override = null;
+		$pricing  = is_array($field['pricing'] ?? null) ? $field['pricing'] : ['strategy' => 'none'];
+		$strategy = (string) ($pricing['strategy'] ?? 'none');
+
+		if ('customer_defined_price' === ($field['type'] ?? '') && '' !== (string) $value) {
+			$override = Money::from_decimal((string) $value, $currency, $scale);
+			$lines[]  = $this->line(
+				$field,
+				'customer_defined_price',
+				$override->subtract($base),
+				['entered' => (string) $value],
+				$override->subtract($base)->to_decimal(),
+				false
+			);
+		} elseif ('fixed' === $strategy && ! $this->empty($value)) {
+			$money   = Money::from_decimal((string) ($pricing['amount'] ?? '0'), $currency, $scale);
+			$lines[] = $this->line($field, $strategy, $money, [], $money->to_decimal());
+		} elseif ('percentage' === $strategy && ! $this->empty($value)) {
+			$money   = $base->percentage((string) ($pricing['percent'] ?? '0'));
+			$lines[] = $this->line($field, $strategy, $money, ['base' => $base->to_decimal()], $money->to_decimal());
+		} elseif ('per_character' === $strategy && is_string($value)) {
+			$length  = function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
+			$unit    = Money::from_decimal((string) ($pricing['amount'] ?? '0'), $currency, $scale);
+			$money   = $unit->multiply_integer($length);
+			$lines[] = $this->line($field, $strategy, $money, ['characters' => $length], $money->to_decimal());
+		} elseif ('per_unit' === $strategy && is_scalar($value) && '' !== (string) $value) {
+			$decimal = Decimal::from_string((string) $value)
+				->multiply(Decimal::from_string((string) ($pricing['amount'] ?? '0')));
+			$money   = Money::from_decimal($decimal->to_string(false), $currency, $scale);
+			$lines[] = $this->line($field, $strategy, $money, ['units' => (string) $value], $decimal->to_string());
+		} elseif ('setup' === $strategy && ! $this->empty($value)) {
+			$total    = Decimal::from_string((string) ($pricing['amount'] ?? '0'));
+			$per_unit = $total->divide(Decimal::from_int($quantity));
+			$money    = Money::from_decimal($per_unit->to_string(false), $currency, $scale);
+			$lines[]  = $this->line($field, $strategy, $money, ['cartQuantity' => $quantity], $per_unit->to_string());
+			if ($money->multiply_integer($quantity)->minor() !== Money::from_decimal($total->to_string(false), $currency, $scale)->minor()) {
+				$warnings[] = ['code' => 'setup_fee_rounding', 'params' => ['quantity' => $quantity]];
+			}
+		} elseif ('tiered' === $strategy && is_scalar($value) && '' !== (string) $value) {
+			$amount = $this->tier_amount((string) $value, (array) ($pricing['tiers'] ?? []));
+			$money  = Money::from_decimal($amount, $currency, $scale);
+			$lines[]= $this->line($field, $strategy, $money, ['value' => (string) $value], $amount);
+		} elseif ('formula' === $strategy) {
+			$expression = (string) ($pricing['expression'] ?? '0');
+			$rows       = 'repeater' === ($field['type'] ?? '')
+				? array_values(
+					array_map(
+						static fn (mixed $row): array => is_array($row['values'] ?? null) ? $row['values'] : [],
+						(array) $value
+					)
+				)
+				: [];
+			$decimal    = $this->formulas->evaluate(
+				$expression,
+				[
+					'base_price' => $base->to_decimal(),
+					'quantity'   => $quantity,
+					'fields'     => $values,
+					'weight'     => (string) ($context['weight'] ?? '0'),
+					'width'      => (string) ($context['width'] ?? '0'),
+					'height'     => (string) ($context['height'] ?? '0'),
+					'length'     => (string) ($context['length'] ?? '0'),
+				],
+				$rows
+			);
+			$money      = Money::from_decimal($decimal->to_string(false), $currency, $scale);
+			if ('unit_price' === ($pricing['mode'] ?? 'adjustment')) {
+				$override = $money;
+				$delta    = $money->subtract($base);
+				$lines[]  = $this->line(
+					$field,
+					$strategy,
+					$delta,
+					['expression' => $expression, 'mode' => 'unit_price'],
+					$decimal->to_string(),
+					false
+				);
+			} else {
+				$lines[] = $this->line($field, $strategy, $money, ['expression' => $expression], $decimal->to_string());
+			}
+		}
+
+		if (isset($field['choices']) && is_array($field['choices'])) {
+			$selected = is_array($value) ? array_values(array_map('strval', $value)) : ('' === (string) $value ? [] : [(string) $value]);
+			$selected_labels = [];
+
+			foreach ($field['choices'] as $choice) {
+				$choice_uuid = (string) ($choice['uuid'] ?? '');
+				if (! in_array($choice_uuid, $selected, true)) {
+					continue;
+				}
+
+				$choice_label = (string) ($choice['label'] ?? __('Choice', 'wooptionsfic'));
+				$selected_labels[] = $choice_label;
+				$display_label = $this->choice_line_label($field, $choice_label);
+				$choice_pricing = is_array($choice['pricing'] ?? null) ? $choice['pricing'] : [];
+				$choice_strategy = (string) ($choice_pricing['strategy'] ?? 'none');
+
+				if ('fixed' === $choice_strategy) {
+					$money = Money::from_decimal((string) ($choice_pricing['amount'] ?? '0'), $currency, $scale);
+					$line = $this->line($field, 'choice_fixed', $money, ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_label], $money->to_decimal());
+					$line['label'] = $display_label;
+					$lines[] = $line;
+				} elseif ('percentage' === $choice_strategy) {
+					$money = $base->percentage((string) ($choice_pricing['percent'] ?? '0'));
+					$line = $this->line($field, 'choice_percentage', $money, ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_label], $money->to_decimal());
+					$line['label'] = $display_label;
+					$lines[] = $line;
+				} elseif ('none' === $strategy) {
+					// Itemized breakdown should still identify selected dropdown/radio choices,
+					// even when that choice does not alter the price.
+					$money = Money::from_minor(0, $currency, $scale);
+					$line = $this->line($field, 'choice_none', $money, ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_label], '0');
+					$line['label'] = $display_label;
+					$lines[] = $line;
+				}
+			}
+
+			// A field-level adjustment on a dropdown or radio group should name the
+			// selected choice instead of showing an ambiguous field-only row.
+			if ([] !== $selected_labels && 'none' !== $strategy) {
+				$selection_label = (string) ($field['label'] ?? '');
+				if ('' !== $selection_label) {
+					$selection_label .= ': ';
+				}
+				$selection_label .= implode(', ', $selected_labels);
+				foreach ($lines as &$line) {
+					if ((string) ($line['sourceUuid'] ?? '') === (string) ($field['uuid'] ?? '')
+						&& ! str_starts_with((string) ($line['strategy'] ?? ''), 'choice_')
+					) {
+						$line['label'] = $selection_label;
+					}
+				}
+				unset($line);
+			}
+		}
+
+		if ('repeater' === ($field['type'] ?? '') && is_array($value)) {
+			foreach ($value as $row_index => $row) {
+				$row_values = is_array($row['values'] ?? null) ? $row['values'] : [];
+				foreach ((array) ($field['children'] ?? []) as $child) {
+					$child_uuid = (string) ($child['uuid'] ?? '');
+					$child_result = $this->field_contributions(
+						$child,
+						$row_values[$child_uuid] ?? null,
+						$base,
+						$quantity,
+						$values,
+						$context,
+						$currency,
+						$scale
+					);
+					foreach ($child_result['lines'] as $child_line) {
+						$child_line['label'] = (string) ($field['label'] ?? '') . ' #' . ($row_index + 1) . ' / ' . $child_line['label'];
+						$lines[]             = $child_line;
+					}
+				}
+			}
+		}
+
+		return ['lines' => $lines, 'override' => $override, 'warnings' => $warnings];
+	}
+
+	private function choice_line_label(array $field, string $choice_label): string {
+		$field_label = trim((string) ($field['label'] ?? ''));
+		$choice_label = trim($choice_label);
+		if ('' === $field_label) {
+			return $choice_label;
+		}
+		if ('' === $choice_label) {
+			return $field_label;
+		}
+		return $field_label . ': ' . $choice_label;
+	}
+
+	/**
+	 * @param array<string, mixed> $field Field.
+	 * @param array<string, mixed> $operands Operands.
+	 * @return array<string, mixed>
+	 */
+	private function line(
+		array $field,
+		string $strategy,
+		Money $money,
+		array $operands,
+		string $unrounded,
+		bool $apply_to_adjustment = true
+	): array {
+		return [
+			'sourceUuid' => (string) ($field['uuid'] ?? ''),
+			'label'      => (string) ($field['label'] ?? ''),
+			'strategy'   => $strategy,
+			'operands'   => $operands,
+			'unrounded'  => $unrounded,
+			'rounded'    => $money->to_array(),
+			'_applyToAdjustment' => $apply_to_adjustment,
+		];
+	}
+
+	/**
+	 * @param list<array<string,mixed>> $tiers Tiers.
+	 */
+	private function tier_amount(string $value, array $tiers): string {
+		$number = Decimal::from_string($value);
+		$amount = '0';
+		usort(
+			$tiers,
+			static fn (array $a, array $b): int => Decimal::from_string((string) ($a['min'] ?? '0'))
+				->compare(Decimal::from_string((string) ($b['min'] ?? '0')))
+		);
+		foreach ($tiers as $tier) {
+			if ($number->compare(Decimal::from_string((string) ($tier['min'] ?? '0'))) >= 0) {
+				$amount = (string) ($tier['amount'] ?? '0');
+			}
+		}
+		return $amount;
+	}
+
+	private function empty(mixed $value): bool {
+		return null === $value || '' === $value || [] === $value || false === $value;
+	}
+}

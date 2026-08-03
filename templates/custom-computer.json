@@ -1,0 +1,36 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {"slug": "custom-computer", "version": 1},
+  "optionSet": {
+    "title": "Custom computer",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "70000000-0000-4000-8000-000000000001",
+      "revisionUuid": "70000000-0000-4000-8000-000000000002",
+      "title": "Configure your workstation",
+      "layout": {"type": "accordion", "settings": {}},
+      "fields": [
+        {"uuid": "70000000-0000-4000-8000-000000000010", "type": "radio", "label": "Processor", "required": true, "choices": [
+          {"uuid": "70000000-0000-4000-8000-000000000011", "label": "Performance 8-core", "default": true},
+          {"uuid": "70000000-0000-4000-8000-000000000012", "label": "Pro 12-core", "pricing": {"strategy": "fixed", "amount": "220"}},
+          {"uuid": "70000000-0000-4000-8000-000000000013", "label": "Studio 16-core", "pricing": {"strategy": "fixed", "amount": "480"}}
+        ]},
+        {"uuid": "70000000-0000-4000-8000-000000000020", "type": "segmented", "label": "Memory", "required": true, "choices": [
+          {"uuid": "70000000-0000-4000-8000-000000000021", "label": "16 GB", "default": true},
+          {"uuid": "70000000-0000-4000-8000-000000000022", "label": "32 GB", "pricing": {"strategy": "fixed", "amount": "95"}},
+          {"uuid": "70000000-0000-4000-8000-000000000023", "label": "64 GB", "pricing": {"strategy": "fixed", "amount": "245"}}
+        ]},
+        {"uuid": "70000000-0000-4000-8000-000000000030", "type": "radio", "label": "Storage", "choices": [
+          {"uuid": "70000000-0000-4000-8000-000000000031", "label": "1 TB NVMe", "default": true},
+          {"uuid": "70000000-0000-4000-8000-000000000032", "label": "2 TB NVMe", "pricing": {"strategy": "fixed", "amount": "120"}},
+          {"uuid": "70000000-0000-4000-8000-000000000033", "label": "4 TB NVMe", "pricing": {"strategy": "fixed", "amount": "310"}}
+        ]},
+        {"uuid": "70000000-0000-4000-8000-000000000040", "type": "toggle", "label": "Three-year care plan", "pricing": {"strategy": "fixed", "amount": "149"}}
+      ],
+      "rules": [],
+      "preview": {"assets": [], "layers": [], "bindings": []},
+      "style": {"palette": "night-studio", "overrides": {}, "typography": {"family": "system-ui"}},
+      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+    }
+  }
+}

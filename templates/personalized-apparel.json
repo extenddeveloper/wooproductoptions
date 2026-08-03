@@ -1,0 +1,28 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {"slug": "personalized-apparel", "version": 1},
+  "optionSet": {
+    "title": "Personalized apparel",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "20000000-0000-4000-8000-000000000001",
+      "revisionUuid": "20000000-0000-4000-8000-000000000002",
+      "title": "Personalize your piece",
+      "layout": {"type": "stack", "settings": {}},
+      "fields": [
+        {"uuid": "20000000-0000-4000-8000-000000000010", "type": "color_swatch", "label": "Print color", "required": true, "choices": [
+          {"uuid": "20000000-0000-4000-8000-000000000011", "label": "Ink black", "color": "#18181B", "default": true},
+          {"uuid": "20000000-0000-4000-8000-000000000012", "label": "Iris", "color": "#5B4FF5"},
+          {"uuid": "20000000-0000-4000-8000-000000000013", "label": "Ember", "color": "#C2410C"},
+          {"uuid": "20000000-0000-4000-8000-000000000014", "label": "Forest", "color": "#166534"}
+        ]},
+        {"uuid": "20000000-0000-4000-8000-000000000020", "type": "text", "label": "Personalization text", "description": "Up to 24 characters.", "required": true, "maxLength": 24, "placeholder": "Your name or phrase", "pricing": {"strategy": "per_character", "amount": "0.35"}},
+        {"uuid": "20000000-0000-4000-8000-000000000030", "type": "file", "label": "Optional artwork", "description": "Upload a print-ready image or PDF.", "allowedExtensions": ["jpg", "jpeg", "png", "pdf"], "maxFileMb": 5, "maxFiles": 1}
+      ],
+      "rules": [],
+      "preview": {"assets": [], "layers": [], "bindings": [{"uuid": "20000000-0000-4000-8000-000000000040", "fieldUuid": "20000000-0000-4000-8000-000000000020", "target": "text", "layerUuid": ""}]},
+      "style": {"palette": "iris-studio", "overrides": {}, "typography": {"family": "Manrope"}},
+      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+    }
+  }
+}

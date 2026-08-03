@@ -1,0 +1,411 @@
+<?php
+/**
+ * Server-authoritative WooCommerce cart lifecycle.
+ *
+ * @package WooOptionsFic
+ */
+
+declare(strict_types=1);
+
+namespace WooOptionsFic\Infrastructure\WooCommerce;
+
+use Throwable;
+use WooOptionsFic\Application\AnalyticsService;
+use WooOptionsFic\Application\QuoteService;
+use WooOptionsFic\Application\UploadService;
+use WooOptionsFic\Domain\Support\CanonicalJson;
+use WooOptionsFic\Infrastructure\WordPress\SessionGuard;
+
+final class CartIntegration {
+	/** @var array<string,array<string,mixed>> */
+	private array $pending_quotes = [];
+	private bool $adding_linked = false;
+	private bool $removing_related = false;
+
+	public function __construct(
+		private readonly QuoteService $quotes,
+		private readonly ProductContext $products,
+		private readonly SessionGuard $sessions,
+		private readonly UploadService $uploads,
+		private readonly AnalyticsService $analytics
+	) {
+	}
+
+	public function register(): void {
+		add_filter('woocommerce_add_to_cart_validation', [$this, 'validate_add_to_cart'], 20, 6);
+		add_filter('woocommerce_add_cart_item_data', [$this, 'add_cart_item_data'], 20, 4);
+		add_action('woocommerce_add_to_cart', [$this, 'after_add_to_cart'], 20, 6);
+		add_action('woocommerce_before_calculate_totals', [$this, 'apply_prices'], 20);
+		add_filter('woocommerce_get_item_data', [$this, 'display_item_data'], 20, 2);
+		add_filter('woocommerce_get_cart_item_from_session', [$this, 'restore_from_session'], 20, 3);
+		add_action('woocommerce_check_cart_items', [$this, 'revalidate_cart'], 20);
+		add_action('woocommerce_after_cart_item_quantity_update', [$this, 'sync_linked_quantity'], 20, 4);
+		add_action('woocommerce_remove_cart_item', [$this, 'remove_related_items'], 20, 2);
+		add_filter('woocommerce_cart_item_class', [$this, 'cart_item_class'], 20, 3);
+	}
+
+	public function validate_add_to_cart(
+		bool $passed,
+		int $product_id,
+		int $quantity,
+		int $variation_id = 0,
+		array $variations = [],
+		array $cart_item_data = []
+	): bool {
+		unset($variations, $cart_item_data);
+		if (! $passed || $this->adding_linked) {
+			return $passed;
+		}
+
+		try {
+			$context = $this->context($product_id, $variation_id, $quantity);
+			$config  = $this->quotes->configuration($context);
+			if (! $config) {
+				return $passed;
+			}
+
+			$token = $this->posted_string('wooptionsfic_token');
+			$token_valid = '' !== $token && $this->sessions->verify($token, $product_id, (string) $config['revisionUuid']);
+
+			$selection = $this->posted_selection();
+			if (! $token_valid && defined('WP_DEBUG') && WP_DEBUG) {
+				error_log('WooOptionsFic add-to-cart token soft-refresh for product ' . $product_id); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			}
+			$quote     = $this->quotes->quote($selection, $context);
+			if (empty($quote['valid'])) {
+				$this->add_validation_notices((array) ($quote['errors'] ?? []));
+				return false;
+			}
+			$this->pending_quotes[$this->quote_key($product_id, $variation_id, $quantity, $selection)] = $quote;
+			return true;
+		} catch (Throwable $exception) {
+			if (defined('WP_DEBUG') && WP_DEBUG) {
+				error_log('WooOptionsFic add-to-cart validation: ' . $exception->getMessage()); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			}
+			wc_add_notice(__('We could not validate these product options. Please refresh and try again.', 'wooptionsfic'), 'error');
+			return false;
+		}
+	}
+
+	/**
+	 * @param array<string,mixed> $cart_item_data Cart data.
+	 * @return array<string,mixed>
+	 */
+	public function add_cart_item_data(
+		array $cart_item_data,
+		int $product_id,
+		int $variation_id,
+		int $quantity
+	): array {
+		if ($this->adding_linked || isset($cart_item_data['wooptionsfic_child'])) {
+			return $cart_item_data;
+		}
+		try {
+			$context = $this->context($product_id, $variation_id, $quantity);
+			$config  = $this->quotes->configuration($context);
+			if (! $config) {
+				return $cart_item_data;
+			}
+			$selection = $this->posted_selection();
+			$key       = $this->quote_key($product_id, $variation_id, $quantity, $selection);
+			$quote     = $this->pending_quotes[$key] ?? $this->quotes->quote($selection, $context);
+			if (empty($quote['valid'])) {
+				return $cart_item_data;
+			}
+			$cart_item_data['wooptionsfic'] = [
+				'selection'      => (array) $quote['values'],
+				'snapshot'       => (array) $quote['snapshot'],
+				'price'          => (array) $quote['price'],
+				'uploadRefs'     => array_values(array_map('strval', (array) ($quote['uploadRefs'] ?? []))),
+				'linkedProducts' => array_values(array_filter((array) ($quote['linkedProducts'] ?? []), 'is_array')),
+				'configurationKey'=> hash('sha256', CanonicalJson::encode([$quote['revisionHash'], $quote['values'], microtime(true)])),
+			];
+		} catch (Throwable) {
+			return $cart_item_data;
+		}
+		return $cart_item_data;
+	}
+
+	public function after_add_to_cart(
+		string $cart_item_key,
+		int $product_id,
+		int $quantity,
+		int $variation_id,
+		array $variation,
+		array $cart_item_data
+	): void {
+		unset($product_id, $variation_id, $variation);
+		if (! isset($cart_item_data['wooptionsfic']) || ! is_array($cart_item_data['wooptionsfic'])) {
+			return;
+		}
+		$data = $cart_item_data['wooptionsfic'];
+		$this->uploads->attach_to_cart((array) ($data['uploadRefs'] ?? []), $cart_item_key);
+
+		if (! function_exists('WC') || ! WC()->cart) {
+			return;
+		}
+		$this->adding_linked = true;
+		try {
+			foreach ((array) ($data['linkedProducts'] ?? []) as $linked) {
+				if (! is_array($linked)) {
+					continue;
+				}
+				$factor       = max(1, (int) ($linked['quantity'] ?? 1));
+				$linked_id    = max(1, (int) ($linked['productId'] ?? 0));
+				$variation_id = max(0, (int) ($linked['variationId'] ?? 0));
+				WC()->cart->add_to_cart(
+					$linked_id,
+					max(1, $quantity) * $factor,
+					$variation_id,
+					[],
+					[
+						'wooptionsfic_child' => [
+							'parentKey'  => $cart_item_key,
+							'factor'     => $factor,
+							'fieldUuid'  => (string) ($linked['fieldUuid'] ?? ''),
+							'choiceUuid' => (string) ($linked['choiceUuid'] ?? ''),
+							'label'      => (string) ($linked['label'] ?? ''),
+						],
+					]
+				);
+			}
+		} finally {
+			$this->adding_linked = false;
+		}
+
+		$snapshot = (array) ($data['snapshot'] ?? []);
+		$this->analytics->record(
+			'add_to_cart',
+			[
+				'productId'     => (int) ($snapshot['productId'] ?? 0),
+				'optionSetUuid' => (string) ($snapshot['setUuid'] ?? ''),
+				'revisionUuid'  => (string) ($snapshot['revisionUuid'] ?? ''),
+			]
+		);
+	}
+
+	public function apply_prices(\WC_Cart $cart): void {
+		if (is_admin() && ! wp_doing_ajax()) {
+			return;
+		}
+		foreach ($cart->get_cart() as $cart_item) {
+			if (! is_array($cart_item) || ! is_array($cart_item['wooptionsfic']['price']['unitPrice'] ?? null)) {
+				continue;
+			}
+			$product = $cart_item['data'] ?? null;
+			if (! $product instanceof \WC_Product) {
+				continue;
+			}
+			$decimal = (string) ($cart_item['wooptionsfic']['price']['unitPrice']['decimal'] ?? '');
+			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
+				$product->set_price($decimal);
+			}
+		}
+	}
+
+	/**
+	 * @param list<array<string,mixed>> $item_data Existing display data.
+	 * @param array<string,mixed> $cart_item Cart item.
+	 * @return list<array<string,mixed>>
+	 */
+	public function display_item_data(array $item_data, array $cart_item): array {
+		if (is_array($cart_item['wooptionsfic']['snapshot']['summary'] ?? null)) {
+			foreach ($cart_item['wooptionsfic']['snapshot']['summary'] as $line) {
+				if (! is_array($line) || ! empty($line['sensitive'])) {
+					continue;
+				}
+				$item_data[] = [
+					'key'     => (string) ($line['label'] ?? __('Option', 'wooptionsfic')),
+					'value'   => (string) ($line['value'] ?? ''),
+					'display' => esc_html((string) ($line['value'] ?? '')),
+				];
+			}
+		}
+		if (is_array($cart_item['wooptionsfic_child'] ?? null)) {
+			$item_data[] = [
+				'key'     => __('Part of configuration', 'wooptionsfic'),
+				'value'   => (string) ($cart_item['wooptionsfic_child']['label'] ?? ''),
+				'display' => esc_html((string) ($cart_item['wooptionsfic_child']['label'] ?? '')),
+			];
+		}
+		return $item_data;
+	}
+
+	/**
+	 * @param array<string,mixed> $cart_item Cart item.
+	 * @param array<string,mixed> $session_values Session data.
+	 * @return array<string,mixed>
+	 */
+	public function restore_from_session(array $cart_item, array $session_values, string $cart_item_key): array {
+		unset($cart_item_key);
+		foreach (['wooptionsfic', 'wooptionsfic_child'] as $key) {
+			if (isset($session_values[$key]) && is_array($session_values[$key])) {
+				$cart_item[$key] = $session_values[$key];
+			}
+		}
+		return $cart_item;
+	}
+
+	public function revalidate_cart(): void {
+		if (! function_exists('WC') || ! WC()->cart) {
+			return;
+		}
+		foreach (WC()->cart->get_cart() as $key => &$cart_item) {
+			if (! is_array($cart_item['wooptionsfic'] ?? null)) {
+				continue;
+			}
+			try {
+				$product_id   = (int) ($cart_item['product_id'] ?? 0);
+				$variation_id = (int) ($cart_item['variation_id'] ?? 0);
+				$quantity     = max(1, (int) ($cart_item['quantity'] ?? 1));
+				$context      = $this->context($product_id, $variation_id, $quantity);
+				$quote        = $this->quotes->quote((array) $cart_item['wooptionsfic']['selection'], $context);
+				if (empty($quote['valid'])) {
+					wc_add_notice(
+						sprintf(
+							/* translators: %s: product name. */
+							__('Please review the configuration for “%s” before checking out.', 'wooptionsfic'),
+							(string) ($cart_item['data'] instanceof \WC_Product ? $cart_item['data']->get_name() : __('configured product', 'wooptionsfic'))
+						),
+						'error'
+					);
+					continue;
+				}
+				$cart_item['wooptionsfic']['selection'] = $quote['values'];
+				$cart_item['wooptionsfic']['snapshot']  = $quote['snapshot'];
+				$cart_item['wooptionsfic']['price']     = $quote['price'];
+				WC()->cart->cart_contents[$key]         = $cart_item;
+			} catch (Throwable) {
+				wc_add_notice(__('A configured product could not be revalidated. Remove it and add it again.', 'wooptionsfic'), 'error');
+			}
+		}
+		unset($cart_item);
+	}
+
+	public function sync_linked_quantity(string $cart_item_key, int $quantity, int $old_quantity, \WC_Cart $cart): void {
+		unset($old_quantity);
+		foreach ($cart->get_cart() as $child_key => $item) {
+			$child = $item['wooptionsfic_child'] ?? null;
+			if (! is_array($child) || (string) ($child['parentKey'] ?? '') !== $cart_item_key) {
+				continue;
+			}
+			$cart->set_quantity($child_key, max(1, $quantity) * max(1, (int) ($child['factor'] ?? 1)), false);
+		}
+	}
+
+	public function remove_related_items(string $cart_item_key, \WC_Cart $cart): void {
+		if ($this->removing_related) {
+			return;
+		}
+		$this->removing_related = true;
+		try {
+			$item = $cart->get_cart_item($cart_item_key);
+			$parent_key = is_array($item['wooptionsfic_child'] ?? null)
+				? (string) ($item['wooptionsfic_child']['parentKey'] ?? '')
+				: '';
+			if ('' !== $parent_key && $cart->get_cart_item($parent_key)) {
+				$cart->remove_cart_item($parent_key);
+			}
+			foreach ($cart->get_cart() as $key => $candidate) {
+				if ((string) ($candidate['wooptionsfic_child']['parentKey'] ?? '') === $cart_item_key) {
+					$cart->remove_cart_item($key);
+				}
+			}
+		} finally {
+			$this->removing_related = false;
+		}
+	}
+
+	public function cart_item_class(string $class, array $cart_item, string $cart_item_key): string {
+		unset($cart_item_key);
+		if (isset($cart_item['wooptionsfic_child'])) {
+			$class .= ' wooptionsfic-linked-child';
+		} elseif (isset($cart_item['wooptionsfic'])) {
+			$class .= ' wooptionsfic-configured-parent';
+		}
+		return trim($class);
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private function context(int $product_id, int $variation_id, int $quantity): array {
+		return $this->products->make(
+			$product_id,
+			$variation_id,
+			$quantity,
+			get_current_user_id(),
+			$this->sessions->session_hash()
+		);
+	}
+
+	/**
+	 * @return array<string,mixed>
+	 */
+	private function posted_selection(): array {
+		$json = $this->posted_string('wooptionsfic_selection_json');
+		if ('' !== $json && strlen($json) <= 262144) {
+			$decoded = json_decode($json, true);
+			if (is_array($decoded)) {
+				return $decoded;
+			}
+		}
+		$value = $_POST['wooptionsfic_selection'] ?? []; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		$value = is_array($value) ? wp_unslash($value) : [];
+		return $this->bounded_array($value);
+	}
+
+	private function posted_string(string $key): string {
+		$value = $_POST[$key] ?? ''; // phpcs:ignore WordPress.Security.NonceVerification.Missing
+		return is_scalar($value) ? sanitize_text_field(wp_unslash((string) $value)) : '';
+	}
+
+	/**
+	 * @param array<string,mixed> $value Value.
+	 * @return array<string,mixed>
+	 */
+	private function bounded_array(array $value, int $depth = 0): array {
+		if ($depth > 5) {
+			return [];
+		}
+		$output = [];
+		foreach (array_slice($value, 0, 500, true) as $key => $item) {
+			$safe_key = substr((string) $key, 0, 80);
+			if (is_array($item)) {
+				$output[$safe_key] = $this->bounded_array($item, $depth + 1);
+			} elseif (is_scalar($item)) {
+				$output[$safe_key] = substr((string) $item, 0, 10000);
+			}
+		}
+		return $output;
+	}
+
+	/**
+	 * @param array<string,mixed> $selection Selection.
+	 */
+	private function quote_key(int $product_id, int $variation_id, int $quantity, array $selection): string {
+		return hash('sha256', CanonicalJson::encode([$product_id, $variation_id, $quantity, $selection]));
+	}
+
+	/**
+	 * @param list<array<string,mixed>> $errors Errors.
+	 */
+	private function add_validation_notices(array $errors): void {
+		$shown = 0;
+		foreach ($errors as $error) {
+			if ($shown >= 5) {
+				break;
+			}
+			$label = trim((string) ($error['label'] ?? ''));
+			$message = '' !== $label
+				? sprintf(
+					/* translators: %s: option label. */
+					__('Please check “%s”.', 'wooptionsfic'),
+					$label
+				)
+				: __('Please check your product options.', 'wooptionsfic');
+			wc_add_notice($message, 'error');
+			++$shown;
+		}
+	}
+}

@@ -1,0 +1,30 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {"slug": "team-roster", "version": 1},
+  "optionSet": {
+    "title": "Team roster",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "a0000000-0000-4000-8000-000000000001",
+      "revisionUuid": "a0000000-0000-4000-8000-000000000002",
+      "title": "Build your team roster",
+      "layout": {"type": "stack", "settings": {}},
+      "fields": [
+        {"uuid": "a0000000-0000-4000-8000-000000000010", "type": "repeater", "label": "Players", "description": "Add one row for every personalized jersey.", "required": true, "minRows": 1, "defaultRows": 1, "maxRows": 25, "rowTitle": "Player {index}", "children": [
+          {"uuid": "a0000000-0000-4000-8000-000000000020", "type": "text", "label": "Player name", "required": true, "maxLength": 24, "pricing": {"strategy": "fixed", "amount": "8"}},
+          {"uuid": "a0000000-0000-4000-8000-000000000030", "type": "select", "label": "Jersey size", "required": true, "choices": [
+            {"uuid": "a0000000-0000-4000-8000-000000000031", "label": "Small"},
+            {"uuid": "a0000000-0000-4000-8000-000000000032", "label": "Medium", "default": true},
+            {"uuid": "a0000000-0000-4000-8000-000000000033", "label": "Large"},
+            {"uuid": "a0000000-0000-4000-8000-000000000034", "label": "Extra large"}
+          ]},
+          {"uuid": "a0000000-0000-4000-8000-000000000040", "type": "quantity", "label": "Jersey number", "required": true, "min": "0", "max": "99", "step": "1"}
+        ]}
+      ],
+      "rules": [],
+      "preview": {"assets": [], "layers": [], "bindings": []},
+      "style": {"palette": "iris-studio", "overrides": {}, "typography": {"family": "Outfit"}},
+      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+    }
+  }
+}

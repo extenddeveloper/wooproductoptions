@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "wooptionsfic/product-options",
+  "version": "0.9.0-beta.25",
+  "title": "WooOptionsFic Product Options",
+  "category": "woocommerce",
+  "icon": "screenoptions",
+  "description": "Displays the effective product options for the current WooCommerce product.",
+  "textdomain": "wooptionsfic",
+  "attributes": {
+    "productId": {
+      "type": "integer",
+      "default": 0
+    }
+  },
+  "supports": {
+    "html": false,
+    "align": [
+      "wide",
+      "full"
+    ]
+  }
+}

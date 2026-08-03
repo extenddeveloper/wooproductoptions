@@ -1,0 +1,22 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {"slug": "donation", "version": 1},
+  "optionSet": {
+    "title": "Donation amount",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "90000000-0000-4000-8000-000000000001",
+      "revisionUuid": "90000000-0000-4000-8000-000000000002",
+      "title": "Choose your contribution",
+      "layout": {"type": "stack", "settings": {}},
+      "fields": [
+        {"uuid": "90000000-0000-4000-8000-000000000010", "type": "customer_defined_price", "label": "Donation amount", "required": true, "min": "5", "max": "5000", "step": "1", "default": "25"},
+        {"uuid": "90000000-0000-4000-8000-000000000020", "type": "checkbox", "label": "Make this gift in someone’s honor"}
+      ],
+      "rules": [],
+      "preview": {"assets": [], "layers": [], "bindings": []},
+      "style": {"palette": "forest-atelier", "overrides": {}, "typography": {"family": "system-ui"}},
+      "settings": {"showPriceBreakdown": true, "saveEnabled": false, "shareEnabled": false}
+    }
+  }
+}

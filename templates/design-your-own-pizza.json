@@ -1,0 +1,37 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {"slug": "design-your-own-pizza", "version": 1},
+  "optionSet": {
+    "title": "Design-your-own pizza",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "10000000-0000-4000-8000-000000000001",
+      "revisionUuid": "10000000-0000-4000-8000-000000000002",
+      "title": "Build your perfect pizza",
+      "layout": {"type": "stack", "settings": {}},
+      "fields": [
+        {"uuid": "10000000-0000-4000-8000-000000000010", "type": "radio", "label": "Pizza size", "description": "Choose the size that fits your table.", "required": true, "choices": [
+          {"uuid": "10000000-0000-4000-8000-000000000011", "label": "Personal · 9 inch", "default": true, "pricing": {"strategy": "none"}},
+          {"uuid": "10000000-0000-4000-8000-000000000012", "label": "Classic · 12 inch", "pricing": {"strategy": "fixed", "amount": "4.00"}},
+          {"uuid": "10000000-0000-4000-8000-000000000013", "label": "Party · 16 inch", "pricing": {"strategy": "fixed", "amount": "9.00"}}
+        ]},
+        {"uuid": "10000000-0000-4000-8000-000000000020", "type": "segmented", "label": "Crust", "required": true, "choices": [
+          {"uuid": "10000000-0000-4000-8000-000000000021", "label": "Classic", "default": true},
+          {"uuid": "10000000-0000-4000-8000-000000000022", "label": "Thin & crisp"},
+          {"uuid": "10000000-0000-4000-8000-000000000023", "label": "Cheese filled", "pricing": {"strategy": "fixed", "amount": "2.50"}}
+        ]},
+        {"uuid": "10000000-0000-4000-8000-000000000030", "type": "checkbox_group", "label": "Toppings", "description": "Pick as many as you like.", "choices": [
+          {"uuid": "10000000-0000-4000-8000-000000000031", "label": "Roasted mushrooms", "pricing": {"strategy": "fixed", "amount": "1.25"}},
+          {"uuid": "10000000-0000-4000-8000-000000000032", "label": "Fresh basil", "pricing": {"strategy": "fixed", "amount": "0.75"}},
+          {"uuid": "10000000-0000-4000-8000-000000000033", "label": "Smoked pepperoni", "pricing": {"strategy": "fixed", "amount": "1.75"}},
+          {"uuid": "10000000-0000-4000-8000-000000000034", "label": "Hot honey", "pricing": {"strategy": "fixed", "amount": "1.00"}}
+        ]},
+        {"uuid": "10000000-0000-4000-8000-000000000040", "type": "textarea", "label": "Kitchen note", "placeholder": "For example: extra crispy", "maxLength": 180}
+      ],
+      "rules": [],
+      "preview": {"assets": [], "layers": [], "bindings": []},
+      "style": {"palette": "ember-craft", "overrides": {}, "typography": {"family": "system-ui"}},
+      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+    }
+  }
+}

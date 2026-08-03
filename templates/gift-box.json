@@ -1,0 +1,32 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {"slug": "gift-box", "version": 1},
+  "optionSet": {
+    "title": "Build a gift box",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "40000000-0000-4000-8000-000000000001",
+      "revisionUuid": "40000000-0000-4000-8000-000000000002",
+      "title": "Build a thoughtful gift",
+      "layout": {"type": "stack", "settings": {}},
+      "fields": [
+        {"uuid": "40000000-0000-4000-8000-000000000010", "type": "checkbox_group", "label": "Choose treats", "required": true, "minChoices": 2, "maxChoices": 4, "choices": [
+          {"uuid": "40000000-0000-4000-8000-000000000011", "label": "Single-origin chocolate", "pricing": {"strategy": "fixed", "amount": "8"}},
+          {"uuid": "40000000-0000-4000-8000-000000000012", "label": "Small-batch coffee", "pricing": {"strategy": "fixed", "amount": "12"}},
+          {"uuid": "40000000-0000-4000-8000-000000000013", "label": "Botanical candle", "pricing": {"strategy": "fixed", "amount": "14"}},
+          {"uuid": "40000000-0000-4000-8000-000000000014", "label": "Handmade biscuits", "pricing": {"strategy": "fixed", "amount": "7"}}
+        ]},
+        {"uuid": "40000000-0000-4000-8000-000000000020", "type": "text", "label": "Recipient name", "required": true, "maxLength": 80},
+        {"uuid": "40000000-0000-4000-8000-000000000030", "type": "textarea", "label": "Gift message", "maxLength": 280, "placeholder": "Write a personal note"},
+        {"uuid": "40000000-0000-4000-8000-000000000040", "type": "radio", "label": "Wrap style", "choices": [
+          {"uuid": "40000000-0000-4000-8000-000000000041", "label": "Signature paper", "default": true},
+          {"uuid": "40000000-0000-4000-8000-000000000042", "label": "Reusable fabric wrap", "pricing": {"strategy": "fixed", "amount": "6"}}
+        ]}
+      ],
+      "rules": [],
+      "preview": {"assets": [], "layers": [], "bindings": []},
+      "style": {"palette": "iris-studio", "overrides": {"primary": "#7C3AED"}, "typography": {"family": "system-ui"}},
+      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+    }
+  }
+}

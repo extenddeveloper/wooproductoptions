@@ -1,0 +1,27 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {"slug": "engraving", "version": 1},
+  "optionSet": {
+    "title": "Engraving studio",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "50000000-0000-4000-8000-000000000001",
+      "revisionUuid": "50000000-0000-4000-8000-000000000002",
+      "title": "Add a personal engraving",
+      "layout": {"type": "stack", "settings": {}},
+      "fields": [
+        {"uuid": "50000000-0000-4000-8000-000000000010", "type": "text", "label": "Engraving text", "required": true, "maxLength": 32, "placeholder": "Up to 32 characters", "pricing": {"strategy": "per_character", "amount": "0.50"}},
+        {"uuid": "50000000-0000-4000-8000-000000000020", "type": "font", "label": "Lettering style", "required": true, "choices": [
+          {"uuid": "50000000-0000-4000-8000-000000000021", "label": "Modern sans", "default": true},
+          {"uuid": "50000000-0000-4000-8000-000000000022", "label": "Classic serif"},
+          {"uuid": "50000000-0000-4000-8000-000000000023", "label": "Soft script", "pricing": {"strategy": "fixed", "amount": "3"}}
+        ]},
+        {"uuid": "50000000-0000-4000-8000-000000000030", "type": "help", "label": "Engraving note", "content": "<strong>Proof carefully:</strong> engraving text is produced exactly as entered."}
+      ],
+      "rules": [],
+      "preview": {"assets": [], "layers": [], "bindings": [{"uuid": "50000000-0000-4000-8000-000000000040", "fieldUuid": "50000000-0000-4000-8000-000000000010", "target": "text", "layerUuid": ""}]},
+      "style": {"palette": "mono-luxe", "overrides": {}, "typography": {"family": "system-ui"}},
+      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+    }
+  }
+}
