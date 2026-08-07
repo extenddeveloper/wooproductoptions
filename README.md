@@ -1,6 +1,6 @@
 # WooOptionsFic
 
-WooOptionsFic 0.9.0-beta.29 is an installable, staging-oriented WooCommerce product-options plugin. It provides a polished WordPress-native React administration experience and an accessible server-rendered storefront whose selections, rules, formulas, linked products, uploads, and prices are revalidated by PHP.
+WooOptionsFic 0.9.0-beta.30 is an installable, staging-oriented WooCommerce product-options plugin. It provides a polished WordPress-native React administration experience and an accessible server-rendered storefront whose selections, rules, formulas, linked products, uploads, and prices are revalidated by PHP.
 
 ## Requirements
 

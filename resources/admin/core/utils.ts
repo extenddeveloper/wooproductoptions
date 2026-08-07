@@ -111,6 +111,12 @@ namespace WooOptionsFic.Utils {
     return allFields(fields).reduce((count, field) => count + (field.choices?.length ?? 0), 0);
   }
 
+  export function compactNumber(value: number): string {
+    const number = Number(value || 0);
+    if (number < 1000) return String(number);
+    return new Intl.NumberFormat(undefined, { notation: 'compact', maximumFractionDigits: 1 }).format(number);
+  }
+
   export function classNames(...values: Array<string | false | null | undefined>): string {
     return values.filter(Boolean).join(' ');
   }

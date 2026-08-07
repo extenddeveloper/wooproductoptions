@@ -1,6 +1,6 @@
 # WooOptionsFic React + TypeScript development
 
-WooOptionsFic `0.9.0-beta.29` contains genuine, readable React + TypeScript source for the administration application. The generated `build/admin.js` file is created from the `.tsx` files under `resources/admin/`; it is not the source of truth.
+WooOptionsFic `0.9.0-beta.30` contains genuine, readable React + TypeScript source for the administration application. The generated `build/admin.js` file is created from the `.tsx` files under `resources/admin/`; it is not the source of truth.
 
 ## Requirements
 

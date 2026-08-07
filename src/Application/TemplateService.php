@@ -24,12 +24,18 @@ final class TemplateService {
 		return array_values(
 			array_map(
 				static fn (array $item): array => [
-					'slug'        => (string) $item['slug'],
-					'name'        => (string) $item['name'],
-					'description' => (string) $item['description'],
-					'icon'        => (string) ($item['icon'] ?? 'screenoptions'),
-					'category'    => (string) ($item['category'] ?? 'commerce'),
-					'fieldCount'  => (int) ($item['fieldCount'] ?? 0),
+					'slug'          => (string) $item['slug'],
+					'name'          => (string) $item['name'],
+					'description'   => (string) $item['description'],
+					'icon'          => (string) ($item['icon'] ?? 'screenoptions'),
+					'category'      => (string) ($item['category'] ?? 'commerce'),
+					'categoryLabel' => (string) ($item['categoryLabel'] ?? $item['category'] ?? 'Commerce'),
+					'fieldCount'    => (int) ($item['fieldCount'] ?? 0),
+					'previewImage'  => WOOPTIONSFIC_URL . 'assets/templates/' . sanitize_file_name((string) $item['slug']) . '.svg',
+					'features'      => array_values(array_map('strval', (array) ($item['features'] ?? []))),
+					'usage'         => (int) ($item['usage'] ?? 0),
+					'popularity'    => (int) ($item['popularity'] ?? 0),
+					'order'         => (int) ($item['order'] ?? 0),
 				],
 				$manifest
 			)

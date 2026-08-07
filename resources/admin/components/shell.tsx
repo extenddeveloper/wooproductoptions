@@ -14,8 +14,9 @@ namespace WooOptionsFic.Components {
 
   export function AdminShell(props: { route: string; navigate: (route: string) => void; children?: any }): any {
     const isBuilder = props.route.startsWith('builder/');
-    if (isBuilder) {
-      return <div className="wof-admin is-builder"><main className="wof-admin__content">{props.children}</main></div>;
+    const isTemplateStudio = props.route === 'templates';
+    if (isBuilder || isTemplateStudio) {
+      return <div className={isBuilder ? "wof-admin is-builder" : "wof-admin is-template-studio"}><main className="wof-admin__content">{props.children}</main></div>;
     }
     return (
       <div className="wof-admin">

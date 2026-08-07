@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.0-beta.30 — 2026-08-07
+
+- Rebuilt the Templates page as a modern template marketplace matching the approved design.
+- Added searchable categories, feature filters, sorting, favorites, previews, and pagination.
+- Added working create-from-scratch and JSON template-import actions.
+- Added ten original bundled SVG template preview illustrations.
+- Expanded template metadata with categories, feature flags, usage, and popularity.
+
+
 ## 0.9.0-beta.29 — 2026-08-03
 
 - Added insertion-aware drag and drop across existing canvas fields, with full-canvas and before/after drop highlighting.

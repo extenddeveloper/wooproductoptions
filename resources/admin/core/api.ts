@@ -110,6 +110,14 @@ namespace WooOptionsFic.Api {
     return request('/templates', { method: 'POST', data: { slug } });
   }
 
+  export function previewImport(payload: Record<string, unknown>): Promise<{ valid: boolean; errors: WooOptionsFic.ValidationIssue[]; warnings: WooOptionsFic.ValidationIssue[]; title: string; fieldCount: number; contentHash: string }> {
+    return request('/imports/preview', { method: 'POST', data: payload });
+  }
+
+  export function commitImport(payload: Record<string, unknown>, title: string): Promise<WooOptionsFic.OptionSetRecord> {
+    return request('/imports/commit', { method: 'POST', data: { ...payload, title } });
+  }
+
   export function exportOptionSet(uuid: string): Promise<Record<string, unknown>> {
     return request(`/exports/${uuid}`);
   }

@@ -2,7 +2,7 @@
 /**
  * Plugin Name:       WooOptionsFic — Product Options for WooCommerce
  * Description:       Accessible product options, conditional logic, formula pricing, repeaters, uploads, and visual configuration for WooCommerce.
- * Version:           0.9.0-beta.29
+ * Version:           0.9.0-beta.30
  * Requires at least: 6.9
  * Requires PHP:      8.1
  * Requires Plugins:  woocommerce
@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 defined('ABSPATH') || exit;
 
-define('WOOPTIONSFIC_VERSION', '0.9.0-beta.29');
+define('WOOPTIONSFIC_VERSION', '0.9.0-beta.30');
 define('WOOPTIONSFIC_DB_VERSION', '2');
 define('WOOPTIONSFIC_FILE', __FILE__);
 define('WOOPTIONSFIC_PATH', plugin_dir_path(__FILE__));

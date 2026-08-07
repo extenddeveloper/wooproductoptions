@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="400" viewBox="0 0 720 400">
+<defs>
+  <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="12" stdDeviation="14" flood-color="#111827" flood-opacity=".16"/></filter>
+  <filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="18"/></filter>
+</defs>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#EEF2FF"/><stop offset="1" stop-color="#E0F2FE"/></linearGradient><linearGradient id="jersey" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#4338CA"/><stop offset="1" stop-color="#7C3AED"/></linearGradient></defs>
+<rect width="720" height="400" rx="28" fill="url(#bg)"/><g filter="url(#shadow)" transform="translate(58 66)"><path d="M94 20 143 0h70l49 20 48 49-48 31-18-30v169H112V70L94 100 46 69z" fill="url(#jersey)"/><text x="148" y="145" font-family="Arial" font-size="70" font-weight="800" fill="#fff">7</text><path d="M160 3c1 23 14 35 34 35s33-12 34-35" fill="none" stroke="#A5B4FC" stroke-width="10"/></g>
+<g transform="translate(390 55)" filter="url(#shadow)"><rect width="275" height="292" rx="24" fill="#fff"/><text x="24" y="38" font-family="Arial" font-size="14" font-weight="700" fill="#374151">TEAM ROSTER</text><g font-family="Arial" font-size="13" fill="#334155"><rect x="22" y="58" width="231" height="50" rx="12" fill="#F8FAFC"/><circle cx="47" cy="83" r="15" fill="#7C3AED"/><text x="71" y="88">Alex · M · #07</text><rect x="22" y="120" width="231" height="50" rx="12" fill="#F8FAFC"/><circle cx="47" cy="145" r="15" fill="#0EA5E9"/><text x="71" y="150">Sam · L · #12</text><rect x="22" y="182" width="231" height="50" rx="12" fill="#F8FAFC"/><circle cx="47" cy="207" r="15" fill="#10B981"/><text x="71" y="212">Jordan · S · #21</text></g><rect x="22" y="250" width="231" height="24" rx="12" fill="#EDE9FE"/></g>
+
+</svg>

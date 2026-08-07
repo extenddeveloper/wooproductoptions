@@ -224,7 +224,13 @@ namespace WooOptionsFic {
     name: string;
     description: string;
     category: string;
+    categoryLabel?: string;
     fieldCount?: number;
+    previewImage: string;
+    features?: string[];
+    usage?: number;
+    popularity?: number;
+    order?: number;
     preview?: Record<string, unknown>;
   }
 
