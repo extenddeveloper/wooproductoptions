@@ -7550,3 +7550,14 @@
 .wof-template-favorite{left:9px;right:auto}
 @media (max-width:1200px){.wof-templates-layout{grid-template-columns:minmax(0,1fr) 205px}}
 @media (max-width:782px){.wof-templates-layout{display:block}.wof-template-filter-panel section+section{border-left:0;border-right:1px solid #eceff4}}
+
+/* Modern Builder Blocks UI RTL */
+.wof-canvas-field__type-badge {
+	right: 16px !important;
+	left: auto !important;
+}
+
+.wof-canvas-field__toolbar {
+	left: 16px !important;
+	right: auto !important;
+}
