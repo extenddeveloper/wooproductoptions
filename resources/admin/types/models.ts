@@ -231,15 +231,26 @@ namespace WooOptionsFic {
   export interface TemplateRecord {
     slug: string;
     name: string;
+    level?: string;
     description: string;
     category: string;
     categoryLabel?: string;
     fieldCount?: number;
+    fieldsCount?: number;
+    rulesCount?: number;
+    pricingModel?: string;
+    layoutModel?: string;
+    tested?: boolean;
     previewImage: string;
+    heroImage?: string;
     features?: string[];
+    details?: Record<string, string>;
+    footerIcons?: string[];
+    fieldTypes?: string[];
     usage?: number;
     popularity?: number;
     order?: number;
+    previewUrl?: string;
     preview?: Record<string, unknown>;
   }
 

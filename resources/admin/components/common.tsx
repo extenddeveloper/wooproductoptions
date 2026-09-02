@@ -3,7 +3,6 @@ namespace WooOptionsFic.Components {
   const { __ } = wp.i18n;
   const { useEffect, useState } = wp.element;
 
-
   export function MediaImage(props: { attachmentId?: number; src?: string; alt?: string; className?: string }): any {
     const [resolvedSrc, setResolvedSrc] = useState(props.src ?? '');
 
@@ -77,11 +76,70 @@ namespace WooOptionsFic.Components {
     onCancel: () => void;
   }): any {
     return (
-      <Modal title={props.title} onRequestClose={() => !props.busy && props.onCancel()} className="wof-modal wof-confirm-modal">
-        <p>{props.message}</p>
-        <div className="wof-modal__actions">
-          <Button variant="tertiary" disabled={props.busy} onClick={props.onCancel}>{props.cancelLabel ?? __('Cancel', 'wooptionsfic')}</Button>
-          <Button variant="primary" isDestructive={props.destructive} isBusy={props.busy} onClick={props.onConfirm}>{props.confirmLabel}</Button>
+      <Modal
+        title={props.title}
+        onRequestClose={() => !props.busy && props.onCancel()}
+        className={WooOptionsFic.Utils.classNames(
+          'wof-modal',
+          'wof-confirm-modal',
+          props.destructive && 'is-destructive'
+        )}
+      >
+        <div className="wof-confirm-modal__header-custom">
+          <h3 className="wof-confirm-modal__title-custom">{props.title}</h3>
+          <button
+            type="button"
+            className="wof-confirm-modal__close-custom"
+            onClick={props.onCancel}
+            aria-label={__('Close', 'wooptionsfic')}
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="wof-confirm-modal__body">
+          {props.destructive ? (
+            <div className="wof-confirm-modal__icon-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                <line x1="10" y1="11" x2="10" y2="17" />
+                <line x1="14" y1="11" x2="14" y2="17" />
+              </svg>
+            </div>
+          ) : null}
+          <div className="wof-confirm-modal__text">
+            <p className="wof-confirm-modal__message">{props.message}</p>
+          </div>
+        </div>
+
+        <div className="wof-modal__actions wof-confirm-modal__actions">
+          <button
+            type="button"
+            className="wof-btn-modal-cancel"
+            disabled={props.busy}
+            onClick={props.onCancel}
+          >
+            {props.cancelLabel ?? __('Cancel', 'wooptionsfic')}
+          </button>
+          <button
+            type="button"
+            className={WooOptionsFic.Utils.classNames(
+              'wof-btn-modal-confirm',
+              props.destructive && 'is-destructive'
+            )}
+            disabled={props.busy}
+            onClick={props.onConfirm}
+          >
+            {props.busy ? (
+              <span className="wof-btn-busy-spinner">
+                <Spinner />
+                <span>{__('Deleting…', 'wooptionsfic')}</span>
+              </span>
+            ) : (
+              props.confirmLabel
+            )}
+          </button>
         </div>
       </Modal>
     );

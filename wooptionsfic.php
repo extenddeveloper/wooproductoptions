@@ -46,6 +46,17 @@ register_deactivation_hook(
 );
 
 add_action(
+	'init',
+	static function (): void {
+		load_plugin_textdomain(
+			'wooptionsfic',
+			false,
+			dirname(plugin_basename(__FILE__)) . '/languages'
+		);
+	}
+);
+
+add_action(
 	'plugins_loaded',
 	static function (): void {
 		if (! \WooOptionsFic\Bootstrap\Requirements::runtime_is_supported()) {
@@ -63,9 +74,10 @@ add_filter(
 	'plugin_action_links_' . WOOPTIONSFIC_BASENAME,
 	static function (array $links): array {
 		$url = admin_url('admin.php?page=wooptionsfic#/settings');
+		$label = did_action('init') ? esc_html__('Settings', 'wooptionsfic') : 'Settings';
 		array_unshift(
 			$links,
-			'<a href="' . esc_url($url) . '">' . esc_html__('Settings', 'wooptionsfic') . '</a>'
+			'<a href="' . esc_url($url) . '">' . $label . '</a>'
 		);
 		return $links;
 	}

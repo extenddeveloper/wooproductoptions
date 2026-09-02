@@ -723,11 +723,24 @@ var WooOptionsFic;
         }
         Components.StatusPill = StatusPill;
         function ConfirmModal(props) {
-            return (wp.element.createElement(Modal, { title: props.title, onRequestClose: () => !props.busy && props.onCancel(), className: "wof-modal wof-confirm-modal" },
-                wp.element.createElement("p", null, props.message),
-                wp.element.createElement("div", { className: "wof-modal__actions" },
-                    wp.element.createElement(Button, { variant: "tertiary", disabled: props.busy, onClick: props.onCancel }, props.cancelLabel ?? __('Cancel', 'wooptionsfic')),
-                    wp.element.createElement(Button, { variant: "primary", isDestructive: props.destructive, isBusy: props.busy, onClick: props.onConfirm }, props.confirmLabel))));
+            return (wp.element.createElement(Modal, { title: props.title, onRequestClose: () => !props.busy && props.onCancel(), className: WooOptionsFic.Utils.classNames('wof-modal', 'wof-confirm-modal', props.destructive && 'is-destructive') },
+                wp.element.createElement("div", { className: "wof-confirm-modal__header-custom" },
+                    wp.element.createElement("h3", { className: "wof-confirm-modal__title-custom" }, props.title),
+                    wp.element.createElement("button", { type: "button", className: "wof-confirm-modal__close-custom", onClick: props.onCancel, "aria-label": __('Close', 'wooptionsfic') }, "\u2715")),
+                wp.element.createElement("div", { className: "wof-confirm-modal__body" },
+                    props.destructive ? (wp.element.createElement("div", { className: "wof-confirm-modal__icon-badge" },
+                        wp.element.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("polyline", { points: "3 6 5 6 21 6" }),
+                            wp.element.createElement("path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" }),
+                            wp.element.createElement("line", { x1: "10", y1: "11", x2: "10", y2: "17" }),
+                            wp.element.createElement("line", { x1: "14", y1: "11", x2: "14", y2: "17" })))) : null,
+                    wp.element.createElement("div", { className: "wof-confirm-modal__text" },
+                        wp.element.createElement("p", { className: "wof-confirm-modal__message" }, props.message))),
+                wp.element.createElement("div", { className: "wof-modal__actions wof-confirm-modal__actions" },
+                    wp.element.createElement("button", { type: "button", className: "wof-btn-modal-cancel", disabled: props.busy, onClick: props.onCancel }, props.cancelLabel ?? __('Cancel', 'wooptionsfic')),
+                    wp.element.createElement("button", { type: "button", className: WooOptionsFic.Utils.classNames('wof-btn-modal-confirm', props.destructive && 'is-destructive'), disabled: props.busy, onClick: props.onConfirm }, props.busy ? (wp.element.createElement("span", { className: "wof-btn-busy-spinner" },
+                        wp.element.createElement(Spinner, null),
+                        wp.element.createElement("span", null, __('Deleting…', 'wooptionsfic')))) : (props.confirmLabel)))));
         }
         Components.ConfirmModal = ConfirmModal;
         function InlineNotice(props) {
@@ -750,16 +763,6 @@ var WooOptionsFic;
     var Components;
     (function (Components) {
         const { __ } = wp.i18n;
-        const navigation = [
-            { route: 'dashboard', label: __('Dashboard', 'wooptionsfic'), icon: 'dashboard' },
-            { route: 'option-sets', label: __('Option Sets', 'wooptionsfic'), icon: 'screenoptions' },
-            { route: 'templates', label: __('Templates', 'wooptionsfic'), icon: 'star-filled' },
-            { route: 'analytics', label: __('Analytics', 'wooptionsfic'), icon: 'chart-area' },
-            { route: 'integrations', label: __('Integrations', 'wooptionsfic'), icon: 'admin-links' },
-            { route: 'diagnostics', label: __('Diagnostics', 'wooptionsfic'), icon: 'yes-alt' },
-            { route: 'settings', label: __('Settings', 'wooptionsfic'), icon: 'admin-settings' },
-            { route: 'help', label: __('Help', 'wooptionsfic'), icon: 'editor-help' },
-        ];
         function AdminShell(props) {
             const isBuilder = props.route.startsWith('builder/');
             const isTemplateStudio = props.route === 'templates';
@@ -779,15 +782,6 @@ var WooOptionsFic;
                         wp.element.createElement("span", { className: "wof-beta-pill" }, window.WooOptionsFicAdmin.version),
                         wp.element.createElement("span", { className: "wof-user-chip" }, window.WooOptionsFicAdmin.currentUser.name))),
                 wp.element.createElement("div", { className: "wof-admin__body" },
-                    wp.element.createElement("nav", { className: "wof-admin__nav", "aria-label": __('WooOptionsFic sections', 'wooptionsfic') },
-                        navigation.map((item) => (wp.element.createElement("button", { type: "button", key: item.route, className: props.route === item.route ? 'is-active' : '', "aria-current": props.route === item.route ? 'page' : undefined, onClick: () => props.navigate(item.route) },
-                            wp.element.createElement(Components.Dashicon, { name: item.icon }),
-                            item.label))),
-                        wp.element.createElement("div", { className: "wof-nav__signal" },
-                            wp.element.createElement("span", { className: window.WooOptionsFicAdmin.wooAvailable ? 'is-connected' : 'is-paused', "aria-hidden": "true" }),
-                            wp.element.createElement("div", null,
-                                wp.element.createElement("strong", null, "WooCommerce"),
-                                wp.element.createElement("small", null, window.WooOptionsFicAdmin.wooAvailable ? __('Connected', 'wooptionsfic') : __('Needs attention', 'wooptionsfic'))))),
                     wp.element.createElement("main", { className: "wof-admin__content" }, props.children))));
         }
         Components.AdminShell = AdminShell;
@@ -1171,133 +1165,221 @@ var WooOptionsFic;
 (function (WooOptionsFic) {
     var Pages;
     (function (Pages) {
-        const { Button, Modal, SearchControl, SelectControl } = wp.components;
         const { __, sprintf } = wp.i18n;
         const { useEffect, useMemo, useRef, useState } = wp.element;
-        const categoryOrder = ['apparel', 'food', 'gift', 'electronics', 'windows-doors', 'print', 'services', 'furniture'];
-        const categoryLabels = {
-            apparel: __('Apparel', 'wooptionsfic'),
-            food: __('Food', 'wooptionsfic'),
-            gift: __('Gift', 'wooptionsfic'),
-            electronics: __('Electronics', 'wooptionsfic'),
-            'windows-doors': __('Windows & Doors', 'wooptionsfic'),
-            print: __('Print', 'wooptionsfic'),
-            services: __('Services', 'wooptionsfic'),
-            furniture: __('Furniture', 'wooptionsfic'),
-        };
-        const categoryIcons = {
-            apparel: 'admin-users',
-            food: 'food',
-            gift: 'heart',
-            electronics: 'desktop',
-            'windows-doors': 'admin-home',
-            print: 'edit-page',
-            services: 'calendar-alt',
-            furniture: 'admin-home',
-        };
-        const featureLabels = {
-            image_upload: __('Image upload', 'wooptionsfic'),
-            live_preview: __('Live preview', 'wooptionsfic'),
-            conditional_logic: __('Conditional logic', 'wooptionsfic'),
-            price_calculation: __('Price calculation', 'wooptionsfic'),
-            repeaters: __('Repeatable fields', 'wooptionsfic'),
-        };
-        function readFavorites() {
-            try {
-                const value = JSON.parse(window.localStorage.getItem('wooptionsfic-template-favorites') ?? '[]');
-                return Array.isArray(value) ? value.map(String) : [];
+        const { Button } = wp.components;
+        const { Dashicon } = WooOptionsFic.Components;
+        function renderFooterIcon(type, itemSlug) {
+            switch (type) {
+                case 'image':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon", title: __('Image options', 'wooptionsfic') },
+                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("rect", { x: "3", y: "3", width: "18", height: "18", rx: "2", ry: "2" }),
+                            wp.element.createElement("circle", { cx: "8.5", cy: "8.5", r: "1.5" }),
+                            wp.element.createElement("polyline", { points: "21 15 16 10 5 21" }))));
+                case 'list':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon", title: __('List choices', 'wooptionsfic') },
+                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("line", { x1: "8", y1: "6", x2: "21", y2: "6" }),
+                            wp.element.createElement("line", { x1: "8", y1: "12", x2: "21", y2: "12" }),
+                            wp.element.createElement("line", { x1: "8", y1: "18", x2: "21", y2: "18" }),
+                            wp.element.createElement("line", { x1: "3", y1: "6", x2: "3.01", y2: "6" }),
+                            wp.element.createElement("line", { x1: "3", y1: "12", x2: "3.01", y2: "12" }),
+                            wp.element.createElement("line", { x1: "3", y1: "18", x2: "3.01", y2: "18" }))));
+                case 'price':
+                case 'price3':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon is-glyph-price", title: __('Dynamic pricing', 'wooptionsfic') }, itemSlug === 'donation' ? '$' : '$$$'));
+                case 'text':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon", title: __('Text personalization', 'wooptionsfic') },
+                        wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("polyline", { points: "4 7 4 4 20 4 20 7" }),
+                            wp.element.createElement("line", { x1: "9", y1: "20", x2: "15", y2: "20" }),
+                            wp.element.createElement("line", { x1: "12", y1: "4", x2: "12", y2: "20" }))));
+                case 'swatch':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon", title: __('Color choices', 'wooptionsfic') },
+                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                            wp.element.createElement("circle", { cx: "12", cy: "12", r: "4" }),
+                            wp.element.createElement("line", { x1: "4.93", y1: "4.93", x2: "9.17", y2: "9.17" }),
+                            wp.element.createElement("line", { x1: "14.83", y1: "14.83", x2: "19.07", y2: "19.07" }),
+                            wp.element.createElement("line", { x1: "14.83", y1: "9.17", x2: "19.07", y2: "4.93" }),
+                            wp.element.createElement("line", { x1: "4.93", y1: "19.07", x2: "9.17", y2: "14.83" }))));
+                case 'package':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon", title: __('Product bundles', 'wooptionsfic') },
+                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("path", { d: "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" }),
+                            wp.element.createElement("polyline", { points: "3.27 6.96 12 12.01 20.73 6.96" }),
+                            wp.element.createElement("line", { x1: "12", y1: "22.08", x2: "12", y2: "12" }))));
+                case 'ruler':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon", title: __('Measurement', 'wooptionsfic') },
+                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("path", { d: "M21.3 8.7 8.7 21.3c-.4.4-1 .4-1.4 0l-6-6c-.4-.4-.4-1 0-1.4L13.9 1.3c.4-.4 1-.4 1.4 0l6 6c.4.4.4 1 0 1.4z" }),
+                            wp.element.createElement("path", { d: "m14.5 4.5 1.5 1.5" }),
+                            wp.element.createElement("path", { d: "m11.5 7.5 1.5 1.5" }),
+                            wp.element.createElement("path", { d: "m8.5 10.5 1.5 1.5" }),
+                            wp.element.createElement("path", { d: "m5.5 13.5 1.5 1.5" }))));
+                case 'chip':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon", title: __('Components builder', 'wooptionsfic') },
+                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("rect", { x: "4", y: "4", width: "16", height: "16", rx: "2" }),
+                            wp.element.createElement("rect", { x: "9", y: "9", width: "6", height: "6" }),
+                            wp.element.createElement("line", { x1: "9", y1: "1", x2: "9", y2: "4" }),
+                            wp.element.createElement("line", { x1: "15", y1: "1", x2: "15", y2: "4" }),
+                            wp.element.createElement("line", { x1: "9", y1: "20", x2: "9", y2: "23" }),
+                            wp.element.createElement("line", { x1: "15", y1: "20", x2: "15", y2: "23" }),
+                            wp.element.createElement("line", { x1: "20", y1: "9", x2: "23", y2: "9" }),
+                            wp.element.createElement("line", { x1: "20", y1: "15", x2: "23", y2: "15" }),
+                            wp.element.createElement("line", { x1: "1", y1: "9", x2: "4", y2: "9" }),
+                            wp.element.createElement("line", { x1: "1", y1: "15", x2: "4", y2: "15" }))));
+                case 'users':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon", title: __('Team members', 'wooptionsfic') },
+                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("path", { d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }),
+                            wp.element.createElement("circle", { cx: "9", cy: "7", r: "4" }),
+                            wp.element.createElement("path", { d: "M23 21v-2a4 4 0 0 0-3-3.87" }),
+                            wp.element.createElement("path", { d: "M16 3.13a4 4 0 0 1 0 7.75" }))));
+                case 'calendar':
+                    return (wp.element.createElement("span", { key: type, className: "wof-footer-icon", title: __('Rental dates', 'wooptionsfic') },
+                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2", ry: "2" }),
+                            wp.element.createElement("line", { x1: "16", y1: "2", x2: "16", y2: "6" }),
+                            wp.element.createElement("line", { x1: "8", y1: "2", x2: "8", y2: "6" }),
+                            wp.element.createElement("line", { x1: "3", y1: "10", x2: "21", y2: "10" }))));
+                default:
+                    return wp.element.createElement("span", { key: type, className: "wof-footer-icon" },
+                        wp.element.createElement(Dashicon, { name: "screenoptions" }));
             }
-            catch {
-                return [];
-            }
-        }
-        function TemplatesBrand(props) {
-            return (wp.element.createElement("button", { type: "button", className: "wof-templates-brand", onClick: () => props.navigate('dashboard') },
-                wp.element.createElement("span", { className: "wof-templates-brand__mark" }, "W"),
-                wp.element.createElement("strong", null,
-                    "Woo",
-                    wp.element.createElement("span", null, "OptionsFic"))));
         }
         function TemplateCard(props) {
-            const { item } = props;
-            return (wp.element.createElement("article", { className: "wof-market-template-card" },
-                wp.element.createElement("div", { className: "wof-market-template-card__media" },
-                    wp.element.createElement("img", { src: item.previewImage, alt: "", loading: "lazy" }),
-                    wp.element.createElement("button", { type: "button", className: WooOptionsFic.Utils.classNames('wof-template-favorite', props.favorite && 'is-active'), onClick: props.onFavorite, "aria-label": props.favorite ? __('Remove from favorites', 'wooptionsfic') : __('Add to favorites', 'wooptionsfic') },
-                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: props.favorite ? 'heart' : 'heart' }))),
-                wp.element.createElement("div", { className: "wof-market-template-card__body" },
-                    wp.element.createElement("h3", null, item.name),
-                    wp.element.createElement("span", { className: "wof-template-category-label" }, item.categoryLabel ?? categoryLabels[item.category] ?? item.category),
-                    wp.element.createElement("p", null, item.description),
-                    wp.element.createElement("div", { className: "wof-market-template-card__footer" },
-                        wp.element.createElement("span", { className: "wof-template-usage" },
-                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "groups" }),
-                            WooOptionsFic.Utils.compactNumber(item.usage ?? 0),
-                            " ",
-                            __('uses', 'wooptionsfic')),
-                        wp.element.createElement("div", null,
-                            wp.element.createElement("button", { type: "button", className: "wof-template-preview-button", onClick: props.onPreview, "aria-label": sprintf(__('Preview %s', 'wooptionsfic'), item.name) },
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "visibility" })),
-                            wp.element.createElement(Button, { variant: "primary", isBusy: props.busy, onClick: props.onUse }, __('Use template', 'wooptionsfic')))))));
+            const { item, selected, busy, onSelect, onPreview, onUse } = props;
+            const isAdvanced = (item.level ?? '').toLowerCase() === 'advanced';
+            const footerIcons = item.footerIcons?.length ? item.footerIcons : ['image', 'list', 'price'];
+            return (wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-new-template-card', selected && 'is-selected'), onClick: onSelect },
+                selected ? (wp.element.createElement("span", { className: "wof-template-card__selected-check", "aria-label": __('Selected', 'wooptionsfic') },
+                    wp.element.createElement("svg", { width: "12", height: "10", viewBox: "0 0 12 10", fill: "none", xmlns: "http://www.w3.org/2000/svg" },
+                        wp.element.createElement("path", { d: "M1 5L4.5 8.5L11 1.5", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })))) : null,
+                wp.element.createElement("div", { className: "wof-template-card__body" },
+                    wp.element.createElement("div", { className: "wof-template-card__media" },
+                        wp.element.createElement("img", { src: item.previewImage, alt: item.name, loading: "lazy" })),
+                    wp.element.createElement("div", { className: "wof-template-card__content" },
+                        wp.element.createElement("div", { className: "wof-template-card__header" },
+                            wp.element.createElement("h3", { className: "wof-template-card__title" }, item.name),
+                            wp.element.createElement("span", { className: `wof-template-level-badge ${isAdvanced ? 'is-advanced' : 'is-beginner'}` }, item.level ?? 'Beginner')),
+                        wp.element.createElement("div", { className: "wof-template-card__specs" },
+                            wp.element.createElement("div", { className: "wof-template-card__spec" },
+                                item.fieldsCount || item.fieldCount || 4,
+                                " ",
+                                __('fields', 'wooptionsfic'),
+                                " \u00B7 ",
+                                item.rulesCount ?? 2,
+                                " ",
+                                __('rules', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-template-card__spec" }, item.pricingModel ?? __('Cumulative pricing', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-template-card__spec" }, item.layoutModel ?? __('Grid layout', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-template-card__tested" },
+                                wp.element.createElement("svg", { width: "13", height: "13", viewBox: "0 0 16 16", fill: "currentColor", xmlns: "http://www.w3.org/2000/svg" },
+                                    wp.element.createElement("path", { fillRule: "evenodd", d: "M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm3.41 5.41a1 1 0 0 0-1.41 0L7 8.41 5.71 7.12a1 1 0 1 0-1.42 1.42l2 2a1 1 0 0 0 1.42 0l4-4a1 1 0 0 0 0-1.42z" })),
+                                wp.element.createElement("span", null, __('Tested', 'wooptionsfic')))))),
+                wp.element.createElement("div", { className: "wof-template-card__footer", onClick: (e) => e.stopPropagation() },
+                    wp.element.createElement("div", { className: "wof-template-card__icons" }, footerIcons.map((t) => renderFooterIcon(t, item.slug))),
+                    wp.element.createElement("div", { className: "wof-template-card__actions" },
+                        wp.element.createElement("button", { type: "button", className: "wof-btn-card-preview", onClick: onPreview }, __('Preview', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "primary", className: "wof-btn-card-use", isBusy: busy, onClick: onUse }, __('Use template', 'wooptionsfic'))))));
         }
         function Templates(props) {
             const [items, setItems] = useState([]);
             const [search, setSearch] = useState('');
             const [category, setCategory] = useState('all');
-            const [features, setFeatures] = useState([]);
+            const [fieldTypeFilter, setFieldTypeFilter] = useState('all');
+            const [layoutFilter, setLayoutFilter] = useState('all');
             const [sort, setSort] = useState('popular');
             const [page, setPage] = useState(1);
+            const [perPage, setPerPage] = useState(9);
+            const [viewMode, setViewMode] = useState('grid');
+            const [selectedSlug, setSelectedSlug] = useState('design-your-own-pizza');
             const [loading, setLoading] = useState(true);
             const [busy, setBusy] = useState(null);
             const [creating, setCreating] = useState(false);
             const [importing, setImporting] = useState(false);
-            const [filterOpen, setFilterOpen] = useState(true);
             const [error, setError] = useState('');
-            const [favorites, setFavorites] = useState(readFavorites);
-            const [preview, setPreview] = useState(null);
             const fileRef = useRef(null);
-            const perPage = 8;
+            const searchInputRef = useRef(null);
             useEffect(() => {
                 WooOptionsFic.Api.listTemplates()
-                    .then((response) => setItems(response.items))
+                    .then((response) => {
+                    setItems(response.items);
+                    if (response.items.length && !selectedSlug) {
+                        setSelectedSlug(response.items[0].slug);
+                    }
+                })
                     .catch((reason) => setError(WooOptionsFic.Utils.errorMessage(reason)))
                     .finally(() => setLoading(false));
             }, []);
+            // ⌘K or Ctrl+K shortcut listener
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                        e.preventDefault();
+                        searchInputRef.current?.focus();
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, []);
             useEffect(() => {
                 setPage(1);
-            }, [search, category, features, sort]);
-            const categoryCounts = useMemo(() => {
-                const counts = {};
-                items.forEach((item) => { counts[item.category] = (counts[item.category] ?? 0) + 1; });
-                return counts;
-            }, [items]);
-            const featureCounts = useMemo(() => {
-                const counts = {};
-                items.forEach((item) => (item.features ?? []).forEach((feature) => { counts[feature] = (counts[feature] ?? 0) + 1; }));
-                return counts;
-            }, [items]);
+            }, [search, category, fieldTypeFilter, layoutFilter, sort]);
+            const categories = [
+                { id: 'all', label: __('All', 'wooptionsfic') },
+                { id: 'food', label: __('Food', 'wooptionsfic') },
+                { id: 'apparel', label: __('Apparel', 'wooptionsfic') },
+                { id: 'personalization', label: __('Personalization', 'wooptionsfic') },
+                { id: 'measurement', label: __('Measurement', 'wooptionsfic') },
+                { id: 'bundles', label: __('Bundles', 'wooptionsfic') },
+                { id: 'advanced', label: __('Advanced', 'wooptionsfic') },
+            ];
             const filtered = useMemo(() => {
                 const term = search.trim().toLowerCase();
-                const next = items.filter((item) => {
-                    if (category !== 'all' && item.category !== category)
-                        return false;
-                    if (features.length && !features.every((feature) => (item.features ?? []).includes(feature)))
-                        return false;
+                const result = items.filter((item) => {
+                    if (category !== 'all') {
+                        if (category === 'advanced') {
+                            if ((item.level ?? '').toLowerCase() !== 'advanced' && item.category !== 'advanced') {
+                                return false;
+                            }
+                        }
+                        else if (item.category !== category) {
+                            return false;
+                        }
+                    }
+                    if (fieldTypeFilter !== 'all') {
+                        if (!(item.fieldTypes ?? []).includes(fieldTypeFilter))
+                            return false;
+                    }
+                    if (layoutFilter !== 'all') {
+                        const layoutName = (item.layoutModel ?? '').toLowerCase();
+                        if (!layoutName.includes(layoutFilter.toLowerCase()))
+                            return false;
+                    }
                     if (!term)
                         return true;
-                    return `${item.name} ${item.description} ${item.categoryLabel ?? item.category} ${(item.features ?? []).join(' ')}`.toLowerCase().includes(term);
+                    return `${item.name} ${item.description} ${item.categoryLabel ?? item.category} ${item.pricingModel ?? ''} ${item.layoutModel ?? ''} ${(item.features ?? []).join(' ')}`.toLowerCase().includes(term);
                 });
-                return next.sort((left, right) => {
+                return result.sort((left, right) => {
                     if (sort === 'name')
                         return left.name.localeCompare(right.name);
                     if (sort === 'newest')
                         return (right.order ?? 0) - (left.order ?? 0);
-                    return (right.popularity ?? right.usage ?? 0) - (left.popularity ?? left.usage ?? 0);
+                    return (right.order ?? 0) - (left.order ?? 0);
                 });
-            }, [items, search, category, features, sort]);
+            }, [items, search, category, fieldTypeFilter, layoutFilter, sort]);
             const pages = Math.max(1, Math.ceil(filtered.length / perPage));
             const currentPage = Math.min(page, pages);
             const visible = filtered.slice((currentPage - 1) * perPage, currentPage * perPage);
+            const selectedItem = useMemo(() => {
+                if (!selectedSlug)
+                    return null;
+                return items.find((i) => i.slug === selectedSlug) ?? (filtered.length ? filtered[0] : null);
+            }, [selectedSlug, items, filtered]);
             const importTemplate = async (slug) => {
                 setBusy(slug);
                 setError('');
@@ -1336,159 +1418,157 @@ var WooOptionsFic;
                 try {
                     const raw = await file.text();
                     const payload = JSON.parse(raw);
-                    const result = await WooOptionsFic.Api.previewImport(payload);
-                    if (!result.valid)
-                        throw new Error(__('The selected template contains validation errors.', 'wooptionsfic'));
-                    const created = await WooOptionsFic.Api.commitImport(payload, result.title || file.name.replace(/\.json$/i, ''));
-                    props.navigate(`builder/${created.uuid}`);
+                    const previewResult = await WooOptionsFic.Api.previewImport(payload);
+                    if (!previewResult.valid) {
+                        throw new Error(__('The selected file is not a valid option set template.', 'wooptionsfic'));
+                    }
+                    const result = await WooOptionsFic.Api.commitImport(payload, previewResult.title || __('Imported template', 'wooptionsfic'));
+                    props.navigate(`builder/${result.uuid}`);
                 }
                 catch (reason) {
-                    setError(reason instanceof SyntaxError ? __('Choose a valid WooOptionsFic JSON export.', 'wooptionsfic') : WooOptionsFic.Utils.errorMessage(reason));
+                    setError(WooOptionsFic.Utils.errorMessage(reason));
                 }
                 finally {
                     setImporting(false);
                 }
             };
-            const toggleFavorite = (slug) => {
-                setFavorites((current) => {
-                    const next = current.includes(slug) ? current.filter((item) => item !== slug) : [...current, slug];
-                    window.localStorage.setItem('wooptionsfic-template-favorites', JSON.stringify(next));
-                    return next;
-                });
-            };
-            const toggleFeature = (feature) => {
-                setFeatures((current) => current.includes(feature) ? current.filter((item) => item !== feature) : [...current, feature]);
-            };
-            const heroItems = items.slice(0, 4);
-            const start = filtered.length ? ((currentPage - 1) * perPage) + 1 : 0;
-            const end = Math.min(currentPage * perPage, filtered.length);
-            return (wp.element.createElement("div", { className: "wof-templates-app" },
-                wp.element.createElement("header", { className: "wof-templates-topbar" },
-                    wp.element.createElement(TemplatesBrand, { navigate: props.navigate }),
-                    wp.element.createElement("div", { className: "wof-templates-breadcrumb" },
-                        wp.element.createElement("button", { type: "button", onClick: () => props.navigate('option-sets') }, __('Option Sets', 'wooptionsfic')),
-                        wp.element.createElement("span", null, "/"),
-                        wp.element.createElement("strong", null, __('Templates', 'wooptionsfic'))),
-                    wp.element.createElement("div", { className: "wof-templates-topbar__search" },
-                        wp.element.createElement(SearchControl, { label: __('Search templates', 'wooptionsfic'), value: search, onChange: setSearch, placeholder: __('Search templates…', 'wooptionsfic') }),
-                        wp.element.createElement("kbd", null, "\u2318 K")),
-                    wp.element.createElement("span", { className: "wof-template-ready" },
-                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "yes-alt" }),
-                        __('Catalog ready', 'wooptionsfic')),
-                    wp.element.createElement("button", { type: "button", className: "wof-templates-icon-button", onClick: () => props.navigate('help'), "aria-label": __('Help', 'wooptionsfic') },
-                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "editor-help" })),
-                    wp.element.createElement("button", { type: "button", className: "wof-templates-icon-button", "aria-label": __('Notifications', 'wooptionsfic') },
-                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "bell" })),
-                    wp.element.createElement("span", { className: "wof-template-avatar" }, window.WooOptionsFicAdmin.currentUser.name.trim().charAt(0).toUpperCase())),
-                wp.element.createElement("div", { className: "wof-templates-layout" },
-                    wp.element.createElement("aside", { className: "wof-templates-sidebar" },
-                        wp.element.createElement("button", { type: "button", className: "wof-template-back", onClick: () => props.navigate('dashboard') },
-                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-left-alt2" }),
-                            __('Back to dashboard', 'wooptionsfic')),
-                        wp.element.createElement("nav", null,
-                            wp.element.createElement("button", { type: "button", onClick: () => props.navigate('option-sets') },
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "screenoptions" }),
-                                __('Option sets', 'wooptionsfic')),
-                            wp.element.createElement("button", { type: "button", className: "is-active" },
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "star-filled" }),
-                                __('Templates', 'wooptionsfic')),
-                            wp.element.createElement("button", { type: "button", onClick: () => props.navigate('option-sets') },
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-links" }),
-                                __('Assignments', 'wooptionsfic')),
-                            wp.element.createElement("button", { type: "button", onClick: () => props.navigate('help') },
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "randomize" }),
-                                __('Rules', 'wooptionsfic')),
-                            wp.element.createElement("button", { type: "button", onClick: () => props.navigate('settings') },
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-settings" }),
-                                __('Settings', 'wooptionsfic'))),
-                        wp.element.createElement("section", { className: "wof-template-sidebar-card is-accent" },
-                            wp.element.createElement("span", null,
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "star-filled" })),
-                            wp.element.createElement("h3", null, __('Need something unique?', 'wooptionsfic')),
-                            wp.element.createElement("p", null, __('Create a custom template that matches your exact requirements.', 'wooptionsfic')),
-                            wp.element.createElement(Button, { variant: "secondary", isBusy: creating, onClick: createFromScratch }, __('Create from scratch', 'wooptionsfic'))),
-                        wp.element.createElement("section", { className: "wof-template-sidebar-card" },
-                            wp.element.createElement("h3", null, __('Need help?', 'wooptionsfic')),
-                            wp.element.createElement("p", null, __('Visit our docs or contact support for assistance.', 'wooptionsfic')),
-                            wp.element.createElement("button", { type: "button", onClick: () => props.navigate('help') },
-                                __('View documentation', 'wooptionsfic'),
-                                " ",
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "external" })),
-                            wp.element.createElement("button", { type: "button", onClick: () => props.navigate('help') },
-                                __('Contact support', 'wooptionsfic'),
-                                " ",
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "external" })))),
-                    wp.element.createElement("main", { className: "wof-templates-content" },
-                        wp.element.createElement("div", { className: "wof-templates-page-heading" },
-                            wp.element.createElement("div", null,
-                                wp.element.createElement("h1", null, __('Templates', 'wooptionsfic')),
-                                wp.element.createElement("p", null, __('Choose a prebuilt template to get started quickly. Every template is fully customizable.', 'wooptionsfic'))),
-                            wp.element.createElement("div", null,
-                                wp.element.createElement("input", { ref: fileRef, type: "file", hidden: true, accept: "application/json,.json", onChange: importFile }),
-                                wp.element.createElement(Button, { variant: "secondary", isBusy: importing, onClick: () => fileRef.current?.click() },
-                                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "upload" }),
-                                    __('Import template', 'wooptionsfic')),
-                                wp.element.createElement(Button, { variant: "primary", isBusy: creating, onClick: createFromScratch },
-                                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
-                                    __('Create from scratch', 'wooptionsfic')))),
-                        error ? wp.element.createElement(WooOptionsFic.Components.InlineNotice, { type: "error", onClose: () => setError('') }, error) : null,
-                        wp.element.createElement("section", { className: "wof-template-hero" },
-                            wp.element.createElement("div", { className: "wof-template-hero__copy" },
-                                wp.element.createElement("span", { className: "wof-template-spark" },
-                                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "star-filled" })),
-                                wp.element.createElement("h2", null, __('Start with a beautiful template', 'wooptionsfic')),
-                                wp.element.createElement("p", null, __('Save time and launch faster with our professionally designed option set templates.', 'wooptionsfic')),
-                                wp.element.createElement("p", null, __('Each template is fully customizable to fit your brand and business needs.', 'wooptionsfic'))),
-                            wp.element.createElement("div", { className: "wof-template-hero__art", "aria-hidden": "true" }, heroItems.map((item, index) => wp.element.createElement("figure", { key: item.slug, style: { '--card-index': index } },
-                                wp.element.createElement("img", { src: item.previewImage, alt: "" }))))),
-                        wp.element.createElement("div", { className: "wof-template-catalog-toolbar" },
-                            wp.element.createElement("div", { className: "wof-template-category-tabs" },
-                                wp.element.createElement("button", { type: "button", className: category === 'all' ? 'is-active' : '', onClick: () => setCategory('all') }, __('All Templates', 'wooptionsfic')),
-                                categoryOrder.filter((item) => categoryCounts[item]).map((item) => wp.element.createElement("button", { type: "button", key: item, className: category === item ? 'is-active' : '', onClick: () => setCategory(item) }, categoryLabels[item]))),
-                            wp.element.createElement("div", { className: "wof-template-catalog-actions" },
-                                wp.element.createElement("button", { type: "button", className: filterOpen ? 'is-active' : '', onClick: () => setFilterOpen(!filterOpen) },
-                                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "filter" }),
-                                    __('Filters', 'wooptionsfic')),
-                                wp.element.createElement(SelectControl, { label: __('Sort templates', 'wooptionsfic'), hideLabelFromVision: true, value: sort, onChange: (value) => setSort(value), options: [{ label: __('Most popular', 'wooptionsfic'), value: 'popular' }, { label: __('Newest first', 'wooptionsfic'), value: 'newest' }, { label: __('Name A–Z', 'wooptionsfic'), value: 'name' }] }))),
-                        wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-template-catalog', !filterOpen && 'is-filter-collapsed') },
-                            filterOpen ? wp.element.createElement("aside", { className: "wof-template-filter-panel" },
-                                wp.element.createElement("section", null,
-                                    wp.element.createElement("h3", null, __('Categories', 'wooptionsfic')),
-                                    wp.element.createElement("button", { type: "button", className: category === 'all' ? 'is-active' : '', onClick: () => setCategory('all') },
-                                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "star-filled" }),
-                                        wp.element.createElement("span", null, __('All Categories', 'wooptionsfic')),
-                                        wp.element.createElement("b", null, items.length)),
-                                    categoryOrder.filter((item) => categoryCounts[item]).map((item) => wp.element.createElement("button", { type: "button", key: item, className: category === item ? 'is-active' : '', onClick: () => setCategory(item) },
-                                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: categoryIcons[item] }),
-                                        wp.element.createElement("span", null, categoryLabels[item]),
-                                        wp.element.createElement("b", null, categoryCounts[item])))),
-                                wp.element.createElement("section", null,
-                                    wp.element.createElement("h3", null, __('Features', 'wooptionsfic')),
-                                    Object.entries(featureLabels).filter(([feature]) => featureCounts[feature]).map(([feature, label]) => wp.element.createElement("label", { key: feature },
-                                        wp.element.createElement("input", { type: "checkbox", checked: features.includes(feature), onChange: () => toggleFeature(feature) }),
-                                        wp.element.createElement("span", null, label),
-                                        wp.element.createElement("b", null, featureCounts[feature]))))) : null,
-                            wp.element.createElement("section", { className: "wof-template-results" },
-                                loading ? wp.element.createElement(WooOptionsFic.Components.Loading, { label: __('Loading templates…', 'wooptionsfic') }) : visible.length ? wp.element.createElement("div", { className: "wof-market-template-grid" }, visible.map((item) => wp.element.createElement(TemplateCard, { key: item.slug, item: item, busy: busy === item.slug, favorite: favorites.includes(item.slug), onUse: () => importTemplate(item.slug), onPreview: () => setPreview(item), onFavorite: () => toggleFavorite(item.slug) }))) : wp.element.createElement(WooOptionsFic.Components.EmptyState, { icon: "search", title: __('No templates found', 'wooptionsfic'), description: __('Try a different search, category, or feature filter.', 'wooptionsfic'), action: wp.element.createElement(Button, { variant: "secondary", onClick: () => { setSearch(''); setCategory('all'); setFeatures([]); } }, __('Clear filters', 'wooptionsfic')) }),
-                                !loading ? wp.element.createElement("footer", { className: "wof-template-pagination" },
-                                    wp.element.createElement("span", null, sprintf(__('Showing %1$d–%2$d of %3$d templates', 'wooptionsfic'), start, end, filtered.length)),
-                                    wp.element.createElement("nav", { "aria-label": __('Template pages', 'wooptionsfic') },
-                                        wp.element.createElement("button", { type: "button", disabled: currentPage <= 1, onClick: () => setPage(currentPage - 1) },
-                                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-left-alt2" })),
-                                        Array.from({ length: pages }, (_, index) => index + 1).map((number) => wp.element.createElement("button", { type: "button", key: number, className: currentPage === number ? 'is-active' : '', onClick: () => setPage(number) }, number)),
-                                        wp.element.createElement("button", { type: "button", disabled: currentPage >= pages, onClick: () => setPage(currentPage + 1) },
-                                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-right-alt2" })))) : null)))),
-                preview ? wp.element.createElement(Modal, { title: preview.name, className: "wof-modal wof-template-preview-modal", onRequestClose: () => setPreview(null) },
-                    wp.element.createElement("div", { className: "wof-template-preview-modal__image" },
-                        wp.element.createElement("img", { src: preview.previewImage, alt: "" })),
-                    wp.element.createElement("span", { className: "wof-template-category-label" }, preview.categoryLabel ?? categoryLabels[preview.category]),
-                    wp.element.createElement("p", null, preview.description),
-                    wp.element.createElement("div", { className: "wof-template-preview-features" }, (preview.features ?? []).map((feature) => wp.element.createElement("span", { key: feature },
-                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "yes-alt" }),
-                        featureLabels[feature] ?? feature))),
-                    wp.element.createElement("div", { className: "wof-modal__actions" },
-                        wp.element.createElement(Button, { variant: "tertiary", onClick: () => setPreview(null) }, __('Close', 'wooptionsfic')),
-                        wp.element.createElement(Button, { variant: "primary", isBusy: busy === preview.slug, onClick: () => importTemplate(preview.slug) }, __('Use this template', 'wooptionsfic')))) : null));
+            return (wp.element.createElement("div", { className: "wof-new-templates-page" },
+                wp.element.createElement("header", { className: "wof-new-templates-header" },
+                    wp.element.createElement("div", { className: "wof-new-templates-header__left" },
+                        wp.element.createElement("h1", { className: "wof-new-templates-title" }, __('Templates', 'wooptionsfic')),
+                        wp.element.createElement("p", { className: "wof-new-templates-subtitle" }, __('Start with a tested option set, then make it your own.', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-new-templates-cta-row" },
+                            wp.element.createElement(Button, { variant: "primary", className: "wof-btn-create-template", isBusy: creating, onClick: createFromScratch }, __('Create template', 'wooptionsfic')),
+                            wp.element.createElement("input", { ref: fileRef, type: "file", hidden: true, accept: "application/json,.json", onChange: importFile }),
+                            wp.element.createElement(Button, { variant: "secondary", className: "wof-btn-import-template", isBusy: importing, onClick: () => fileRef.current?.click() }, __('Import template', 'wooptionsfic')))),
+                    wp.element.createElement("div", { className: "wof-new-templates-header__right" },
+                        wp.element.createElement("div", { className: "wof-quick-search-box", onClick: () => searchInputRef.current?.focus() },
+                            wp.element.createElement("input", { ref: searchInputRef, type: "text", value: search, onChange: (e) => setSearch(e.target.value), placeholder: __('Search (⌘K)', 'wooptionsfic'), className: "wof-quick-search-input" }),
+                            wp.element.createElement("span", { className: "wof-quick-search-icon" },
+                                wp.element.createElement(Dashicon, { name: "search" }))))),
+                wp.element.createElement("div", { className: "wof-new-templates-toolbar" },
+                    wp.element.createElement("div", { className: "wof-toolbar-row-top" },
+                        wp.element.createElement("div", { className: "wof-search-templates-field" },
+                            wp.element.createElement("input", { type: "text", value: search, onChange: (e) => setSearch(e.target.value), placeholder: __('Search templates', 'wooptionsfic'), className: "wof-search-templates-input" }),
+                            wp.element.createElement("span", { className: "wof-search-templates-icon" },
+                                wp.element.createElement(Dashicon, { name: "search" }))),
+                        wp.element.createElement("div", { className: "wof-category-pills" }, categories.map((cat) => (wp.element.createElement("button", { type: "button", key: cat.id, className: `wof-category-pill ${category === cat.id ? 'is-active' : ''}`, onClick: () => setCategory(cat.id) }, cat.label))))),
+                    wp.element.createElement("div", { className: "wof-toolbar-row-bottom" },
+                        wp.element.createElement("div", { className: "wof-toolbar-dropdowns-left" },
+                            wp.element.createElement("div", { className: "wof-select-wrapper" },
+                                wp.element.createElement("select", { value: fieldTypeFilter, onChange: (e) => setFieldTypeFilter(e.target.value), className: "wof-filter-select", "aria-label": __('Filter by field type', 'wooptionsfic') },
+                                    wp.element.createElement("option", { value: "all" }, __('Field types', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "image_swatch" }, __('Image choices', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "color_swatch" }, __('Color swatches', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "radio" }, __('Radio group', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "segmented" }, __('Button choices', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "checkbox_group" }, __('Checkbox group', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "product" }, __('Product choices', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "file" }, __('File upload', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "repeater" }, __('Repeatable section', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "date_range" }, __('Date range', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "formula" }, __('Formula output', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "customer_defined_price" }, __('Customer price', 'wooptionsfic'))),
+                                wp.element.createElement("span", { className: "wof-select-chevron" }, "\u25BE")),
+                            wp.element.createElement("div", { className: "wof-select-wrapper" },
+                                wp.element.createElement("select", { value: layoutFilter, onChange: (e) => setLayoutFilter(e.target.value), className: "wof-filter-select", "aria-label": __('Filter by layout', 'wooptionsfic') },
+                                    wp.element.createElement("option", { value: "all" }, __('Layout', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "grid" }, __('Grid layout', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "sectioned" }, __('Sectioned layout', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "accordion" }, __('Accordion layout', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "step" }, __('Step layout', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "single column" }, __('Single column', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "table" }, __('Table layout', 'wooptionsfic'))),
+                                wp.element.createElement("span", { className: "wof-select-chevron" }, "\u25BE"))),
+                        wp.element.createElement("div", { className: "wof-toolbar-dropdowns-right" },
+                            wp.element.createElement("div", { className: "wof-select-wrapper" },
+                                wp.element.createElement("select", { value: sort, onChange: (e) => setSort(e.target.value), className: "wof-filter-select", "aria-label": __('Sort templates', 'wooptionsfic') },
+                                    wp.element.createElement("option", { value: "popular" }, __('Most useful', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "newest" }, __('Newest first', 'wooptionsfic')),
+                                    wp.element.createElement("option", { value: "name" }, __('Name A–Z', 'wooptionsfic'))),
+                                wp.element.createElement("span", { className: "wof-select-chevron" }, "\u25BE"))))),
+                error ? (wp.element.createElement("div", { className: "wof-notice-wrap" },
+                    wp.element.createElement(WooOptionsFic.Components.InlineNotice, { type: "error", onClose: () => setError('') }, error))) : null,
+                wp.element.createElement("div", { className: `wof-templates-main-layout ${selectedItem ? 'has-drawer' : 'no-drawer'}` },
+                    wp.element.createElement("div", { className: "wof-templates-catalog-column" },
+                        loading ? (wp.element.createElement(WooOptionsFic.Components.Loading, { label: __('Loading templates…', 'wooptionsfic') })) : visible.length ? (wp.element.createElement("div", { className: `wof-templates-cards-grid is-${viewMode}` }, visible.map((item) => (wp.element.createElement(TemplateCard, { key: item.slug, item: item, selected: selectedItem?.slug === item.slug, busy: busy === item.slug, onSelect: () => setSelectedSlug(item.slug), onPreview: () => setSelectedSlug(item.slug), onUse: () => importTemplate(item.slug) }))))) : (wp.element.createElement(WooOptionsFic.Components.EmptyState, { icon: "search", title: __('No templates found', 'wooptionsfic'), description: __('Try adjusting your search terms or category filters.', 'wooptionsfic'), action: wp.element.createElement(Button, { variant: "secondary", onClick: () => {
+                                    setSearch('');
+                                    setCategory('all');
+                                    setFieldTypeFilter('all');
+                                    setLayoutFilter('all');
+                                } }, __('Clear all filters', 'wooptionsfic')) })),
+                        !loading && filtered.length ? (wp.element.createElement("div", { className: "wof-templates-bottom-bar" },
+                            wp.element.createElement("div", { className: "wof-templates-bottom-count" }, sprintf(__('%d original templates', 'wooptionsfic'), filtered.length)),
+                            wp.element.createElement("div", { className: "wof-templates-bottom-controls" },
+                                wp.element.createElement("div", { className: "wof-view-mode-toggle" },
+                                    wp.element.createElement("button", { type: "button", className: `wof-view-btn ${viewMode === 'grid' ? 'is-active' : ''}`, onClick: () => setViewMode('grid'), "aria-label": __('Grid view', 'wooptionsfic'), title: __('Grid view', 'wooptionsfic') },
+                                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor" },
+                                            wp.element.createElement("rect", { x: "1", y: "1", width: "6", height: "6", rx: "1.5" }),
+                                            wp.element.createElement("rect", { x: "9", y: "1", width: "6", height: "6", rx: "1.5" }),
+                                            wp.element.createElement("rect", { x: "1", y: "9", width: "6", height: "6", rx: "1.5" }),
+                                            wp.element.createElement("rect", { x: "9", y: "9", width: "6", height: "6", rx: "1.5" }))),
+                                    wp.element.createElement("button", { type: "button", className: `wof-view-btn ${viewMode === 'list' ? 'is-active' : ''}`, onClick: () => setViewMode('list'), "aria-label": __('List view', 'wooptionsfic'), title: __('List view', 'wooptionsfic') },
+                                        wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 16 16", fill: "currentColor" },
+                                            wp.element.createElement("rect", { x: "1", y: "2", width: "14", height: "2", rx: "1" }),
+                                            wp.element.createElement("rect", { x: "1", y: "7", width: "14", height: "2", rx: "1" }),
+                                            wp.element.createElement("rect", { x: "1", y: "12", width: "14", height: "2", rx: "1" })))),
+                                wp.element.createElement("div", { className: "wof-per-page-select-wrapper" },
+                                    wp.element.createElement("select", { value: perPage, onChange: (e) => setPerPage(Number(e.target.value)), className: "wof-per-page-select", "aria-label": __('Items per page', 'wooptionsfic') },
+                                        wp.element.createElement("option", { value: 9 }, __('9 per page', 'wooptionsfic')),
+                                        wp.element.createElement("option", { value: 18 }, __('18 per page', 'wooptionsfic')),
+                                        wp.element.createElement("option", { value: 36 }, __('36 per page', 'wooptionsfic'))),
+                                    wp.element.createElement("span", { className: "wof-select-chevron" }, "\u25BE")),
+                                wp.element.createElement("div", { className: "wof-templates-pagination" },
+                                    wp.element.createElement("button", { type: "button", disabled: currentPage <= 1, onClick: () => setPage(currentPage - 1), className: "wof-page-nav-btn", "aria-label": __('Previous page', 'wooptionsfic') }, "\u2039"),
+                                    wp.element.createElement("span", { className: "wof-page-number-active" }, currentPage),
+                                    wp.element.createElement("button", { type: "button", disabled: currentPage >= pages, onClick: () => setPage(currentPage + 1), className: "wof-page-nav-btn", "aria-label": __('Next page', 'wooptionsfic') }, "\u203A"))))) : null),
+                    selectedItem ? (wp.element.createElement("aside", { className: "wof-template-drawer" },
+                        wp.element.createElement("div", { className: "wof-template-drawer__header" },
+                            wp.element.createElement("h2", { className: "wof-template-drawer__title" }, selectedItem.name),
+                            wp.element.createElement("button", { type: "button", className: "wof-template-drawer__close", onClick: () => setSelectedSlug(null), "aria-label": __('Close details', 'wooptionsfic') }, "\u2715")),
+                        wp.element.createElement("div", { className: "wof-template-drawer__hero" },
+                            wp.element.createElement("img", { src: selectedItem.heroImage || selectedItem.previewImage, alt: selectedItem.name, className: "wof-template-drawer__hero-img" })),
+                        wp.element.createElement("p", { className: "wof-template-drawer__desc" }, selectedItem.description),
+                        wp.element.createElement("div", { className: "wof-template-drawer__section" },
+                            wp.element.createElement("h4", { className: "wof-drawer-section-title" }, __('Features', 'wooptionsfic')),
+                            wp.element.createElement("ul", { className: "wof-drawer-features-list" }, (selectedItem.features?.length ? selectedItem.features : [
+                                __('Image choices', 'wooptionsfic'),
+                                __('Per-choice quantity', 'wooptionsfic'),
+                                __('Conditional toppings', 'wooptionsfic'),
+                                __('Cumulative pricing', 'wooptionsfic')
+                            ]).map((feat, idx) => (wp.element.createElement("li", { key: idx, className: "wof-drawer-feature-item" },
+                                wp.element.createElement("span", { className: "wof-feature-check" },
+                                    wp.element.createElement("svg", { width: "12", height: "12", viewBox: "0 0 16 16", fill: "currentColor" },
+                                        wp.element.createElement("path", { fillRule: "evenodd", d: "M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0zm3.41 5.41a1 1 0 0 0-1.41 0L7 8.41 5.71 7.12a1 1 0 1 0-1.42 1.42l2 2a1 1 0 0 0 1.42 0l4-4a1 1 0 0 0 0-1.42z" }))),
+                                wp.element.createElement("span", null, feat)))))),
+                        wp.element.createElement("div", { className: "wof-template-drawer__section" },
+                            wp.element.createElement("h4", { className: "wof-drawer-section-title" }, __('Details', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-drawer-details-list" },
+                                wp.element.createElement("div", { className: "wof-drawer-detail-item" },
+                                    wp.element.createElement("span", { className: "wof-detail-icon is-glyph" }, "$$"),
+                                    wp.element.createElement("span", null, selectedItem.details?.fields || `${selectedItem.fieldsCount || selectedItem.fieldCount || 12} fields`)),
+                                wp.element.createElement("div", { className: "wof-drawer-detail-item" },
+                                    wp.element.createElement("span", { className: "wof-detail-icon" }, "\u26A1"),
+                                    wp.element.createElement("span", null, selectedItem.details?.rules || `${selectedItem.rulesCount ?? 4} rules`)),
+                                wp.element.createElement("div", { className: "wof-drawer-detail-item" },
+                                    wp.element.createElement("span", { className: "wof-detail-icon" }, "\u229E"),
+                                    wp.element.createElement("span", null, selectedItem.details?.layout || selectedItem.layoutModel || 'Grid layout')),
+                                wp.element.createElement("div", { className: "wof-drawer-detail-item" },
+                                    wp.element.createElement("span", { className: "wof-detail-icon is-check" }, "\u2714"),
+                                    wp.element.createElement("span", null, selectedItem.details?.tested || 'Tested for accessibility')))),
+                        wp.element.createElement("div", { className: "wof-template-drawer__actions" },
+                            wp.element.createElement(Button, { variant: "primary", className: "wof-drawer-btn-use", isBusy: busy === selectedItem.slug, onClick: () => importTemplate(selectedItem.slug) }, __('Use this template', 'wooptionsfic')),
+                            wp.element.createElement("button", { type: "button", className: "wof-drawer-btn-preview", onClick: () => {
+                                    if (selectedItem.previewUrl) {
+                                        window.open(selectedItem.previewUrl, '_blank');
+                                    }
+                                    else {
+                                        window.alert(__('Storefront preview URL will be configured manually.', 'wooptionsfic'));
+                                    }
+                                } },
+                                wp.element.createElement("span", null, __('Preview storefront', 'wooptionsfic')),
+                                wp.element.createElement("svg", { width: "13", height: "13", viewBox: "0 0 16 16", fill: "currentColor" },
+                                    wp.element.createElement("path", { d: "M14 2.5a.5.5 0 0 0-.5-.5h-6a.5.5 0 0 0 0 1h4.793L2.146 13.146a.5.5 0 0 0 .708.708L13 3.707V8.5a.5.5 0 0 0 1 0v-6z" })))))) : null)));
         }
         Pages.Templates = Templates;
     })(Pages = WooOptionsFic.Pages || (WooOptionsFic.Pages = {}));

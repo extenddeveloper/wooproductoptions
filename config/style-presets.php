@@ -7,9 +7,11 @@
 
 defined('ABSPATH') || exit;
 
+$t = static fn (string $text): string => did_action('init') ? __($text, 'wooptionsfic') : $text;
+
 return [
 	'theme-native' => [
-		'name' => __('Theme Native', 'wooptionsfic'),
+		'name' => $t('Theme Native'),
 		'tokens' => [
 			'primary' => 'currentColor', 'onPrimary' => 'Canvas', 'accent' => 'currentColor',
 			'background' => 'transparent', 'surface' => 'transparent', 'text' => 'currentColor',
@@ -18,7 +20,7 @@ return [
 		],
 	],
 	'iris-studio' => [
-		'name' => __('Iris Studio', 'wooptionsfic'),
+		'name' => $t('Iris Studio'),
 		'tokens' => [
 			'primary' => '#5B4FF5', 'onPrimary' => '#FFFFFF', 'accent' => '#0F766E',
 			'background' => '#F7F7FC', 'surface' => '#FFFFFF', 'text' => '#172033',
@@ -27,7 +29,7 @@ return [
 		],
 	],
 	'ocean-commerce' => [
-		'name' => __('Ocean Commerce', 'wooptionsfic'),
+		'name' => $t('Ocean Commerce'),
 		'tokens' => [
 			'primary' => '#0369A1', 'onPrimary' => '#FFFFFF', 'accent' => '#0F766E',
 			'background' => '#F0F9FF', 'surface' => '#FFFFFF', 'text' => '#0C2B3A',
@@ -36,7 +38,7 @@ return [
 		],
 	],
 	'ember-craft' => [
-		'name' => __('Ember Craft', 'wooptionsfic'),
+		'name' => $t('Ember Craft'),
 		'tokens' => [
 			'primary' => '#C2410C', 'onPrimary' => '#FFFFFF', 'accent' => '#A16207',
 			'background' => '#FFF7ED', 'surface' => '#FFFFFF', 'text' => '#292524',
@@ -45,7 +47,7 @@ return [
 		],
 	],
 	'forest-atelier' => [
-		'name' => __('Forest Atelier', 'wooptionsfic'),
+		'name' => $t('Forest Atelier'),
 		'tokens' => [
 			'primary' => '#166534', 'onPrimary' => '#FFFFFF', 'accent' => '#A16207',
 			'background' => '#F8FAF5', 'surface' => '#FFFFFF', 'text' => '#142012',
@@ -54,7 +56,7 @@ return [
 		],
 	],
 	'mono-luxe' => [
-		'name' => __('Mono Luxe', 'wooptionsfic'),
+		'name' => $t('Mono Luxe'),
 		'tokens' => [
 			'primary' => '#18181B', 'onPrimary' => '#FFFFFF', 'accent' => '#A16207',
 			'background' => '#FAFAFA', 'surface' => '#FFFFFF', 'text' => '#18181B',
@@ -63,7 +65,7 @@ return [
 		],
 	],
 	'night-studio' => [
-		'name' => __('Night Studio', 'wooptionsfic'),
+		'name' => $t('Night Studio'),
 		'tokens' => [
 			'primary' => '#8B80FF', 'onPrimary' => '#0E1420', 'accent' => '#3CC8B4',
 			'background' => '#0E1420', 'surface' => '#151D2B', 'text' => '#F6F8FC',

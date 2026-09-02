@@ -23,20 +23,41 @@ final class TemplateService {
 		$manifest = $this->manifest();
 		return array_values(
 			array_map(
-				static fn (array $item): array => [
-					'slug'          => (string) $item['slug'],
-					'name'          => (string) $item['name'],
-					'description'   => (string) $item['description'],
-					'icon'          => (string) ($item['icon'] ?? 'screenoptions'),
-					'category'      => (string) ($item['category'] ?? 'commerce'),
-					'categoryLabel' => (string) ($item['categoryLabel'] ?? $item['category'] ?? 'Commerce'),
-					'fieldCount'    => (int) ($item['fieldCount'] ?? 0),
-					'previewImage'  => WOOPTIONSFIC_URL . 'assets/templates/' . sanitize_file_name((string) $item['slug']) . '.svg',
-					'features'      => array_values(array_map('strval', (array) ($item['features'] ?? []))),
-					'usage'         => (int) ($item['usage'] ?? 0),
-					'popularity'    => (int) ($item['popularity'] ?? 0),
-					'order'         => (int) ($item['order'] ?? 0),
-				],
+				static function (array $item): array {
+					$slug = sanitize_file_name((string) $item['slug']);
+					$img_url = WOOPTIONSFIC_URL . 'assets/templates/' . $slug . '.jpg';
+
+					$hero_file = WOOPTIONSFIC_PATH . 'assets/templates/' . $slug . '-large.jpg';
+					$hero_url = file_exists($hero_file)
+						? WOOPTIONSFIC_URL . 'assets/templates/' . $slug . '-large.jpg'
+						: $img_url;
+
+					return [
+						'slug'          => (string) $item['slug'],
+						'name'          => (string) $item['name'],
+						'level'         => (string) ($item['level'] ?? 'Beginner'),
+						'description'   => (string) $item['description'],
+						'icon'          => (string) ($item['icon'] ?? 'screenoptions'),
+						'category'      => (string) ($item['category'] ?? 'commerce'),
+						'categoryLabel' => (string) ($item['categoryLabel'] ?? $item['category'] ?? 'Commerce'),
+						'fieldCount'    => (int) ($item['fieldsCount'] ?? $item['fieldCount'] ?? 0),
+						'fieldsCount'   => (int) ($item['fieldsCount'] ?? $item['fieldCount'] ?? 0),
+						'rulesCount'    => (int) ($item['rulesCount'] ?? 0),
+						'pricingModel'  => (string) ($item['pricingModel'] ?? 'Cumulative pricing'),
+						'layoutModel'   => (string) ($item['layoutModel'] ?? 'Grid layout'),
+						'tested'        => ! empty($item['tested']),
+						'previewImage'  => $img_url,
+						'heroImage'     => $hero_url,
+						'features'      => array_values(array_map('strval', (array) ($item['features'] ?? []))),
+						'details'       => is_array($item['details'] ?? null) ? $item['details'] : [],
+						'footerIcons'   => array_values(array_map('strval', (array) ($item['footerIcons'] ?? []))),
+						'fieldTypes'    => array_values(array_map('strval', (array) ($item['fieldTypes'] ?? []))),
+						'usage'         => (int) ($item['usage'] ?? 0),
+						'popularity'    => (int) ($item['popularity'] ?? 0),
+						'order'         => (int) ($item['order'] ?? 0),
+						'previewUrl'    => (string) ($item['previewUrl'] ?? ''),
+					];
+				},
 				$manifest
 			)
 		);

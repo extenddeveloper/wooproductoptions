@@ -24,7 +24,16 @@ final class PaletteRegistry {
 	 * @return array<string, array<string,mixed>>
 	 */
 	public function all(): array {
-		return $this->palettes;
+		$palettes = $this->palettes;
+		if (function_exists('did_action') && did_action('init')) {
+			foreach ($palettes as &$palette) {
+				if (isset($palette['name']) && is_string($palette['name'])) {
+					$palette['name'] = translate($palette['name'], 'wooptionsfic');
+				}
+			}
+			unset($palette);
+		}
+		return $palettes;
 	}
 
 	/**
