@@ -14,7 +14,6 @@ namespace WooOptionsFic.Builder {
     index: number;
     count: number;
     selected: boolean;
-    previewMode: boolean;
     onSelect: () => void;
     onAdd: (field: WooOptionsFic.FieldDefinition, index?: number) => void;
     onMove: (from: number, to: number) => void;
@@ -67,6 +66,13 @@ namespace WooOptionsFic.Builder {
       if (finalIndex !== source) props.onMove(source, finalIndex);
     };
 
+    const width = props.field.width || '100%';
+    const widthStyle: any = {
+      width: width === '33%' ? 'calc(33.333% - 8px)' : width === '50%' ? 'calc(50% - 8px)' : width === '66%' ? 'calc(66.666% - 8px)' : '100%',
+      flex: width === '33%' ? '0 0 calc(33.333% - 8px)' : width === '50%' ? '0 0 calc(50% - 8px)' : width === '66%' ? '0 0 calc(66.666% - 8px)' : '0 0 100%',
+      boxSizing: 'border-box',
+    };
+
     return <article
       className={WooOptionsFic.Utils.classNames(
         'wof-canvas-field',
@@ -74,18 +80,20 @@ namespace WooOptionsFic.Builder {
         props.field.disabled && 'is-disabled',
         dropEdge === 'before' && 'is-drop-before',
         dropEdge === 'after' && 'is-drop-after',
+        `wof-canvas-field--width-${width.replace('%', '')}`
       )}
+      style={widthStyle}
       onDragOver={dragOver}
       onDragLeave={dragLeave}
       onDrop={drop}
       onClick={props.onSelect}
       data-field-uuid={props.field.uuid}
     >
-      {!props.previewMode ? <div className="wof-canvas-field__toolbar" onClick={(event: Event) => event.stopPropagation()}>
+      <div className="wof-canvas-field__toolbar" onClick={(event: Event) => event.stopPropagation()}>
         <button type="button" draggable className="wof-canvas-field__drag-handle" onDragStart={dragStart} onDragEnd={() => setDropEdge(null)} aria-label={__('Drag field', 'wooptionsfic')} title={__('Drag to reorder', 'wooptionsfic')}><WooOptionsFic.Components.GripIcon /></button>
         <button type="button" onClick={props.onDuplicate} aria-label={__('Duplicate field', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="admin-page" /></button>
         <button type="button" className="is-destructive" onClick={props.onDelete} aria-label={__('Delete field', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="trash" /></button>
-      </div> : null}
+      </div>
       <div className="wof-canvas-field__copy"><div><strong>{props.field.label || __('Untitled field', 'wooptionsfic')}</strong>{props.field.required ? <span>{__('Required', 'wooptionsfic')}</span> : null}</div><small>{props.field.choices?.length ? `${props.field.choices.length} ${__('choices', 'wooptionsfic')}` : window.WooOptionsFicAdmin.fieldTypes[props.field.type]?.label ?? props.field.type}</small></div>
       <div className="wof-canvas-field__preview"><FieldPreview field={props.field} /></div>
     </article>;
@@ -101,7 +109,6 @@ namespace WooOptionsFic.Builder {
     onDuplicate: (field: WooOptionsFic.FieldDefinition) => void;
     onDelete: (uuid: string) => void;
   }): any {
-    const [previewMode, setPreviewMode] = useState(false);
     const [zoom, setZoom] = useState(100);
     const [dragActive, setDragActive] = useState(false);
     const palette = window.WooOptionsFicAdmin.palettes[props.document.style.palette] ?? window.WooOptionsFicAdmin.palettes['iris-studio'];
@@ -163,11 +170,11 @@ namespace WooOptionsFic.Builder {
       setDragActive(false);
     };
 
-    return <section className={WooOptionsFic.Utils.classNames('wof-builder-canvas', previewMode ? 'is-preview-mode' : 'is-edit-mode', dragActive && 'is-drag-active')}>
-      <div className="wof-canvas-toolbar"><div className="wof-canvas-toolbar__copy"><h2>{__('Live storefront canvas', 'wooptionsfic')}</h2><p>{__('The builder and product page use the same component stylesheet.', 'wooptionsfic')}</p></div><div className="wof-canvas-toolbar__controls"><div className="wof-zoom-control"><button type="button" disabled={zoom <= 75} onClick={() => setZoom(Math.max(75, zoom - 10))}><WooOptionsFic.Components.Dashicon name="minus" /></button><output>{zoom}%</output><button type="button" disabled={zoom >= 125} onClick={() => setZoom(Math.min(125, zoom + 10))}><WooOptionsFic.Components.Dashicon name="plus-alt2" /></button></div><span className="wof-interactive-status"><i />{__('Interactive', 'wooptionsfic')}</span><div className="wof-mode-switcher"><button type="button" className={!previewMode ? 'is-active' : ''} onClick={() => setPreviewMode(false)}><WooOptionsFic.Components.Dashicon name="edit" />{__('Edit', 'wooptionsfic')}</button><button type="button" className={previewMode ? 'is-active' : ''} onClick={() => setPreviewMode(true)}><WooOptionsFic.Components.Dashicon name="visibility" />{__('Preview', 'wooptionsfic')}</button></div></div></div>
+    return <section className={WooOptionsFic.Utils.classNames('wof-builder-canvas', 'is-edit-mode', dragActive && 'is-drag-active')}>
+      <div className="wof-canvas-toolbar"><div className="wof-canvas-toolbar__copy"><h2>{__('Live storefront canvas', 'wooptionsfic')}</h2><p>{__('The builder and product page use the same component stylesheet.', 'wooptionsfic')}</p></div><div className="wof-canvas-toolbar__controls"><div className="wof-zoom-control"><button type="button" disabled={zoom <= 75} onClick={() => setZoom(Math.max(75, zoom - 10))}><WooOptionsFic.Components.Dashicon name="minus" /></button><output>{zoom}%</output><button type="button" disabled={zoom >= 125} onClick={() => setZoom(Math.min(125, zoom + 10))}><WooOptionsFic.Components.Dashicon name="plus-alt2" /></button></div><span className="wof-interactive-status"><i />{__('Interactive', 'wooptionsfic')}</span></div></div>
       <div className={`wof-canvas-device is-${props.device}`} style={style}>
         <div className="wof-canvas-device__chrome"><span>{__('Live customer preview', 'wooptionsfic')}</span><small>{props.device} · {props.document.layout.type}</small></div>
-        <div className="wof-canvas-frame"><div className={WooOptionsFic.Utils.classNames('wof-canvas-sheet', dragActive && 'is-drag-active')} onDragEnter={canvasDragOver} onDragOver={canvasDragOver} onDragLeave={canvasDragLeave} onDrop={dropAtEnd}><div className="wof-product-shell"><aside className="wof-product-shell__media"><div className="wof-product-gallery__hero"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumbs"><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div></div></aside><div className="wof-product-shell__content"><div className="wof-product-preview-meta"><span className="wof-product-preview-meta__eyebrow">{__('Live product preview', 'wooptionsfic')}</span><h1>{__('WowAddon Product (Preview)', 'wooptionsfic')}</h1><strong className="wof-product-preview-meta__price">20.00 USD</strong></div>{props.document.fields.length ? <div className={`wof-canvas-fields is-${props.document.layout.type}`}>{props.document.fields.map((field, index) => <CanvasField key={field.uuid} field={field} index={index} count={props.document.fields.length} selected={field.uuid === props.selectedUuid} previewMode={previewMode} onSelect={() => props.onSelect(field.uuid)} onAdd={props.onAdd} onMove={props.onMove} onDuplicate={() => props.onDuplicate(field)} onDelete={() => props.onDelete(field.uuid)} />)}<div className={WooOptionsFic.Utils.classNames('wof-canvas-drop-end', dragActive && 'is-active')} onDragOver={canvasDragOver} onDrop={dropAtEnd}><WooOptionsFic.Components.Dashicon name="plus-alt2" />{__('Drop a field here', 'wooptionsfic')}</div></div> : <div className={WooOptionsFic.Utils.classNames('wof-canvas-empty', dragActive && 'is-active')} onDragOver={canvasDragOver} onDrop={dropAtEnd}><div><WooOptionsFic.Components.Dashicon name="layout" /></div><h3>{__('Your canvas is ready', 'wooptionsfic')}</h3><p>{__('Choose a field from the palette or drag one into this product page preview.', 'wooptionsfic')}</p></div>}</div></div></div></div>
+        <div className="wof-canvas-frame"><div className={WooOptionsFic.Utils.classNames('wof-canvas-sheet', dragActive && 'is-drag-active')} onDragEnter={canvasDragOver} onDragOver={canvasDragOver} onDragLeave={canvasDragLeave} onDrop={dropAtEnd}><div className="wof-product-shell"><aside className="wof-product-shell__media"><div className="wof-product-gallery__hero"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumbs"><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div></div></aside><div className="wof-product-shell__content"><div className="wof-product-preview-meta"><span className="wof-product-preview-meta__eyebrow">{__('Live product preview', 'wooptionsfic')}</span><h1>{__('WowAddon Product (Preview)', 'wooptionsfic')}</h1><strong className="wof-product-preview-meta__price">20.00 USD</strong></div>{props.document.fields.length ? <div className={`wof-canvas-fields is-${props.document.layout.type}`} style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'flex-start' }}>{props.document.fields.map((field, index) => <CanvasField key={field.uuid} field={field} index={index} count={props.document.fields.length} selected={field.uuid === props.selectedUuid} onSelect={() => props.onSelect(field.uuid)} onAdd={props.onAdd} onMove={props.onMove} onDuplicate={() => props.onDuplicate(field)} onDelete={() => props.onDelete(field.uuid)} />)}<div className={WooOptionsFic.Utils.classNames('wof-canvas-drop-end', dragActive && 'is-active')} onDragOver={canvasDragOver} onDrop={dropAtEnd}><WooOptionsFic.Components.Dashicon name="plus-alt2" />{__('Drop a field here', 'wooptionsfic')}</div></div> : <div className={WooOptionsFic.Utils.classNames('wof-canvas-empty', dragActive && 'is-active')} onDragOver={canvasDragOver} onDrop={dropAtEnd}><div><WooOptionsFic.Components.Dashicon name="layout" /></div><h3>{__('Your canvas is ready', 'wooptionsfic')}</h3><p>{__('Choose a field from the palette or drag one into this product page preview.', 'wooptionsfic')}</p></div>}</div></div></div></div>
       </div>
     </section>;
   }

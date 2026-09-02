@@ -42,6 +42,7 @@ namespace WooOptionsFic.FieldFactory {
       style: {},
       preview: {},
       help: '',
+      width: '100%',
     };
 
     if (choiceTypes.has(type)) {
@@ -49,7 +50,18 @@ namespace WooOptionsFic.FieldFactory {
       field.multiple = Boolean(manifest?.multiple);
       field.minChoices = 0;
       field.maxChoices = 0;
+      field.choiceWidth = '';
+      field.choiceHeight = '';
+      field.choiceBorderRadius = '';
+      field.enableQuantity = false;
+      field.minQuantity = 1;
+      field.maxQuantity = 100;
       if (type === 'image_swatch') field.updateProductImage = false;
+    }
+
+    if (type === 'tel') {
+      field.flagStyle = 'number_only';
+      field.defaultCountry = 'US';
     }
 
     if (['text', 'textarea', 'password', 'tel', 'email', 'url', 'number', 'range', 'quantity', 'date', 'date_range', 'time', 'datetime', 'customer_defined_price', 'color_picker'].includes(type)) {

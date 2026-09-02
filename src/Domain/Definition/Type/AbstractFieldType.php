@@ -23,6 +23,11 @@ abstract class AbstractFieldType implements FieldType {
 			$uuid = Uuid::v4();
 		}
 
+		$width = (string) ($definition['width'] ?? '100%');
+		if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
+			$width = '100%';
+		}
+
 		return [
 			'uuid'        => strtolower($uuid),
 			'type'        => $this->key(),
@@ -37,6 +42,7 @@ abstract class AbstractFieldType implements FieldType {
 			'style'       => is_array($definition['style'] ?? null) ? $definition['style'] : [],
 			'preview'     => is_array($definition['preview'] ?? null) ? $definition['preview'] : [],
 			'help'        => self::plain_text((string) ($definition['help'] ?? ''), 1000),
+			'width'       => $width,
 		];
 	}
 

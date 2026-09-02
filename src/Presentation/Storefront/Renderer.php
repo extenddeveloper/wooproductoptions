@@ -173,10 +173,22 @@ final class Renderer {
 
 		$description_id = 'wof-description-' . str_replace('-', '', $uuid);
 		$required       = ! empty($field['required']);
+		$width          = (string) ($field['width'] ?? '100%');
+		if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
+			$width = '100%';
+		}
 		$classes        = 'wof-field wof-field--' . sanitize_html_class($type);
+		$classes       .= ' wof-field--width-' . str_replace('%', '', $width);
+
 		echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="' . esc_attr($type) . '"';
 		if ('image_swatch' === $type && ! empty($field['updateProductImage'])) {
 			echo ' data-wof-update-product-image="1"';
+		}
+		if (! empty($field['minChoices'])) {
+			echo ' data-wof-min-choices="' . esc_attr((string) $field['minChoices']) . '"';
+		}
+		if (! empty($field['maxChoices'])) {
+			echo ' data-wof-max-choices="' . esc_attr((string) $field['maxChoices']) . '"';
 		}
 		echo '>';
 
@@ -250,30 +262,25 @@ final class Renderer {
 		$multiple = ! empty($field['multiple']) || in_array($type, ['checkbox_group', 'product'], true);
 		$input    = $multiple ? 'checkbox' : 'radio';
 		$group    = $multiple ? $name . '[]' : $name;
+		$choice_item_style = '';
+		if (! empty($field['choiceWidth'])) {
+			$choice_item_style .= 'width:' . esc_attr((string) $field['choiceWidth']) . 'px;';
+		}
+		if (! empty($field['choiceHeight'])) {
+			$choice_item_style .= 'min-height:' . esc_attr((string) $field['choiceHeight']) . 'px;';
+		}
+		if (! empty($field['choiceBorderRadius'])) {
+			$choice_item_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
+		}
+
 		echo '<div class="wof-choice-grid" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
 			$checked     = ! empty($choice['default']);
-			echo '<label class="wof-choice" for="' . esc_attr($id) . '">';
+			echo '<label class="wof-choice" for="' . esc_attr($id) . '"' . ('' !== $choice_item_style ? ' style="' . $choice_item_style . '"' : '') . '>';
 			echo '<input id="' . esc_attr($id) . '" type="' . esc_attr($input) . '" name="' . esc_attr($group) . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
-			if ('image_swatch' === $type && ! empty($field['updateProductImage'])) {
-				$product_image_url = '';
-				if ((int) ($choice['imageId'] ?? 0) > 0) {
-					$resolved = wp_get_attachment_image_url((int) $choice['imageId'], 'woocommerce_single');
-					if (! is_string($resolved) || '' === $resolved) {
-						$resolved = wp_get_attachment_image_url((int) $choice['imageId'], 'full');
-					}
-					$product_image_url = is_string($resolved) ? $resolved : '';
-				}
-				if ('' === $product_image_url) {
-					$product_image_url = (string) ($choice['imageUrl'] ?? '');
-				}
-				if ('' !== $product_image_url) {
-					echo ' data-wof-product-image-url="' . esc_url($product_image_url) . '"';
-				}
-			}
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
 			if ('color_swatch' === $type && '' !== (string) ($choice['color'] ?? '')) {
 				echo '<span class="wof-choice__swatch" style="--wof-swatch:' . esc_attr((string) $choice['color']) . '" aria-hidden="true"></span>';
@@ -290,8 +297,14 @@ final class Renderer {
 			if ('' !== (string) ($choice['description'] ?? '')) {
 				echo '<small>' . esc_html((string) $choice['description']) . '</small>';
 			}
-			echo '<span class="wof-choice__price">' . esc_html($this->choice_price_text((array) $choice)) . '</span></span>';
-			echo '<span class="wof-choice__check" aria-hidden="true">✓</span></label>';
+			echo '<span class="wof-choice__price">' . esc_html($this->choice_price_text((array) $choice)) . '</span>';
+			if (! empty($field['enableQuantity'])) {
+				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
+				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
+				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
+			}
+			echo '</span>';
+			echo '<span class="wof-choice__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span></label>';
 		}
 		echo '</div>';
 	}
@@ -305,6 +318,17 @@ final class Renderer {
 		$multiple = ! empty($field['multiple']);
 		$input    = $multiple ? 'checkbox' : 'radio';
 		$group    = $multiple ? $name . '[]' : $name;
+		$swatch_style = '';
+		if (! empty($field['choiceWidth'])) {
+			$swatch_style .= 'width:' . esc_attr((string) $field['choiceWidth']) . 'px;';
+		}
+		if (! empty($field['choiceHeight'])) {
+			$swatch_style .= 'height:' . esc_attr((string) $field['choiceHeight']) . 'px;';
+		}
+		if (! empty($field['choiceBorderRadius'])) {
+			$swatch_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
+		}
+
 		echo '<div class="wof-swatches" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
@@ -315,13 +339,16 @@ final class Renderer {
 			echo '<input id="' . esc_attr($id) . '" type="' . esc_attr($input) . '" name="' . esc_attr($group) . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
-			echo '<span class="wof-swatch-item__color" style="background:' . esc_attr($color) . '" aria-hidden="true">';
-			echo '<span class="wof-swatch-item__check">✓</span>';
+			echo '<span class="wof-swatch-item__color" style="background:' . esc_attr($color) . ';' . $swatch_style . '" aria-hidden="true">';
+			echo '<span class="wof-swatch-item__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="11" height="11" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>';
 			echo '</span>';
 			echo '<span class="wof-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
 			$price_text = $this->choice_price_text((array) $choice);
-			if ('' !== $price_text) {
-				echo '<span class="wof-swatch-item__price">' . esc_html($price_text) . '</span>';
+			echo '<span class="wof-swatch-item__price">' . ('' !== $price_text ? esc_html($price_text) : '&nbsp;') . '</span>';
+			if (! empty($field['enableQuantity'])) {
+				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
+				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
+				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
 			}
 			echo '</label>';
 		}
@@ -337,6 +364,17 @@ final class Renderer {
 		$multiple = ! empty($field['multiple']);
 		$input    = $multiple ? 'checkbox' : 'radio';
 		$group    = $multiple ? $name . '[]' : $name;
+		$thumb_style = '';
+		if (! empty($field['choiceWidth'])) {
+			$thumb_style .= 'width:' . esc_attr((string) $field['choiceWidth']) . 'px;';
+		}
+		if (! empty($field['choiceHeight'])) {
+			$thumb_style .= 'height:' . esc_attr((string) $field['choiceHeight']) . 'px;';
+		}
+		if (! empty($field['choiceBorderRadius'])) {
+			$thumb_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;overflow:hidden;';
+		}
+
 		echo '<div class="wof-image-swatches" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
@@ -362,7 +400,7 @@ final class Renderer {
 				}
 			}
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
-			echo '<span class="wof-image-swatch-item__thumb" aria-hidden="true">';
+			echo '<span class="wof-image-swatch-item__thumb" style="' . $thumb_style . '" aria-hidden="true">';
 			$image_html = '';
 			if ((int) ($choice['imageId'] ?? 0) > 0) {
 				$image_html = (string) wp_get_attachment_image((int) $choice['imageId'], 'thumbnail', false, ['class' => 'wof-image-swatch-item__img', 'alt' => '']);
@@ -375,11 +413,15 @@ final class Renderer {
 			} else {
 				echo '<svg class="wof-image-swatch-item__placeholder" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 5.5h15v13h-15zM7.5 15l3.2-3.5 2.4 2.3 1.9-2 2.5 3.2M9 9.2h.01" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 			}
+			echo '<span class="wof-image-swatch-item__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="11" height="11" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>';
 			echo '</span>';
 			echo '<span class="wof-image-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
 			$price_text = $this->choice_price_text((array) $choice);
-			if ('' !== $price_text) {
-				echo '<span class="wof-image-swatch-item__price">' . esc_html($price_text) . '</span>';
+			echo '<span class="wof-image-swatch-item__price">' . ('' !== $price_text ? esc_html($price_text) : '&nbsp;') . '</span>';
+			if (! empty($field['enableQuantity'])) {
+				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
+				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
+				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
 			}
 			echo '</label>';
 		}
@@ -392,12 +434,17 @@ final class Renderer {
 	 * @param array<string,mixed> $field Field.
 	 */
 	private function render_radio_list(array $field, string $name, string $description_id): void {
+		$radio_style = '';
+		if (! empty($field['choiceBorderRadius'])) {
+			$radio_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
+		}
+
 		echo '<div class="wof-radio-list" role="radiogroup" aria-label="' . esc_attr((string) $field['label']) . '">';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
 			$checked     = ! empty($choice['default']) || (string) ($field['default'] ?? '') === $choice_uuid;
-			echo '<label class="wof-radio-item" for="' . esc_attr($id) . '">';
+			echo '<label class="wof-radio-item" for="' . esc_attr($id) . '"' . ('' !== $radio_style ? ' style="' . $radio_style . '"' : '') . '>';
 			echo '<input id="' . esc_attr($id) . '" type="radio" name="' . esc_attr($name) . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
@@ -405,6 +452,11 @@ final class Renderer {
 			$price_text = $this->choice_price_text((array) $choice);
 			if ('' !== $price_text) {
 				echo '<span class="wof-radio-item__price">' . esc_html($price_text) . '</span>';
+			}
+			if (! empty($field['enableQuantity'])) {
+				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
+				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
+				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
 			}
 			echo '</label>';
 		}
@@ -417,12 +469,17 @@ final class Renderer {
 	 * @param array<string,mixed> $field Field.
 	 */
 	private function render_checkbox_list(array $field, string $name, string $description_id): void {
+		$cb_style = '';
+		if (! empty($field['choiceBorderRadius'])) {
+			$cb_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
+		}
+
 		echo '<div class="wof-checkbox-list" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
 			$checked     = ! empty($choice['default']);
-			echo '<label class="wof-checkbox-item" for="' . esc_attr($id) . '">';
+			echo '<label class="wof-checkbox-item" for="' . esc_attr($id) . '"' . ('' !== $cb_style ? ' style="' . $cb_style . '"' : '') . '>';
 			echo '<input id="' . esc_attr($id) . '" type="checkbox" name="' . esc_attr($name . '[]') . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
@@ -430,6 +487,11 @@ final class Renderer {
 			$price_text = $this->choice_price_text((array) $choice);
 			if ('' !== $price_text) {
 				echo '<span class="wof-checkbox-item__price">' . esc_html($price_text) . '</span>';
+			}
+			if (! empty($field['enableQuantity'])) {
+				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
+				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
+				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
 			}
 			echo '</label>';
 		}
@@ -491,6 +553,40 @@ final class Renderer {
 			echo '<span aria-hidden="true">→</span><input type="date" name="' . esc_attr($name . '[end]') . '" aria-label="' . esc_attr__('End date', 'wooptionsfic') . '"></div>';
 			return;
 		}
+		if ('tel' === $type) {
+			$flag_style      = (string) ($field['flagStyle'] ?? 'number_only');
+			$default_country = strtoupper((string) ($field['defaultCountry'] ?? 'US'));
+			if ('number_only' !== $flag_style) {
+				$countries    = $this->country_definitions();
+				$curr_country = $countries[$default_country] ?? $countries['US'];
+				$dial_code    = $curr_country['dial'];
+				$flag_svg     = $this->country_flag_svg($default_country);
+
+				echo '<div class="wof-phone-field-wrap" data-wof-phone-wrap>';
+				echo '<div class="wof-phone-picker" data-wof-phone-picker>';
+				echo '<span class="wof-phone-picker__display" data-wof-phone-display>';
+				echo '<span class="wof-phone-picker__flag" data-wof-flag-slot>' . $flag_svg . '</span>';
+				echo '<span class="wof-phone-picker__code" data-wof-country-slot>' . esc_html($default_country) . '</span>';
+				if ('number_flag_dialcode' === $flag_style) {
+					echo '<span class="wof-phone-picker__dial" data-wof-dial-slot>' . esc_html($dial_code) . '</span>';
+				}
+				echo '<svg class="wof-phone-picker__chevron" viewBox="0 0 20 20" width="12" height="12" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>';
+				echo '</span>';
+				echo '<select class="wof-phone-country-select" name="' . esc_attr($name . '[country]') . '" aria-label="' . esc_attr__('Select country', 'wooptionsfic') . '" data-wof-phone-select>';
+				foreach ($countries as $code => $info) {
+					echo '<option value="' . esc_attr($code) . '" data-dial="' . esc_attr($info['dial']) . '"' . selected($code, $default_country, false) . '>';
+					echo esc_html($info['name'] . ' (' . $info['dial'] . ')');
+					echo '</option>';
+				}
+				echo '</select>';
+				echo '</div>';
+				echo '<input id="wof-' . esc_attr($uuid) . '" type="tel" name="' . esc_attr($name . '[number]') . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '" class="wof-phone-number-input"';
+				echo ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? __('Enter phone number…', 'wooptionsfic'))) . '"';
+				echo $this->input_attributes($field, $description_id) . '>';
+				echo '</div>';
+				return;
+			}
+		}
 		$html_type = $type_map[$type] ?? 'text';
 		echo '<input id="wof-' . esc_attr($uuid) . '" type="' . esc_attr($html_type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '"';
 		echo ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? '')) . '"';
@@ -498,6 +594,108 @@ final class Renderer {
 		if ('range' === $type) {
 			echo '<output class="wof-range-output" data-wof-range-output>—</output>';
 		}
+	}
+
+	public function country_definitions(): array {
+		return [
+			'US' => ['name' => 'United States', 'dial' => '+1'],
+			'GB' => ['name' => 'United Kingdom', 'dial' => '+44'],
+			'CA' => ['name' => 'Canada', 'dial' => '+1'],
+			'AU' => ['name' => 'Australia', 'dial' => '+61'],
+			'DE' => ['name' => 'Germany', 'dial' => '+49'],
+			'FR' => ['name' => 'France', 'dial' => '+33'],
+			'IT' => ['name' => 'Italy', 'dial' => '+39'],
+			'ES' => ['name' => 'Spain', 'dial' => '+34'],
+			'NL' => ['name' => 'Netherlands', 'dial' => '+31'],
+			'BR' => ['name' => 'Brazil', 'dial' => '+55'],
+			'IN' => ['name' => 'India', 'dial' => '+91'],
+			'CN' => ['name' => 'China', 'dial' => '+86'],
+			'JP' => ['name' => 'Japan', 'dial' => '+81'],
+			'KR' => ['name' => 'South Korea', 'dial' => '+82'],
+			'MX' => ['name' => 'Mexico', 'dial' => '+52'],
+			'AE' => ['name' => 'United Arab Emirates', 'dial' => '+971'],
+			'SA' => ['name' => 'Saudi Arabia', 'dial' => '+966'],
+			'SG' => ['name' => 'Singapore', 'dial' => '+65'],
+			'BD' => ['name' => 'Bangladesh', 'dial' => '+880'],
+			'PK' => ['name' => 'Pakistan', 'dial' => '+92'],
+			'ZA' => ['name' => 'South Africa', 'dial' => '+27'],
+			'TR' => ['name' => 'Turkey', 'dial' => '+90'],
+			'SE' => ['name' => 'Sweden', 'dial' => '+46'],
+			'CH' => ['name' => 'Switzerland', 'dial' => '+41'],
+			'PL' => ['name' => 'Poland', 'dial' => '+48'],
+			'AR' => ['name' => 'Argentina', 'dial' => '+54'],
+			'BE' => ['name' => 'Belgium', 'dial' => '+32'],
+			'AT' => ['name' => 'Austria', 'dial' => '+43'],
+			'NO' => ['name' => 'Norway', 'dial' => '+47'],
+			'DK' => ['name' => 'Denmark', 'dial' => '+45'],
+			'FI' => ['name' => 'Finland', 'dial' => '+358'],
+			'IE' => ['name' => 'Ireland', 'dial' => '+353'],
+			'NZ' => ['name' => 'New Zealand', 'dial' => '+64'],
+			'PT' => ['name' => 'Portugal', 'dial' => '+351'],
+			'GR' => ['name' => 'Greece', 'dial' => '+30'],
+			'IL' => ['name' => 'Israel', 'dial' => '+972'],
+			'HK' => ['name' => 'Hong Kong', 'dial' => '+852'],
+			'MY' => ['name' => 'Malaysia', 'dial' => '+60'],
+			'PH' => ['name' => 'Philippines', 'dial' => '+63'],
+			'ID' => ['name' => 'Indonesia', 'dial' => '+62'],
+			'TH' => ['name' => 'Thailand', 'dial' => '+66'],
+			'VN' => ['name' => 'Vietnam', 'dial' => '+84'],
+			'EG' => ['name' => 'Egypt', 'dial' => '+20'],
+			'NG' => ['name' => 'Nigeria', 'dial' => '+234'],
+			'KE' => ['name' => 'Kenya', 'dial' => '+254'],
+		];
+	}
+
+	public function country_flag_svg(string $country): string {
+		$country = strtoupper(trim($country));
+		return match ($country) {
+			'BD' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#006A4E" rx="2"/><circle cx="9" cy="7" r="4.2" fill="#F42A41"/></svg>',
+			'US' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#B22234" rx="2"/><rect y="2.1" width="20" height="2" fill="#FFFFFF"/><rect y="6.3" width="20" height="2" fill="#FFFFFF"/><rect y="10.5" width="20" height="2" fill="#FFFFFF"/><rect width="8" height="7.2" fill="#3C3B6E"/><circle cx="4" cy="3.6" r="1.5" fill="#FFFFFF"/></svg>',
+			'GB' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#012169" rx="2"/><path d="M0 0L20 14M20 0L0 14" stroke="#FFFFFF" stroke-width="2.5"/><path d="M0 0L20 14M20 0L0 14" stroke="#C8102E" stroke-width="1.2"/><path d="M10 0v14M0 7h20" stroke="#FFFFFF" stroke-width="4"/><path d="M10 0v14M0 7h20" stroke="#C8102E" stroke-width="2.2"/></svg>',
+			'CA' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#D80027" rx="2"/><rect x="5" width="10" height="14" fill="#FFFFFF"/><polygon points="10,2.5 11,5.5 13.5,5 12,7 13.5,8.5 11,8 10.5,11 9.5,11 9,8 6.5,8.5 8,7 6.5,5 9,5.5" fill="#D80027"/></svg>',
+			'AU' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#00008B" rx="2"/><circle cx="14" cy="4" r="1" fill="#FFFFFF"/><circle cx="16" cy="7" r="1" fill="#FFFFFF"/><circle cx="13" cy="10" r="1" fill="#FFFFFF"/></svg>',
+			'DE' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="4.66" fill="#000000" rx="2"/><rect y="4.66" width="20" height="4.66" fill="#DD0000"/><rect y="9.33" width="20" height="4.67" fill="#FFCE00"/></svg>',
+			'FR' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="6.6" height="14" fill="#002654" rx="2"/><rect x="6.6" width="6.8" height="14" fill="#FFFFFF"/><rect x="13.4" width="6.6" height="14" fill="#CE1126"/></svg>',
+			'IT' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="6.6" height="14" fill="#009246" rx="2"/><rect x="6.6" width="6.8" height="14" fill="#FFFFFF"/><rect x="13.4" width="6.6" height="14" fill="#CE2B37"/></svg>',
+			'ES' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="3.5" fill="#AA151B" rx="2"/><rect y="3.5" width="20" height="7" fill="#F1BF00"/><rect y="10.5" width="20" height="3.5" fill="#AA151B"/></svg>',
+			'NL' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="4.66" fill="#AE1C28" rx="2"/><rect y="4.66" width="20" height="4.66" fill="#FFFFFF"/><rect y="9.33" width="20" height="4.67" fill="#21468B"/></svg>',
+			'BR' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#009C3B" rx="2"/><polygon points="10,2 18,7 10,12 2,7" fill="#FEDF00"/><circle cx="10" cy="7" r="2.5" fill="#002776"/></svg>',
+			'IN' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="4.66" fill="#FF9933" rx="2"/><rect y="4.66" width="20" height="4.66" fill="#FFFFFF"/><rect y="9.33" width="20" height="4.67" fill="#138808"/><circle cx="10" cy="7" r="1.8" fill="#000080"/></svg>',
+			'CN' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#DE2910" rx="2"/><polygon points="4,2.5 4.6,4.2 6.2,4.2 4.9,5.2 5.4,6.8 4,5.8 2.6,6.8 3.1,5.2 1.8,4.2 3.4,4.2" fill="#FFDE00"/></svg>',
+			'JP' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#FFFFFF" rx="2"/><circle cx="10" cy="7" r="4" fill="#BC002D"/></svg>',
+			'KR' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#FFFFFF" rx="2"/><circle cx="10" cy="7" r="3.5" fill="#CD2E3A"/><path d="M10 7a3.5 3.5 0 0 1 0 3.5 3.5 3.5 0 0 0 0-7z" fill="#0047A0"/></svg>',
+			'MX' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="6.6" height="14" fill="#006847" rx="2"/><rect x="6.6" width="6.8" height="14" fill="#FFFFFF"/><rect x="13.4" width="6.6" height="14" fill="#CE1126"/><circle cx="10" cy="7" r="1.5" fill="#8B5A2B"/></svg>',
+			'AE' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect y="0" width="20" height="4.66" fill="#00732F" rx="2"/><rect y="4.66" width="20" height="4.66" fill="#FFFFFF"/><rect y="9.33" width="20" height="4.67" fill="#000000"/><rect width="5" height="14" fill="#FF0000"/></svg>',
+			'SA' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#006C35" rx="2"/><rect x="4" y="6.2" width="12" height="1.6" fill="#FFFFFF"/></svg>',
+			'SG' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="7" fill="#ED2939" rx="2"/><rect y="7" width="20" height="7" fill="#FFFFFF"/><circle cx="4.5" cy="3.5" r="2.2" fill="#FFFFFF"/><circle cx="5.2" cy="3.5" r="1.8" fill="#ED2939"/></svg>',
+			'PK' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="5" height="14" fill="#FFFFFF" rx="2"/><rect x="5" width="15" height="14" fill="#01411C"/><circle cx="12" cy="7" r="3.2" fill="#FFFFFF"/><circle cx="13" cy="6.4" r="2.7" fill="#01411C"/></svg>',
+			'ZA' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="7" fill="#E03C31" rx="2"/><rect y="7" width="20" height="7" fill="#001489"/><polygon points="0,0 8,7 0,14" fill="#000000"/><path d="M0 0l8.5 7-8.5 7h3l7-5.5v-3l-7-5.5z" fill="#FFB81C"/><path d="M8 5.5h12v3h-12z" fill="#007749"/></svg>',
+			'TR' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#E30A17" rx="2"/><circle cx="8" cy="7" r="3.5" fill="#FFFFFF"/><circle cx="9" cy="7" r="2.8" fill="#E30A17"/><polygon points="12.5,5.5 13.5,7 15,7 13.8,8 14.2,9.5 13,8.5 11.8,9.5 12.2,8 11,7 12.5,7" fill="#FFFFFF"/></svg>',
+			'SE' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#005293" rx="2"/><rect x="6" width="3" height="14" fill="#FECB00"/><rect y="5.5" width="20" height="3" fill="#FECB00"/></svg>',
+			'CH' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#D52B1E" rx="2"/><rect x="8.5" y="3" width="3" height="8" fill="#FFFFFF"/><rect x="6" y="5.5" width="8" height="3" fill="#FFFFFF"/></svg>',
+			'PL' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="7" fill="#FFFFFF" rx="2"/><rect y="7" width="20" height="7" fill="#DC143C"/></svg>',
+			'AR' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="4.66" fill="#74ACDF" rx="2"/><rect y="4.66" width="20" height="4.66" fill="#FFFFFF"/><rect y="9.33" width="20" height="4.67" fill="#74ACDF"/><circle cx="10" cy="7" r="1.6" fill="#F6B40E"/></svg>',
+			'BE' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="6.6" height="14" fill="#000000" rx="2"/><rect x="6.6" width="6.8" height="14" fill="#FDDA24"/><rect x="13.4" width="6.6" height="14" fill="#EF3340"/></svg>',
+			'AT' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="4.66" fill="#ED2939" rx="2"/><rect y="4.66" width="20" height="4.66" fill="#FFFFFF"/><rect y="9.33" width="20" height="4.67" fill="#ED2939"/></svg>',
+			'NO' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#BA0C2F" rx="2"/><rect x="5.5" width="4" height="14" fill="#FFFFFF"/><rect y="5" width="20" height="4" fill="#FFFFFF"/><rect x="6.5" width="2" height="14" fill="#00205B"/><rect y="6" width="20" height="2" fill="#00205B"/></svg>',
+			'DK' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#C60C30" rx="2"/><rect x="6" width="2.5" height="14" fill="#FFFFFF"/><rect y="5.7" width="20" height="2.5" fill="#FFFFFF"/></svg>',
+			'FI' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#FFFFFF" rx="2"/><rect x="6" width="3" height="14" fill="#002F6C"/><rect y="5.5" width="20" height="3" fill="#002F6C"/></svg>',
+			'IE' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="6.6" height="14" fill="#169B62" rx="2"/><rect x="6.6" width="6.8" height="14" fill="#FFFFFF"/><rect x="13.4" width="6.6" height="14" fill="#FF883E"/></svg>',
+			'NZ' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#00247D" rx="2"/><circle cx="14" cy="4" r="1.1" fill="#CC142B"/><circle cx="16.5" cy="7" r="1.1" fill="#CC142B"/><circle cx="13" cy="10" r="1.1" fill="#CC142B"/></svg>',
+			'PT' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="8" height="14" fill="#046A38" rx="2"/><rect x="8" width="12" height="14" fill="#DA291C"/><circle cx="8" cy="7" r="2.5" fill="#FFE900"/></svg>',
+			'GR' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#0D5EAF" rx="2"/><rect y="1.5" width="20" height="1.5" fill="#FFFFFF"/><rect y="4.6" width="20" height="1.5" fill="#FFFFFF"/><rect y="7.7" width="20" height="1.5" fill="#FFFFFF"/><rect y="10.8" width="20" height="1.5" fill="#FFFFFF"/><rect width="7.5" height="7.7" fill="#0D5EAF"/><rect x="3" width="1.5" height="7.7" fill="#FFFFFF"/><rect y="3.1" width="7.5" height="1.5" fill="#FFFFFF"/></svg>',
+			'IL' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#FFFFFF" rx="2"/><rect y="1.5" width="20" height="2" fill="#0038B8"/><rect y="10.5" width="20" height="2" fill="#0038B8"/><polygon points="10,4.5 12,8 8,8" stroke="#0038B8" stroke-width="0.7" fill="none"/><polygon points="10,9 12,5.5 8,5.5" stroke="#0038B8" stroke-width="0.7" fill="none"/></svg>',
+			'HK' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#C8102E" rx="2"/><circle cx="10" cy="7" r="3" fill="#FFFFFF"/></svg>',
+			'MY' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#CC0000" rx="2"/><rect y="2" width="20" height="2" fill="#FFFFFF"/><rect y="6" width="20" height="2" fill="#FFFFFF"/><rect y="10" width="20" height="2" fill="#FFFFFF"/><rect width="10" height="8" fill="#010066"/><circle cx="5" cy="4" r="2.5" fill="#FFCC00"/><circle cx="5.8" cy="4" r="2.1" fill="#010066"/></svg>',
+			'PH' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="7" fill="#0038A8" rx="2"/><rect y="7" width="20" height="7" fill="#CE1126"/><polygon points="0,0 8,7 0,14" fill="#FFFFFF"/><circle cx="2.8" cy="7" r="1.3" fill="#FCD116"/></svg>',
+			'ID' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="7" fill="#CE1126" rx="2"/><rect y="7" width="20" height="7" fill="#FFFFFF"/></svg>',
+			'TH' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#A51931" rx="2"/><rect y="2.3" width="20" height="9.4" fill="#F4F5F8"/><rect y="4.6" width="20" height="4.8" fill="#2D2A4A"/></svg>',
+			'VN' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" fill="#DA251D" rx="2"/><polygon points="10,3.5 11.2,7.2 14.8,7.2 11.9,9.4 13,13 10,10.8 7,13 8.1,9.4 5.2,7.2 8.8,7.2" fill="#FFFF00"/></svg>',
+			'EG' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="4.66" fill="#CE1126" rx="2"/><rect y="4.66" width="20" height="4.66" fill="#FFFFFF"/><rect y="9.33" width="20" height="4.67" fill="#000000"/><circle cx="10" cy="7" r="1.3" fill="#C09A3E"/></svg>',
+			'NG' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="6.6" height="14" fill="#008751" rx="2"/><rect x="6.6" width="6.8" height="14" fill="#FFFFFF"/><rect x="13.4" width="6.6" height="14" fill="#008751"/></svg>',
+			'KE' => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="4" fill="#000000" rx="2"/><rect y="4" width="20" height="1" fill="#FFFFFF"/><rect y="5" width="20" height="4" fill="#922529"/><rect y="9" width="20" height="1" fill="#FFFFFF"/><rect y="10" width="20" height="4" fill="#006600"/><ellipse cx="10" cy="7" rx="2" ry="3.5" fill="#922529"/><ellipse cx="10" cy="7" rx="0.5" ry="3.5" fill="#FFFFFF"/></svg>',
+			default => '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true"><rect width="20" height="14" rx="2" fill="#334155"/><text x="10" y="10" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="7" font-weight="700" fill="#FFFFFF" text-anchor="middle">' . esc_html(substr($country, 0, 2)) . '</text></svg>',
+		};
 	}
 
 	/**
@@ -528,7 +726,7 @@ final class Renderer {
 	}
 
 	/**
-	 * @param array<string,mixed> $field Field.
+	 * @param array<string,mixed> $field Repeater.
 	 */
 	private function render_repeater(array $field, string $name): void {
 		$count = max((int) ($field['minRows'] ?? 0), (int) ($field['defaultRows'] ?? 1));

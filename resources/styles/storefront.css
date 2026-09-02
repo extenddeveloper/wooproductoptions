@@ -110,7 +110,7 @@
 
 .wof-field.is-invalid {
 	border-color: var(--wof-danger);
-	box-shadow: 0 0 0 3px color-mix(in srgb,var(--wof-danger) 12%,transparent);
+	box-shadow: none !important;
 }
 
 .wof-field.is-disabled {
@@ -156,7 +156,7 @@
 	display: none;
 }
 
-.wof-field :where(input[type=text],input[type=password],input[type=tel],input[type=email],input[type=url],input[type=number],input[type=date],input[type=time],input[type=datetime-local],select,textarea) {
+.wof-field :where(input[type=text],input[type=password],input[type=tel],input[type=email],input[type=url],input[type=number]:not(.wof-choice-qty-input),input[type=date],input[type=time],input[type=datetime-local],select,textarea) {
 	background: var(--wof-surface);
 	border: 1px solid var(--wof-border);
 	border-radius: 9px;
@@ -1901,4 +1901,350 @@
 .wof-configurator .wof-image-swatch-item__label {
 	color: var(--wof-text) !important;
 	font-family: var(--wof-font) !important;
+}
+
+/* --- New Options Enhancements --- */
+.wof-fields {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 0.85rem !important;
+}
+
+.wof-field {
+	width: 100%;
+	flex: 0 0 100%;
+	box-sizing: border-box;
+}
+
+.wof-field--width-33 {
+	width: calc(33.333% - 0.57rem) !important;
+	flex: 0 0 calc(33.333% - 0.57rem) !important;
+}
+
+.wof-field--width-50 {
+	width: calc(50% - 0.43rem) !important;
+	flex: 0 0 calc(50% - 0.43rem) !important;
+}
+
+.wof-field--width-66 {
+	width: calc(66.666% - 0.29rem) !important;
+	flex: 0 0 calc(66.666% - 0.29rem) !important;
+}
+
+.wof-field--width-100 {
+	width: 100% !important;
+	flex: 0 0 100% !important;
+}
+
+@media (max-width: 600px) {
+	.wof-field--width-33,
+	.wof-field--width-50,
+	.wof-field--width-66 {
+		width: 100% !important;
+		flex: 0 0 100% !important;
+	}
+}
+
+.wof-phone-field-wrap {
+	display: flex;
+	align-items: stretch;
+	gap: 8px;
+}
+
+.wof-phone-flag {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0 12px;
+	background: var(--wof-surface);
+	border: 1.5px solid var(--wof-border);
+	border-radius: var(--wof-radius);
+	font-size: 0.88rem;
+	font-weight: 600;
+	color: var(--wof-text);
+	white-space: nowrap;
+	user-select: none;
+}
+
+.wof-phone-flag__dialcode {
+	color: var(--wof-muted);
+	font-size: 0.82rem;
+}
+
+.wof-phone-field-wrap input {
+	flex: 1;
+	min-width: 0;
+}
+
+.wof-choice-qty-wrap {
+	display: inline-flex;
+	align-items: center;
+	margin-top: 6px;
+}
+
+.wof-choice-qty-input {
+	width: 60px !important;
+	padding: 2px 6px !important;
+	font-size: 0.82rem !important;
+	height: 28px !important;
+	border-radius: 4px !important;
+	text-align: center;
+}
+
+/* --- Choice Quantity and Options Enhancements --- */
+.wof-fields {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 0.85rem !important;
+}
+
+.wof-field {
+	width: 100%;
+	flex: 0 0 100%;
+	box-sizing: border-box;
+}
+
+.wof-field--width-33 {
+	width: calc(33.333% - 0.57rem) !important;
+	flex: 0 0 calc(33.333% - 0.57rem) !important;
+}
+
+.wof-field--width-50 {
+	width: calc(50% - 0.43rem) !important;
+	flex: 0 0 calc(50% - 0.43rem) !important;
+}
+
+.wof-field--width-66 {
+	width: calc(66.666% - 0.29rem) !important;
+	flex: 0 0 calc(66.666% - 0.29rem) !important;
+}
+
+.wof-field--width-100 {
+	width: 100% !important;
+	flex: 0 0 100% !important;
+}
+
+@media (max-width: 600px) {
+	.wof-field--width-33,
+	.wof-field--width-50,
+	.wof-field--width-66 {
+		width: 100% !important;
+		flex: 0 0 100% !important;
+	}
+}
+
+/* --- Unified International Phone Field --- */
+.wof-phone-field-wrap {
+	display: flex !important;
+	align-items: stretch !important;
+	background: var(--wof-surface, #ffffff) !important;
+	border: 1.5px solid var(--wof-border, #d8deea) !important;
+	border-radius: var(--wof-radius, 8px) !important;
+	height: 44px !important;
+	min-height: 44px !important;
+	overflow: hidden !important;
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+	box-sizing: border-box !important;
+	position: relative !important;
+}
+
+.wof-phone-field-wrap:focus-within {
+	border-color: var(--wof-primary, #5B4FF5) !important;
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--wof-primary, #5B4FF5) 15%, transparent) !important;
+}
+
+.wof-phone-picker {
+	position: relative !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	background: color-mix(in srgb, var(--wof-surface, #ffffff) 94%, var(--wof-text, #000)) !important;
+	border-right: 1.5px solid var(--wof-border, #d8deea) !important;
+	cursor: pointer !important;
+	padding: 0 10px !important;
+	flex-shrink: 0 !important;
+	user-select: none !important;
+}
+
+.wof-phone-picker:hover {
+	background: color-mix(in srgb, var(--wof-surface, #ffffff) 90%, var(--wof-text, #000)) !important;
+}
+
+.wof-phone-picker__display {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	font-size: 0.88rem !important;
+	font-weight: 600 !important;
+	color: var(--wof-text, #172033) !important;
+	pointer-events: none !important;
+}
+
+.wof-flag-svg {
+	display: block !important;
+	border-radius: 2px !important;
+	box-shadow: 0 0 1px rgba(0, 0, 0, 0.35) !important;
+	flex-shrink: 0 !important;
+}
+
+.wof-phone-picker__dial {
+	font-size: 0.82rem !important;
+	color: var(--wof-muted, #64748b) !important;
+	font-weight: 500 !important;
+}
+
+.wof-phone-picker__chevron {
+	color: var(--wof-muted, #64748b) !important;
+	flex-shrink: 0 !important;
+	display: block !important;
+}
+
+.wof-phone-country-select {
+	position: absolute !important;
+	inset: 0 !important;
+	width: 100% !important;
+	height: 100% !important;
+	opacity: 0 !important;
+	cursor: pointer !important;
+	z-index: 5 !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border: none !important;
+}
+
+.wof-phone-number-input {
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	height: 100% !important;
+	min-height: 100% !important;
+	padding: 0 14px !important;
+	font-size: max(15px, 0.92rem) !important;
+	background: transparent !important;
+	color: var(--wof-text, #172033) !important;
+	flex: 1 !important;
+	min-width: 0 !important;
+	outline: none !important;
+}
+
+/* Swatch Item Checkmark (Top-Right Corner Circular Badge with SVG Check) */
+.wof-swatch-item__color,
+.wof-image-swatch-item__thumb {
+	position: relative !important;
+}
+
+.wof-swatch-item__check,
+.wof-image-swatch-item__check {
+	align-items: center !important;
+	background: var(--wof-primary, #172033) !important;
+	border: 1.5px solid #ffffff !important;
+	border-radius: 50% !important;
+	color: #ffffff !important;
+	display: none !important;
+	height: 18px !important;
+	width: 18px !important;
+	justify-content: center !important;
+	position: absolute !important;
+	top: 2px !important;
+	right: 2px !important;
+	left: auto !important;
+	bottom: auto !important;
+	transform: none !important;
+	z-index: 5 !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+	padding: 0 !important;
+}
+
+.wof-swatch-item__check svg,
+.wof-image-swatch-item__check svg {
+	width: 11px !important;
+	height: 11px !important;
+	display: block !important;
+}
+
+.wof-swatch-item:has(input:checked) .wof-swatch-item__check,
+.wof-image-swatch-item:has(input:checked) .wof-image-swatch-item__check {
+	display: flex !important;
+}
+
+.wof-image-swatch-item:has(input:checked) .wof-image-swatch-item__thumb {
+	border-color: var(--wof-primary, #172033) !important;
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-primary, #172033) 25%, transparent) !important;
+}
+
+/* Swatch Items Horizontal Alignment & Fixed Spacing */
+.wof-swatches,
+.wof-image-swatches {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	align-items: stretch !important;
+	gap: 0.85rem !important;
+}
+
+.wof-swatch-item,
+.wof-image-swatch-item {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	justify-content: flex-start !important;
+	min-width: 68px !important;
+	text-align: center !important;
+	margin: 0 !important;
+}
+
+.wof-swatch-item__label,
+.wof-image-swatch-item__label {
+	min-height: 1.35em !important;
+	display: block !important;
+	text-align: center !important;
+	margin-top: 0.45rem !important;
+	font-size: 0.82rem !important;
+	line-height: 1.3 !important;
+}
+
+.wof-swatch-item__price,
+.wof-image-swatch-item__price {
+	min-height: 1.35em !important;
+	display: block !important;
+	text-align: center !important;
+	margin-top: 2px !important;
+	font-size: 0.78rem !important;
+	line-height: 1.3 !important;
+}
+
+/* Fixed Quantity Input (Height max 30px, standard 28px, clean rectangular border) */
+.wof-choice-qty-wrap {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	margin-top: auto !important;
+	padding-top: 8px !important;
+	width: 100% !important;
+	max-height: 30px !important;
+}
+
+.wof-field input[type="number"].wof-choice-qty-input,
+.wof-choice-qty-input {
+	height: 28px !important;
+	min-height: 28px !important;
+	max-height: 30px !important;
+	width: 52px !important;
+	max-width: 52px !important;
+	padding: 2px 4px !important;
+	font-size: 13px !important;
+	line-height: 22px !important;
+	text-align: center !important;
+	border: 1px solid var(--wof-border, #ccc) !important;
+	border-radius: 3px !important;
+	background: var(--wof-surface, #fff) !important;
+	color: var(--wof-text, #172033) !important;
+	box-shadow: none !important;
+	box-sizing: border-box !important;
+	margin: 0 auto !important;
+}
+
+.is-choice-disabled {
+	opacity: 0.45 !important;
+	pointer-events: none !important;
+	filter: grayscale(0.6) !important;
 }

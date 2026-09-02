@@ -16,19 +16,102 @@
         savedUuid = "";
         productImageSnapshot = null;
         constructor(e) { this.root = e; const t = e.querySelector("[data-wof-config]"); if (!t?.textContent)
-            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.scheduleQuote(50); }
-        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; t.matches("[data-wof-upload-input]") ? this.upload(t) : this.selectionChanged(t); }), this.root.addEventListener("click", e => { const t = e.target, o = t.closest("[data-wof-upload-remove]"); if (o)
+            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
+        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target, o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
             return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), this.form?.addEventListener("submit", e => { const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy") || (e.preventDefault(), this.requestQuote(!0)); }), this.form && window.jQuery) {
             const e = () => this.scheduleQuote(50);
             window.jQuery(this.form).on("found_variation.wooptionsfic reset_data.wooptionsfic", e);
         } }
-        selectionChanged(e) { this.updateColorOutputs(), this.updateProductImage(e); if (this.clearFieldError(e.closest("[data-wof-field]")), this.scheduleQuote(), !this.interactionRecorded) {
+        countryFlagSvg(country) {
+            const c = String(country || 'US').toUpperCase();
+            const s = 'border-radius:2px;overflow:hidden;flex-shrink:0;display:block;box-shadow:0 0 1px rgba(0,0,0,0.3);';
+            if (c === 'BD') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#006A4E" /><circle cx="9" cy="7" r="4.2" fill="#F42A41" /></svg>';
+            if (c === 'US') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#B22234" /><rect y="2.1" width="20" height="2" fill="#FFFFFF" /><rect y="6.3" width="20" height="2" fill="#FFFFFF" /><rect y="10.5" width="20" height="2" fill="#FFFFFF" /><rect width="8" height="7.2" fill="#3C3B6E" /><circle cx="4" cy="3.6" r="1.5" fill="#FFFFFF" /></svg>';
+            if (c === 'GB') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#012169" /><path d="M0 0L20 14M20 0L0 14" stroke="#FFFFFF" stroke-width="2.5" /><path d="M0 0L20 14M20 0L0 14" stroke="#C8102E" stroke-width="1.2" /><path d="M10 0v14M0 7h20" stroke="#FFFFFF" stroke-width="4" /><path d="M10 0v14M0 7h20" stroke="#C8102E" stroke-width="2.2" /></svg>';
+            if (c === 'CA') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#D80027" /><rect x="5" width="10" height="14" fill="#FFFFFF" /><polygon points="10,2.5 11,5.5 13.5,5 12,7 13.5,8.5 11,8 10.5,11 9.5,11 9,8 6.5,8.5 8,7 6.5,5 9,5.5" fill="#D80027" /></svg>';
+            if (c === 'AU') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#00008B" /><circle cx="14" cy="4" r="1" fill="#FFFFFF" /><circle cx="16" cy="7" r="1" fill="#FFFFFF" /><circle cx="13" cy="10" r="1" fill="#FFFFFF" /></svg>';
+            if (c === 'DE') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="4.66" fill="#000000" /><rect y="4.66" width="20" height="4.66" fill="#DD0000" /><rect y="9.33" width="20" height="4.67" fill="#FFCE00" /></svg>';
+            if (c === 'FR') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="6.6" height="14" fill="#002654" /><rect x="6.6" width="6.8" height="14" fill="#FFFFFF" /><rect x="13.4" width="6.6" height="14" fill="#CE1126" /></svg>';
+            if (c === 'IT') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="6.6" height="14" fill="#009246" /><rect x="6.6" width="6.8" height="14" fill="#FFFFFF" /><rect x="13.4" width="6.6" height="14" fill="#CE2B37" /></svg>';
+            if (c === 'ES') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="3.5" fill="#AA151B" /><rect y="3.5" width="20" height="7" fill="#F1BF00" /><rect y="10.5" width="20" height="3.5" fill="#AA151B" /></svg>';
+            if (c === 'NL') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="4.66" fill="#AE1C28" /><rect y="4.66" width="20" height="4.66" fill="#FFFFFF" /><rect y="9.33" width="20" height="4.67" fill="#21468B" /></svg>';
+            if (c === 'BR') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#009C3B" /><polygon points="10,2 18,7 10,12 2,7" fill="#FEDF00" /><circle cx="10" cy="7" r="2.5" fill="#002776" /></svg>';
+            if (c === 'IN') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="4.66" fill="#FF9933" /><rect y="4.66" width="20" height="4.66" fill="#FFFFFF" /><rect y="9.33" width="20" height="4.67" fill="#138808" /><circle cx="10" cy="7" r="1.8" fill="#000080" /></svg>';
+            if (c === 'CN') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#DE2910" /><polygon points="4,2.5 4.6,4.2 6.2,4.2 4.9,5.2 5.4,6.8 4,5.8 2.6,6.8 3.1,5.2 1.8,4.2 3.4,4.2" fill="#FFDE00" /></svg>';
+            if (c === 'JP') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#FFFFFF" /><circle cx="10" cy="7" r="4" fill="#BC002D" /></svg>';
+            if (c === 'KR') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#FFFFFF" /><circle cx="10" cy="7" r="3.5" fill="#CD2E3A" /><path d="M10 7a3.5 3.5 0 0 1 0 3.5 3.5 3.5 0 0 0 0-7z" fill="#0047A0" /></svg>';
+            if (c === 'MX') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="6.6" height="14" fill="#006847" /><rect x="6.6" width="6.8" height="14" fill="#FFFFFF" /><rect x="13.4" width="6.6" height="14" fill="#CE1126" /><circle cx="10" cy="7" r="1.5" fill="#8B5A2B" /></svg>';
+            if (c === 'AE') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect y="0" width="20" height="4.66" fill="#00732F" /><rect y="4.66" width="20" height="4.66" fill="#FFFFFF" /><rect y="9.33" width="20" height="4.67" fill="#000000" /><rect width="5" height="14" fill="#FF0000" /></svg>';
+            if (c === 'SA') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#006C35" /><rect x="4" y="6.2" width="12" height="1.6" fill="#FFFFFF" /></svg>';
+            if (c === 'SG') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="7" fill="#ED2939" /><rect y="7" width="20" height="7" fill="#FFFFFF" /><circle cx="4.5" cy="3.5" r="2.2" fill="#FFFFFF" /><circle cx="5.2" cy="3.5" r="1.8" fill="#ED2939" /></svg>';
+            if (c === 'PK') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="5" height="14" fill="#FFFFFF" /><rect x="5" width="15" height="14" fill="#01411C" /><circle cx="12" cy="7" r="3.2" fill="#FFFFFF" /><circle cx="13" cy="6.4" r="2.7" fill="#01411C" /></svg>';
+            if (c === 'ZA') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="7" fill="#E03C31" /><rect y="7" width="20" height="7" fill="#001489" /><polygon points="0,0 8,7 0,14" fill="#000000" /><path d="M0 0l8.5 7-8.5 7h3l7-5.5v-3l-7-5.5z" fill="#FFB81C" /><path d="M8 5.5h12v3h-12z" fill="#007749" /></svg>';
+            if (c === 'TR') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#E30A17" /><circle cx="8" cy="7" r="3.5" fill="#FFFFFF" /><circle cx="9" cy="7" r="2.8" fill="#E30A17" /><polygon points="12.5,5.5 13.5,7 15,7 13.8,8 14.2,9.5 13,8.5 11.8,9.5 12.2,8 11,7 12.5,7" fill="#FFFFFF" /></svg>';
+            if (c === 'SE') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#005293" /><rect x="6" width="3" height="14" fill="#FECB00" /><rect y="5.5" width="20" height="3" fill="#FECB00" /></svg>';
+            if (c === 'CH') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#D52B1E" /><rect x="8.5" y="3" width="3" height="8" fill="#FFFFFF" /><rect x="6" y="5.5" width="8" height="3" fill="#FFFFFF" /></svg>';
+            if (c === 'PL') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="7" fill="#FFFFFF" style="' + s + '" /><rect y="7" width="20" height="7" fill="#DC143C" /></svg>';
+            if (c === 'AR') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="4.66" fill="#74ACDF" /><rect y="4.66" width="20" height="4.66" fill="#FFFFFF" /><rect y="9.33" width="20" height="4.67" fill="#74ACDF" /><circle cx="10" cy="7" r="1.6" fill="#F6B40E" /></svg>';
+            if (c === 'BE') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="6.6" height="14" fill="#000000" /><rect x="6.6" width="6.8" height="14" fill="#FDDA24" /><rect x="13.4" width="6.6" height="14" fill="#EF3340" /></svg>';
+            if (c === 'AT') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="4.66" fill="#ED2939" /><rect y="4.66" width="20" height="4.66" fill="#FFFFFF" /><rect y="9.33" width="20" height="4.67" fill="#ED2939" /></svg>';
+            if (c === 'NO') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#BA0C2F" /><rect x="5.5" width="4" height="14" fill="#FFFFFF" /><rect y="5" width="20" height="4" fill="#FFFFFF" /><rect x="6.5" width="2" height="14" fill="#00205B" /><rect y="6" width="20" height="2" fill="#00205B" /></svg>';
+            if (c === 'DK') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#C60C30" /><rect x="6" width="2.5" height="14" fill="#FFFFFF" /><rect y="5.7" width="20" height="2.5" fill="#FFFFFF" /></svg>';
+            if (c === 'FI') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#FFFFFF" /><rect x="6" width="3" height="14" fill="#002F6C" /><rect y="5.5" width="20" height="3" fill="#002F6C" /></svg>';
+            if (c === 'IE') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="6.6" height="14" fill="#169B62" /><rect x="6.6" width="6.8" height="14" fill="#FFFFFF" /><rect x="13.4" width="6.6" height="14" fill="#FF883E" /></svg>';
+            if (c === 'NZ') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#00247D" /><circle cx="14" cy="4" r="1.1" fill="#CC142B" /><circle cx="16.5" cy="7" r="1.1" fill="#CC142B" /><circle cx="13" cy="10" r="1.1" fill="#CC142B" /></svg>';
+            if (c === 'PT') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="8" height="14" fill="#046A38" /><rect x="8" width="12" height="14" fill="#DA291C" /><circle cx="8" cy="7" r="2.5" fill="#FFE900" /></svg>';
+            if (c === 'GR') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#0D5EAF" /><rect y="1.5" width="20" height="1.5" fill="#FFFFFF" /><rect y="4.6" width="20" height="1.5" fill="#FFFFFF" /><rect y="7.7" width="20" height="1.5" fill="#FFFFFF" /><rect y="10.8" width="20" height="1.5" fill="#FFFFFF" /><rect width="7.5" height="7.7" fill="#0D5EAF" /><rect x="3" width="1.5" height="7.7" fill="#FFFFFF" /><rect y="3.1" width="7.5" height="1.5" fill="#FFFFFF" /></svg>';
+            if (c === 'IL') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#FFFFFF" /><rect y="1.5" width="20" height="2" fill="#0038B8" /><rect y="10.5" width="20" height="2" fill="#0038B8" /><polygon points="10,4.5 12,8 8,8" stroke="#0038B8" stroke-width="0.7" fill="none" /><polygon points="10,9 12,5.5 8,5.5" stroke="#0038B8" stroke-width="0.7" fill="none" /></svg>';
+            if (c === 'HK') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#C8102E" /><circle cx="10" cy="7" r="3" fill="#FFFFFF" /></svg>';
+            if (c === 'MY') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#CC0000" /><rect y="2" width="20" height="2" fill="#FFFFFF" /><rect y="6" width="20" height="2" fill="#FFFFFF" /><rect y="10" width="20" height="2" fill="#FFFFFF" /><rect width="10" height="8" fill="#010066" /><circle cx="5" cy="4" r="2.5" fill="#FFCC00" /><circle cx="5.8" cy="4" r="2.1" fill="#010066" /></svg>';
+            if (c === 'PH') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="7" fill="#0038A8" style="' + s + '" /><rect y="7" width="20" height="7" fill="#CE1126" /><polygon points="0,0 8,7 0,14" fill="#FFFFFF" /><circle cx="2.8" cy="7" r="1.3" fill="#FCD116" /></svg>';
+            if (c === 'ID') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="7" fill="#CE1126" style="' + s + '" /><rect y="7" width="20" height="7" fill="#FFFFFF" /></svg>';
+            if (c === 'TH') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#A51931" /><rect y="2.3" width="20" height="9.4" fill="#F4F5F8" /><rect y="4.6" width="20" height="4.8" fill="#2D2A4A" /></svg>';
+            if (c === 'VN') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" fill="#DA251D" /><polygon points="10,3.5 11.2,7.2 14.8,7.2 11.9,9.4 13,13 10,10.8 7,13 8.1,9.4 5.2,7.2 8.8,7.2" fill="#FFFF00" /></svg>';
+            if (c === 'EG') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="4.66" fill="#CE1126" /><rect y="4.66" width="20" height="4.66" fill="#FFFFFF" /><rect y="9.33" width="20" height="4.67" fill="#000000" /><circle cx="10" cy="7" r="1.3" fill="#C09A3E" /></svg>';
+            if (c === 'NG') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="6.6" height="14" fill="#008751" /><rect x="6.6" width="6.8" height="14" fill="#FFFFFF" /><rect x="13.4" width="6.6" height="14" fill="#008751" /></svg>';
+            if (c === 'KE') return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="4" fill="#000000" /><rect y="4" width="20" height="1" fill="#FFFFFF" /><rect y="5" width="20" height="4" fill="#922529" /><rect y="9" width="20" height="1" fill="#FFFFFF" /><rect y="10" width="20" height="4" fill="#006600" /><ellipse cx="10" cy="7" rx="2" ry="3.5" fill="#922529" /><ellipse cx="10" cy="7" rx="0.5" ry="3.5" fill="#FFFFFF" /></svg>';
+            return '<svg class="wof-flag-svg" viewBox="0 0 20 14" width="20" height="14" aria-hidden="true" style="' + s + '"><rect width="20" height="14" rx="2" fill="#334155" /><text x="10" y="10" font-family="-apple-system,BlinkMacSystemFont,sans-serif" font-size="7" font-weight="700" fill="#FFFFFF" text-anchor="middle">' + c.slice(0, 2) + '</text></svg>';
+        }
+        updatePhoneCountry(selectElem) {
+            const wrap = selectElem.closest("[data-wof-phone-wrap]");
+            if (!wrap) return;
+            const option = selectElem.selectedOptions[0];
+            if (!option) return;
+            const code = option.value;
+            const dial = option.dataset.dial || "";
+            const countrySlot = wrap.querySelector("[data-wof-country-slot]");
+            if (countrySlot) countrySlot.textContent = code;
+            const dialSlot = wrap.querySelector("[data-wof-dial-slot]");
+            if (dialSlot) dialSlot.textContent = dial;
+            const flagSlot = wrap.querySelector("[data-wof-flag-slot]");
+            if (flagSlot) flagSlot.innerHTML = this.countryFlagSvg(code);
+        }
+        selectionChanged(e) { this.updateColorOutputs(), this.updateProductImage(e), this.enforceMaxChoices(); if (this.clearFieldError(e.closest("[data-wof-field]")), this.scheduleQuote(), !this.interactionRecorded) {
             this.interactionRecorded = !0;
             const t = e.closest("[data-wof-field]"), r = { setUuid: this.configuration.setUuid, revisionUuid: this.configuration.revisionUuid, variationId: this.variationId(), token: this.payload.token, fieldUuid: t?.dataset.wofField ?? "", choiceUuid: e.matches('input[type="radio"],input[type="checkbox"]') && /^[0-9a-f-]{36}$/i.test(e.value) ? e.value : "" };
             fetch(`${o}products/${this.productId()}/interaction`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r), credentials: "same-origin" }).catch(() => { });
         } }
+        enforceMaxChoices() {
+            this.root.querySelectorAll("[data-wof-max-choices]").forEach(fieldElem => {
+                const max = Number(fieldElem.dataset.wofMaxChoices || 0);
+                if (max <= 0) return;
+                const checkboxes = Array.from(fieldElem.querySelectorAll('input[type="checkbox"]'));
+                if (!checkboxes.length) return;
+                const checked = checkboxes.filter(cb => cb.checked);
+                const limitReached = checked.length >= max;
+                checkboxes.forEach(cb => {
+                    if (!cb.checked && "true" !== cb.dataset.wofFixedDisabled) {
+                        cb.disabled = limitReached;
+                        cb.closest("label")?.classList.toggle("is-choice-disabled", limitReached);
+                    } else if (cb.checked) {
+                        cb.disabled = false;
+                        cb.closest("label")?.classList.remove("is-choice-disabled");
+                    }
+                });
+            });
+        }
         scheduleQuote(e = 320) { window.clearTimeout(this.quoteTimer), this.quoteTimer = window.setTimeout(() => { this.requestQuote(); }, e); }
         async requestQuote(e = !1, r = !1) { const a = this.readSelection(); this.writeSelection(a); const i = JSON.stringify(a); this.aborter?.abort(), this.aborter = new AbortController, this.setPending(!0); try {
             const n = await fetch(`${o}products/${this.productId()}/quote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: this.payload.token, variationId: this.variationId(), quantity: this.quantity(), selection: a }), credentials: "same-origin", cache: "no-store", signal: this.aborter.signal }), s = await n.json().catch(() => ({}));
@@ -64,30 +147,134 @@
         readField(e, t) { const o = t.querySelector(`[data-wof-field="${r(e.uuid)}"]`); if (!o)
             return null; if ("repeater" === e.type)
             return Array.from(o.querySelectorAll(":scope [data-wof-row]")).map(t => { const o = {}; return (e.children ?? []).forEach(e => { o[e.uuid] = this.readField(e, t); }), { rowUuid: t.dataset.wofRow, values: o }; }); if ("checkbox" === e.type || "toggle" === e.type)
-            return Boolean(o.querySelector('input[type="checkbox"]:checked')); if ("checkbox_group" === e.type || e.multiple)
-            return Array.from(o.querySelectorAll('input[type="checkbox"]:checked')).map(e => e.value); if (["radio", "segmented", "color_swatch", "image_swatch"].includes(e.type))
-            return o.querySelector('input[type="radio"]:checked')?.value ?? ""; if ("product" === e.type)
+            return Boolean(o.querySelector('input[type="checkbox"]:checked')); if ("checkbox_group" === e.type || e.multiple) {
+                const checked = Array.from(o.querySelectorAll('input[type="checkbox"]:checked'));
+                return checked.map(input => input.value);
+            } if (["radio", "segmented", "color_swatch", "image_swatch"].includes(e.type)) {
+                return o.querySelector('input[type="radio"]:checked')?.value ?? "";
+            } if ("product" === e.type)
             return Array.from(o.querySelectorAll("input:checked")).map(e => e.value); if ("date_range" === e.type) {
             const e = o.querySelectorAll('input[type="date"]');
             return { start: e[0]?.value ?? "", end: e[1]?.value ?? "" };
+        } if ("tel" === e.type) {
+            const wrap = o.querySelector("[data-wof-phone-wrap]");
+            if (wrap) {
+                const select = wrap.querySelector("[data-wof-phone-select]");
+                const input = wrap.querySelector(".wof-phone-number-input");
+                const dial = select?.selectedOptions[0]?.dataset?.dial ?? "";
+                const num = input?.value ?? "";
+                return num ? (dial ? `${dial} ${num}` : num) : "";
+            }
+            return o.querySelector('input[type="tel"]')?.value ?? "";
         } return "file" === e.type ? Array.from(o.querySelectorAll("[data-wof-upload-ref]")).map(e => e.value).filter(Boolean) : o.querySelector('input:not([type="file"]), select, textarea')?.value ?? ""; }
         acceptsValue(e) { return !["heading", "paragraph", "help", "separator", "spacer", "formula", "calculated"].includes(e.type); }
         writeSelection(e) { const t = this.root.querySelector("[data-wof-selection-json]"); t && (t.value = JSON.stringify(e)); }
-        renderQuote(e, o) { if (e?.settings && (this.configuration.settings = { ...(this.configuration.settings ?? {}), ...e.settings }), e?.style && (this.configuration.style = e.style), e?.settings || e?.style)
-            this.applyConfigurationSettings(), this.applyConfigurationStyle(); if (this.clearAllErrors(), this.applyStates(e.states), !e.valid)
-            return this.renderErrors(e.errors, o), this.setAddToCartEnabled(!1), void this.setStatus(t.couldNotQuote, "error"); this.setAddToCartEnabled(!0), this.setStatus(t.confirmed, "confirmed"); const a = this.root.querySelector("[data-wof-total]"); a && e.price && (a.textContent = this.money(e.price.unitPrice.decimal, e.price.unitPrice.currency)); const i = this.root.querySelector("[data-wof-summary-rows]"), n = !1 !== this.configuration?.settings?.showPriceBreakdown; i && (i.hidden = !n, i.replaceChildren(), n && e.price?.contributions.forEach(e => { const t = document.createElement("div"), o = document.createElement("span"), a = document.createElement("strong"); o.textContent = e.label, a.textContent = this.money(e.rounded.decimal, e.rounded.currency), t.append(o, a), i.append(t); const n = this.root.querySelector(`[data-wof-calculated="${r(e.sourceUuid)}"]`); n && (n.value = a.textContent); })); }
-        applyStates(e) { Object.entries(e ?? {}).forEach(([e, t]) => { const o = this.root.querySelector(`[data-wof-field="${r(e)}"]`); o && (o.hidden = !t.visible, o.classList.toggle("is-disabled", !t.enabled), o.querySelectorAll("input, select, textarea").forEach(e => { const o = !!t.visible && !!t.enabled; e.disabled = !o || "true" === e.dataset.wofFixedDisabled, e.required = !1, t.required && o ? e.setAttribute("aria-required", "true") : e.removeAttribute("aria-required"); })); }); }
-        renderErrors(e, t) { const o = this.root.querySelector("[data-wof-errors]"), a = []; let i = null; if (e.forEach(e => { const t = e.fieldUuid ? this.root.querySelector(`[data-wof-field="${r(e.fieldUuid)}"]`) : null, o = this.errorText(e.code, e.label); if (t) {
+        renderQuote(e, o) {
+            if (e?.settings && (this.configuration.settings = { ...(this.configuration.settings ?? {}), ...e.settings }), e?.style && (this.configuration.style = e.style), e?.settings || e?.style)
+                this.applyConfigurationSettings(), this.applyConfigurationStyle();
+            if (this.clearAllErrors(), this.applyStates(e.states), !e.valid)
+                return this.renderErrors(e.errors, o), this.setAddToCartEnabled(!1), this.enforceMaxChoices(), void this.setStatus(t.couldNotQuote, "error");
+            this.setAddToCartEnabled(!0), this.setStatus(t.confirmed, "confirmed");
+            const a = this.root.querySelector("[data-wof-total]");
+            a && e.price && (a.textContent = this.money(e.price.unitPrice.decimal, e.price.unitPrice.currency));
+            const i = this.root.querySelector("[data-wof-summary-rows]"), n = !1 !== this.configuration?.settings?.showPriceBreakdown;
+            i && (i.hidden = !n, i.replaceChildren(), n && e.price?.contributions.forEach(e => {
+                const t = document.createElement("div"), o = document.createElement("span"), a = document.createElement("strong");
+                o.textContent = e.label, a.textContent = this.money(e.rounded.decimal, e.rounded.currency), t.append(o, a), i.append(t);
+                const n = this.root.querySelector(`[data-wof-calculated="${r(e.sourceUuid)}"]`);
+                n && (n.value = a.textContent);
+            }));
+            this.enforceMaxChoices();
+        }
+        applyStates(e) {
+            Object.entries(e ?? {}).forEach(([e, t]) => {
+                const o = this.root.querySelector(`[data-wof-field="${r(e)}"]`);
+                if (!o) return;
+                o.hidden = !t.visible;
+                o.classList.toggle("is-disabled", !t.enabled);
+                const isFieldActive = !!t.visible && !!t.enabled;
+                o.querySelectorAll("input, select, textarea").forEach(e => {
+                    e.disabled = !isFieldActive || "true" === e.dataset.wofFixedDisabled;
+                    e.required = !1;
+                    t.required && isFieldActive ? e.setAttribute("aria-required", "true") : e.removeAttribute("aria-required");
+                });
+            });
+            this.enforceMaxChoices();
+        }
+        renderErrors(e, t) { const o = this.root.querySelector("[data-wof-errors]"), a = []; let i = null; if (e.forEach(e => { const t = e.fieldUuid ? this.root.querySelector(`[data-wof-field="${r(e.fieldUuid)}"]`) : null, msg = this.errorText(e.code, e.label, e.params); if (t) {
             t.classList.add("is-invalid");
             const e = t.querySelector("[data-wof-field-error]");
-            e && (e.textContent = o), t.querySelector("input, select, textarea")?.setAttribute("aria-invalid", "true"), i ??= t;
+            e && (e.textContent = msg), t.querySelector("input, select, textarea")?.setAttribute("aria-invalid", "true"), i ??= t;
         }
         else
-            a.push(o); }), o && (o.hidden = 0 === a.length, o.textContent = a.join(" ")), t) {
+            a.push(msg); }), o && (o.hidden = 0 === a.length, o.textContent = a.join(" ")), t) {
             const e = i, t = e?.querySelector("input, select, textarea") ?? o;
             t?.focus();
         } }
-        errorText(e, t = "") { const o = t || "This option"; return e.includes("required") ? `${o} is required.` : e.includes("minimum") || e.includes("too_few") ? `${o} is below the allowed minimum.` : e.includes("maximum") || e.includes("too_many") ? `${o} exceeds the allowed maximum.` : e.includes("email") ? `Enter a valid email address for ${o}.` : e.includes("upload") ? `Check the private upload for ${o}.` : `Please check ${o}.`; }
+        errorText(code, label = "", params = {}) {
+            const name = label || "This option";
+            const min = params?.minimum ?? "";
+            const max = params?.maximum ?? "";
+
+            if (code === "field_required" || code === "required") {
+                return `${name} is required. Please select or enter a value.`;
+            }
+            if (code === "field_too_few_choices" || code === "too_few_choices") {
+                return min ? `${name}: Please select at least ${min} item${Number(min) > 1 ? "s" : ""}.` : `${name}: Please select more items.`;
+            }
+            if (code === "field_too_many_choices" || code === "too_many_choices") {
+                return max ? `${name} max allowed item ${max}.` : `${name} exceeds the allowed maximum.`;
+            }
+            if (code === "field_below_minimum" || code === "below_minimum") {
+                return min ? `${name}: Minimum allowed value is ${min}.` : `${name} is below the allowed minimum.`;
+            }
+            if (code === "field_above_maximum" || code === "above_maximum") {
+                return max ? `${name}: Maximum allowed value is ${max}.` : `${name} exceeds the allowed maximum.`;
+            }
+            if (code === "field_too_short" || code === "too_short") {
+                return min ? `${name}: Must be at least ${min} character${Number(min) > 1 ? "s" : ""}.` : `${name} is too short.`;
+            }
+            if (code === "field_too_long" || code === "too_long") {
+                return max ? `${name}: Cannot exceed ${max} character${Number(max) > 1 ? "s" : ""}.` : `${name} is too long.`;
+            }
+            if (code === "field_invalid_email" || code === "invalid_email") {
+                return `Please enter a valid email address for ${name}.`;
+            }
+            if (code === "field_invalid_url" || code === "invalid_url") {
+                return `Please enter a valid website URL for ${name}.`;
+            }
+            if (code === "field_invalid_color" || code === "invalid_color") {
+                return `Please select a valid color for ${name}.`;
+            }
+            if (code === "field_invalid_number" || code === "invalid_number") {
+                return `Please enter a valid number for ${name}.`;
+            }
+            if (code === "field_invalid_date" || code === "invalid_date") {
+                return `Please select a valid date for ${name}.`;
+            }
+            if (code === "field_invalid_time" || code === "invalid_time") {
+                return `Please select a valid time for ${name}.`;
+            }
+            if (code === "field_invalid_datetime" || code === "invalid_datetime") {
+                return `Please select a valid date and time for ${name}.`;
+            }
+            if (code === "field_invalid_date_range" || code === "invalid_date_range") {
+                return `${name}: End date must be on or after start date.`;
+            }
+            if (code === "field_too_many_files" || code === "too_many_files") {
+                return max ? `${name}: You can upload up to ${max} file${Number(max) > 1 ? "s" : ""} maximum.` : `${name}: Too many files uploaded.`;
+            }
+            if (code.includes("required")) {
+                return `${name} is required. Please select or enter a value.`;
+            }
+            if (code.includes("too_many") || code.includes("maximum")) {
+                return max ? `${name} max allowed item ${max}.` : `${name} exceeds the allowed maximum.`;
+            }
+            if (code.includes("too_few") || code.includes("minimum")) {
+                return min ? `${name}: Please select at least ${min} item${Number(min) > 1 ? "s" : ""}.` : `${name} is below the allowed minimum.`;
+            }
+            return `Please check ${name}.`;
+        }
         clearAllErrors() { this.root.querySelectorAll(".is-invalid").forEach(e => this.clearFieldError(e)); const e = this.root.querySelector("[data-wof-errors]"); e && (e.hidden = !0, e.textContent = ""); }
         clearFieldError(e) { if (!e)
             return; e.classList.remove("is-invalid"); const t = e.querySelector("[data-wof-field-error]"); t && (t.textContent = ""), e.querySelector('[aria-invalid="true"]')?.removeAttribute("aria-invalid"); }
@@ -209,7 +396,24 @@
             a.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(t => { t.checked = e.includes(t.value); });
             const t = a.querySelector("select");
             return void (t && (t.value = e[0] ?? ""));
-        } const i = a.querySelector('input:not([type="file"]), textarea, select'); i && "object" != typeof o && (i.value = String(o ?? "")); }), this.updateColorOutputs(), this.updateProductImage(); }
+        } if ("tel" === t.type) {
+            const wrap = a.querySelector("[data-wof-phone-wrap]");
+            if (wrap && "string" == typeof o) {
+                const parts = o.trim().split(" ");
+                if (parts.length > 1 && parts[0].startsWith("+")) {
+                    const dial = parts[0];
+                    const num = parts.slice(1).join(" ");
+                    const select = wrap.querySelector("[data-wof-phone-select]");
+                    if (select) {
+                        const opt = Array.from(select.options).find(o => o.dataset.dial === dial);
+                        if (opt) { select.value = opt.value; this.updatePhoneCountry(select); }
+                    }
+                    const input = wrap.querySelector(".wof-phone-number-input");
+                    if (input) input.value = num;
+                    return;
+                }
+            }
+        } const i = a.querySelector('input:not([type="file"]), textarea, select'); i && "object" != typeof o && (i.value = String(o ?? "")); }), this.updateColorOutputs(), this.updateProductImage(), this.enforceMaxChoices(); }
         money(e, t) { const o = Number(e); if (Number.isFinite(o))
             try {
                 return new Intl.NumberFormat(window.WooOptionsFicStorefront.locale, { style: "currency", currency: t }).format(o);
@@ -232,4 +436,3 @@
     } }); }
     "loading" === document.readyState ? document.addEventListener("DOMContentLoaded", i, { once: !0 }) : i();
 })();
-

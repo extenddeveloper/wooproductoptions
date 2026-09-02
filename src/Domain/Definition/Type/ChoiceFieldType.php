@@ -62,31 +62,57 @@ final class ChoiceFieldType extends AbstractFieldType {
 			];
 		}
 
-		$normalized['choices']    = $choices;
-		$normalized['multiple']   = $this->multiple;
-		$normalized['minChoices'] = max(0, (int) ($definition['minChoices'] ?? 0));
-		$normalized['maxChoices'] = max(0, (int) ($definition['maxChoices'] ?? 0));
+		$is_multiple = ! empty($definition['multiple']) || $this->multiple;
+
+		$normalized['choices']            = $choices;
+		$normalized['multiple']           = $is_multiple;
+		$normalized['minChoices']         = max(0, (int) ($definition['minChoices'] ?? 0));
+		$normalized['maxChoices']         = max(0, (int) ($definition['maxChoices'] ?? 0));
 		$normalized['updateProductImage'] = 'image_swatch' === $this->type_key && ! empty($definition['updateProductImage']);
+		$normalized['choiceWidth']        = self::plain_text((string) ($definition['choiceWidth'] ?? ''), 20);
+		$normalized['choiceHeight']       = self::plain_text((string) ($definition['choiceHeight'] ?? ''), 20);
+		$normalized['choiceBorderRadius'] = self::plain_text((string) ($definition['choiceBorderRadius'] ?? ''), 20);
+		$normalized['enableQuantity']     = ! empty($definition['enableQuantity']);
+		$normalized['minQuantity']        = max(1, (int) ($definition['minQuantity'] ?? 1));
+		$normalized['maxQuantity']        = max(0, (int) ($definition['maxQuantity'] ?? 100));
 		return $normalized;
 	}
 
 	public function normalize_value(mixed $value, array $definition): mixed {
-		$allowed = array_column((array) ($definition['choices'] ?? []), 'uuid');
+		$allowed     = array_column((array) ($definition['choices'] ?? []), 'uuid');
+		$is_multiple = ! empty($definition['multiple']) || $this->multiple;
 
-		if ($this->multiple) {
-			$values = is_array($value) ? $value : ('' === (string) $value ? [] : [$value]);
-			$values = array_values(array_unique(array_map('strval', $values)));
-			return array_values(array_intersect($allowed, $values));
+		if ($is_multiple) {
+			$raw_items  = is_array($value) ? $value : ('' === (string) $value ? [] : [$value]);
+			$normalized = [];
+			foreach ($raw_items as $item) {
+				if (is_array($item) && isset($item['choice'])) {
+					$uuid = (string) $item['choice'];
+					if (in_array($uuid, $allowed, true)) {
+						$normalized[] = $uuid;
+					}
+				} elseif (is_scalar($item)) {
+					$uuid = (string) $item;
+					if (in_array($uuid, $allowed, true)) {
+						$normalized[] = $uuid;
+					}
+				}
+			}
+			return array_values(array_unique($normalized));
 		}
 
+		if (is_array($value) && isset($value['choice'])) {
+			$value = (string) $value['choice'];
+		}
 		$value = is_scalar($value) ? (string) $value : '';
 		return in_array($value, $allowed, true) ? $value : '';
 	}
 
 	public function validate(mixed $value, array $definition): array {
-		$errors   = [];
-		$selected = $this->multiple ? (array) $value : ('' === (string) $value ? [] : [(string) $value]);
-		$choices  = [];
+		$errors      = [];
+		$is_multiple = ! empty($definition['multiple']) || $this->multiple;
+		$selected    = $is_multiple ? (array) $value : ('' === (string) $value ? [] : [(string) $value]);
+		$choices     = [];
 		foreach ((array) ($definition['choices'] ?? []) as $choice) {
 			$choices[(string) ($choice['uuid'] ?? '')] = $choice;
 		}
@@ -112,8 +138,9 @@ final class ChoiceFieldType extends AbstractFieldType {
 	}
 
 	public function format_value(mixed $value, array $definition): string {
-		$selected = $this->multiple ? (array) $value : ('' === (string) $value ? [] : [(string) $value]);
-		$labels   = [];
+		$is_multiple = ! empty($definition['multiple']) || $this->multiple;
+		$selected    = $is_multiple ? (array) $value : ('' === (string) $value ? [] : [(string) $value]);
+		$labels      = [];
 		foreach ((array) ($definition['choices'] ?? []) as $choice) {
 			if (in_array((string) ($choice['uuid'] ?? ''), $selected, true)) {
 				$labels[] = (string) ($choice['label'] ?? '');

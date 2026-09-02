@@ -8089,3 +8089,203 @@
 @media (max-width:1500px){.wof-market-template-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.wof-template-hero{grid-template-columns:minmax(330px,1fr) minmax(360px,.85fr)}.wof-template-hero__art figure{height:90px;width:125px}.wof-template-hero__art figure:nth-child(2){height:108px;width:145px}}
 @media (max-width:1200px){.wof-templates-topbar{grid-template-columns:auto minmax(0,1fr) auto auto auto}.wof-templates-breadcrumb,.wof-template-ready{display:none}.wof-templates-layout{grid-template-columns:205px minmax(0,1fr)}.wof-template-hero{grid-template-columns:1fr}.wof-template-hero__art{display:none}.wof-market-template-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.wof-template-category-tabs button{padding-inline:10px}}
 @media (max-width:782px){.wof-admin.is-template-studio{min-height:calc(100vh - 46px)}.wof-templates-app{min-height:calc(100vh - 46px)}.wof-templates-topbar{height:64px;padding:0 12px;top:46px}.wof-templates-brand strong,.wof-templates-icon-button{display:none}.wof-templates-topbar__search{max-width:none}.wof-templates-layout{display:block}.wof-templates-sidebar{display:none}.wof-templates-content{padding:18px 12px 36px}.wof-templates-page-heading{display:grid}.wof-templates-page-heading>div:last-child{flex-wrap:wrap}.wof-template-hero{min-height:auto;padding:22px}.wof-template-hero h2{font-size:25px}.wof-template-catalog-toolbar{align-items:stretch;display:grid}.wof-template-category-tabs{order:2}.wof-template-catalog-actions{justify-content:flex-end}.wof-template-catalog{grid-template-columns:1fr}.wof-template-filter-panel{display:grid;grid-template-columns:1fr 1fr}.wof-template-filter-panel section+section{border-left:1px solid #eceff4;border-top:0}.wof-market-template-grid{grid-template-columns:1fr}.wof-template-pagination{align-items:flex-start;flex-direction:column}.wof-template-avatar{display:none}}
+
+/* --- New Options Enhancements --- */
+.wof-canvas-fields {
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 12px !important;
+	align-items: flex-start !important;
+}
+
+.wof-canvas-field {
+	box-sizing: border-box;
+}
+
+.wof-canvas-field--width-33 {
+	width: calc(33.333% - 8px) !important;
+	flex: 0 0 calc(33.333% - 8px) !important;
+}
+
+.wof-canvas-field--width-50 {
+	width: calc(50% - 6px) !important;
+	flex: 0 0 calc(50% - 6px) !important;
+}
+
+.wof-canvas-field--width-66 {
+	width: calc(66.666% - 4px) !important;
+	flex: 0 0 calc(66.666% - 4px) !important;
+}
+
+.wof-canvas-field--width-100 {
+	width: 100% !important;
+	flex: 0 0 100% !important;
+}
+
+/* --- Modern Canvas Field Preview Enhancements --- */
+.wof-canvas-field__preview input[type="text"],
+.wof-canvas-field__preview input[type="password"],
+.wof-canvas-field__preview input[type="tel"],
+.wof-canvas-field__preview input[type="email"],
+.wof-canvas-field__preview input[type="url"],
+.wof-canvas-field__preview input[type="number"]:not(.wof-choice-qty-input),
+.wof-canvas-field__preview input[type="date"],
+.wof-canvas-field__preview input[type="time"],
+.wof-canvas-field__preview input[type="datetime-local"],
+.wof-canvas-field__preview select,
+.wof-canvas-field__preview textarea {
+	background: #ffffff !important;
+	border: 1.5px solid #d8deea !important;
+	border-radius: 8px !important;
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+	color: #1e293b !important;
+	font-size: 13.5px !important;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif !important;
+	height: 40px !important;
+	min-height: 40px !important;
+	padding: 0 14px !important;
+	width: 100% !important;
+	box-sizing: border-box !important;
+	cursor: default !important;
+	opacity: 1 !important;
+	outline: none !important;
+	transition: all 0.15s ease !important;
+}
+
+.wof-canvas-field__preview input::placeholder,
+.wof-canvas-field__preview textarea::placeholder {
+	color: #94a3b8 !important;
+	font-weight: 400 !important;
+}
+
+.wof-canvas-field__preview textarea {
+	height: 76px !important;
+	min-height: 76px !important;
+	padding: 10px 14px !important;
+	line-height: 1.5 !important;
+}
+
+/* Unified International Phone Field on Canvas Preview */
+.wof-preview-tel-wrap {
+	display: flex !important;
+	align-items: stretch !important;
+	background: #ffffff !important;
+	border: 1.5px solid #d8deea !important;
+	border-radius: 8px !important;
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+	height: 40px !important;
+	min-height: 40px !important;
+	overflow: hidden !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+}
+
+.wof-preview-tel-flag {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 6px !important;
+	padding: 0 10px !important;
+	background: #f8fafc !important;
+	border-right: 1.5px solid #d8deea !important;
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	color: #334155 !important;
+	white-space: nowrap !important;
+	user-select: none !important;
+	flex-shrink: 0 !important;
+}
+
+.wof-preview-tel-wrap input[type="tel"] {
+	border: none !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+	height: 100% !important;
+	min-height: 100% !important;
+	padding: 0 12px !important;
+	background: transparent !important;
+	flex: 1 !important;
+	min-width: 0 !important;
+}
+
+/* --- Choice Swatch Tiles and Quantity Alignment in Builder Canvas --- */
+.wof-preview-image-tiles,
+.wof-preview-color-blocks {
+	display: flex !important;
+	flex-direction: row !important;
+	flex-wrap: wrap !important;
+	align-items: flex-start !important;
+	gap: 16px !important;
+	margin-top: 8px !important;
+}
+
+.wof-preview-image-tile,
+.wof-preview-color-block {
+	display: flex !important;
+	flex-direction: column !important;
+	align-items: center !important;
+	text-align: center !important;
+	width: auto !important;
+	min-width: 68px !important;
+	max-width: 82px !important;
+	box-sizing: border-box !important;
+}
+
+.wof-preview-image-tile small,
+.wof-preview-color-block small {
+	display: block !important;
+	font-size: 12px !important;
+	font-weight: 600 !important;
+	color: var(--wof-admin-ink, #1e293b) !important;
+	margin-top: 6px !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	max-width: 80px !important;
+	text-align: center !important;
+	line-height: 1.25 !important;
+}
+
+.wof-preview-image-tile__price,
+.wof-preview-color-block__price {
+	display: block !important;
+	font-size: 11px !important;
+	color: #64748b !important;
+	margin-top: 2px !important;
+	line-height: 1.2 !important;
+}
+
+.wof-canvas-field__preview .wof-choice-qty-wrap {
+	display: flex !important;
+	justify-content: center !important;
+	align-items: center !important;
+	margin-top: 6px !important;
+	width: 100% !important;
+}
+
+.wof-canvas-field__preview input.wof-choice-qty-input,
+.wof-preview-image-tile input.wof-choice-qty-input,
+.wof-preview-color-block input.wof-choice-qty-input {
+	width: 52px !important;
+	max-width: 52px !important;
+	min-width: 52px !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	max-height: 28px !important;
+	padding: 0 4px !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	text-align: center !important;
+	border: 1px solid #d8deea !important;
+	border-radius: 4px !important;
+	background: #ffffff !important;
+	color: #1e293b !important;
+	box-shadow: none !important;
+	box-sizing: border-box !important;
+	margin: 0 auto !important;
+	line-height: 26px !important;
+}
+
+.wof-preview-color-block__swatch,
+.wof-preview-image-tile__thumb {
+	position: relative !important;
+}

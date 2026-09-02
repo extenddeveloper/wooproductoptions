@@ -12,6 +12,53 @@ namespace WooOptionsFic.Builder {
     ['advanced', __('Advanced', 'wooptionsfic')],
   ];
 
+  const COUNTRY_OPTIONS = [
+    { label: 'United States (+1)', value: 'US' },
+    { label: 'United Kingdom (+44)', value: 'GB' },
+    { label: 'Canada (+1)', value: 'CA' },
+    { label: 'Australia (+61)', value: 'AU' },
+    { label: 'Germany (+49)', value: 'DE' },
+    { label: 'France (+33)', value: 'FR' },
+    { label: 'Italy (+39)', value: 'IT' },
+    { label: 'Spain (+34)', value: 'ES' },
+    { label: 'Netherlands (+31)', value: 'NL' },
+    { label: 'Brazil (+55)', value: 'BR' },
+    { label: 'India (+91)', value: 'IN' },
+    { label: 'China (+86)', value: 'CN' },
+    { label: 'Japan (+81)', value: 'JP' },
+    { label: 'South Korea (+82)', value: 'KR' },
+    { label: 'Mexico (+52)', value: 'MX' },
+    { label: 'United Arab Emirates (+971)', value: 'AE' },
+    { label: 'Saudi Arabia (+966)', value: 'SA' },
+    { label: 'Singapore (+65)', value: 'SG' },
+    { label: 'Bangladesh (+880)', value: 'BD' },
+    { label: 'Pakistan (+92)', value: 'PK' },
+    { label: 'South Africa (+27)', value: 'ZA' },
+    { label: 'Turkey (+90)', value: 'TR' },
+    { label: 'Sweden (+46)', value: 'SE' },
+    { label: 'Switzerland (+41)', value: 'CH' },
+    { label: 'Poland (+48)', value: 'PL' },
+    { label: 'Argentina (+54)', value: 'AR' },
+    { label: 'Belgium (+32)', value: 'BE' },
+    { label: 'Austria (+43)', value: 'AT' },
+    { label: 'Norway (+47)', value: 'NO' },
+    { label: 'Denmark (+45)', value: 'DK' },
+    { label: 'Finland (+358)', value: 'FI' },
+    { label: 'Ireland (+353)', value: 'IE' },
+    { label: 'New Zealand (+64)', value: 'NZ' },
+    { label: 'Portugal (+351)', value: 'PT' },
+    { label: 'Greece (+30)', value: 'GR' },
+    { label: 'Israel (+972)', value: 'IL' },
+    { label: 'Hong Kong (+852)', value: 'HK' },
+    { label: 'Malaysia (+60)', value: 'MY' },
+    { label: 'Philippines (+63)', value: 'PH' },
+    { label: 'Indonesia (+62)', value: 'ID' },
+    { label: 'Thailand (+66)', value: 'TH' },
+    { label: 'Vietnam (+84)', value: 'VN' },
+    { label: 'Egypt (+20)', value: 'EG' },
+    { label: 'Nigeria (+234)', value: 'NG' },
+    { label: 'Kenya (+254)', value: 'KE' },
+  ];
 
   function normalizeHexColor(value: string, fallback = '#5B4FF5'): string {
     const color = String(value || '').trim().toUpperCase();
@@ -144,6 +191,31 @@ namespace WooOptionsFic.Builder {
 
     return (
       <div className="wof-choice-editor-list">
+        {/* Choice item width, height & border radius options */}
+        <div className="wof-choice-dimensions-box" style={{ padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '16px' }}>
+          <strong style={{ display: 'block', fontSize: '13px', marginBottom: '8px' }}>{__('Choice Item Dimensions & Style', 'wooptionsfic')}</strong>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+            <TextControl
+              label={__('Width (px)', 'wooptionsfic')}
+              value={String(props.field.choiceWidth ?? '')}
+              placeholder="Auto"
+              onChange={(choiceWidth: string) => props.onChange({ ...props.field, choiceWidth })}
+            />
+            <TextControl
+              label={__('Height (px)', 'wooptionsfic')}
+              value={String(props.field.choiceHeight ?? '')}
+              placeholder="Auto"
+              onChange={(choiceHeight: string) => props.onChange({ ...props.field, choiceHeight })}
+            />
+            <TextControl
+              label={__('Radius (px)', 'wooptionsfic')}
+              value={String(props.field.choiceBorderRadius ?? '')}
+              placeholder="Default"
+              onChange={(choiceBorderRadius: string) => props.onChange({ ...props.field, choiceBorderRadius })}
+            />
+          </div>
+        </div>
+
         {props.field.type === 'image_swatch' ? <div className="wof-image-swatch-behavior">
           <ToggleControl
             label={__('Update product image on selection', 'wooptionsfic')}
@@ -164,7 +236,8 @@ namespace WooOptionsFic.Builder {
             {props.field.type === 'color_swatch' ? (
               <ChoiceColorControl color={choice.color || '#5B4FF5'} onChange={(color: string) => updateChoice(choice.uuid, { color })} />
             ) : null}
-            {['image_swatch', 'color_swatch', 'product', 'radio', 'checkbox_group', 'segmented'].includes(props.field.type) ? (
+            {/* Note: 'color_swatch' is excluded so 'Choice image (optional)' is removed from color swatches */}
+            {['image_swatch', 'product', 'radio', 'checkbox_group', 'segmented'].includes(props.field.type) ? (
               <ChoiceMediaControl
                 choice={choice}
                 required={props.field.type === 'image_swatch'}
@@ -234,6 +307,210 @@ namespace WooOptionsFic.Builder {
     const field = props.field;
     const update = (patch: Partial<WooOptionsFic.FieldDefinition>) => props.onFieldChange({ ...field, ...patch });
     const visibleTabs = tabs.filter(([tab]) => tab !== 'choices' || Boolean(field.choices));
-    return <aside className="wof-builder-inspector"><div className="wof-builder-pane__heading"><div><span className="wof-eyebrow">{window.WooOptionsFicAdmin.fieldTypes[field.type]?.label ?? field.type}</span><h2>{field.label}</h2></div><div className="wof-inspector-heading-actions"><button type="button" onClick={props.onDuplicate}><WooOptionsFic.Components.Dashicon name="admin-page" /></button><button type="button" className="is-destructive" onClick={props.onDelete}><WooOptionsFic.Components.Dashicon name="trash" /></button></div></div><div className="wof-inspector-tabs-shell">{canLeft ? <button type="button" className="wof-inspector-tabs-arrow is-left" onClick={() => scrollerRef.current?.scrollBy({ left: -180, behavior: 'smooth' })}><WooOptionsFic.Components.Dashicon name="arrow-left-alt2" /></button> : null}<div className="wof-inspector-tabs" ref={scrollerRef}>{visibleTabs.map(([tab, label]) => <button type="button" key={tab} className={props.tab === tab ? 'is-active' : ''} onClick={(event: Event) => { props.onTabChange(tab); (event.currentTarget as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); }}>{label}</button>)}</div>{canRight ? <button type="button" className="wof-inspector-tabs-arrow is-right" onClick={() => scrollerRef.current?.scrollBy({ left: 180, behavior: 'smooth' })}><WooOptionsFic.Components.Dashicon name="arrow-right-alt2" /></button> : null}</div><div className="wof-inspector-body"><section className="wof-inspector-section">{props.tab === 'content' ? <><TextControl label={__('Label', 'wooptionsfic')} value={field.label} onChange={(label: string) => update({ label })} /><TextareaControl label={__('Description', 'wooptionsfic')} value={field.description} onChange={(description: string) => update({ description })} />{'placeholder' in field ? <TextControl label={__('Placeholder', 'wooptionsfic')} value={field.placeholder ?? ''} onChange={(placeholder: string) => update({ placeholder })} /> : null}{field.type === 'color_picker' ? <ChoiceColorControl label={__('Default color', 'wooptionsfic')} color={String(field.default ?? '#5B4FF5')} onChange={(color: string) => update({ default: color })} /> : null}<TextareaControl label={__('Help text', 'wooptionsfic')} value={field.help} onChange={(help: string) => update({ help })} /><ToggleControl label={__('Required', 'wooptionsfic')} checked={field.required} onChange={(required: boolean) => update({ required })} /></> : props.tab === 'choices' ? <ChoiceEditor field={field} onChange={props.onFieldChange} /> : props.tab === 'pricing' ? <PricingPanel field={field} onChange={props.onFieldChange} /> : props.tab === 'logic' ? <LogicEditor field={field} allFields={props.document.fields} onChange={props.onFieldChange} /> : props.tab === 'style' ? <StyleStudio document={props.document} onChange={props.onDocumentChange} /> : <><ToggleControl label={__('Disable this field', 'wooptionsfic')} checked={field.disabled} onChange={(disabled: boolean) => update({ disabled })} />{field.type === 'file' ? <><TextControl label={__('Allowed extensions', 'wooptionsfic')} value={(field.allowedExtensions ?? []).join(', ')} onChange={(value: string) => update({ allowedExtensions: value.split(',').map((item) => item.trim().replace(/^\./, '')).filter(Boolean) })} /><TextControl label={__('Maximum files', 'wooptionsfic')} type="number" value={String(field.maxFiles ?? 1)} onChange={(value: string) => update({ maxFiles: Math.max(1, Number(value)) })} /><TextControl label={__('Maximum file size (MB)', 'wooptionsfic')} type="number" value={String(field.maxFileMb ?? 5)} onChange={(value: string) => update({ maxFileMb: Math.max(1, Number(value)) })} /></> : null}{['number', 'range', 'quantity', 'customer_defined_price'].includes(field.type) ? <><TextControl label={__('Minimum', 'wooptionsfic')} value={field.min ?? ''} onChange={(value: string) => update({ min: value || null })} /><TextControl label={__('Maximum', 'wooptionsfic')} value={field.max ?? ''} onChange={(value: string) => update({ max: value || null })} /><TextControl label={__('Step', 'wooptionsfic')} value={field.step ?? ''} onChange={(value: string) => update({ step: value || null })} /></> : null}<TextControl label={__('Field UUID', 'wooptionsfic')} value={field.uuid} disabled /></>}</section></div></aside>;
+
+    return <aside className="wof-builder-inspector">
+      <div className="wof-builder-pane__heading">
+        <div>
+          <span className="wof-eyebrow">{window.WooOptionsFicAdmin.fieldTypes[field.type]?.label ?? field.type}</span>
+          <h2>{field.label}</h2>
+        </div>
+        <div className="wof-inspector-heading-actions">
+          <button type="button" onClick={props.onDuplicate} aria-label={__('Duplicate field', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="admin-page" /></button>
+          <button type="button" className="is-destructive" onClick={props.onDelete} aria-label={__('Delete field', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="trash" /></button>
+        </div>
+      </div>
+      <div className="wof-inspector-tabs-shell">
+        {canLeft ? <button type="button" className="wof-inspector-tabs-arrow is-left" onClick={() => scrollerRef.current?.scrollBy({ left: -180, behavior: 'smooth' })}><WooOptionsFic.Components.Dashicon name="arrow-left-alt2" /></button> : null}
+        <div className="wof-inspector-tabs" ref={scrollerRef}>
+          {visibleTabs.map(([tab, label]) => (
+            <button
+              type="button"
+              key={tab}
+              className={props.tab === tab ? 'is-active' : ''}
+              onClick={(event: Event) => {
+                props.onTabChange(tab);
+                (event.currentTarget as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        {canRight ? <button type="button" className="wof-inspector-tabs-arrow is-right" onClick={() => scrollerRef.current?.scrollBy({ left: 180, behavior: 'smooth' })}><WooOptionsFic.Components.Dashicon name="arrow-right-alt2" /></button> : null}
+      </div>
+      <div className="wof-inspector-body">
+        <section className="wof-inspector-section">
+          {props.tab === 'content' ? (
+            <>
+              <TextControl label={__('Label', 'wooptionsfic')} value={field.label} onChange={(label: string) => update({ label })} />
+              <TextareaControl label={__('Description', 'wooptionsfic')} value={field.description} onChange={(description: string) => update({ description })} />
+
+              {/* Block Width options for every block */}
+              <div className="wof-field-width-setting" style={{ marginBottom: '16px' }}>
+                <label className="components-base-control__label" style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>{__('Block Width', 'wooptionsfic')}</label>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  {['33%', '50%', '66%', '100%'].map((w) => (
+                    <Button
+                      key={w}
+                      variant={(field.width || '100%') === w ? 'primary' : 'secondary'}
+                      isSmall
+                      onClick={() => update({ width: w })}
+                    >
+                      {w}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {'placeholder' in field ? <TextControl label={__('Placeholder', 'wooptionsfic')} value={field.placeholder ?? ''} onChange={(placeholder: string) => update({ placeholder })} /> : null}
+
+              {/* Phone / Telephone Flag Style & Default Country */}
+              {field.type === 'tel' ? (
+                <div className="wof-phone-settings" style={{ marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>
+                  <SelectControl
+                    label={__('Flag Style', 'wooptionsfic')}
+                    value={field.flagStyle ?? 'number_only'}
+                    options={[
+                      { label: __('Number Only', 'wooptionsfic'), value: 'number_only' },
+                      { label: __('Number Only & Flag', 'wooptionsfic'), value: 'number_flag' },
+                      { label: __('Number Only & Flag and Dial Code', 'wooptionsfic'), value: 'number_flag_dialcode' },
+                    ]}
+                    onChange={(flagStyle: 'number_only' | 'number_flag' | 'number_flag_dialcode') => update({ flagStyle })}
+                  />
+                  {(field.flagStyle === 'number_flag' || field.flagStyle === 'number_flag_dialcode') ? (
+                    <SelectControl
+                      label={__('Default Country', 'wooptionsfic')}
+                      value={field.defaultCountry ?? 'US'}
+                      options={COUNTRY_OPTIONS}
+                      onChange={(defaultCountry: string) => update({ defaultCountry })}
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+
+              {/* Allow Multiple Choices for color, image, and button choices */}
+              {['color_swatch', 'image_swatch', 'segmented'].includes(field.type) ? (
+                <div className="wof-multiple-choice-settings" style={{ marginBottom: '16px' }}>
+                  <ToggleControl
+                    label={__('Allow Multiple Choices', 'wooptionsfic')}
+                    help={__('Allow customers to select more than one option.', 'wooptionsfic')}
+                    checked={Boolean(field.multiple)}
+                    onChange={(multiple: boolean) => update({ multiple })}
+                  />
+                  {field.multiple ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+                      <TextControl
+                        label={__('Min Restriction', 'wooptionsfic')}
+                        type="number"
+                        min={0}
+                        value={String(field.minChoices ?? '')}
+                        placeholder={__('Min', 'wooptionsfic')}
+                        onChange={(val: string) => update({ minChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
+                      />
+                      <TextControl
+                        label={__('Max Restriction', 'wooptionsfic')}
+                        type="number"
+                        min={0}
+                        value={String(field.maxChoices ?? '')}
+                        placeholder={__('Max', 'wooptionsfic')}
+                        onChange={(val: string) => update({ maxChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {/* Min/Max restriction for checkboxes */}
+              {field.type === 'checkbox_group' ? (
+                <div className="wof-checkbox-restrictions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
+                  <TextControl
+                    label={__('Min Restriction', 'wooptionsfic')}
+                    type="number"
+                    min={0}
+                    value={String(field.minChoices ?? '')}
+                    placeholder={__('Min', 'wooptionsfic')}
+                    onChange={(val: string) => update({ minChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
+                  />
+                  <TextControl
+                    label={__('Max Restriction', 'wooptionsfic')}
+                    type="number"
+                    min={0}
+                    value={String(field.maxChoices ?? '')}
+                    placeholder={__('Max', 'wooptionsfic')}
+                    onChange={(val: string) => update({ maxChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
+                  />
+                </div>
+              ) : null}
+
+              {/* Enable Quantity option for every choice field with Min/Max limits */}
+              {Boolean(field.choices) ? (
+                <div className="wof-quantity-setting" style={{ marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>
+                  <ToggleControl
+                    label={__('Enable Quantity', 'wooptionsfic')}
+                    help={__('Allow customers to specify quantity for each choice option.', 'wooptionsfic')}
+                    checked={Boolean(field.enableQuantity)}
+                    onChange={(enableQuantity: boolean) => update({ enableQuantity })}
+                  />
+                  {field.enableQuantity ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+                      <TextControl
+                        label={__('Minimum Quantity', 'wooptionsfic')}
+                        type="number"
+                        min={1}
+                        value={String(field.minQuantity ?? 1)}
+                        placeholder="1"
+                        onChange={(val: string) => update({ minQuantity: val === '' ? 1 : Math.max(1, Number(val)) })}
+                      />
+                      <TextControl
+                        label={__('Maximum Quantity', 'wooptionsfic')}
+                        type="number"
+                        min={1}
+                        value={String(field.maxQuantity ?? 100)}
+                        placeholder="100"
+                        onChange={(val: string) => update({ maxQuantity: val === '' ? 0 : Math.max(1, Number(val)) })}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {field.type === 'color_picker' ? (
+                <ChoiceColorControl label={__('Default color', 'wooptionsfic')} color={String(field.default ?? '#5B4FF5')} onChange={(color: string) => update({ default: color })} />
+              ) : null}
+
+              <TextareaControl label={__('Help text', 'wooptionsfic')} value={field.help} onChange={(help: string) => update({ help })} />
+              <ToggleControl label={__('Required', 'wooptionsfic')} checked={field.required} onChange={(required: boolean) => update({ required })} />
+            </>
+          ) : props.tab === 'choices' ? (
+            <ChoiceEditor field={field} onChange={props.onFieldChange} />
+          ) : props.tab === 'pricing' ? (
+            <PricingPanel field={field} onChange={props.onFieldChange} />
+          ) : props.tab === 'logic' ? (
+            <LogicEditor field={field} allFields={props.document.fields} onChange={props.onFieldChange} />
+          ) : props.tab === 'style' ? (
+            <StyleStudio document={props.document} onChange={props.onDocumentChange} />
+          ) : (
+            <>
+              <ToggleControl label={__('Disable this field', 'wooptionsfic')} checked={field.disabled} onChange={(disabled: boolean) => update({ disabled })} />
+              {field.type === 'file' ? (
+                <>
+                  <TextControl label={__('Allowed extensions', 'wooptionsfic')} value={(field.allowedExtensions ?? []).join(', ')} onChange={(value: string) => update({ allowedExtensions: value.split(',').map((item) => item.trim().replace(/^\./, '')).filter(Boolean) })} />
+                  <TextControl label={__('Maximum files', 'wooptionsfic')} type="number" value={String(field.maxFiles ?? 1)} onChange={(value: string) => update({ maxFiles: Math.max(1, Number(value)) })} />
+                  <TextControl label={__('Maximum file size (MB)', 'wooptionsfic')} type="number" value={String(field.maxFileMb ?? 5)} onChange={(value: string) => update({ maxFileMb: Math.max(1, Number(value)) })} />
+                </>
+              ) : null}
+              {['number', 'range', 'quantity', 'customer_defined_price'].includes(field.type) ? (
+                <>
+                  <TextControl label={__('Minimum', 'wooptionsfic')} value={field.min ?? ''} onChange={(value: string) => update({ min: value || null })} />
+                  <TextControl label={__('Maximum', 'wooptionsfic')} value={field.max ?? ''} onChange={(value: string) => update({ max: value || null })} />
+                  <TextControl label={__('Step', 'wooptionsfic')} value={field.step ?? ''} onChange={(value: string) => update({ step: value || null })} />
+                </>
+              ) : null}
+              <TextControl label={__('Field UUID', 'wooptionsfic')} value={field.uuid} disabled />
+            </>
+          )}
+        </section>
+      </div>
+    </aside>;
   }
 }

@@ -100,6 +100,15 @@ namespace WooOptionsFic {
     style: Record<string, unknown>;
     preview: Record<string, unknown>;
     help: string;
+    width?: string;
+    flagStyle?: 'number_only' | 'number_flag' | 'number_flag_dialcode';
+    defaultCountry?: string;
+    choiceWidth?: string | number;
+    choiceHeight?: string | number;
+    choiceBorderRadius?: string | number;
+    enableQuantity?: boolean;
+    minQuantity?: number;
+    maxQuantity?: number;
     placeholder?: string;
     min?: string | null;
     max?: string | null;

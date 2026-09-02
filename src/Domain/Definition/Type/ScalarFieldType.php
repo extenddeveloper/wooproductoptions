@@ -30,11 +30,21 @@ final class ScalarFieldType extends AbstractFieldType {
 		$normalized['step']        = $this->decimal_or_null($definition['step'] ?? null);
 		$normalized['maxLength']   = max(0, min(10000, (int) ($definition['maxLength'] ?? 0)));
 		$normalized['privacyMode'] = 'secret' === $this->value_kind;
+		if ('tel' === $this->type_key) {
+			$flag_style = (string) ($definition['flagStyle'] ?? 'number_only');
+			$normalized['flagStyle']      = in_array($flag_style, ['number_only', 'number_flag', 'number_flag_dialcode'], true) ? $flag_style : 'number_only';
+			$normalized['defaultCountry'] = self::plain_text((string) ($definition['defaultCountry'] ?? 'US'), 10);
+		}
 		return $normalized;
 	}
 
 	public function normalize_value(mixed $value, array $definition): mixed {
 		if (is_array($value) && 'date_range' !== $this->value_kind) {
+			if ('tel' === $this->value_kind && isset($value['number'])) {
+				$dial = ! empty($value['dial']) ? (string) $value['dial'] : '';
+				$num  = (string) $value['number'];
+				return preg_replace('/[^\d+().\-\s]/u', '', trim($dial . ' ' . $num)) ?? '';
+			}
 			return '';
 		}
 
@@ -55,149 +65,150 @@ final class ScalarFieldType extends AbstractFieldType {
 
 	public function validate(mixed $value, array $definition): array {
 		$errors = [];
-		if (! empty($definition['required']) && self::is_empty($value)) {
-			$errors[] = ['code' => 'required', 'params' => []];
-			return $errors;
+		$empty  = null === $value || '' === $value || ([] === $value);
+		if (! empty($definition['required']) && $empty) {
+			return [['code' => 'required', 'params' => []]];
 		}
-		if (self::is_empty($value)) {
+		if ($empty) {
 			return [];
 		}
 
-		if (in_array($this->value_kind, ['integer', 'decimal'], true)) {
-			if (! is_string($value) || 1 !== preg_match('/\A-?\d+(?:\.\d+)?\z/', $value)) {
-				$errors[] = ['code' => 'invalid_number', 'params' => []];
-				return $errors;
-			}
-			if (null !== ($definition['min'] ?? null) && $this->compare_decimals($value, (string) $definition['min']) < 0) {
-				$errors[] = ['code' => 'below_minimum', 'params' => ['minimum' => $definition['min']]];
-			}
-			if (null !== ($definition['max'] ?? null) && $this->compare_decimals($value, (string) $definition['max']) > 0) {
-				$errors[] = ['code' => 'above_maximum', 'params' => ['maximum' => $definition['max']]];
-			}
-		}
-
-		if ('email' === $this->value_kind && false === filter_var($value, FILTER_VALIDATE_EMAIL)) {
-			$errors[] = ['code' => 'invalid_email', 'params' => []];
-		}
-		if ('url' === $this->value_kind && false === filter_var($value, FILTER_VALIDATE_URL)) {
-			$errors[] = ['code' => 'invalid_url', 'params' => []];
-		}
-		if ('color' === $this->value_kind && 1 !== preg_match('/\A#[0-9A-F]{6}\z/', (string) $value)) {
-			$errors[] = ['code' => 'invalid_color', 'params' => []];
-		}
-		if ('date' === $this->value_kind && ! $this->valid_date((string) $value, '!Y-m-d')) {
-			$errors[] = ['code' => 'invalid_date', 'params' => []];
-		}
-		if ('time' === $this->value_kind && 1 !== preg_match('/\A(?:[01]\d|2[0-3]):[0-5]\d\z/', (string) $value)) {
-			$errors[] = ['code' => 'invalid_time', 'params' => []];
-		}
-		if ('datetime' === $this->value_kind && ! $this->valid_date((string) $value, '!Y-m-d\TH:i')) {
-			$errors[] = ['code' => 'invalid_datetime', 'params' => []];
-		}
-		if ('date_range' === $this->value_kind) {
-			$start = (string) ($value['start'] ?? '');
-			$end   = (string) ($value['end'] ?? '');
-			if (! $this->valid_date($start, '!Y-m-d') || ! $this->valid_date($end, '!Y-m-d') || $start > $end) {
-				$errors[] = ['code' => 'invalid_date_range', 'params' => []];
-			}
-		}
-
-		if (is_string($value)) {
-			$length = self::length($value);
-			$max     = (int) ($definition['maxLength'] ?? 0);
-			if ($max > 0 && $length > $max) {
-				$errors[] = ['code' => 'too_long', 'params' => ['maximum' => $max]];
-			}
-			$minimum_length = (int) (($definition['validation']['minLength'] ?? 0));
-			if ($minimum_length > 0 && $length < $minimum_length) {
-				$errors[] = ['code' => 'too_short', 'params' => ['minimum' => $minimum_length]];
-			}
-		}
-
-		return $errors;
+		return match ($this->value_kind) {
+			'email'      => $this->validate_email((string) $value),
+			'url'        => $this->validate_url((string) $value),
+			'integer'    => $this->validate_number((string) $value, $definition, true),
+			'decimal'    => $this->validate_number((string) $value, $definition, false),
+			'date'       => $this->validate_date((string) $value),
+			'time'       => $this->validate_time((string) $value),
+			'datetime'   => $this->validate_datetime((string) $value),
+			'date_range' => $this->validate_date_range(is_array($value) ? $value : []),
+			'color'      => $this->validate_color((string) $value),
+			default      => $this->validate_string((string) $value, $definition),
+		};
 	}
 
 	public function format_value(mixed $value, array $definition): string {
-		if ('secret' === $this->value_kind) {
-			return self::is_empty($value) ? '' : '••••••••';
+		if ('date_range' === $this->value_kind && is_array($value)) {
+			return trim(($value['start'] ?? '') . ' → ' . ($value['end'] ?? ''));
 		}
-		if (is_array($value)) {
-			return implode(' – ', array_map('strval', $value));
-		}
-		return (string) $value;
+		return is_scalar($value) ? (string) $value : '';
 	}
 
 	public function accepts_customer_value(): bool {
 		return true;
 	}
 
+	private function decimal_or_null(mixed $value): ?string {
+		if (null === $value || '' === $value || ! is_numeric($value)) {
+			return null;
+		}
+		return (string) round((float) $value, 4);
+	}
+
 	private function normalize_string(mixed $value, array $definition): string {
-		$string  = is_scalar($value) ? (string) $value : '';
-		$string  = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/u', '', $string) ?? '';
-		$maximum = (int) ($definition['maxLength'] ?? 0);
-		$maximum = $maximum > 0 ? min($maximum, 10000) : 10000;
-		return self::substring(trim($string), 0, $maximum);
+		$max = (int) ($definition['maxLength'] ?? 0);
+		return self::plain_text((string) $value, $max > 0 ? $max : 5000);
 	}
 
 	private function normalize_integer(mixed $value): string {
-		$value = trim((string) $value);
-		return 1 === preg_match('/\A-?\d+\z/', $value) ? (string) (int) $value : '';
+		if (is_numeric($value)) {
+			return (string) (int) $value;
+		}
+		return '';
 	}
 
 	private function normalize_decimal(mixed $value): string {
-		$value = str_replace(',', '.', trim((string) $value));
-		return 1 === preg_match('/\A-?\d+(?:\.\d{1,6})?\z/', $value) ? $value : '';
+		if (! is_numeric($value)) {
+			return '';
+		}
+		return (string) round((float) $value, 4);
 	}
 
-	/**
-	 * @return array{start:string,end:string}
-	 */
 	private function normalize_date_range(mixed $value): array {
-		$value = is_array($value) ? $value : [];
+		if (! is_array($value)) {
+			return ['start' => '', 'end' => ''];
+		}
 		return [
 			'start' => trim((string) ($value['start'] ?? '')),
 			'end'   => trim((string) ($value['end'] ?? '')),
 		];
 	}
 
-	private function decimal_or_null(mixed $value): ?string {
-		if (null === $value || '' === $value) {
-			return null;
-		}
-		$normalized = $this->normalize_decimal($value);
-		return '' === $normalized ? null : $normalized;
+	private function validate_email(string $value): array {
+		return is_email($value) ? [] : [['code' => 'invalid_email', 'params' => []]];
 	}
 
-	private function compare_decimals(string $left, string $right): int {
-		$normalize = static function (string $value): array {
-			$negative = str_starts_with($value, '-');
-			$value    = ltrim($value, '+-');
-			[$whole, $fraction] = array_pad(explode('.', $value, 2), 2, '');
-			$whole    = ltrim($whole, '0') ?: '0';
-			$fraction = rtrim(str_pad($fraction, 6, '0'), '0');
-			return [$negative, $whole, $fraction];
-		};
-
-		[$left_negative, $left_whole, $left_fraction]    = $normalize($left);
-		[$right_negative, $right_whole, $right_fraction] = $normalize($right);
-		if ($left_negative !== $right_negative) {
-			return $left_negative ? -1 : 1;
-		}
-		$sign = $left_negative ? -1 : 1;
-		if (strlen($left_whole) !== strlen($right_whole)) {
-			return (strlen($left_whole) <=> strlen($right_whole)) * $sign;
-		}
-		$whole_compare = strcmp($left_whole, $right_whole);
-		if (0 !== $whole_compare) {
-			return $whole_compare * $sign;
-		}
-		return strcmp(str_pad($left_fraction, 6, '0'), str_pad($right_fraction, 6, '0')) * $sign;
+	private function validate_url(string $value): array {
+		return 1 === preg_match('/\Ahttps?:\/\/[^\s<>"#%{}|\\^~`]+\z/i', $value)
+			? []
+			: [['code' => 'invalid_url', 'params' => []]];
 	}
 
-	private function valid_date(string $value, string $format): bool {
-		$date = DateTimeImmutable::createFromFormat($format, $value);
-		$errors = DateTimeImmutable::getLastErrors();
-		return false !== $date
-			&& (false === $errors || (0 === $errors['warning_count'] && 0 === $errors['error_count']));
+	private function validate_number(string $value, array $definition, bool $integer_only): array {
+		$errors = [];
+		if ($integer_only && 1 !== preg_match('/\A-?\d+\z/', $value)) {
+			return [['code' => 'invalid_number', 'params' => []]];
+		}
+		if (! is_numeric($value)) {
+			return [['code' => 'invalid_number', 'params' => []]];
+		}
+		$numeric = (float) $value;
+		if (null !== ($definition['min'] ?? null) && $numeric < (float) $definition['min']) {
+			$errors[] = ['code' => 'below_minimum', 'params' => ['minimum' => (string) $definition['min']]];
+		}
+		if (null !== ($definition['max'] ?? null) && $numeric > (float) $definition['max']) {
+			$errors[] = ['code' => 'above_maximum', 'params' => ['maximum' => (string) $definition['max']]];
+		}
+		return $errors;
+	}
+
+	private function validate_date(string $value): array {
+		return false !== DateTimeImmutable::createFromFormat('Y-m-d', $value)
+			? []
+			: [['code' => 'invalid_date', 'params' => []]];
+	}
+
+	private function validate_time(string $value): array {
+		return 1 === preg_match('/\A\d{2}:\d{2}(?::\d{2})?\z/', $value)
+			? []
+			: [['code' => 'invalid_time', 'params' => []]];
+	}
+
+	private function validate_datetime(string $value): array {
+		return 1 === preg_match('/\A\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?\z/', $value)
+			? []
+			: [['code' => 'invalid_datetime', 'params' => []]];
+	}
+
+	private function validate_date_range(array $value): array {
+		$start = (string) ($value['start'] ?? '');
+		$end   = (string) ($value['end'] ?? '');
+		if ('' === $start || '' === $end) {
+			return [['code' => 'incomplete_date_range', 'params' => []]];
+		}
+		$d_start = DateTimeImmutable::createFromFormat('Y-m-d', $start);
+		$d_end   = DateTimeImmutable::createFromFormat('Y-m-d', $end);
+		if (! $d_start || ! $d_end) {
+			return [['code' => 'invalid_date_range', 'params' => []]];
+		}
+		if ($d_end < $d_start) {
+			return [['code' => 'invalid_date_range_order', 'params' => []]];
+		}
+		return [];
+	}
+
+	private function validate_color(string $value): array {
+		return 1 === preg_match('/\A#[0-9A-F]{6}\z/', $value)
+			? []
+			: [['code' => 'invalid_color', 'params' => []]];
+	}
+
+	private function validate_string(string $value, array $definition): array {
+		$errors = [];
+		$max    = (int) ($definition['maxLength'] ?? 0);
+		if ($max > 0 && mb_strlen($value) > $max) {
+			$errors[] = ['code' => 'too_long', 'params' => ['maximum' => $max]];
+		}
+		return $errors;
 	}
 }
