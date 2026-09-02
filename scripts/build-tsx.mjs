@@ -11,10 +11,11 @@ const compiler = (() => {
   try { return tsc; } catch { return 'tsc'; }
 })();
 mkdirSync(resolve(root, 'build'), { recursive: true });
+const targetTsconfig = resolve(root, 'tsconfig.admin.json');
 try {
-  execFileSync(compiler, ['-p', resolve(root, 'tsconfig.admin.json')], { stdio: 'inherit' });
+  execFileSync(`"${compiler}"`, ['-p', `"${targetTsconfig}"`], { stdio: 'inherit', shell: true });
 } catch (error) {
-  if (compiler !== 'tsc') execFileSync('tsc', ['-p', resolve(root, 'tsconfig.admin.json')], { stdio: 'inherit' });
+  if (compiler !== 'tsc') execFileSync('npx', ['tsc', '-p', `"${targetTsconfig}"`], { stdio: 'inherit', shell: true });
   else throw error;
 }
 const copies = [

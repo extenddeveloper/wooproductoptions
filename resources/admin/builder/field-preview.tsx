@@ -66,14 +66,20 @@ namespace WooOptionsFic.Builder {
     }
 
     if (field.type === 'date_range') return <div className="wof-preview-date-range"><input disabled type="date" /><span>to</span><input disabled type="date" /></div>;
-    if (['radio', 'checkbox_group', 'segmented', 'font'].includes(field.type)) {
+    if (field.type === 'radio') {
+      return <div className="wof-preview-radio-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid}><span className="wof-preview-radio-item__indicator" /><span className="wof-preview-radio-item__label">{choice.label}</span>{choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? <span className="wof-preview-radio-item__price">{choice.pricing.amount}</span> : null}</label>)}</div>;
+    }
+    if (field.type === 'checkbox_group') {
+      return <div className="wof-preview-checkbox-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid}><span className="wof-preview-checkbox-item__indicator" /><span className="wof-preview-checkbox-item__label">{choice.label}</span>{choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? <span className="wof-preview-checkbox-item__price">{choice.pricing.amount}</span> : null}</label>)}</div>;
+    }
+    if (['segmented', 'font'].includes(field.type)) {
       return <div className="wof-preview-choice-row">{choices.slice(0, 4).map((choice, index) => <span className={index === 0 ? 'is-selected' : ''} key={choice.uuid}>{choiceLabel(choice)}</span>)}</div>;
     }
     if (field.type === 'color_swatch') {
-      return <div className="wof-preview-swatches">{choices.slice(0, 5).map((choice, index) => <span className={index === 0 ? 'is-selected' : ''} style={{ background: choice.color || '#ddd' }} key={choice.uuid} />)}</div>;
+      return <div className="wof-preview-color-blocks">{choices.slice(0, 5).map((choice, index) => <div className={`wof-preview-color-block${index === 0 ? ' is-selected' : ''}`} key={choice.uuid}><span className="wof-preview-color-block__swatch" style={{ background: choice.color || '#ddd' }}>{index === 0 ? <span className="wof-preview-color-block__check">✓</span> : null}</span><small>{choice.label}</small>{choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? <span className="wof-preview-color-block__price">{choice.pricing.amount}</span> : null}</div>)}</div>;
     }
     if (field.type === 'image_swatch' || field.type === 'product') {
-      return <div className="wof-preview-images">{choices.slice(0, 4).map((choice, index) => <span className={index === 0 ? 'is-selected' : ''} key={choice.uuid}>{choice.imageId || choice.imageUrl ? <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" /> : <WooOptionsFic.Components.Dashicon name="format-image" />}<small>{choice.label}</small></span>)}</div>;
+      return <div className="wof-preview-image-tiles">{choices.slice(0, 4).map((choice, index) => <div className={`wof-preview-image-tile${index === 0 ? ' is-selected' : ''}`} key={choice.uuid}><span className="wof-preview-image-tile__thumb">{choice.imageId || choice.imageUrl ? <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" /> : <WooOptionsFic.Components.Dashicon name="format-image" />}</span><small>{choice.label}</small>{choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? <span className="wof-preview-image-tile__price">{choice.pricing.amount}</span> : null}</div>)}</div>;
     }
     if (field.type === 'repeater') return <div className="wof-preview-repeater"><div><strong>Item 1</strong><small>{field.children?.length ?? 0} fields</small></div><button type="button" disabled>+ Add item</button></div>;
 

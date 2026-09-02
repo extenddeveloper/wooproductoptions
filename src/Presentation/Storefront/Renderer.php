@@ -195,7 +195,15 @@ final class Renderer {
 		$name = $name_prefix . '[' . $uuid . ']';
 		if (in_array($type, ['select', 'font'], true)) {
 			$this->render_select($field, $name, $description_id);
-		} elseif (in_array($type, ['radio', 'segmented', 'color_swatch', 'image_swatch', 'product', 'checkbox_group'], true)) {
+		} elseif ('color_swatch' === $type) {
+			$this->render_color_swatches($field, $name, $description_id);
+		} elseif ('image_swatch' === $type) {
+			$this->render_image_swatches($field, $name, $description_id);
+		} elseif ('radio' === $type) {
+			$this->render_radio_list($field, $name, $description_id);
+		} elseif ('checkbox_group' === $type) {
+			$this->render_checkbox_list($field, $name, $description_id);
+		} elseif (in_array($type, ['segmented', 'product'], true)) {
 			$this->render_choices($field, $name, $description_id);
 		} elseif (in_array($type, ['checkbox', 'toggle'], true)) {
 			$this->render_boolean($field, $name, $description_id);
@@ -284,6 +292,146 @@ final class Renderer {
 			}
 			echo '<span class="wof-choice__price">' . esc_html($this->choice_price_text((array) $choice)) . '</span></span>';
 			echo '<span class="wof-choice__check" aria-hidden="true">✓</span></label>';
+		}
+		echo '</div>';
+	}
+
+	/**
+	 * Render color swatches as color blocks with label + price below.
+	 *
+	 * @param array<string,mixed> $field Field.
+	 */
+	private function render_color_swatches(array $field, string $name, string $description_id): void {
+		$multiple = ! empty($field['multiple']);
+		$input    = $multiple ? 'checkbox' : 'radio';
+		$group    = $multiple ? $name . '[]' : $name;
+		echo '<div class="wof-swatches" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
+		foreach ((array) ($field['choices'] ?? []) as $choice) {
+			$choice_uuid = (string) ($choice['uuid'] ?? '');
+			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$checked     = ! empty($choice['default']);
+			$color       = (string) ($choice['color'] ?? '#ddd');
+			echo '<label class="wof-swatch-item" for="' . esc_attr($id) . '">';
+			echo '<input id="' . esc_attr($id) . '" type="' . esc_attr($input) . '" name="' . esc_attr($group) . '" value="' . esc_attr($choice_uuid) . '"';
+			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
+			echo ' aria-describedby="' . esc_attr($description_id) . '">';
+			echo '<span class="wof-swatch-item__color" style="background:' . esc_attr($color) . '" aria-hidden="true">';
+			echo '<span class="wof-swatch-item__check">✓</span>';
+			echo '</span>';
+			echo '<span class="wof-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
+			$price_text = $this->choice_price_text((array) $choice);
+			if ('' !== $price_text) {
+				echo '<span class="wof-swatch-item__price">' . esc_html($price_text) . '</span>';
+			}
+			echo '</label>';
+		}
+		echo '</div>';
+	}
+
+	/**
+	 * Render image swatches as thumbnail tiles with label + price below.
+	 *
+	 * @param array<string,mixed> $field Field.
+	 */
+	private function render_image_swatches(array $field, string $name, string $description_id): void {
+		$multiple = ! empty($field['multiple']);
+		$input    = $multiple ? 'checkbox' : 'radio';
+		$group    = $multiple ? $name . '[]' : $name;
+		echo '<div class="wof-image-swatches" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
+		foreach ((array) ($field['choices'] ?? []) as $choice) {
+			$choice_uuid = (string) ($choice['uuid'] ?? '');
+			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$checked     = ! empty($choice['default']);
+			echo '<label class="wof-image-swatch-item" for="' . esc_attr($id) . '">';
+			echo '<input id="' . esc_attr($id) . '" type="' . esc_attr($input) . '" name="' . esc_attr($group) . '" value="' . esc_attr($choice_uuid) . '"';
+			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
+			if (! empty($field['updateProductImage'])) {
+				$product_image_url = '';
+				if ((int) ($choice['imageId'] ?? 0) > 0) {
+					$resolved = wp_get_attachment_image_url((int) $choice['imageId'], 'woocommerce_single');
+					if (! is_string($resolved) || '' === $resolved) {
+						$resolved = wp_get_attachment_image_url((int) $choice['imageId'], 'full');
+					}
+					$product_image_url = is_string($resolved) ? $resolved : '';
+				}
+				if ('' === $product_image_url) {
+					$product_image_url = (string) ($choice['imageUrl'] ?? '');
+				}
+				if ('' !== $product_image_url) {
+					echo ' data-wof-product-image-url="' . esc_url($product_image_url) . '"';
+				}
+			}
+			echo ' aria-describedby="' . esc_attr($description_id) . '">';
+			echo '<span class="wof-image-swatch-item__thumb" aria-hidden="true">';
+			$image_html = '';
+			if ((int) ($choice['imageId'] ?? 0) > 0) {
+				$image_html = (string) wp_get_attachment_image((int) $choice['imageId'], 'thumbnail', false, ['class' => 'wof-image-swatch-item__img', 'alt' => '']);
+			}
+			if ('' === $image_html && '' !== (string) ($choice['imageUrl'] ?? '')) {
+				$image_html = '<img class="wof-image-swatch-item__img" src="' . esc_url((string) $choice['imageUrl']) . '" alt="">';
+			}
+			if ('' !== $image_html) {
+				echo wp_kses_post($image_html);
+			} else {
+				echo '<svg class="wof-image-swatch-item__placeholder" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4.5 5.5h15v13h-15zM7.5 15l3.2-3.5 2.4 2.3 1.9-2 2.5 3.2M9 9.2h.01" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+			}
+			echo '</span>';
+			echo '<span class="wof-image-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
+			$price_text = $this->choice_price_text((array) $choice);
+			if ('' !== $price_text) {
+				echo '<span class="wof-image-swatch-item__price">' . esc_html($price_text) . '</span>';
+			}
+			echo '</label>';
+		}
+		echo '</div>';
+	}
+
+	/**
+	 * Render radio field as a vertical list with standard radio buttons.
+	 *
+	 * @param array<string,mixed> $field Field.
+	 */
+	private function render_radio_list(array $field, string $name, string $description_id): void {
+		echo '<div class="wof-radio-list" role="radiogroup" aria-label="' . esc_attr((string) $field['label']) . '">';
+		foreach ((array) ($field['choices'] ?? []) as $choice) {
+			$choice_uuid = (string) ($choice['uuid'] ?? '');
+			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$checked     = ! empty($choice['default']) || (string) ($field['default'] ?? '') === $choice_uuid;
+			echo '<label class="wof-radio-item" for="' . esc_attr($id) . '">';
+			echo '<input id="' . esc_attr($id) . '" type="radio" name="' . esc_attr($name) . '" value="' . esc_attr($choice_uuid) . '"';
+			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
+			echo ' aria-describedby="' . esc_attr($description_id) . '">';
+			echo '<span class="wof-radio-item__label">' . esc_html((string) $choice['label']) . '</span>';
+			$price_text = $this->choice_price_text((array) $choice);
+			if ('' !== $price_text) {
+				echo '<span class="wof-radio-item__price">' . esc_html($price_text) . '</span>';
+			}
+			echo '</label>';
+		}
+		echo '</div>';
+	}
+
+	/**
+	 * Render checkbox group as a vertical list with standard checkboxes.
+	 *
+	 * @param array<string,mixed> $field Field.
+	 */
+	private function render_checkbox_list(array $field, string $name, string $description_id): void {
+		echo '<div class="wof-checkbox-list" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
+		foreach ((array) ($field['choices'] ?? []) as $choice) {
+			$choice_uuid = (string) ($choice['uuid'] ?? '');
+			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$checked     = ! empty($choice['default']);
+			echo '<label class="wof-checkbox-item" for="' . esc_attr($id) . '">';
+			echo '<input id="' . esc_attr($id) . '" type="checkbox" name="' . esc_attr($name . '[]') . '" value="' . esc_attr($choice_uuid) . '"';
+			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
+			echo ' aria-describedby="' . esc_attr($description_id) . '">';
+			echo '<span class="wof-checkbox-item__label">' . esc_html((string) $choice['label']) . '</span>';
+			$price_text = $this->choice_price_text((array) $choice);
+			if ('' !== $price_text) {
+				echo '<span class="wof-checkbox-item__price">' . esc_html($price_text) . '</span>';
+			}
+			echo '</label>';
 		}
 		echo '</div>';
 	}

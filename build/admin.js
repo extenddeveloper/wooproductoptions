@@ -1671,16 +1671,32 @@ var WooOptionsFic;
                     wp.element.createElement("input", { disabled: true, type: "date" }),
                     wp.element.createElement("span", null, "to"),
                     wp.element.createElement("input", { disabled: true, type: "date" }));
-            if (['radio', 'checkbox_group', 'segmented', 'font'].includes(field.type)) {
+            if (field.type === 'radio') {
+                return wp.element.createElement("div", { className: "wof-preview-radio-list" }, choices.slice(0, 4).map((choice, index) => wp.element.createElement("label", { className: `wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`, key: choice.uuid },
+                    wp.element.createElement("span", { className: "wof-preview-radio-item__indicator" }),
+                    wp.element.createElement("span", { className: "wof-preview-radio-item__label" }, choice.label),
+                    choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? wp.element.createElement("span", { className: "wof-preview-radio-item__price" }, choice.pricing.amount) : null)));
+            }
+            if (field.type === 'checkbox_group') {
+                return wp.element.createElement("div", { className: "wof-preview-checkbox-list" }, choices.slice(0, 4).map((choice, index) => wp.element.createElement("label", { className: `wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`, key: choice.uuid },
+                    wp.element.createElement("span", { className: "wof-preview-checkbox-item__indicator" }),
+                    wp.element.createElement("span", { className: "wof-preview-checkbox-item__label" }, choice.label),
+                    choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? wp.element.createElement("span", { className: "wof-preview-checkbox-item__price" }, choice.pricing.amount) : null)));
+            }
+            if (['segmented', 'font'].includes(field.type)) {
                 return wp.element.createElement("div", { className: "wof-preview-choice-row" }, choices.slice(0, 4).map((choice, index) => wp.element.createElement("span", { className: index === 0 ? 'is-selected' : '', key: choice.uuid }, choiceLabel(choice))));
             }
             if (field.type === 'color_swatch') {
-                return wp.element.createElement("div", { className: "wof-preview-swatches" }, choices.slice(0, 5).map((choice, index) => wp.element.createElement("span", { className: index === 0 ? 'is-selected' : '', style: { background: choice.color || '#ddd' }, key: choice.uuid })));
+                return wp.element.createElement("div", { className: "wof-preview-color-blocks" }, choices.slice(0, 5).map((choice, index) => wp.element.createElement("div", { className: `wof-preview-color-block${index === 0 ? ' is-selected' : ''}`, key: choice.uuid },
+                    wp.element.createElement("span", { className: "wof-preview-color-block__swatch", style: { background: choice.color || '#ddd' } }, index === 0 ? wp.element.createElement("span", { className: "wof-preview-color-block__check" }, "\u2713") : null),
+                    wp.element.createElement("small", null, choice.label),
+                    choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? wp.element.createElement("span", { className: "wof-preview-color-block__price" }, choice.pricing.amount) : null)));
             }
             if (field.type === 'image_swatch' || field.type === 'product') {
-                return wp.element.createElement("div", { className: "wof-preview-images" }, choices.slice(0, 4).map((choice, index) => wp.element.createElement("span", { className: index === 0 ? 'is-selected' : '', key: choice.uuid },
-                    choice.imageId || choice.imageUrl ? wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }) : wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" }),
-                    wp.element.createElement("small", null, choice.label))));
+                return wp.element.createElement("div", { className: "wof-preview-image-tiles" }, choices.slice(0, 4).map((choice, index) => wp.element.createElement("div", { className: `wof-preview-image-tile${index === 0 ? ' is-selected' : ''}`, key: choice.uuid },
+                    wp.element.createElement("span", { className: "wof-preview-image-tile__thumb" }, choice.imageId || choice.imageUrl ? wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }) : wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" })),
+                    wp.element.createElement("small", null, choice.label),
+                    choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? wp.element.createElement("span", { className: "wof-preview-image-tile__price" }, choice.pricing.amount) : null)));
             }
             if (field.type === 'repeater')
                 return wp.element.createElement("div", { className: "wof-preview-repeater" },
