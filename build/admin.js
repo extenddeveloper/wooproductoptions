@@ -2404,7 +2404,7 @@ var WooOptionsFic;
                                 wp.element.createElement("div", { className: "wof-product-shell__content" },
                                     wp.element.createElement("div", { className: "wof-product-preview-meta" },
                                         wp.element.createElement("span", { className: "wof-product-preview-meta__eyebrow" }, __('Live product preview', 'wooptionsfic')),
-                                        wp.element.createElement("h1", null, __('WowAddon Product (Preview)', 'wooptionsfic')),
+                                        wp.element.createElement("h1", null, __('WooOptionsFic Product (Preview)', 'wooptionsfic')),
                                         wp.element.createElement("strong", { className: "wof-product-preview-meta__price" }, `20.00 ${window.WooOptionsFicAdmin?.currency || 'USD'}`)),
                                     props.document.fields.length ? wp.element.createElement("div", { className: `wof-canvas-fields is-${props.document.layout.type}`, style: { display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-start' } },
                                         props.document.fields.map((field, index) => wp.element.createElement(CanvasField, { key: field.uuid, field: field, index: index, count: props.document.fields.length, selected: field.uuid === props.selectedUuid, onSelect: () => props.onSelect(field.uuid), onAdd: props.onAdd, onMove: props.onMove, onDuplicate: () => props.onDuplicate(field), onDelete: () => props.onDelete(field.uuid) })),
@@ -2882,10 +2882,16 @@ var WooOptionsFic;
                         wp.element.createElement("span", { className: "wof-eyebrow" }, window.WooOptionsFicAdmin.fieldTypes[field.type]?.label ?? field.type),
                         wp.element.createElement("h2", null, field.label)),
                     wp.element.createElement("div", { className: "wof-inspector-heading-actions" },
-                        wp.element.createElement("button", { type: "button", onClick: props.onDuplicate, "aria-label": __('Duplicate field', 'wooptionsfic') },
-                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-page" })),
-                        wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete field', 'wooptionsfic') },
-                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" })))),
+                        wp.element.createElement("button", { type: "button", onClick: props.onDuplicate, "aria-label": __('Duplicate field', 'wooptionsfic'), title: __('Duplicate', 'wooptionsfic') },
+                            wp.element.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                wp.element.createElement("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }),
+                                wp.element.createElement("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" }))),
+                        wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete field', 'wooptionsfic'), title: __('Delete', 'wooptionsfic') },
+                            wp.element.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                wp.element.createElement("polyline", { points: "3 6 5 6 21 6" }),
+                                wp.element.createElement("path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" }),
+                                wp.element.createElement("line", { x1: "10", y1: "11", x2: "10", y2: "17" }),
+                                wp.element.createElement("line", { x1: "14", y1: "11", x2: "14", y2: "17" }))))),
                 wp.element.createElement("div", { className: "wof-inspector-tabs-shell" },
                     canLeft ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-left", onClick: () => scrollerRef.current?.scrollBy({ left: -180, behavior: 'smooth' }) },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-left-alt2" })) : null,
@@ -2899,9 +2905,12 @@ var WooOptionsFic;
                     wp.element.createElement("section", { className: "wof-inspector-section" }, props.tab === 'content' ? (wp.element.createElement(wp.element.Fragment, null,
                         wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
                         wp.element.createElement(TextareaControl, { label: __('Description', 'wooptionsfic'), value: field.description, onChange: (description) => update({ description }) }),
-                        wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: '16px' } },
-                            wp.element.createElement("label", { className: "components-base-control__label", style: { display: 'block', marginBottom: '6px', fontWeight: 600 } }, __('Block Width', 'wooptionsfic')),
-                            wp.element.createElement("div", { style: { display: 'flex', gap: '6px' } }, ['33%', '50%', '66%', '100%'].map((w) => (wp.element.createElement(Button, { key: w, variant: (field.width || '100%') === w ? 'primary' : 'secondary', isSmall: true, onClick: () => update({ width: w }) }, w))))),
+                        wp.element.createElement("div", { className: "wof-field-width-setting" },
+                            wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
+                                const isSelected = (field.width || '100%') === w;
+                                return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
+                            }))),
                         'placeholder' in field ? wp.element.createElement(TextControl, { label: __('Placeholder', 'wooptionsfic'), value: field.placeholder ?? '', onChange: (placeholder) => update({ placeholder }) }) : null,
                         field.type === 'tel' ? (wp.element.createElement("div", { className: "wof-phone-settings", style: { marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
                             wp.element.createElement(SelectControl, { label: __('Flag Style', 'wooptionsfic'), value: field.flagStyle ?? 'number_only', options: [
@@ -3043,6 +3052,33 @@ var WooOptionsFic;
             };
             return icons[type] ?? 'dashicons-marker';
         }
+        function renderTypeIcon(type) {
+            switch (type) {
+                case 'global':
+                    return wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                        wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                        wp.element.createElement("line", { x1: "2", y1: "12", x2: "22", y2: "12" }),
+                        wp.element.createElement("path", { d: "M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" }));
+                case 'product':
+                    return wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                        wp.element.createElement("path", { d: "M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" }),
+                        wp.element.createElement("line", { x1: "3", y1: "6", x2: "21", y2: "6" }),
+                        wp.element.createElement("path", { d: "M16 10a4 4 0 0 1-8 0" }));
+                case 'category':
+                    return wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                        wp.element.createElement("path", { d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" }));
+                case 'tag':
+                    return wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                        wp.element.createElement("path", { d: "M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" }),
+                        wp.element.createElement("line", { x1: "7", y1: "7", x2: "7.01", y2: "7" }));
+                case 'variation':
+                    return wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                        wp.element.createElement("polyline", { points: "23 4 23 10 17 10" }),
+                        wp.element.createElement("path", { d: "M20.49 15a9 9 0 1 1-2.12-9.36L23 10" }));
+                default:
+                    return wp.element.createElement("span", { className: `dashicons ${assignmentTypeIcon(type)}`, "aria-hidden": "true" });
+            }
+        }
         function TargetSearch(props) {
             const [query, setQuery] = useState('');
             const [results, setResults] = useState([]);
@@ -3093,11 +3129,14 @@ var WooOptionsFic;
                         meta: __('Every product in the store', 'wooptionsfic'),
                         image: '',
                     }) },
-                    wp.element.createElement("span", { className: "dashicons dashicons-admin-site-alt3", "aria-hidden": "true" }),
+                    wp.element.createElement("span", { className: "wof-assignment-global__icon", "aria-hidden": "true" }, renderTypeIcon('global')),
                     wp.element.createElement("span", null,
                         wp.element.createElement("strong", null, __('All products', 'wooptionsfic')),
                         wp.element.createElement("small", null, selected ? __('Already assigned', 'wooptionsfic') : __('Apply this option set store-wide', 'wooptionsfic'))),
-                    wp.element.createElement("span", { className: `dashicons ${selected ? 'dashicons-yes-alt' : 'dashicons-plus-alt2'}`, "aria-hidden": "true" })));
+                    wp.element.createElement("span", { className: "wof-assignment-global__status", "aria-hidden": "true" }, selected ? (wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" },
+                        wp.element.createElement("polyline", { points: "20 6 9 17 4 12" }))) : (wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" },
+                        wp.element.createElement("line", { x1: "12", y1: "5", x2: "12", y2: "19" }),
+                        wp.element.createElement("line", { x1: "5", y1: "12", x2: "19", y2: "12" }))))));
             }
             const placeholder = props.type === 'product'
                 ? __('Search products by name, ID, or SKU…', 'wooptionsfic')
@@ -3199,13 +3238,16 @@ var WooOptionsFic;
             };
             return (wp.element.createElement(Modal, { title: __('Product assignments', 'wooptionsfic'), onRequestClose: props.onClose, className: "wof-modal wof-assignment-modal" },
                 wp.element.createElement("div", { className: "wof-assignment-hero" },
-                    wp.element.createElement("span", { className: "dashicons dashicons-admin-links", "aria-hidden": "true" }),
+                    wp.element.createElement("span", { className: "wof-assignment-hero__icon", "aria-hidden": "true" },
+                        wp.element.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }),
+                            wp.element.createElement("path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" }))),
                     wp.element.createElement("div", null,
                         wp.element.createElement("h3", null, __('Choose exactly where this option set appears', 'wooptionsfic')),
                         wp.element.createElement("p", null, __('Search and select multiple products, categories, tags, or variations. Product-specific rules take priority over broader category rules.', 'wooptionsfic')))),
                 wp.element.createElement("section", { className: "wof-assignment-picker" },
                     wp.element.createElement("div", { className: "wof-assignment-type-tabs", role: "tablist" }, assignmentTypes.map((assignmentType) => (wp.element.createElement("button", { type: "button", role: "tab", key: assignmentType.type, "aria-selected": type === assignmentType.type, className: type === assignmentType.type ? 'is-active' : '', onClick: () => setType(assignmentType.type) },
-                        wp.element.createElement("span", { className: `dashicons ${assignmentType.icon}`, "aria-hidden": "true" }),
+                        wp.element.createElement("span", { className: "wof-type-tab-icon", "aria-hidden": "true" }, renderTypeIcon(assignmentType.type)),
                         assignmentType.label)))),
                     wp.element.createElement(TargetSearch, { type: type, assignments: draft, onAdd: addTarget })),
                 wp.element.createElement("div", { className: "wof-assignment-section-head" },
@@ -3229,28 +3271,40 @@ var WooOptionsFic;
                         || (assignment.targetType === 'global' ? __('Store-wide assignment', 'wooptionsfic') : `ID: ${assignment.targetId}`);
                     const image = assignment.targetImage || target?.image || '';
                     return (wp.element.createElement("article", { className: "wof-assignment-card", key: assignment.uuid || key },
-                        wp.element.createElement("div", { className: "wof-assignment-card__visual" }, image ? wp.element.createElement("img", { src: image, alt: "" }) : wp.element.createElement("span", { className: `dashicons ${assignmentTypeIcon(assignment.targetType)}`, "aria-hidden": "true" })),
+                        wp.element.createElement("div", { className: "wof-assignment-card__visual" }, image ? wp.element.createElement("img", { src: image, alt: "" }) : wp.element.createElement("span", { className: "wof-assignment-visual-icon", "aria-hidden": "true" }, renderTypeIcon(assignment.targetType))),
                         wp.element.createElement("div", { className: "wof-assignment-card__identity" },
                             wp.element.createElement("div", null,
                                 wp.element.createElement("strong", null, label),
-                                wp.element.createElement("span", null, assignmentTypeLabel(assignment.targetType))),
+                                wp.element.createElement("span", { className: "wof-target-type-badge" }, assignmentTypeLabel(assignment.targetType))),
                             wp.element.createElement("small", null, meta)),
-                        wp.element.createElement(SelectControl, { label: __('Mode', 'wooptionsfic'), value: assignment.mode, options: [
-                                { label: __('Include', 'wooptionsfic'), value: 'include' },
-                                { label: __('Exclude', 'wooptionsfic'), value: 'exclude' },
-                            ], onChange: (mode) => updateAssignment(index, { mode }) }),
-                        wp.element.createElement(TextControl, { type: "number", label: __('Priority', 'wooptionsfic'), value: String(assignment.priority), min: -1000, max: 1000, onChange: (priority) => updateAssignment(index, { priority: Number(priority) }) }),
-                        wp.element.createElement("button", { type: "button", className: "wof-assignment-card__remove", onClick: () => setDraft((current) => current.filter((candidate) => candidate !== assignment)), "aria-label": __('Remove assignment', 'wooptionsfic') },
-                            wp.element.createElement("span", { className: "dashicons dashicons-trash", "aria-hidden": "true" }))));
+                        wp.element.createElement("div", { className: "wof-assignment-card__controls" },
+                            wp.element.createElement(SelectControl, { label: __('Mode', 'wooptionsfic'), value: assignment.mode, options: [
+                                    { label: __('Include', 'wooptionsfic'), value: 'include' },
+                                    { label: __('Exclude', 'wooptionsfic'), value: 'exclude' },
+                                ], onChange: (mode) => updateAssignment(index, { mode }) }),
+                            wp.element.createElement(TextControl, { type: "number", label: __('Priority', 'wooptionsfic'), value: String(assignment.priority), min: -1000, max: 1000, onChange: (priority) => updateAssignment(index, { priority: Number(priority) }) }),
+                            wp.element.createElement("button", { type: "button", className: "wof-assignment-card__remove", onClick: () => setDraft((current) => current.filter((candidate) => candidate !== assignment)), "aria-label": __('Remove assignment', 'wooptionsfic'), title: __('Remove assignment', 'wooptionsfic') },
+                                wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                    wp.element.createElement("polyline", { points: "3 6 5 6 21 6" }),
+                                    wp.element.createElement("path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" }),
+                                    wp.element.createElement("line", { x1: "10", y1: "11", x2: "10", y2: "17" }),
+                                    wp.element.createElement("line", { x1: "14", y1: "11", x2: "14", y2: "17" }))))));
                 }))) : (wp.element.createElement("div", { className: "wof-assignment-empty" },
-                    wp.element.createElement("span", { className: "dashicons dashicons-admin-links", "aria-hidden": "true" }),
+                    wp.element.createElement("span", { className: "wof-assignment-empty__icon", "aria-hidden": "true" },
+                        wp.element.createElement("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.7", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" }),
+                            wp.element.createElement("path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" }))),
                     wp.element.createElement("h3", null, __('No products assigned yet', 'wooptionsfic')),
                     wp.element.createElement("p", null, __('Use the search above to select one or more targets.', 'wooptionsfic')))),
                 wp.element.createElement("div", { className: "wof-modal__actions wof-assignment-actions" },
-                    wp.element.createElement(Button, { variant: "tertiary", onClick: props.onClose }, __('Cancel', 'wooptionsfic')),
-                    wp.element.createElement(Button, { variant: "primary", isBusy: saving || props.busy, onClick: save },
-                        wp.element.createElement("span", { className: "dashicons dashicons-saved", "aria-hidden": "true" }),
-                        __('Save assignments', 'wooptionsfic')))));
+                    wp.element.createElement(Button, { variant: "secondary", className: "wof-btn-cancel", disabled: saving || props.busy, onClick: props.onClose }, __('Cancel', 'wooptionsfic')),
+                    wp.element.createElement(Button, { variant: "primary", className: "wof-btn-save", isBusy: saving || props.busy, disabled: saving || props.busy, onClick: save },
+                        saving || props.busy ? (wp.element.createElement("svg", { className: "wof-btn-spinner", width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", "aria-hidden": "true", style: { fill: 'none', stroke: 'currentColor' } },
+                            wp.element.createElement("circle", { cx: "12", cy: "12", r: "10", stroke: "currentColor", strokeWidth: "2.8", strokeDasharray: "31.4 31.4", strokeDashoffset: "10", fill: "none" }))) : (wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", style: { fill: 'none', stroke: 'currentColor' } },
+                            wp.element.createElement("path", { d: "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z", fill: "none", stroke: "currentColor", strokeWidth: "2" }),
+                            wp.element.createElement("polyline", { points: "17 21 17 13 7 13 7 21", fill: "none", stroke: "currentColor", strokeWidth: "2" }),
+                            wp.element.createElement("polyline", { points: "7 3 7 8 15 8", fill: "none", stroke: "currentColor", strokeWidth: "2" }))),
+                        wp.element.createElement("span", null, saving || props.busy ? __('Saving…', 'wooptionsfic') : __('Save assignments', 'wooptionsfic'))))));
         }
         Builder.AssignmentsModal = AssignmentsModal;
     })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
@@ -3399,13 +3453,17 @@ var WooOptionsFic;
                         wp.element.createElement("div", { className: "wof-tool-group wof-device-switcher" }, ['desktop', 'tablet', 'mobile'].map((device) => wp.element.createElement("button", { type: "button", key: device, className: state.device === device ? 'is-active' : '', onClick: () => actions.setDevice(device) },
                             wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: device === 'desktop' ? 'desktop' : device === 'tablet' ? 'tablet' : 'smartphone' })))),
                         wp.element.createElement(Button, { variant: "tertiary", className: "wof-header-action", onClick: openHistory },
-                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "backup" }),
-                            __('Version history', 'wooptionsfic')),
+                            wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", style: { fill: 'none', stroke: 'currentColor' } },
+                                wp.element.createElement("circle", { cx: "12", cy: "12", r: "9", fill: "none", stroke: "currentColor", strokeWidth: "2" }),
+                                wp.element.createElement("polyline", { points: "12 7 12 12 15 15", fill: "none", stroke: "currentColor", strokeWidth: "2" })),
+                            __('History', 'wooptionsfic')),
                         wp.element.createElement(Button, { variant: "tertiary", className: "wof-header-action", onClick: openAssignments },
-                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-links" }),
+                            wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true", style: { fill: 'none', stroke: 'currentColor' } },
+                                wp.element.createElement("path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71", fill: "none", stroke: "currentColor", strokeWidth: "2" }),
+                                wp.element.createElement("path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71", fill: "none", stroke: "currentColor", strokeWidth: "2" })),
                             __('Assignments', 'wooptionsfic')),
-                        wp.element.createElement(Button, { variant: "secondary", isBusy: state.saveStatus === 'saving', onClick: () => saveNow('Manual save').catch(() => undefined) }, state.saveStatus === 'saving' ? __('Saving…', 'wooptionsfic') : __('Save draft', 'wooptionsfic')),
-                        wp.element.createElement(Button, { variant: "primary", isBusy: publishBusy, disabled: state.errors.length > 0 || publishBusy, onClick: publish }, publishBusy ? __('Publishing…', 'wooptionsfic') : __('Publish', 'wooptionsfic')))),
+                        wp.element.createElement(Button, { variant: "secondary", className: "wof-header-action wof-header-save", isBusy: state.saveStatus === 'saving', onClick: () => saveNow('Manual save').catch(() => undefined) }, state.saveStatus === 'saving' ? __('Saving…', 'wooptionsfic') : __('Save draft', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "primary", className: "wof-header-publish", isBusy: publishBusy, disabled: state.errors.length > 0 || publishBusy, onClick: publish }, publishBusy ? __('Publishing…', 'wooptionsfic') : __('Publish', 'wooptionsfic')))),
                 notice ? wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-builder-notice', state.saveStatus === 'error' || state.saveStatus === 'conflict' ? 'is-error' : 'is-success') },
                     wp.element.createElement("span", null, notice),
                     wp.element.createElement("button", { type: "button", onClick: () => setNotice('') }, "\u00D7")) : null,

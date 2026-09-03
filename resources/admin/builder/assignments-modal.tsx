@@ -46,6 +46,23 @@ namespace WooOptionsFic.Builder {
     return icons[type] ?? 'dashicons-marker';
   }
 
+  function renderTypeIcon(type: PickerAssignmentType | WooOptionsFic.AssignmentType): any {
+    switch (type) {
+      case 'global':
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg>;
+      case 'product':
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>;
+      case 'category':
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>;
+      case 'tag':
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" /><line x1="7" y1="7" x2="7.01" y2="7" /></svg>;
+      case 'variation':
+        return <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="23 4 23 10 17 10" /><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" /></svg>;
+      default:
+        return <span className={`dashicons ${assignmentTypeIcon(type as WooOptionsFic.AssignmentType)}`} aria-hidden="true" />;
+    }
+  }
+
   function TargetSearch(props: {
     type: PickerAssignmentType;
     assignments: WooOptionsFic.AssignmentRecord[];
@@ -111,12 +128,18 @@ namespace WooOptionsFic.Builder {
             image: '',
           })}
         >
-          <span className="dashicons dashicons-admin-site-alt3" aria-hidden="true" />
+          <span className="wof-assignment-global__icon" aria-hidden="true">{renderTypeIcon('global')}</span>
           <span>
             <strong>{__('All products', 'wooptionsfic')}</strong>
             <small>{selected ? __('Already assigned', 'wooptionsfic') : __('Apply this option set store-wide', 'wooptionsfic')}</small>
           </span>
-          <span className={`dashicons ${selected ? 'dashicons-yes-alt' : 'dashicons-plus-alt2'}`} aria-hidden="true" />
+          <span className="wof-assignment-global__status" aria-hidden="true">
+            {selected ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+            )}
+          </span>
         </button>
       );
     }
@@ -279,7 +302,9 @@ namespace WooOptionsFic.Builder {
         className="wof-modal wof-assignment-modal"
       >
         <div className="wof-assignment-hero">
-          <span className="dashicons dashicons-admin-links" aria-hidden="true" />
+          <span className="wof-assignment-hero__icon" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+          </span>
           <div>
             <h3>{__('Choose exactly where this option set appears', 'wooptionsfic')}</h3>
             <p>{__('Search and select multiple products, categories, tags, or variations. Product-specific rules take priority over broader category rules.', 'wooptionsfic')}</p>
@@ -297,7 +322,7 @@ namespace WooOptionsFic.Builder {
                 className={type === assignmentType.type ? 'is-active' : ''}
                 onClick={() => setType(assignmentType.type)}
               >
-                <span className={`dashicons ${assignmentType.icon}`} aria-hidden="true" />
+                <span className="wof-type-tab-icon" aria-hidden="true">{renderTypeIcon(assignmentType.type)}</span>
                 {assignmentType.label}
               </button>
             ))}
@@ -330,54 +355,71 @@ namespace WooOptionsFic.Builder {
               return (
                 <article className="wof-assignment-card" key={assignment.uuid || key}>
                   <div className="wof-assignment-card__visual">
-                    {image ? <img src={image} alt="" /> : <span className={`dashicons ${assignmentTypeIcon(assignment.targetType)}`} aria-hidden="true" />}
+                    {image ? <img src={image} alt="" /> : <span className="wof-assignment-visual-icon" aria-hidden="true">{renderTypeIcon(assignment.targetType)}</span>}
                   </div>
                   <div className="wof-assignment-card__identity">
-                    <div><strong>{label}</strong><span>{assignmentTypeLabel(assignment.targetType)}</span></div>
+                    <div><strong>{label}</strong><span className="wof-target-type-badge">{assignmentTypeLabel(assignment.targetType)}</span></div>
                     <small>{meta}</small>
                   </div>
-                  <SelectControl
-                    label={__('Mode', 'wooptionsfic')}
-                    value={assignment.mode}
-                    options={[
-                      { label: __('Include', 'wooptionsfic'), value: 'include' },
-                      { label: __('Exclude', 'wooptionsfic'), value: 'exclude' },
-                    ]}
-                    onChange={(mode: 'include' | 'exclude') => updateAssignment(index, { mode })}
-                  />
-                  <TextControl
-                    type="number"
-                    label={__('Priority', 'wooptionsfic')}
-                    value={String(assignment.priority)}
-                    min={-1000}
-                    max={1000}
-                    onChange={(priority: string) => updateAssignment(index, { priority: Number(priority) })}
-                  />
-                  <button
-                    type="button"
-                    className="wof-assignment-card__remove"
-                    onClick={() => setDraft((current) => current.filter((candidate) => candidate !== assignment))}
-                    aria-label={__('Remove assignment', 'wooptionsfic')}
-                  >
-                    <span className="dashicons dashicons-trash" aria-hidden="true" />
-                  </button>
+                  <div className="wof-assignment-card__controls">
+                    <SelectControl
+                      label={__('Mode', 'wooptionsfic')}
+                      value={assignment.mode}
+                      options={[
+                        { label: __('Include', 'wooptionsfic'), value: 'include' },
+                        { label: __('Exclude', 'wooptionsfic'), value: 'exclude' },
+                      ]}
+                      onChange={(mode: 'include' | 'exclude') => updateAssignment(index, { mode })}
+                    />
+                    <TextControl
+                      type="number"
+                      label={__('Priority', 'wooptionsfic')}
+                      value={String(assignment.priority)}
+                      min={-1000}
+                      max={1000}
+                      onChange={(priority: string) => updateAssignment(index, { priority: Number(priority) })}
+                    />
+                    <button
+                      type="button"
+                      className="wof-assignment-card__remove"
+                      onClick={() => setDraft((current) => current.filter((candidate) => candidate !== assignment))}
+                      aria-label={__('Remove assignment', 'wooptionsfic')}
+                      title={__('Remove assignment', 'wooptionsfic')}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+                    </button>
+                  </div>
                 </article>
               );
             })}
           </div>
         ) : (
           <div className="wof-assignment-empty">
-            <span className="dashicons dashicons-admin-links" aria-hidden="true" />
+            <span className="wof-assignment-empty__icon" aria-hidden="true">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+            </span>
             <h3>{__('No products assigned yet', 'wooptionsfic')}</h3>
             <p>{__('Use the search above to select one or more targets.', 'wooptionsfic')}</p>
           </div>
         )}
 
         <div className="wof-modal__actions wof-assignment-actions">
-          <Button variant="tertiary" onClick={props.onClose}>{__('Cancel', 'wooptionsfic')}</Button>
-          <Button variant="primary" isBusy={saving || props.busy} onClick={save}>
-            <span className="dashicons dashicons-saved" aria-hidden="true" />
-            {__('Save assignments', 'wooptionsfic')}
+          <Button variant="secondary" className="wof-btn-cancel" disabled={saving || props.busy} onClick={props.onClose}>
+            {__('Cancel', 'wooptionsfic')}
+          </Button>
+          <Button variant="primary" className="wof-btn-save" isBusy={saving || props.busy} disabled={saving || props.busy} onClick={save}>
+            {saving || props.busy ? (
+              <svg className="wof-btn-spinner" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true" style={{ fill: 'none', stroke: 'currentColor' }}>
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2.8" strokeDasharray="31.4 31.4" strokeDashoffset="10" fill="none" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ fill: 'none', stroke: 'currentColor' }}>
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" fill="none" stroke="currentColor" strokeWidth="2" />
+                <polyline points="17 21 17 13 7 13 7 21" fill="none" stroke="currentColor" strokeWidth="2" />
+                <polyline points="7 3 7 8 15 8" fill="none" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            )}
+            <span>{saving || props.busy ? __('Saving…', 'wooptionsfic') : __('Save assignments', 'wooptionsfic')}</span>
           </Button>
         </div>
       </Modal>

@@ -315,8 +315,12 @@ namespace WooOptionsFic.Builder {
           <h2>{field.label}</h2>
         </div>
         <div className="wof-inspector-heading-actions">
-          <button type="button" onClick={props.onDuplicate} aria-label={__('Duplicate field', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="admin-page" /></button>
-          <button type="button" className="is-destructive" onClick={props.onDelete} aria-label={__('Delete field', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="trash" /></button>
+          <button type="button" onClick={props.onDuplicate} aria-label={__('Duplicate field', 'wooptionsfic')} title={__('Duplicate', 'wooptionsfic')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></svg>
+          </button>
+          <button type="button" className="is-destructive" onClick={props.onDelete} aria-label={__('Delete field', 'wooptionsfic')} title={__('Delete', 'wooptionsfic')}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" /></svg>
+          </button>
         </div>
       </div>
       <div className="wof-inspector-tabs-shell">
@@ -346,19 +350,24 @@ namespace WooOptionsFic.Builder {
               <TextareaControl label={__('Description', 'wooptionsfic')} value={field.description} onChange={(description: string) => update({ description })} />
 
               {/* Block Width options for every block */}
-              <div className="wof-field-width-setting" style={{ marginBottom: '16px' }}>
-                <label className="components-base-control__label" style={{ display: 'block', marginBottom: '6px', fontWeight: 600 }}>{__('Block Width', 'wooptionsfic')}</label>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  {['33%', '50%', '66%', '100%'].map((w) => (
-                    <Button
-                      key={w}
-                      variant={(field.width || '100%') === w ? 'primary' : 'secondary'}
-                      isSmall
-                      onClick={() => update({ width: w })}
-                    >
-                      {w}
-                    </Button>
-                  ))}
+              <div className="wof-field-width-setting">
+                <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+                <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+                  {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+                    const isSelected = (field.width || '100%') === w;
+                    return (
+                      <button
+                        type="button"
+                        key={w}
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                        onClick={() => update({ width: w })}
+                      >
+                        {w}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
