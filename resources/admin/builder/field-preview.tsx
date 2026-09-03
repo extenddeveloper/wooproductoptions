@@ -1,8 +1,32 @@
 namespace WooOptionsFic.Builder {
   const { __ } = wp.i18n;
 
+  export function formatChoicePrice(pricing?: WooOptionsFic.PricingDefinition): string {
+    if (!pricing || pricing.strategy === 'none') return '';
+    const adminConfig = (window as any).WooOptionsFicAdmin;
+    const symbol = adminConfig?.currencySymbol || adminConfig?.currency || '$';
+    if (pricing.strategy === 'fixed') {
+      const raw = String(pricing.amount ?? '0').trim();
+      if (!raw || raw === '0') return '';
+      const isNegative = raw.startsWith('-');
+      const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
+      const prefix = isNegative ? '-' : '+';
+      return `${prefix}${symbol}${clean}`;
+    }
+    if (pricing.strategy === 'percentage') {
+      const raw = String(pricing.percent ?? '0').trim();
+      if (!raw || raw === '0') return '';
+      const isNegative = raw.startsWith('-');
+      const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
+      const prefix = isNegative ? '-' : '+';
+      return `${prefix}${clean}%`;
+    }
+    return '';
+  }
+
   function choiceLabel(choice: WooOptionsFic.ChoiceDefinition): string {
-    const amount = choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? ` · ${choice.pricing.amount}` : '';
+    const priceText = formatChoicePrice(choice.pricing);
+    const amount = priceText ? ` · ${priceText}` : '';
     return `${choice.label}${amount}`;
   }
 
@@ -168,13 +192,13 @@ namespace WooOptionsFic.Builder {
     if (field.type === 'radio') {
       const itemStyle: any = {};
       if (field.choiceBorderRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
-      return <div className="wof-preview-radio-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}><span className="wof-preview-radio-item__indicator" /><div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}><span className="wof-preview-radio-item__label">{choice.label}</span>{choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? <span className="wof-preview-radio-item__price">{choice.pricing.amount}</span> : null}{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div></label>)}</div>;
+      return <div className="wof-preview-radio-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}><span className="wof-preview-radio-item__indicator" /><div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}><span className="wof-preview-radio-item__label">{choice.label}</span>{formatChoicePrice(choice.pricing) ? <span className="wof-preview-radio-item__price">{formatChoicePrice(choice.pricing)}</span> : null}{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div></label>)}</div>;
     }
 
     if (field.type === 'checkbox_group') {
       const itemStyle: any = {};
       if (field.choiceBorderRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
-      return <div className="wof-preview-checkbox-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}><span className="wof-preview-checkbox-item__indicator" /><div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}><span className="wof-preview-checkbox-item__label">{choice.label}</span>{choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? <span className="wof-preview-checkbox-item__price">{choice.pricing.amount}</span> : null}{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div></label>)}</div>;
+      return <div className="wof-preview-checkbox-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}><span className="wof-preview-checkbox-item__indicator" /><div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}><span className="wof-preview-checkbox-item__label">{choice.label}</span>{formatChoicePrice(choice.pricing) ? <span className="wof-preview-checkbox-item__price">{formatChoicePrice(choice.pricing)}</span> : null}{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div></label>)}</div>;
     }
 
     if (['segmented', 'font'].includes(field.type)) {
@@ -192,7 +216,7 @@ namespace WooOptionsFic.Builder {
       if (field.choiceHeight) swatchStyle.height = `${field.choiceHeight}px`;
       if (field.choiceBorderRadius) swatchStyle.borderRadius = `${field.choiceBorderRadius}px`;
 
-      return <div className="wof-preview-color-blocks">{choices.slice(0, 5).map((choice, index) => <div className={`wof-preview-color-block${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}><span className="wof-preview-color-block__swatch" style={{ background: choice.color || '#ddd', ...swatchStyle, position: 'relative' }}>{index === 0 ? <span className="wof-preview-color-block__check" style={{ position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 }}>{renderCheckSvg(10)}</span> : null}</span><small style={{ minHeight: '1.3em', marginTop: '4px' }}>{choice.label}</small><span className="wof-preview-color-block__price" style={{ minHeight: '1.3em' }}>{choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? choice.pricing.amount : ''}</span>{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div>)}</div>;
+      return <div className="wof-preview-color-blocks">{choices.slice(0, 5).map((choice, index) => <div className={`wof-preview-color-block${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}><span className="wof-preview-color-block__swatch" style={{ background: choice.color || '#ddd', ...swatchStyle, position: 'relative' }}>{index === 0 ? <span className="wof-preview-color-block__check" style={{ position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 }}>{renderCheckSvg(10)}</span> : null}</span><small style={{ minHeight: '1.3em', marginTop: '4px' }}>{choice.label}</small><span className="wof-preview-color-block__price" style={{ minHeight: '1.3em' }}>{formatChoicePrice(choice.pricing)}</span>{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div>)}</div>;
     }
 
     if (field.type === 'image_swatch' || field.type === 'product') {
@@ -210,7 +234,7 @@ namespace WooOptionsFic.Builder {
                 {index === 0 ? <span className="wof-preview-image-tile__check" style={{ position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 }}>{renderCheckSvg(10)}</span> : null}
               </span>
               <small style={{ minHeight: '1.3em', marginTop: '4px' }}>{choice.label}</small>
-              <span className="wof-preview-image-tile__price" style={{ minHeight: '1.3em' }}>{choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? choice.pricing.amount : ''}</span>
+              <span className="wof-preview-image-tile__price" style={{ minHeight: '1.3em' }}>{formatChoicePrice(choice.pricing)}</span>
               {field.enableQuantity ? (
                 <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' }}>
                   <input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} />

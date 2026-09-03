@@ -117,6 +117,8 @@ final class AdminPage {
 					'palettes'      => is_array($palettes) ? $palettes : [],
 					'settings'      => Settings::all(),
 					'wooAvailable'  => Requirements::woocommerce_is_available(),
+					'currency'      => Requirements::woocommerce_is_available() && function_exists('get_woocommerce_currency') ? (string) get_woocommerce_currency() : 'USD',
+					'currencySymbol'=> Requirements::woocommerce_is_available() && function_exists('get_woocommerce_currency_symbol') ? html_entity_decode((string) get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8') : '$',
 					'currentUser'   => [
 						'id'   => get_current_user_id(),
 						'name' => wp_get_current_user()->display_name,

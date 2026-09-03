@@ -343,7 +343,7 @@ final class Renderer {
 			echo '<span class="wof-swatch-item__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="11" height="11" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>';
 			echo '</span>';
 			echo '<span class="wof-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
-			$price_text = $this->choice_price_text((array) $choice);
+			$price_text = $this->choice_price_text((array) $choice, false);
 			echo '<span class="wof-swatch-item__price">' . ('' !== $price_text ? esc_html($price_text) : '&nbsp;') . '</span>';
 			if (! empty($field['enableQuantity'])) {
 				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
@@ -416,7 +416,7 @@ final class Renderer {
 			echo '<span class="wof-image-swatch-item__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="11" height="11" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>';
 			echo '</span>';
 			echo '<span class="wof-image-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
-			$price_text = $this->choice_price_text((array) $choice);
+			$price_text = $this->choice_price_text((array) $choice, false);
 			echo '<span class="wof-image-swatch-item__price">' . ('' !== $price_text ? esc_html($price_text) : '&nbsp;') . '</span>';
 			if (! empty($field['enableQuantity'])) {
 				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
@@ -449,7 +449,7 @@ final class Renderer {
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
 			echo '<span class="wof-radio-item__label">' . esc_html((string) $choice['label']) . '</span>';
-			$price_text = $this->choice_price_text((array) $choice);
+			$price_text = $this->choice_price_text((array) $choice, false);
 			if ('' !== $price_text) {
 				echo '<span class="wof-radio-item__price">' . esc_html($price_text) . '</span>';
 			}
@@ -484,7 +484,7 @@ final class Renderer {
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
 			echo '<span class="wof-checkbox-item__label">' . esc_html((string) $choice['label']) . '</span>';
-			$price_text = $this->choice_price_text((array) $choice);
+			$price_text = $this->choice_price_text((array) $choice, false);
 			if ('' !== $price_text) {
 				echo '<span class="wof-checkbox-item__price">' . esc_html($price_text) . '</span>';
 			}
@@ -802,14 +802,33 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $choice Choice.
 	 */
-	private function choice_price_text(array $choice): string {
+	private function choice_price_text(array $choice, bool $parentheses = true): string {
 		$pricing  = (array) ($choice['pricing'] ?? []);
 		$strategy = (string) ($pricing['strategy'] ?? 'none');
+		$currency = function_exists('get_woocommerce_currency_symbol')
+			? html_entity_decode((string) get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8')
+			: '';
+		if ('' === $currency && function_exists('get_woocommerce_currency')) {
+			$currency = (string) get_woocommerce_currency();
+		}
+		if ('' === $currency) {
+			$currency = '$';
+		}
 		if ('fixed' === $strategy && '0' !== (string) ($pricing['amount'] ?? '0')) {
-			return ' (+' . (string) $pricing['amount'] . ')';
+			$raw = trim((string) ($pricing['amount'] ?? '0'));
+			$is_negative = str_starts_with($raw, '-');
+			$clean = $is_negative ? substr($raw, 1) : (str_starts_with($raw, '+') ? substr($raw, 1) : $raw);
+			$prefix = $is_negative ? '-' : '+';
+			$text = $prefix . $currency . $clean;
+			return $parentheses ? ' (' . $text . ')' : $text;
 		}
 		if ('percentage' === $strategy && '0' !== (string) ($pricing['percent'] ?? '0')) {
-			return ' (+' . (string) $pricing['percent'] . '%)';
+			$raw = trim((string) ($pricing['percent'] ?? '0'));
+			$is_negative = str_starts_with($raw, '-');
+			$clean = $is_negative ? substr($raw, 1) : (str_starts_with($raw, '+') ? substr($raw, 1) : $raw);
+			$prefix = $is_negative ? '-' : '+';
+			$text = $prefix . $clean . '%';
+			return $parentheses ? ' (' . $text . ')' : $text;
 		}
 		return '';
 	}

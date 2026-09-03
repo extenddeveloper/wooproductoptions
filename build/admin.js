@@ -1687,8 +1687,35 @@ var WooOptionsFic;
     var Builder;
     (function (Builder) {
         const { __ } = wp.i18n;
+        function formatChoicePrice(pricing) {
+            if (!pricing || pricing.strategy === 'none')
+                return '';
+            const adminConfig = window.WooOptionsFicAdmin;
+            const symbol = adminConfig?.currencySymbol || adminConfig?.currency || '$';
+            if (pricing.strategy === 'fixed') {
+                const raw = String(pricing.amount ?? '0').trim();
+                if (!raw || raw === '0')
+                    return '';
+                const isNegative = raw.startsWith('-');
+                const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
+                const prefix = isNegative ? '-' : '+';
+                return `${prefix}${symbol}${clean}`;
+            }
+            if (pricing.strategy === 'percentage') {
+                const raw = String(pricing.percent ?? '0').trim();
+                if (!raw || raw === '0')
+                    return '';
+                const isNegative = raw.startsWith('-');
+                const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
+                const prefix = isNegative ? '-' : '+';
+                return `${prefix}${clean}%`;
+            }
+            return '';
+        }
+        Builder.formatChoicePrice = formatChoicePrice;
         function choiceLabel(choice) {
-            const amount = choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? ` · ${choice.pricing.amount}` : '';
+            const priceText = formatChoicePrice(choice.pricing);
+            const amount = priceText ? ` · ${priceText}` : '';
             return `${choice.label}${amount}`;
         }
         function previewColor(field) {
@@ -2047,7 +2074,7 @@ var WooOptionsFic;
                     wp.element.createElement("span", { className: "wof-preview-radio-item__indicator" }),
                     wp.element.createElement("div", { style: { display: 'flex', flexDirection: 'column', flex: 1 } },
                         wp.element.createElement("span", { className: "wof-preview-radio-item__label" }, choice.label),
-                        choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? wp.element.createElement("span", { className: "wof-preview-radio-item__price" }, choice.pricing.amount) : null,
+                        formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-radio-item__price" }, formatChoicePrice(choice.pricing)) : null,
                         field.enableQuantity ? wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex' } },
                             wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } })) : null))));
             }
@@ -2059,7 +2086,7 @@ var WooOptionsFic;
                     wp.element.createElement("span", { className: "wof-preview-checkbox-item__indicator" }),
                     wp.element.createElement("div", { style: { display: 'flex', flexDirection: 'column', flex: 1 } },
                         wp.element.createElement("span", { className: "wof-preview-checkbox-item__label" }, choice.label),
-                        choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? wp.element.createElement("span", { className: "wof-preview-checkbox-item__price" }, choice.pricing.amount) : null,
+                        formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-checkbox-item__price" }, formatChoicePrice(choice.pricing)) : null,
                         field.enableQuantity ? wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex' } },
                             wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } })) : null))));
             }
@@ -2086,7 +2113,7 @@ var WooOptionsFic;
                 return wp.element.createElement("div", { className: "wof-preview-color-blocks" }, choices.slice(0, 5).map((choice, index) => wp.element.createElement("div", { className: `wof-preview-color-block${index === 0 ? ' is-selected' : ''}`, key: choice.uuid, style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
                     wp.element.createElement("span", { className: "wof-preview-color-block__swatch", style: { background: choice.color || '#ddd', ...swatchStyle, position: 'relative' } }, index === 0 ? wp.element.createElement("span", { className: "wof-preview-color-block__check", style: { position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 } }, renderCheckSvg(10)) : null),
                     wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px' } }, choice.label),
-                    wp.element.createElement("span", { className: "wof-preview-color-block__price", style: { minHeight: '1.3em' } }, choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? choice.pricing.amount : ''),
+                    wp.element.createElement("span", { className: "wof-preview-color-block__price", style: { minHeight: '1.3em' } }, formatChoicePrice(choice.pricing)),
                     field.enableQuantity ? wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' } },
                         wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } })) : null)));
             }
@@ -2103,7 +2130,7 @@ var WooOptionsFic;
                         choice.imageId || choice.imageUrl ? wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }) : wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" }),
                         index === 0 ? wp.element.createElement("span", { className: "wof-preview-image-tile__check", style: { position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 } }, renderCheckSvg(10)) : null),
                     wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px' } }, choice.label),
-                    wp.element.createElement("span", { className: "wof-preview-image-tile__price", style: { minHeight: '1.3em' } }, choice.pricing?.strategy === 'fixed' && choice.pricing.amount !== '0' ? choice.pricing.amount : ''),
+                    wp.element.createElement("span", { className: "wof-preview-image-tile__price", style: { minHeight: '1.3em' } }, formatChoicePrice(choice.pricing)),
                     field.enableQuantity ? (wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' } },
                         wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } }))) : null)))));
             }
@@ -2378,7 +2405,7 @@ var WooOptionsFic;
                                     wp.element.createElement("div", { className: "wof-product-preview-meta" },
                                         wp.element.createElement("span", { className: "wof-product-preview-meta__eyebrow" }, __('Live product preview', 'wooptionsfic')),
                                         wp.element.createElement("h1", null, __('WowAddon Product (Preview)', 'wooptionsfic')),
-                                        wp.element.createElement("strong", { className: "wof-product-preview-meta__price" }, "20.00 USD")),
+                                        wp.element.createElement("strong", { className: "wof-product-preview-meta__price" }, `20.00 ${window.WooOptionsFicAdmin?.currency || 'USD'}`)),
                                     props.document.fields.length ? wp.element.createElement("div", { className: `wof-canvas-fields is-${props.document.layout.type}`, style: { display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-start' } },
                                         props.document.fields.map((field, index) => wp.element.createElement(CanvasField, { key: field.uuid, field: field, index: index, count: props.document.fields.length, selected: field.uuid === props.selectedUuid, onSelect: () => props.onSelect(field.uuid), onAdd: props.onAdd, onMove: props.onMove, onDuplicate: () => props.onDuplicate(field), onDelete: () => props.onDelete(field.uuid) })),
                                         wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-drop-end', dragActive && 'is-active'), onDragOver: canvasDragOver, onDrop: dropAtEnd },
@@ -3388,31 +3415,69 @@ var WooOptionsFic;
                     wp.element.createElement(Builder.Inspector, { field: selectedField, document: state.document, tab: state.inspectorTab, onTabChange: actions.setInspectorTab, onFieldChange: (field) => actions.replaceField(field.uuid, field), onDocumentChange: actions.updateDocument, onDuplicate: duplicateSelected, onDelete: () => selectedField && setDeleteUuid(selectedField.uuid) })),
                 wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-diagnostics-drawer', diagnosticsOpen && 'is-open') },
                     wp.element.createElement("button", { type: "button", className: "wof-diagnostics-toggle", onClick: () => setDiagnosticsOpen(!diagnosticsOpen) },
-                        wp.element.createElement("span", { className: state.errors.length ? 'is-error' : 'is-good' }, state.errors.length ? '!' : '✓'),
+                        wp.element.createElement("span", { className: state.errors.length ? 'is-error' : state.warnings.length ? 'is-warn' : 'is-good', "aria-hidden": "true" }, state.errors.length ? (wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round" },
+                            wp.element.createElement("line", { x1: "3", y1: "3", x2: "13", y2: "13" }),
+                            wp.element.createElement("line", { x1: "13", y1: "3", x2: "3", y2: "13" }))) : state.warnings.length ? (wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("path", { d: "M8 2L14.5 13H1.5L8 2z" }),
+                            wp.element.createElement("line", { x1: "8", y1: "7", x2: "8", y2: "10" }),
+                            wp.element.createElement("circle", { cx: "8", cy: "12", r: ".6", fill: "currentColor", stroke: "none" }))) : (wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("polyline", { points: "2,8 6.5,12.5 14,4" })))),
                         wp.element.createElement("strong", null, __('Preflight diagnostics', 'wooptionsfic')),
                         wp.element.createElement("small", null,
                             state.errors.length ? `${state.errors.length} ${__('errors', 'wooptionsfic')}` : __('Ready to publish', 'wooptionsfic'),
                             state.warnings.length ? ` · ${state.warnings.length} ${__('warnings', 'wooptionsfic')}` : ''),
-                        wp.element.createElement("b", null, diagnosticsOpen ? '⌄' : '⌃')),
+                        wp.element.createElement("b", { className: "wof-diagnostics-chevron", "aria-hidden": "true" }, diagnosticsOpen ? (wp.element.createElement("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("polyline", { points: "3,10 8,5 13,10" }))) : (wp.element.createElement("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("polyline", { points: "3,6 8,11 13,6" }))))),
                     diagnosticsOpen ? wp.element.createElement("div", { className: "wof-diagnostics-content" },
-                        wp.element.createElement("div", null,
-                            wp.element.createElement("h3", null, __('Errors', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-diagnostics-section" },
+                            wp.element.createElement("h3", null,
+                                wp.element.createElement("span", { className: "wof-diag-section-icon wof-diag-icon-error", "aria-hidden": "true" },
+                                    wp.element.createElement("svg", { width: "9", height: "9", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round" },
+                                        wp.element.createElement("line", { x1: "3", y1: "3", x2: "13", y2: "13" }),
+                                        wp.element.createElement("line", { x1: "13", y1: "3", x2: "3", y2: "13" }))),
+                                __('Errors', 'wooptionsfic'),
+                                state.errors.length ? wp.element.createElement("em", { className: "wof-diag-count" }, state.errors.length) : null),
                             state.errors.length ? wp.element.createElement("ul", null, state.errors.map((issue, index) => wp.element.createElement("li", { key: `${issue.code}-${index}` },
-                                wp.element.createElement("span", null, "!"),
+                                wp.element.createElement("span", { className: "wof-issue-icon is-error", "aria-label": "error" },
+                                    wp.element.createElement("svg", { width: "9", height: "9", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", "aria-hidden": "true" },
+                                        wp.element.createElement("line", { x1: "3", y1: "3", x2: "13", y2: "13" }),
+                                        wp.element.createElement("line", { x1: "13", y1: "3", x2: "3", y2: "13" }))),
                                 wp.element.createElement("code", null, issue.code),
-                                wp.element.createElement("small", null, issue.path ?? issue.fieldUuid ?? '')))) : wp.element.createElement("p", null,
-                                "\u2713 ",
+                                wp.element.createElement("small", null, issue.path ?? issue.fieldUuid ?? '')))) : wp.element.createElement("p", { className: "wof-diag-ok" },
+                                wp.element.createElement("span", { "aria-hidden": "true" },
+                                    wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                        wp.element.createElement("polyline", { points: "2,8 6.5,12.5 14,4" }))),
                                 __('No blocking errors.', 'wooptionsfic'))),
-                        wp.element.createElement("div", null,
-                            wp.element.createElement("h3", null, __('Warnings', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-diagnostics-section" },
+                            wp.element.createElement("h3", null,
+                                wp.element.createElement("span", { className: "wof-diag-section-icon wof-diag-icon-warn", "aria-hidden": "true" },
+                                    wp.element.createElement("svg", { width: "9", height: "9", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                        wp.element.createElement("path", { d: "M8 2L14.5 13H1.5L8 2z" }),
+                                        wp.element.createElement("line", { x1: "8", y1: "7", x2: "8", y2: "10" }),
+                                        wp.element.createElement("circle", { cx: "8", cy: "12", r: ".6", fill: "currentColor", stroke: "none" }))),
+                                __('Warnings', 'wooptionsfic'),
+                                state.warnings.length ? wp.element.createElement("em", { className: "wof-diag-count is-warn" }, state.warnings.length) : null),
                             state.warnings.length ? wp.element.createElement("ul", null, state.warnings.map((issue, index) => wp.element.createElement("li", { key: `${issue.code}-${index}` },
-                                wp.element.createElement("span", null, "\u2022"),
+                                wp.element.createElement("span", { className: "wof-issue-icon is-warn", "aria-label": "warning" },
+                                    wp.element.createElement("svg", { width: "9", height: "9", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                        wp.element.createElement("path", { d: "M8 2L14.5 13H1.5L8 2z" }),
+                                        wp.element.createElement("line", { x1: "8", y1: "7", x2: "8", y2: "10" }),
+                                        wp.element.createElement("circle", { cx: "8", cy: "12", r: ".6", fill: "currentColor", stroke: "none" }))),
                                 wp.element.createElement("code", null, issue.code),
-                                wp.element.createElement("small", null, issue.path ?? issue.fieldUuid ?? '')))) : wp.element.createElement("p", null,
-                                "\u2713 ",
+                                wp.element.createElement("small", null, issue.path ?? issue.fieldUuid ?? '')))) : wp.element.createElement("p", { className: "wof-diag-ok" },
+                                wp.element.createElement("span", { "aria-hidden": "true" },
+                                    wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                        wp.element.createElement("polyline", { points: "2,8 6.5,12.5 14,4" }))),
                                 __('No warnings.', 'wooptionsfic'))),
                         wp.element.createElement("div", { className: "wof-config-size" },
-                            wp.element.createElement("h3", null, __('Configuration size', 'wooptionsfic')),
+                            wp.element.createElement("span", { className: "wof-config-size-icon", "aria-hidden": "true" },
+                                wp.element.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
+                                    wp.element.createElement("ellipse", { cx: "12", cy: "5", rx: "9", ry: "3" }),
+                                    wp.element.createElement("path", { d: "M3 5v4c0 1.66 4.03 3 9 3s9-1.34 9-3V5" }),
+                                    wp.element.createElement("path", { d: "M3 9v4c0 1.66 4.03 3 9 3s9-1.34 9-3V9" }),
+                                    wp.element.createElement("path", { d: "M3 13v4c0 1.66 4.03 3 9 3s9-1.34 9-3v-4" }))),
+                            wp.element.createElement("h3", null, __('Config size', 'wooptionsfic')),
                             wp.element.createElement("strong", null,
                                 new Blob([JSON.stringify(state.document)]).size.toLocaleString(),
                                 " B"),
