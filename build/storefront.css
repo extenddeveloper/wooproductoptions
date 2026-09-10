@@ -1797,6 +1797,21 @@
 	gap: .35rem;
 }
 
+.wof-radio-list--cols-2,
+.wof-radio-list[data-columns="2"] {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: .5rem 1rem;
+}
+
+@media (max-width: 480px) {
+	.wof-radio-list--cols-2,
+	.wof-radio-list[data-columns="2"],
+	.wof-checkbox-list--cols-2,
+	.wof-checkbox-list[data-columns="2"] {
+		grid-template-columns: 1fr;
+	}
+}
+
 .wof-radio-item {
 	align-items: center;
 	cursor: pointer;
@@ -1826,6 +1841,22 @@
 	border-radius: 4px;
 }
 
+.wof-radio-item .wof-choice-img,
+.wof-checkbox-item .wof-choice-img {
+	border: 1px solid var(--wof-border, #d8deea);
+	border-radius: 4px;
+	display: block;
+	flex: 0 0 auto;
+	height: 32px;
+	object-fit: cover;
+	width: 32px;
+}
+
+.wof-radio-item .wof-choice-img--circle,
+.wof-checkbox-item .wof-choice-img--circle {
+	border-radius: 50% !important;
+}
+
 .wof-radio-item__label {
 	color: var(--wof-text);
 	font-size: .88rem;
@@ -1837,13 +1868,20 @@
 	color: var(--wof-muted);
 	font-size: .82rem;
 	line-height: 1.4;
-	margin-left: auto;
+	margin-inline-start: 0;
+	white-space: nowrap;
 }
 
 /* --- Checkbox List (standard visible checkboxes) --- */
 .wof-checkbox-list {
 	display: grid;
 	gap: .35rem;
+}
+
+.wof-checkbox-list--cols-2,
+.wof-checkbox-list[data-columns="2"] {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: .5rem 1rem;
 }
 
 .wof-checkbox-item {
@@ -1886,8 +1924,10 @@
 	color: var(--wof-muted);
 	font-size: .82rem;
 	line-height: 1.4;
-	margin-left: auto;
+	margin-inline-start: 0;
+	white-space: nowrap;
 }
+
 
 /* --- Theme override contracts for new field types --- */
 .wof-configurator .wof-swatch-item__color {
@@ -1931,6 +1971,12 @@
 .wof-configurator .wof-image-swatch-item__price {
 	color: var(--wof-muted) !important;
 	font-family: var(--wof-font) !important;
+}
+
+.wof-configurator .wof-radio-item__price,
+.wof-configurator .wof-checkbox-item__price {
+	margin-inline-start: 0 !important;
+	white-space: nowrap !important;
 }
 
 .wof-configurator .wof-swatch-item__label,
@@ -2255,7 +2301,6 @@
 	justify-content: center !important;
 	margin-top: auto !important;
 	padding-top: 8px !important;
-	width: 100% !important;
 	max-height: 30px !important;
 }
 

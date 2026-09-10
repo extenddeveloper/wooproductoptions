@@ -448,7 +448,13 @@ final class Renderer {
 			$radio_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
 		}
 
-		echo '<div class="wof-radio-list" role="radiogroup" aria-label="' . esc_attr((string) $field['label']) . '">';
+		$is_two_cols  = in_array((string) ($field['columns'] ?? 'one'), ['two', '2'], true);
+		$list_class   = 'wof-radio-list' . ($is_two_cols ? ' wof-radio-list--cols-2' : '');
+		$col_attr     = $is_two_cols ? ' data-columns="2"' : '';
+		$image_style  = (string) ($field['imageStyle'] ?? 'normal');
+		$img_base_cls = 'circle' === $image_style ? 'wof-choice-img wof-choice-img--circle' : 'wof-choice-img';
+
+		echo '<div class="' . esc_attr($list_class) . '" role="radiogroup" aria-label="' . esc_attr((string) $field['label']) . '"' . $col_attr . '>';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
@@ -457,15 +463,22 @@ final class Renderer {
 			echo '<input id="' . esc_attr($id) . '" type="radio" name="' . esc_attr($name) . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
+
+			$image_html = '';
+			if ((int) ($choice['imageId'] ?? 0) > 0) {
+				$image_html = (string) wp_get_attachment_image((int) $choice['imageId'], 'thumbnail', false, ['class' => $img_base_cls, 'alt' => '']);
+			}
+			if ('' === $image_html && '' !== (string) ($choice['imageUrl'] ?? '')) {
+				$image_html = '<img class="' . esc_attr($img_base_cls) . '" src="' . esc_url((string) $choice['imageUrl']) . '" alt="">';
+			}
+			if ('' !== $image_html) {
+				echo wp_kses_post($image_html);
+			}
+
 			echo '<span class="wof-radio-item__label">' . esc_html((string) $choice['label']) . '</span>';
 			$price_text = $this->choice_price_text((array) $choice, false);
 			if ('' !== $price_text) {
 				echo '<span class="wof-radio-item__price">' . esc_html($price_text) . '</span>';
-			}
-			if (! empty($field['enableQuantity'])) {
-				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
-				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
-				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
 			}
 			echo '</label>';
 		}
@@ -483,7 +496,13 @@ final class Renderer {
 			$cb_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
 		}
 
-		echo '<div class="wof-checkbox-list" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
+		$is_two_cols  = in_array((string) ($field['columns'] ?? 'one'), ['two', '2'], true);
+		$list_class   = 'wof-checkbox-list' . ($is_two_cols ? ' wof-checkbox-list--cols-2' : '');
+		$col_attr     = $is_two_cols ? ' data-columns="2"' : '';
+		$image_style  = (string) ($field['imageStyle'] ?? 'normal');
+		$img_base_cls = 'circle' === $image_style ? 'wof-choice-img wof-choice-img--circle' : 'wof-choice-img';
+
+		echo '<div class="' . esc_attr($list_class) . '" role="group" aria-label="' . esc_attr((string) $field['label']) . '"' . $col_attr . '>';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
@@ -492,15 +511,22 @@ final class Renderer {
 			echo '<input id="' . esc_attr($id) . '" type="checkbox" name="' . esc_attr($name . '[]') . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
+
+			$image_html = '';
+			if ((int) ($choice['imageId'] ?? 0) > 0) {
+				$image_html = (string) wp_get_attachment_image((int) $choice['imageId'], 'thumbnail', false, ['class' => $img_base_cls, 'alt' => '']);
+			}
+			if ('' === $image_html && '' !== (string) ($choice['imageUrl'] ?? '')) {
+				$image_html = '<img class="' . esc_attr($img_base_cls) . '" src="' . esc_url((string) $choice['imageUrl']) . '" alt="">';
+			}
+			if ('' !== $image_html) {
+				echo wp_kses_post($image_html);
+			}
+
 			echo '<span class="wof-checkbox-item__label">' . esc_html((string) $choice['label']) . '</span>';
 			$price_text = $this->choice_price_text((array) $choice, false);
 			if ('' !== $price_text) {
 				echo '<span class="wof-checkbox-item__price">' . esc_html($price_text) . '</span>';
-			}
-			if (! empty($field['enableQuantity'])) {
-				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
-				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
-				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
 			}
 			echo '</label>';
 		}

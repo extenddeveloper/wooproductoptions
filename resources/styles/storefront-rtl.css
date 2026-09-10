@@ -1497,3 +1497,141 @@
 
 /* beta.29 color picker field */
 .wof-color-picker{align-items:center;background:var(--wof-surface);border:1px solid var(--wof-border);border-radius:10px;display:grid;gap:.75rem;grid-template-columns:46px minmax(0,1fr) auto;min-height:62px;padding:.5rem .7rem}.wof-color-picker input[type=color]{appearance:none;background:transparent;border:0;border-radius:8px;box-shadow:0 0 0 1px var(--wof-border);cursor:pointer;height:42px;margin:0;min-height:42px;padding:0;width:42px}.wof-color-picker input[type=color]::-webkit-color-swatch-wrapper{padding:3px}.wof-color-picker input[type=color]::-webkit-color-swatch{border:0;border-radius:6px}.wof-color-picker input[type=color]::-moz-color-swatch{border:0;border-radius:6px}.wof-color-picker input[type=color]:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--wof-focus) 25%,transparent);outline:0}.wof-color-picker__value{display:grid;gap:.08rem;min-width:0}.wof-color-picker__value strong{color:var(--wof-text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.82rem}.wof-color-picker__value small{color:var(--wof-muted);font-size:.7rem}.wof-color-picker__icon{color:var(--wof-primary);font-size:19px;height:19px;width:19px}
+
+/* --- Radio List (standard visible radio buttons) --- */
+.wof-radio-list {
+	display: grid;
+	gap: .35rem;
+}
+
+.wof-radio-list--cols-2,
+.wof-radio-list[data-columns="2"] {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: .5rem 1rem;
+}
+
+@media (max-width: 480px) {
+	.wof-radio-list--cols-2,
+	.wof-radio-list[data-columns="2"],
+	.wof-checkbox-list--cols-2,
+	.wof-checkbox-list[data-columns="2"] {
+		grid-template-columns: 1fr;
+	}
+}
+
+.wof-radio-item {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	gap: .5rem;
+	margin: 0;
+	padding: .25rem 0;
+}
+
+.wof-radio-item>input[type="radio"] {
+	accent-color: var(--wof-primary);
+	cursor: pointer;
+	flex: 0 0 auto;
+	height: 18px;
+	margin: 0;
+	width: 18px;
+}
+
+.wof-radio-item:has(input:disabled) {
+	cursor: not-allowed;
+	opacity: .52;
+}
+
+.wof-radio-item:has(input:focus-visible) {
+	outline: 3px solid color-mix(in srgb, var(--wof-focus) 42%, transparent);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+.wof-radio-item .wof-choice-img,
+.wof-checkbox-item .wof-choice-img {
+	border: 1px solid var(--wof-border, #d8deea);
+	border-radius: 4px;
+	display: block;
+	flex: 0 0 auto;
+	height: 32px;
+	object-fit: cover;
+	width: 32px;
+}
+
+.wof-radio-item .wof-choice-img--circle,
+.wof-checkbox-item .wof-choice-img--circle {
+	border-radius: 50% !important;
+}
+
+.wof-radio-item__label {
+	color: var(--wof-text);
+	font-size: .88rem;
+	font-weight: var(--wof-body-weight, 450);
+	line-height: 1.4;
+}
+
+.wof-radio-item__price {
+	color: var(--wof-muted);
+	font-size: .82rem;
+	line-height: 1.4;
+	margin-inline-start: 0;
+	white-space: nowrap;
+}
+
+/* --- Checkbox List (standard visible checkboxes) --- */
+.wof-checkbox-list {
+	display: grid;
+	gap: .35rem;
+}
+
+.wof-checkbox-list--cols-2,
+.wof-checkbox-list[data-columns="2"] {
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: .5rem 1rem;
+}
+
+.wof-checkbox-item {
+	align-items: center;
+	cursor: pointer;
+	display: flex;
+	gap: .5rem;
+	margin: 0;
+	padding: .25rem 0;
+}
+
+.wof-checkbox-item>input[type="checkbox"] {
+	accent-color: var(--wof-primary);
+	cursor: pointer;
+	flex: 0 0 auto;
+	height: 18px;
+	margin: 0;
+	width: 18px;
+}
+
+.wof-checkbox-item:has(input:disabled) {
+	cursor: not-allowed;
+	opacity: .52;
+}
+
+.wof-checkbox-item:has(input:focus-visible) {
+	outline: 3px solid color-mix(in srgb, var(--wof-focus) 42%, transparent);
+	outline-offset: 2px;
+	border-radius: 4px;
+}
+
+.wof-checkbox-item__label {
+	color: var(--wof-text);
+	font-size: .88rem;
+	font-weight: var(--wof-body-weight, 450);
+	line-height: 1.4;
+}
+
+.wof-checkbox-item__price {
+	color: var(--wof-muted);
+	font-size: .82rem;
+	line-height: 1.4;
+	margin-inline-start: 0;
+	white-space: nowrap;
+}
+

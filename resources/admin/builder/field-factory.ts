@@ -57,6 +57,10 @@ namespace WooOptionsFic.FieldFactory {
       field.minQuantity = 1;
       field.maxQuantity = 100;
       if (type === 'image_swatch') field.updateProductImage = false;
+      if (['radio', 'checkbox_group'].includes(type)) {
+        field.columns = 'one';
+        field.imageStyle = 'normal';
+      }
     }
 
     if (type === 'tel') {

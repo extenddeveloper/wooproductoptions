@@ -126,6 +126,8 @@ namespace WooOptionsFic {
     expression?: string;
     displayMode?: 'number' | 'currency' | 'text';
     displayDirection?: 'horizontal' | 'vertical';
+    columns?: 'one' | 'two' | 1 | 2;
+    imageStyle?: 'normal' | 'circle';
     children?: FieldDefinition[];
     minRows?: number;
     maxRows?: number;

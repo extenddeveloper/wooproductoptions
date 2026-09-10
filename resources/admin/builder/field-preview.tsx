@@ -193,14 +193,80 @@ namespace WooOptionsFic.Builder {
       const itemStyle: any = {};
       const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
       if (hasRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
-      return <div className="wof-preview-radio-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}><span className="wof-preview-radio-item__indicator" /><div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}><span className="wof-preview-radio-item__label">{choice.label}</span>{formatChoicePrice(choice.pricing) ? <span className="wof-preview-radio-item__price">{formatChoicePrice(choice.pricing)}</span> : null}{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div></label>)}</div>;
+      const isTwoCols = field.columns === 'two' || field.columns === 2;
+      const isCircle = field.imageStyle === 'circle';
+      const listStyle: any = isTwoCols ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' } : undefined;
+
+      return (
+        <div className={`wof-preview-radio-list${isTwoCols ? ' wof-preview-radio-list--cols-2' : ''}`} style={listStyle}>
+          {choices.slice(0, 4).map((choice, index) => (
+            <label className={`wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}>
+              <span className="wof-preview-radio-item__indicator" />
+              {Boolean(choice.imageId || choice.imageUrl) ? (
+                <span
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: isCircle ? '50%' : '4px',
+                    overflow: 'hidden',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    background: '#f1f5f9',
+                    border: '1px solid #d8deea',
+                    marginInlineEnd: '6px',
+                  }}
+                >
+                  <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" />
+                </span>
+              ) : null}
+              <span className="wof-preview-radio-item__label">{choice.label}</span>
+              {formatChoicePrice(choice.pricing) ? <span className="wof-preview-radio-item__price">{formatChoicePrice(choice.pricing)}</span> : null}
+            </label>
+          ))}
+        </div>
+      );
     }
 
     if (field.type === 'checkbox_group') {
       const itemStyle: any = {};
       const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
       if (hasRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
-      return <div className="wof-preview-checkbox-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}><span className="wof-preview-checkbox-item__indicator" /><div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}><span className="wof-preview-checkbox-item__label">{choice.label}</span>{formatChoicePrice(choice.pricing) ? <span className="wof-preview-checkbox-item__price">{formatChoicePrice(choice.pricing)}</span> : null}{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div></label>)}</div>;
+      const isTwoCols = field.columns === 'two' || field.columns === 2;
+      const isCircle = field.imageStyle === 'circle';
+      const listStyle: any = isTwoCols ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' } : undefined;
+
+      return (
+        <div className={`wof-preview-checkbox-list${isTwoCols ? ' wof-preview-checkbox-list--cols-2' : ''}`} style={listStyle}>
+          {choices.slice(0, 4).map((choice, index) => (
+            <label className={`wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}>
+              <span className="wof-preview-checkbox-item__indicator" />
+              {Boolean(choice.imageId || choice.imageUrl) ? (
+                <span
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: isCircle ? '50%' : '4px',
+                    overflow: 'hidden',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    background: '#f1f5f9',
+                    border: '1px solid #d8deea',
+                    marginInlineEnd: '6px',
+                  }}
+                >
+                  <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" />
+                </span>
+              ) : null}
+              <span className="wof-preview-checkbox-item__label">{choice.label}</span>
+              {formatChoicePrice(choice.pricing) ? <span className="wof-preview-checkbox-item__price">{formatChoicePrice(choice.pricing)}</span> : null}
+            </label>
+          ))}
+        </div>
+      );
     }
 
     if (['segmented', 'font'].includes(field.type)) {

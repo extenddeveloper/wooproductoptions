@@ -543,6 +543,10 @@ var WooOptionsFic;
                 field.maxQuantity = 100;
                 if (type === 'image_swatch')
                     field.updateProductImage = false;
+                if (['radio', 'checkbox_group'].includes(type)) {
+                    field.columns = 'one';
+                    field.imageStyle = 'normal';
+                }
             }
             if (type === 'tel') {
                 field.flagStyle = 'number_only';
@@ -2071,26 +2075,54 @@ var WooOptionsFic;
                 const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
                 if (hasRadius)
                     itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
-                return wp.element.createElement("div", { className: "wof-preview-radio-list" }, choices.slice(0, 4).map((choice, index) => wp.element.createElement("label", { className: `wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`, key: choice.uuid, style: itemStyle },
+                const isTwoCols = field.columns === 'two' || field.columns === 2;
+                const isCircle = field.imageStyle === 'circle';
+                const listStyle = isTwoCols ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' } : undefined;
+                return (wp.element.createElement("div", { className: `wof-preview-radio-list${isTwoCols ? ' wof-preview-radio-list--cols-2' : ''}`, style: listStyle }, choices.slice(0, 4).map((choice, index) => (wp.element.createElement("label", { className: `wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`, key: choice.uuid, style: itemStyle },
                     wp.element.createElement("span", { className: "wof-preview-radio-item__indicator" }),
-                    wp.element.createElement("div", { style: { display: 'flex', flexDirection: 'column', flex: 1 } },
-                        wp.element.createElement("span", { className: "wof-preview-radio-item__label" }, choice.label),
-                        formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-radio-item__price" }, formatChoicePrice(choice.pricing)) : null,
-                        field.enableQuantity ? wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex' } },
-                            wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } })) : null))));
+                    Boolean(choice.imageId || choice.imageUrl) ? (wp.element.createElement("span", { style: {
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: isCircle ? '50%' : '4px',
+                            overflow: 'hidden',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            background: '#f1f5f9',
+                            border: '1px solid #d8deea',
+                            marginInlineEnd: '6px',
+                        } },
+                        wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }))) : null,
+                    wp.element.createElement("span", { className: "wof-preview-radio-item__label" }, choice.label),
+                    formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-radio-item__price" }, formatChoicePrice(choice.pricing)) : null)))));
             }
             if (field.type === 'checkbox_group') {
                 const itemStyle = {};
                 const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
                 if (hasRadius)
                     itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
-                return wp.element.createElement("div", { className: "wof-preview-checkbox-list" }, choices.slice(0, 4).map((choice, index) => wp.element.createElement("label", { className: `wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`, key: choice.uuid, style: itemStyle },
+                const isTwoCols = field.columns === 'two' || field.columns === 2;
+                const isCircle = field.imageStyle === 'circle';
+                const listStyle = isTwoCols ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' } : undefined;
+                return (wp.element.createElement("div", { className: `wof-preview-checkbox-list${isTwoCols ? ' wof-preview-checkbox-list--cols-2' : ''}`, style: listStyle }, choices.slice(0, 4).map((choice, index) => (wp.element.createElement("label", { className: `wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`, key: choice.uuid, style: itemStyle },
                     wp.element.createElement("span", { className: "wof-preview-checkbox-item__indicator" }),
-                    wp.element.createElement("div", { style: { display: 'flex', flexDirection: 'column', flex: 1 } },
-                        wp.element.createElement("span", { className: "wof-preview-checkbox-item__label" }, choice.label),
-                        formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-checkbox-item__price" }, formatChoicePrice(choice.pricing)) : null,
-                        field.enableQuantity ? wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex' } },
-                            wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } })) : null))));
+                    Boolean(choice.imageId || choice.imageUrl) ? (wp.element.createElement("span", { style: {
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: isCircle ? '50%' : '4px',
+                            overflow: 'hidden',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0,
+                            background: '#f1f5f9',
+                            border: '1px solid #d8deea',
+                            marginInlineEnd: '6px',
+                        } },
+                        wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }))) : null,
+                    wp.element.createElement("span", { className: "wof-preview-checkbox-item__label" }, choice.label),
+                    formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-checkbox-item__price" }, formatChoicePrice(choice.pricing)) : null)))));
             }
             if (['segmented', 'font'].includes(field.type)) {
                 const isVertical = field.type === 'segmented' && field.displayDirection === 'vertical';
@@ -2867,6 +2899,30 @@ var WooOptionsFic;
                         const isSelected = (props.field.displayDirection || 'horizontal') === dir;
                         return (wp.element.createElement("button", { type: "button", key: dir, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => props.onChange({ ...props.field, displayDirection: dir }) }, dir === 'horizontal' ? __('Horizontal', 'wooptionsfic') : __('Vertical', 'wooptionsfic')));
                     })))) : null,
+                ['radio', 'checkbox_group'].includes(props.field.type) ? (wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' } },
+                    wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: 0 } },
+                        wp.element.createElement("span", { className: "wof-field-width-label" }, __('Columns', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Columns', 'wooptionsfic') }, [
+                            { label: __('One', 'wooptionsfic'), value: 'one' },
+                            { label: __('Two', 'wooptionsfic'), value: 'two' },
+                        ].map((col) => {
+                            const isSelected = (props.field.columns || 'one') === col.value;
+                            return (wp.element.createElement("button", { type: "button", key: col.value, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => props.onChange({ ...props.field, columns: col.value }) }, col.label));
+                        }))),
+                    wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: 0 } },
+                        wp.element.createElement("span", { className: "wof-field-width-label" }, __('Image Style', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Image Style', 'wooptionsfic') }, [
+                            { label: __('Normal', 'wooptionsfic'), value: 'normal' },
+                            { label: __('Circle', 'wooptionsfic'), value: 'circle' },
+                        ].map((st) => {
+                            const isSelected = (props.field.imageStyle || 'normal') === st.value;
+                            return (wp.element.createElement("button", { type: "button", key: st.value, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => props.onChange({ ...props.field, imageStyle: st.value }) }, st.label));
+                        }))))) : null,
+                props.field.type === 'checkbox_group' ? (wp.element.createElement("div", { className: "wof-checkbox-restrictions-box", style: { padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '18px' } },
+                    wp.element.createElement("strong", { style: { display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' } }, __('Choice Selection Restrictions', 'wooptionsfic')),
+                    wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' } },
+                        wp.element.createElement(TextControl, { label: __('Min Restriction', 'wooptionsfic'), type: "number", min: 0, value: String(props.field.minChoices ?? ''), placeholder: __('Min', 'wooptionsfic'), onChange: (val) => props.onChange({ ...props.field, minChoices: val === '' ? 0 : Math.max(0, Number(val)) }) }),
+                        wp.element.createElement(TextControl, { label: __('Max Restriction', 'wooptionsfic'), type: "number", min: 0, value: String(props.field.maxChoices ?? ''), placeholder: __('Max', 'wooptionsfic'), onChange: (val) => props.onChange({ ...props.field, maxChoices: val === '' ? 0 : Math.max(0, Number(val)) }) })))) : null,
                 props.field.type === 'image_swatch' ? wp.element.createElement("div", { className: "wof-image-swatch-behavior" },
                     wp.element.createElement(ToggleControl, { label: __('Update product image on selection', 'wooptionsfic'), help: __('Replace the main WooCommerce product image with the selected swatch image.', 'wooptionsfic'), checked: Boolean(props.field.updateProductImage), onChange: (updateProductImage) => props.onChange({ ...props.field, updateProductImage }) })) : null,
                 choices.map((choice, index) => (wp.element.createElement("article", { key: choice.uuid },
@@ -2981,10 +3037,12 @@ var WooOptionsFic;
                             field.multiple ? (wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' } },
                                 wp.element.createElement(TextControl, { label: __('Min Restriction', 'wooptionsfic'), type: "number", min: 0, value: String(field.minChoices ?? ''), placeholder: __('Min', 'wooptionsfic'), onChange: (val) => update({ minChoices: val === '' ? 0 : Math.max(0, Number(val)) }) }),
                                 wp.element.createElement(TextControl, { label: __('Max Restriction', 'wooptionsfic'), type: "number", min: 0, value: String(field.maxChoices ?? ''), placeholder: __('Max', 'wooptionsfic'), onChange: (val) => update({ maxChoices: val === '' ? 0 : Math.max(0, Number(val)) }) }))) : null)) : null,
-                        field.type === 'checkbox_group' ? (wp.element.createElement("div", { className: "wof-checkbox-restrictions", style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' } },
-                            wp.element.createElement(TextControl, { label: __('Min Restriction', 'wooptionsfic'), type: "number", min: 0, value: String(field.minChoices ?? ''), placeholder: __('Min', 'wooptionsfic'), onChange: (val) => update({ minChoices: val === '' ? 0 : Math.max(0, Number(val)) }) }),
-                            wp.element.createElement(TextControl, { label: __('Max Restriction', 'wooptionsfic'), type: "number", min: 0, value: String(field.maxChoices ?? ''), placeholder: __('Max', 'wooptionsfic'), onChange: (val) => update({ maxChoices: val === '' ? 0 : Math.max(0, Number(val)) }) }))) : null,
-                        Boolean(field.choices) && field.type !== 'segmented' ? (wp.element.createElement("div", { className: "wof-quantity-setting", style: { marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
+                        field.type === 'checkbox_group' ? (wp.element.createElement("div", { className: "wof-checkbox-restrictions-box", style: { padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '16px' } },
+                            wp.element.createElement("strong", { style: { display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' } }, __('Choice Selection Restrictions', 'wooptionsfic')),
+                            wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' } },
+                                wp.element.createElement(TextControl, { label: __('Min Restriction', 'wooptionsfic'), type: "number", min: 0, value: String(field.minChoices ?? ''), placeholder: __('Min', 'wooptionsfic'), onChange: (val) => update({ minChoices: val === '' ? 0 : Math.max(0, Number(val)) }) }),
+                                wp.element.createElement(TextControl, { label: __('Max Restriction', 'wooptionsfic'), type: "number", min: 0, value: String(field.maxChoices ?? ''), placeholder: __('Max', 'wooptionsfic'), onChange: (val) => update({ maxChoices: val === '' ? 0 : Math.max(0, Number(val)) }) })))) : null,
+                        Boolean(field.choices) && !['segmented', 'radio', 'checkbox_group'].includes(field.type) ? (wp.element.createElement("div", { className: "wof-quantity-setting", style: { marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
                             wp.element.createElement(ToggleControl, { label: __('Enable Quantity', 'wooptionsfic'), help: __('Allow customers to specify quantity for each choice option.', 'wooptionsfic'), checked: Boolean(field.enableQuantity), onChange: (enableQuantity) => update({ enableQuantity }) }),
                             field.enableQuantity ? (wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' } },
                                 wp.element.createElement(TextControl, { label: __('Minimum Quantity', 'wooptionsfic'), type: "number", min: 1, value: String(field.minQuantity ?? 1), placeholder: "1", onChange: (val) => update({ minQuantity: val === '' ? 1 : Math.max(1, Number(val)) }) }),

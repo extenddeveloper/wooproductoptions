@@ -240,6 +240,84 @@ namespace WooOptionsFic.Builder {
           </div>
         ) : null}
 
+        {/* Columns and Image Style for Radio and Checkbox Group */}
+        {['radio', 'checkbox_group'].includes(props.field.type) ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
+            <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
+              <span className="wof-field-width-label">{__('Columns', 'wooptionsfic')}</span>
+              <div className="wof-field-width-group" role="radiogroup" aria-label={__('Columns', 'wooptionsfic')}>
+                {([
+                  { label: __('One', 'wooptionsfic'), value: 'one' },
+                  { label: __('Two', 'wooptionsfic'), value: 'two' },
+                ] as const).map((col) => {
+                  const isSelected = (props.field.columns || 'one') === col.value;
+                  return (
+                    <button
+                      type="button"
+                      key={col.value}
+                      role="radio"
+                      aria-checked={isSelected}
+                      className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                      onClick={() => props.onChange({ ...props.field, columns: col.value })}
+                    >
+                      {col.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
+              <span className="wof-field-width-label">{__('Image Style', 'wooptionsfic')}</span>
+              <div className="wof-field-width-group" role="radiogroup" aria-label={__('Image Style', 'wooptionsfic')}>
+                {([
+                  { label: __('Normal', 'wooptionsfic'), value: 'normal' },
+                  { label: __('Circle', 'wooptionsfic'), value: 'circle' },
+                ] as const).map((st) => {
+                  const isSelected = (props.field.imageStyle || 'normal') === st.value;
+                  return (
+                    <button
+                      type="button"
+                      key={st.value}
+                      role="radio"
+                      aria-checked={isSelected}
+                      className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                      onClick={() => props.onChange({ ...props.field, imageStyle: st.value })}
+                    >
+                      {st.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Min / Max Restriction for Checkbox Group */}
+        {props.field.type === 'checkbox_group' ? (
+          <div className="wof-checkbox-restrictions-box" style={{ padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '18px' }}>
+            <strong style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>{__('Choice Selection Restrictions', 'wooptionsfic')}</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <TextControl
+                label={__('Min Restriction', 'wooptionsfic')}
+                type="number"
+                min={0}
+                value={String(props.field.minChoices ?? '')}
+                placeholder={__('Min', 'wooptionsfic')}
+                onChange={(val: string) => props.onChange({ ...props.field, minChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
+              />
+              <TextControl
+                label={__('Max Restriction', 'wooptionsfic')}
+                type="number"
+                min={0}
+                value={String(props.field.maxChoices ?? '')}
+                placeholder={__('Max', 'wooptionsfic')}
+                onChange={(val: string) => props.onChange({ ...props.field, maxChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
+              />
+            </div>
+          </div>
+        ) : null}
+
         {props.field.type === 'image_swatch' ? <div className="wof-image-swatch-behavior">
           <ToggleControl
             label={__('Update product image on selection', 'wooptionsfic')}
@@ -455,28 +533,31 @@ namespace WooOptionsFic.Builder {
 
               {/* Min/Max restriction for checkboxes */}
               {field.type === 'checkbox_group' ? (
-                <div className="wof-checkbox-restrictions" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '16px' }}>
-                  <TextControl
-                    label={__('Min Restriction', 'wooptionsfic')}
-                    type="number"
-                    min={0}
-                    value={String(field.minChoices ?? '')}
-                    placeholder={__('Min', 'wooptionsfic')}
-                    onChange={(val: string) => update({ minChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
-                  />
-                  <TextControl
-                    label={__('Max Restriction', 'wooptionsfic')}
-                    type="number"
-                    min={0}
-                    value={String(field.maxChoices ?? '')}
-                    placeholder={__('Max', 'wooptionsfic')}
-                    onChange={(val: string) => update({ maxChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
-                  />
+                <div className="wof-checkbox-restrictions-box" style={{ padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '16px' }}>
+                  <strong style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>{__('Choice Selection Restrictions', 'wooptionsfic')}</strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <TextControl
+                      label={__('Min Restriction', 'wooptionsfic')}
+                      type="number"
+                      min={0}
+                      value={String(field.minChoices ?? '')}
+                      placeholder={__('Min', 'wooptionsfic')}
+                      onChange={(val: string) => update({ minChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
+                    />
+                    <TextControl
+                      label={__('Max Restriction', 'wooptionsfic')}
+                      type="number"
+                      min={0}
+                      value={String(field.maxChoices ?? '')}
+                      placeholder={__('Max', 'wooptionsfic')}
+                      onChange={(val: string) => update({ maxChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
+                    />
+                  </div>
                 </div>
               ) : null}
 
-              {/* Enable Quantity option for choice fields (excluding segmented/button choices) */}
-              {Boolean(field.choices) && field.type !== 'segmented' ? (
+              {/* Enable Quantity option for choice fields (excluding segmented, radio, and checkbox_group) */}
+              {Boolean(field.choices) && !['segmented', 'radio', 'checkbox_group'].includes(field.type) ? (
                 <div className="wof-quantity-setting" style={{ marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>
                   <ToggleControl
                     label={__('Enable Quantity', 'wooptionsfic')}

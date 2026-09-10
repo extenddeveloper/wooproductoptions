@@ -72,9 +72,12 @@ final class ChoiceFieldType extends AbstractFieldType {
 		$normalized['choiceWidth']        = self::plain_text((string) ($definition['choiceWidth'] ?? ''), 20);
 		$normalized['choiceHeight']       = self::plain_text((string) ($definition['choiceHeight'] ?? ''), 20);
 		$normalized['choiceBorderRadius'] = self::plain_text((string) ($definition['choiceBorderRadius'] ?? ''), 20);
-		$normalized['enableQuantity']     = ! empty($definition['enableQuantity']);
+		$normalized['enableQuantity']     = ! in_array($this->type_key, ['segmented', 'radio', 'checkbox_group'], true) && ! empty($definition['enableQuantity']);
 		$normalized['minQuantity']        = max(1, (int) ($definition['minQuantity'] ?? 1));
 		$normalized['maxQuantity']        = max(0, (int) ($definition['maxQuantity'] ?? 100));
+		$normalized['displayDirection']   = 'segmented' === $this->type_key && 'vertical' === (string) ($definition['displayDirection'] ?? '') ? 'vertical' : 'horizontal';
+		$normalized['columns']            = in_array($this->type_key, ['radio', 'checkbox_group'], true) && in_array((string) ($definition['columns'] ?? ''), ['2', 'two'], true) ? 'two' : 'one';
+		$normalized['imageStyle']         = in_array($this->type_key, ['radio', 'checkbox_group'], true) && 'circle' === (string) ($definition['imageStyle'] ?? '') ? 'circle' : 'normal';
 		return $normalized;
 	}
 
