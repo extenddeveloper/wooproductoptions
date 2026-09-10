@@ -125,6 +125,7 @@ namespace WooOptionsFic {
     maxFileMb?: number;
     expression?: string;
     displayMode?: 'number' | 'currency' | 'text';
+    displayDirection?: 'horizontal' | 'vertical';
     children?: FieldDefinition[];
     minRows?: number;
     maxRows?: number;

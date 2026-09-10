@@ -199,7 +199,6 @@
 	align-items: center;
 	background: var(--wof-surface);
 	border: 1px solid var(--wof-border);
-	border-radius: 10px;
 	color: var(--wof-text);
 	cursor: pointer;
 	display: grid;
@@ -894,7 +893,6 @@
 .wof-upload__surface {
 	background: color-mix(in srgb,var(--wof-surface) 96%,var(--wof-background));
 	border: 1.5px dashed color-mix(in srgb,var(--wof-border) 88%,var(--wof-muted));
-	border-radius: 12px;
 	padding: 16px;
 	transition: border-color .16s ease,background .16s ease,box-shadow .16s ease;
 }
@@ -928,7 +926,7 @@
 	align-items: center;
 	background: var(--wof-surface);
 	border: 1px solid color-mix(in srgb,var(--wof-border) 92%,var(--wof-text));
-	border-radius: 8px;
+	border-radius: 3px;
 	color: var(--wof-text);
 	display: inline-flex;
 	font-size: .82rem;
@@ -971,7 +969,7 @@
 	align-items: center;
 	background: var(--wof-surface);
 	border: 1px solid color-mix(in srgb,var(--wof-border) 90%,transparent);
-	border-radius: 9px;
+	border-radius: 3px;
 	display: grid;
 	gap: 10px;
 	grid-template-columns: 22px 28px minmax(0,1fr) auto;

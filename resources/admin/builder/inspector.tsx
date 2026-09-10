@@ -216,6 +216,30 @@ namespace WooOptionsFic.Builder {
           </div>
         </div>
 
+        {/* Display Direction option for Button Choices (segmented) */}
+        {props.field.type === 'segmented' ? (
+          <div className="wof-field-width-setting">
+            <span className="wof-field-width-label">{__('Display Direction', 'wooptionsfic')}</span>
+            <div className="wof-field-width-group" role="radiogroup" aria-label={__('Display Direction', 'wooptionsfic')}>
+              {(['vertical', 'horizontal'] as const).map((dir) => {
+                const isSelected = (props.field.displayDirection || 'horizontal') === dir;
+                return (
+                  <button
+                    type="button"
+                    key={dir}
+                    role="radio"
+                    aria-checked={isSelected}
+                    className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                    onClick={() => props.onChange({ ...props.field, displayDirection: dir })}
+                  >
+                    {dir === 'horizontal' ? __('Horizontal', 'wooptionsfic') : __('Vertical', 'wooptionsfic')}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
         {props.field.type === 'image_swatch' ? <div className="wof-image-swatch-behavior">
           <ToggleControl
             label={__('Update product image on selection', 'wooptionsfic')}
@@ -451,8 +475,8 @@ namespace WooOptionsFic.Builder {
                 </div>
               ) : null}
 
-              {/* Enable Quantity option for every choice field with Min/Max limits */}
-              {Boolean(field.choices) ? (
+              {/* Enable Quantity option for choice fields (excluding segmented/button choices) */}
+              {Boolean(field.choices) && field.type !== 'segmented' ? (
                 <div className="wof-quantity-setting" style={{ marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>
                   <ToggleControl
                     label={__('Enable Quantity', 'wooptionsfic')}

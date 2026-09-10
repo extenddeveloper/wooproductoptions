@@ -191,39 +191,111 @@ namespace WooOptionsFic.Builder {
 
     if (field.type === 'radio') {
       const itemStyle: any = {};
-      if (field.choiceBorderRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
+      const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
+      if (hasRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
       return <div className="wof-preview-radio-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}><span className="wof-preview-radio-item__indicator" /><div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}><span className="wof-preview-radio-item__label">{choice.label}</span>{formatChoicePrice(choice.pricing) ? <span className="wof-preview-radio-item__price">{formatChoicePrice(choice.pricing)}</span> : null}{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div></label>)}</div>;
     }
 
     if (field.type === 'checkbox_group') {
       const itemStyle: any = {};
-      if (field.choiceBorderRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
+      const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
+      if (hasRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
       return <div className="wof-preview-checkbox-list">{choices.slice(0, 4).map((choice, index) => <label className={`wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}><span className="wof-preview-checkbox-item__indicator" /><div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}><span className="wof-preview-checkbox-item__label">{choice.label}</span>{formatChoicePrice(choice.pricing) ? <span className="wof-preview-checkbox-item__price">{formatChoicePrice(choice.pricing)}</span> : null}{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div></label>)}</div>;
     }
 
     if (['segmented', 'font'].includes(field.type)) {
-      const itemStyle: any = {};
-      if (field.choiceWidth) itemStyle.width = `${field.choiceWidth}px`;
-      if (field.choiceHeight) itemStyle.minHeight = `${field.choiceHeight}px`;
-      if (field.choiceBorderRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
+      const isVertical = field.type === 'segmented' && field.displayDirection === 'vertical';
+      const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
+      const hasWidth = field.choiceWidth !== undefined && field.choiceWidth !== null && String(field.choiceWidth).trim() !== '';
+      const hasHeight = field.choiceHeight !== undefined && field.choiceHeight !== null && String(field.choiceHeight).trim() !== '';
 
-      return <div className="wof-preview-choice-row">{choices.slice(0, 4).map((choice, index) => <span className={index === 0 ? 'is-selected' : ''} key={choice.uuid} style={{ ...itemStyle, display: 'inline-flex', flexDirection: 'column', alignItems: 'center' }}><span>{choiceLabel(choice)}</span>{field.enableQuantity ? <input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center', marginTop: '6px' }} /> : null}</span>)}</div>;
+      const btnStyle: any = {};
+      if (hasWidth) btnStyle.minWidth = `${field.choiceWidth}px`;
+      if (hasHeight) btnStyle.minHeight = `${field.choiceHeight}px`;
+      if (hasRadius) btnStyle.borderRadius = `${field.choiceBorderRadius}px`;
+
+      const wrapStyle: any = {
+        display: 'flex',
+        flexDirection: isVertical ? 'column' : 'row',
+        flexWrap: isVertical ? 'nowrap' : 'wrap',
+        gap: '8px',
+        alignItems: isVertical ? 'flex-start' : 'center',
+      };
+
+      return (
+        <div style={wrapStyle}>
+          {choices.slice(0, 4).map((choice, index) => {
+            const priceText = formatChoicePrice(choice.pricing);
+            const isSelected = Boolean(choice.default) || (index === 0 && !choices.some((c) => c.default));
+            return (
+              <span
+                key={choice.uuid}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 14px',
+                  minHeight: btnStyle.minHeight ?? '40px',
+                  minWidth: btnStyle.minWidth,
+                  borderRadius: hasRadius ? `${field.choiceBorderRadius}px` : undefined,
+                  border: isSelected ? '1.5px solid var(--wof-preview-primary, #5b4ff5)' : '1px solid var(--wof-preview-border, #d8deea)',
+                  background: isSelected ? 'color-mix(in srgb, var(--wof-preview-primary, #5b4ff5) 5%, var(--wof-preview-surface, #fff))' : 'var(--wof-preview-surface, #fff)',
+                  color: 'var(--wof-preview-text, #172033)',
+                  fontSize: '13px',
+                  fontWeight: 550,
+                  boxShadow: 'none',
+                  cursor: 'default',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {Boolean(choice.imageId || choice.imageUrl) ? (
+                  <span
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '6px',
+                      overflow: 'hidden',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      background: '#f1f5f9',
+                    }}
+                  >
+                    <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" />
+                  </span>
+                ) : null}
+                <span>{choice.label}</span>
+                {priceText ? <span style={{ fontSize: '11px', opacity: 0.72 }}>{priceText}</span> : null}
+              </span>
+            );
+          })}
+        </div>
+      );
     }
 
     if (field.type === 'color_swatch') {
       const swatchStyle: any = {};
-      if (field.choiceWidth) swatchStyle.width = `${field.choiceWidth}px`;
-      if (field.choiceHeight) swatchStyle.height = `${field.choiceHeight}px`;
-      if (field.choiceBorderRadius) swatchStyle.borderRadius = `${field.choiceBorderRadius}px`;
+      const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
+      const hasWidth = field.choiceWidth !== undefined && field.choiceWidth !== null && String(field.choiceWidth).trim() !== '';
+      const hasHeight = field.choiceHeight !== undefined && field.choiceHeight !== null && String(field.choiceHeight).trim() !== '';
+
+      if (hasWidth) swatchStyle.width = `${field.choiceWidth}px`;
+      if (hasHeight) swatchStyle.height = `${field.choiceHeight}px`;
+      if (hasRadius) swatchStyle.borderRadius = `${field.choiceBorderRadius}px`;
 
       return <div className="wof-preview-color-blocks">{choices.slice(0, 5).map((choice, index) => <div className={`wof-preview-color-block${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}><span className="wof-preview-color-block__swatch" style={{ background: choice.color || '#ddd', ...swatchStyle, position: 'relative' }}>{index === 0 ? <span className="wof-preview-color-block__check" style={{ position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 }}>{renderCheckSvg(10)}</span> : null}</span><small style={{ minHeight: '1.3em', marginTop: '4px' }}>{choice.label}</small><span className="wof-preview-color-block__price" style={{ minHeight: '1.3em' }}>{formatChoicePrice(choice.pricing)}</span>{field.enableQuantity ? <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' }}><input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} /></span> : null}</div>)}</div>;
     }
 
     if (field.type === 'image_swatch' || field.type === 'product') {
       const thumbStyle: any = {};
-      if (field.choiceWidth) thumbStyle.width = `${field.choiceWidth}px`;
-      if (field.choiceHeight) thumbStyle.height = `${field.choiceHeight}px`;
-      if (field.choiceBorderRadius) thumbStyle.borderRadius = `${field.choiceBorderRadius}px`;
+      const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
+      const hasWidth = field.choiceWidth !== undefined && field.choiceWidth !== null && String(field.choiceWidth).trim() !== '';
+      const hasHeight = field.choiceHeight !== undefined && field.choiceHeight !== null && String(field.choiceHeight).trim() !== '';
+
+      if (hasWidth) thumbStyle.width = `${field.choiceWidth}px`;
+      if (hasHeight) thumbStyle.height = `${field.choiceHeight}px`;
+      if (hasRadius) thumbStyle.borderRadius = `${field.choiceBorderRadius}px`;
 
       return (
         <div className="wof-preview-image-tiles">

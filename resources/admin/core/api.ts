@@ -73,7 +73,7 @@ namespace WooOptionsFic.Api {
   export function publishOptionSet(uuid: string, expectedHash: string): Promise<WooOptionsFic.OptionSetRecord> {
     return request(`/option-sets/${uuid}/publish`, {
       method: 'POST',
-      data: { expectedHash, versionNote: 'Published from the TypeScript builder' },
+      data: { expectedHash, versionNote: 'Published from the builder' },
     });
   }
 

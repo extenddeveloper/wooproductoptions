@@ -263,22 +263,31 @@ final class Renderer {
 		$input    = $multiple ? 'checkbox' : 'radio';
 		$group    = $multiple ? $name . '[]' : $name;
 		$choice_item_style = '';
-		if (! empty($field['choiceWidth'])) {
-			$choice_item_style .= 'width:' . esc_attr((string) $field['choiceWidth']) . 'px;';
+		if (isset($field['choiceWidth']) && '' !== (string) $field['choiceWidth']) {
+			$choice_item_style .= 'min-width:' . esc_attr((string) $field['choiceWidth']) . 'px;';
 		}
-		if (! empty($field['choiceHeight'])) {
+		if (isset($field['choiceHeight']) && '' !== (string) $field['choiceHeight']) {
 			$choice_item_style .= 'min-height:' . esc_attr((string) $field['choiceHeight']) . 'px;';
 		}
-		if (! empty($field['choiceBorderRadius'])) {
+		if (isset($field['choiceBorderRadius']) && '' !== (string) $field['choiceBorderRadius']) {
 			$choice_item_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
 		}
 
-		echo '<div class="wof-choice-grid" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
+		// Determine display direction for segmented (button choices) field.
+		$is_vertical     = 'segmented' === $type && 'vertical' === (string) ($field['displayDirection'] ?? 'horizontal');
+		$grid_class      = 'wof-choice-grid';
+		if ($is_vertical) {
+			$grid_class .= ' wof-choice-grid--vertical';
+		}
+		$dir_attr = $is_vertical ? ' data-direction="vertical"' : '';
+
+		echo '<div class="' . esc_attr($grid_class) . '" role="group" aria-label="' . esc_attr((string) $field['label']) . '"' . $dir_attr . '>';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
-			$choice_uuid = (string) ($choice['uuid'] ?? '');
-			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
-			$checked     = ! empty($choice['default']);
-			echo '<label class="wof-choice" for="' . esc_attr($id) . '"' . ('' !== $choice_item_style ? ' style="' . $choice_item_style . '"' : '') . '>';
+			$choice_uuid  = (string) ($choice['uuid'] ?? '');
+			$id           = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$checked      = ! empty($choice['default']);
+			$label_class  = 'segmented' === $type ? 'wof-choice wof-choice--btn' : 'wof-choice';
+			echo '<label class="' . esc_attr($label_class) . '" for="' . esc_attr($id) . '"' . ('' !== $choice_item_style ? ' style="' . $choice_item_style . '"' : '') . '>';
 			echo '<input id="' . esc_attr($id) . '" type="' . esc_attr($input) . '" name="' . esc_attr($group) . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
@@ -319,13 +328,13 @@ final class Renderer {
 		$input    = $multiple ? 'checkbox' : 'radio';
 		$group    = $multiple ? $name . '[]' : $name;
 		$swatch_style = '';
-		if (! empty($field['choiceWidth'])) {
+		if (isset($field['choiceWidth']) && '' !== (string) $field['choiceWidth']) {
 			$swatch_style .= 'width:' . esc_attr((string) $field['choiceWidth']) . 'px;';
 		}
-		if (! empty($field['choiceHeight'])) {
+		if (isset($field['choiceHeight']) && '' !== (string) $field['choiceHeight']) {
 			$swatch_style .= 'height:' . esc_attr((string) $field['choiceHeight']) . 'px;';
 		}
-		if (! empty($field['choiceBorderRadius'])) {
+		if (isset($field['choiceBorderRadius']) && '' !== (string) $field['choiceBorderRadius']) {
 			$swatch_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
 		}
 
@@ -365,13 +374,13 @@ final class Renderer {
 		$input    = $multiple ? 'checkbox' : 'radio';
 		$group    = $multiple ? $name . '[]' : $name;
 		$thumb_style = '';
-		if (! empty($field['choiceWidth'])) {
+		if (isset($field['choiceWidth']) && '' !== (string) $field['choiceWidth']) {
 			$thumb_style .= 'width:' . esc_attr((string) $field['choiceWidth']) . 'px;';
 		}
-		if (! empty($field['choiceHeight'])) {
+		if (isset($field['choiceHeight']) && '' !== (string) $field['choiceHeight']) {
 			$thumb_style .= 'height:' . esc_attr((string) $field['choiceHeight']) . 'px;';
 		}
-		if (! empty($field['choiceBorderRadius'])) {
+		if (isset($field['choiceBorderRadius']) && '' !== (string) $field['choiceBorderRadius']) {
 			$thumb_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;overflow:hidden;';
 		}
 
@@ -435,7 +444,7 @@ final class Renderer {
 	 */
 	private function render_radio_list(array $field, string $name, string $description_id): void {
 		$radio_style = '';
-		if (! empty($field['choiceBorderRadius'])) {
+		if (isset($field['choiceBorderRadius']) && '' !== (string) $field['choiceBorderRadius']) {
 			$radio_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
 		}
 
@@ -470,7 +479,7 @@ final class Renderer {
 	 */
 	private function render_checkbox_list(array $field, string $name, string $description_id): void {
 		$cb_style = '';
-		if (! empty($field['choiceBorderRadius'])) {
+		if (isset($field['choiceBorderRadius']) && '' !== (string) $field['choiceBorderRadius']) {
 			$cb_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
 		}
 
