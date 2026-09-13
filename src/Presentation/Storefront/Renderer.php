@@ -259,7 +259,7 @@ final class Renderer {
 	 */
 	private function render_choices(array $field, string $name, string $description_id): void {
 		$type     = (string) $field['type'];
-		$multiple = ! empty($field['multiple']) || in_array($type, ['checkbox_group', 'product'], true);
+		$multiple = ! empty($field['multiple']) || 'product' === $type;
 		$input    = $multiple ? 'checkbox' : 'radio';
 		$group    = $multiple ? $name . '[]' : $name;
 		$choice_item_style = '';
@@ -443,11 +443,6 @@ final class Renderer {
 	 * @param array<string,mixed> $field Field.
 	 */
 	private function render_radio_list(array $field, string $name, string $description_id): void {
-		$radio_style = '';
-		if (isset($field['choiceBorderRadius']) && '' !== (string) $field['choiceBorderRadius']) {
-			$radio_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
-		}
-
 		$is_two_cols  = in_array((string) ($field['columns'] ?? 'one'), ['two', '2'], true);
 		$list_class   = 'wof-radio-list' . ($is_two_cols ? ' wof-radio-list--cols-2' : '');
 		$col_attr     = $is_two_cols ? ' data-columns="2"' : '';
@@ -459,7 +454,7 @@ final class Renderer {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
 			$checked     = ! empty($choice['default']) || (string) ($field['default'] ?? '') === $choice_uuid;
-			echo '<label class="wof-radio-item" for="' . esc_attr($id) . '"' . ('' !== $radio_style ? ' style="' . $radio_style . '"' : '') . '>';
+			echo '<label class="wof-radio-item" for="' . esc_attr($id) . '">';
 			echo '<input id="' . esc_attr($id) . '" type="radio" name="' . esc_attr($name) . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';
@@ -491,11 +486,6 @@ final class Renderer {
 	 * @param array<string,mixed> $field Field.
 	 */
 	private function render_checkbox_list(array $field, string $name, string $description_id): void {
-		$cb_style = '';
-		if (isset($field['choiceBorderRadius']) && '' !== (string) $field['choiceBorderRadius']) {
-			$cb_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
-		}
-
 		$is_two_cols  = in_array((string) ($field['columns'] ?? 'one'), ['two', '2'], true);
 		$list_class   = 'wof-checkbox-list' . ($is_two_cols ? ' wof-checkbox-list--cols-2' : '');
 		$col_attr     = $is_two_cols ? ' data-columns="2"' : '';
@@ -507,7 +497,7 @@ final class Renderer {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
 			$checked     = ! empty($choice['default']);
-			echo '<label class="wof-checkbox-item" for="' . esc_attr($id) . '"' . ('' !== $cb_style ? ' style="' . $cb_style . '"' : '') . '>';
+			echo '<label class="wof-checkbox-item" for="' . esc_attr($id) . '">';
 			echo '<input id="' . esc_attr($id) . '" type="checkbox" name="' . esc_attr($name . '[]') . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
 			echo ' aria-describedby="' . esc_attr($description_id) . '">';

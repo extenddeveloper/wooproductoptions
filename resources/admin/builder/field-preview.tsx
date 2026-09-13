@@ -121,7 +121,7 @@ namespace WooOptionsFic.Builder {
       );
     }
 
-    if (field.type === 'select') {
+    if (field.type === 'select' || field.type === 'font') {
       return (
         <div className="wof-preview-select-control">
           <select aria-disabled="true" tabIndex={-1} value="" onChange={() => undefined}><option value="">{choices[0]?.label ?? __('Choose an option', 'wooptionsfic')}</option></select>
@@ -190,9 +190,6 @@ namespace WooOptionsFic.Builder {
     }
 
     if (field.type === 'radio') {
-      const itemStyle: any = {};
-      const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
-      if (hasRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
       const isTwoCols = field.columns === 'two' || field.columns === 2;
       const isCircle = field.imageStyle === 'circle';
       const listStyle: any = isTwoCols ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' } : undefined;
@@ -200,7 +197,7 @@ namespace WooOptionsFic.Builder {
       return (
         <div className={`wof-preview-radio-list${isTwoCols ? ' wof-preview-radio-list--cols-2' : ''}`} style={listStyle}>
           {choices.slice(0, 4).map((choice, index) => (
-            <label className={`wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}>
+            <label className={`wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid}>
               <span className="wof-preview-radio-item__indicator" />
               {Boolean(choice.imageId || choice.imageUrl) ? (
                 <span
@@ -230,9 +227,6 @@ namespace WooOptionsFic.Builder {
     }
 
     if (field.type === 'checkbox_group') {
-      const itemStyle: any = {};
-      const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
-      if (hasRadius) itemStyle.borderRadius = `${field.choiceBorderRadius}px`;
       const isTwoCols = field.columns === 'two' || field.columns === 2;
       const isCircle = field.imageStyle === 'circle';
       const listStyle: any = isTwoCols ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' } : undefined;
@@ -240,7 +234,7 @@ namespace WooOptionsFic.Builder {
       return (
         <div className={`wof-preview-checkbox-list${isTwoCols ? ' wof-preview-checkbox-list--cols-2' : ''}`} style={listStyle}>
           {choices.slice(0, 4).map((choice, index) => (
-            <label className={`wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid} style={itemStyle}>
+            <label className={`wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`} key={choice.uuid}>
               <span className="wof-preview-checkbox-item__indicator" />
               {Boolean(choice.imageId || choice.imageUrl) ? (
                 <span
@@ -269,7 +263,7 @@ namespace WooOptionsFic.Builder {
       );
     }
 
-    if (['segmented', 'font'].includes(field.type)) {
+    if (field.type === 'segmented') {
       const isVertical = field.type === 'segmented' && field.displayDirection === 'vertical';
       const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
       const hasWidth = field.choiceWidth !== undefined && field.choiceWidth !== null && String(field.choiceWidth).trim() !== '';

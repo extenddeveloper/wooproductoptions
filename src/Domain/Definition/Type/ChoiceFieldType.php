@@ -69,10 +69,11 @@ final class ChoiceFieldType extends AbstractFieldType {
 		$normalized['minChoices']         = max(0, (int) ($definition['minChoices'] ?? 0));
 		$normalized['maxChoices']         = max(0, (int) ($definition['maxChoices'] ?? 0));
 		$normalized['updateProductImage'] = 'image_swatch' === $this->type_key && ! empty($definition['updateProductImage']);
-		$normalized['choiceWidth']        = self::plain_text((string) ($definition['choiceWidth'] ?? ''), 20);
-		$normalized['choiceHeight']       = self::plain_text((string) ($definition['choiceHeight'] ?? ''), 20);
-		$normalized['choiceBorderRadius'] = self::plain_text((string) ($definition['choiceBorderRadius'] ?? ''), 20);
-		$normalized['enableQuantity']     = ! in_array($this->type_key, ['segmented', 'radio', 'checkbox_group'], true) && ! empty($definition['enableQuantity']);
+		$supports_choice_dimensions       = ! in_array($this->type_key, ['radio', 'checkbox_group', 'select', 'font'], true);
+		$normalized['choiceWidth']        = $supports_choice_dimensions ? self::plain_text((string) ($definition['choiceWidth'] ?? ''), 20) : '';
+		$normalized['choiceHeight']       = $supports_choice_dimensions ? self::plain_text((string) ($definition['choiceHeight'] ?? ''), 20) : '';
+		$normalized['choiceBorderRadius'] = $supports_choice_dimensions ? self::plain_text((string) ($definition['choiceBorderRadius'] ?? ''), 20) : '';
+		$normalized['enableQuantity']     = ! in_array($this->type_key, ['segmented', 'radio', 'checkbox_group', 'font', 'select'], true) && ! empty($definition['enableQuantity']);
 		$normalized['minQuantity']        = max(1, (int) ($definition['minQuantity'] ?? 1));
 		$normalized['maxQuantity']        = max(0, (int) ($definition['maxQuantity'] ?? 100));
 		$normalized['displayDirection']   = 'segmented' === $this->type_key && 'vertical' === (string) ($definition['displayDirection'] ?? '') ? 'vertical' : 'horizontal';

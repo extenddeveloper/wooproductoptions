@@ -192,29 +192,31 @@ namespace WooOptionsFic.Builder {
     return (
       <div className="wof-choice-editor-list">
         {/* Choice item width, height & border radius options */}
-        <div className="wof-choice-dimensions-box" style={{ padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '16px' }}>
-          <strong style={{ display: 'block', fontSize: '13px', marginBottom: '8px' }}>{__('Choice Item Dimensions & Style', 'wooptionsfic')}</strong>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-            <TextControl
-              label={__('Width (px)', 'wooptionsfic')}
-              value={String(props.field.choiceWidth ?? '')}
-              placeholder="Auto"
-              onChange={(choiceWidth: string) => props.onChange({ ...props.field, choiceWidth })}
-            />
-            <TextControl
-              label={__('Height (px)', 'wooptionsfic')}
-              value={String(props.field.choiceHeight ?? '')}
-              placeholder="Auto"
-              onChange={(choiceHeight: string) => props.onChange({ ...props.field, choiceHeight })}
-            />
-            <TextControl
-              label={__('Radius (px)', 'wooptionsfic')}
-              value={String(props.field.choiceBorderRadius ?? '')}
-              placeholder="Default"
-              onChange={(choiceBorderRadius: string) => props.onChange({ ...props.field, choiceBorderRadius })}
-            />
+        {!['radio', 'checkbox_group', 'select', 'font'].includes(props.field.type) ? (
+          <div className="wof-choice-dimensions-box" style={{ padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '16px' }}>
+            <strong style={{ display: 'block', fontSize: '13px', marginBottom: '8px' }}>{__('Choice Item Dimensions & Style', 'wooptionsfic')}</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+              <TextControl
+                label={__('Width (px)', 'wooptionsfic')}
+                value={String(props.field.choiceWidth ?? '')}
+                placeholder="Auto"
+                onChange={(choiceWidth: string) => props.onChange({ ...props.field, choiceWidth })}
+              />
+              <TextControl
+                label={__('Height (px)', 'wooptionsfic')}
+                value={String(props.field.choiceHeight ?? '')}
+                placeholder="Auto"
+                onChange={(choiceHeight: string) => props.onChange({ ...props.field, choiceHeight })}
+              />
+              <TextControl
+                label={__('Radius (px)', 'wooptionsfic')}
+                value={String(props.field.choiceBorderRadius ?? '')}
+                placeholder="Default"
+                onChange={(choiceBorderRadius: string) => props.onChange({ ...props.field, choiceBorderRadius })}
+              />
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {/* Display Direction option for Button Choices (segmented) */}
         {props.field.type === 'segmented' ? (
@@ -556,8 +558,8 @@ namespace WooOptionsFic.Builder {
                 </div>
               ) : null}
 
-              {/* Enable Quantity option for choice fields (excluding segmented, radio, and checkbox_group) */}
-              {Boolean(field.choices) && !['segmented', 'radio', 'checkbox_group'].includes(field.type) ? (
+              {/* Enable Quantity option for choice fields (excluding segmented, radio, checkbox_group, font, and select) */}
+              {Boolean(field.choices) && !['segmented', 'radio', 'checkbox_group', 'font', 'select'].includes(field.type) ? (
                 <div className="wof-quantity-setting" style={{ marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>
                   <ToggleControl
                     label={__('Enable Quantity', 'wooptionsfic')}
