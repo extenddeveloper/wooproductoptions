@@ -1645,11 +1645,10 @@
 	align-items: center;
 	margin: 0;
 	text-align: center;
-	transition: transform .12s ease;
 }
 
 .wof-swatch-item:hover {
-	transform: translateY(-2px);
+	transform: none !important;
 }
 
 .wof-swatch-item>input {
@@ -1743,11 +1742,10 @@
 	align-items: center;
 	margin: 0;
 	text-align: center;
-	transition: transform .12s ease;
 }
 
 .wof-image-swatch-item:hover {
-	transform: translateY(-2px);
+	transform: none !important;
 }
 
 .wof-image-swatch-item>input {
@@ -1797,7 +1795,13 @@
 	max-height: none !important;
 	max-width: none !important;
 	object-fit: cover;
+	transform: none !important;
+	transition: none !important;
 	width: 100% !important;
+}
+
+.wof-image-swatch-item:hover .wof-image-swatch-item__img {
+	transform: none !important;
 }
 
 .wof-image-swatch-item__placeholder {

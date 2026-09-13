@@ -13,6 +13,7 @@
         lastQuote = null;
         lastSelection = "";
         interactionRecorded = !1;
+        isSubmitting = !1;
         savedUuid = "";
         productImageSnapshot = null;
         constructor(e) { this.root = e; const t = e.querySelector("[data-wof-config]"); if (!t?.textContent)
@@ -20,7 +21,7 @@
         bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
-            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } }), this.form?.addEventListener("submit", e => { const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy") || (e.preventDefault(), this.requestQuote(!0)); }), this.form && window.jQuery) {
+            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy") || (e.preventDefault(), this.requestQuote(!0)); }), this.form && window.jQuery) {
             const e = () => this.scheduleQuote(50);
             window.jQuery(this.form).on("found_variation.wooptionsfic reset_data.wooptionsfic", e);
         } }
@@ -179,7 +180,7 @@
                     return await this.requestQuote(e, !0);
                 throw new Error(this.restErrorMessage(s));
             }
-            this.acceptToken(s.token), this.lastQuote = s, this.lastSelection = i, this.renderQuote(s, e);
+            this.acceptToken(s.token), this.lastQuote = s, this.lastSelection = i, this.setPending(!1), this.renderQuote(s, e);
         }
         catch (r) {
             if (r instanceof DOMException && "AbortError" === r.name)
@@ -244,6 +245,22 @@
                 n && (n.value = a.textContent);
             }));
             this.enforceMaxChoices();
+            if (o && this.form) {
+                // Final-submit path: quote confirmed mid-submit — re-trigger form submission now.
+                this.isSubmitting = !0;
+                const submitBtn = this.form.querySelector('button.single_add_to_cart_button, button[type="submit"][name="add-to-cart"], button[type="submit"]');
+                try {
+                    if (typeof this.form.requestSubmit === "function") {
+                        submitBtn ? this.form.requestSubmit(submitBtn) : this.form.requestSubmit();
+                    } else if (submitBtn) {
+                        submitBtn.click();
+                    } else {
+                        this.form.submit();
+                    }
+                } finally {
+                    setTimeout(() => { this.isSubmitting = !1; }, 1000);
+                }
+            }
         }
         applyStates(e) {
             Object.entries(e ?? {}).forEach(([e, t]) => {

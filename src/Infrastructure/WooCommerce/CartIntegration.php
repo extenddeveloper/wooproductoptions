@@ -34,8 +34,14 @@ final class CartIntegration {
 	public function register(): void {
 		add_filter('woocommerce_add_to_cart_validation', [$this, 'validate_add_to_cart'], 20, 6);
 		add_filter('woocommerce_add_cart_item_data', [$this, 'add_cart_item_data'], 20, 4);
+		add_filter('woocommerce_add_cart_item', [$this, 'add_cart_item'], 20, 2);
 		add_action('woocommerce_add_to_cart', [$this, 'after_add_to_cart'], 20, 6);
 		add_action('woocommerce_before_calculate_totals', [$this, 'apply_prices'], 20);
+		add_action('woocommerce_before_calculate_totals', [$this, 'apply_prices'], 9999);
+		add_action('woocommerce_before_mini_cart', [$this, 'apply_prices'], 1);
+		add_action('woocommerce_before_mini_cart_contents', [$this, 'apply_prices'], 1);
+		add_filter('woocommerce_product_get_price', [$this, 'filter_product_price'], 9999, 2);
+		add_filter('woocommerce_product_variation_get_price', [$this, 'filter_product_price'], 9999, 2);
 		add_filter('woocommerce_get_item_data', [$this, 'display_item_data'], 20, 2);
 		add_filter('woocommerce_get_cart_item_from_session', [$this, 'restore_from_session'], 20, 3);
 		add_action('woocommerce_check_cart_items', [$this, 'revalidate_cart'], 20);
@@ -126,6 +132,28 @@ final class CartIntegration {
 		return $cart_item_data;
 	}
 
+	/**
+	 * Apply custom option price when item is first added to the cart.
+	 *
+	 * @param array<string,mixed> $cart_item Cart item data.
+	 * @param string $cart_item_key Cart item key.
+	 * @return array<string,mixed>
+	 */
+	public function add_cart_item(array $cart_item, string $cart_item_key = ''): array {
+		unset($cart_item_key);
+		if (isset($cart_item['wooptionsfic']['price']['unitPrice']['decimal'])) {
+			$decimal = (string) $cart_item['wooptionsfic']['price']['unitPrice']['decimal'];
+			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
+				$product = $cart_item['data'] ?? null;
+				if ($product instanceof \WC_Product) {
+					$product->set_price($decimal);
+					$product->wooptionsfic_custom_price = $decimal;
+				}
+			}
+		}
+		return $cart_item;
+	}
+
 	public function after_add_to_cart(
 		string $cart_item_key,
 		int $product_id,
@@ -182,11 +210,20 @@ final class CartIntegration {
 				'revisionUuid'  => (string) ($snapshot['revisionUuid'] ?? ''),
 			]
 		);
+		if (function_exists('WC') && WC()->cart) {
+			WC()->cart->calculate_totals();
+		}
 	}
 
-	public function apply_prices(\WC_Cart $cart): void {
+	public function apply_prices(?\WC_Cart $cart = null): void {
 		if (is_admin() && ! wp_doing_ajax()) {
 			return;
+		}
+		if (! $cart instanceof \WC_Cart) {
+			if (! function_exists('WC') || ! WC()->cart) {
+				return;
+			}
+			$cart = WC()->cart;
 		}
 		foreach ($cart->get_cart() as $cart_item) {
 			if (! is_array($cart_item) || ! is_array($cart_item['wooptionsfic']['price']['unitPrice'] ?? null)) {
@@ -199,8 +236,26 @@ final class CartIntegration {
 			$decimal = (string) ($cart_item['wooptionsfic']['price']['unitPrice']['decimal'] ?? '');
 			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
 				$product->set_price($decimal);
+				$product->wooptionsfic_custom_price = $decimal;
 			}
 		}
+	}
+
+	/**
+	 * Ensure product instances in cart/checkout return their custom calculated unit price.
+	 *
+	 * @param mixed $price Product price.
+	 * @param \WC_Product $product Product instance.
+	 * @return mixed
+	 */
+	public function filter_product_price(mixed $price, \WC_Product $product): mixed {
+		if (isset($product->wooptionsfic_custom_price)) {
+			$decimal = (string) $product->wooptionsfic_custom_price;
+			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
+				return $decimal;
+			}
+		}
+		return $price;
 	}
 
 	/**
@@ -210,14 +265,18 @@ final class CartIntegration {
 	 */
 	public function display_item_data(array $item_data, array $cart_item): array {
 		if (is_array($cart_item['wooptionsfic']['snapshot']['summary'] ?? null)) {
+			$wooptionsfic = (array) ($cart_item['wooptionsfic'] ?? []);
 			foreach ($cart_item['wooptionsfic']['snapshot']['summary'] as $line) {
 				if (! is_array($line) || ! empty($line['sensitive'])) {
 					continue;
 				}
+				$field_uuid = (string) ($line['fieldUuid'] ?? '');
+				$raw_value  = (string) ($line['value'] ?? '');
+				$value      = self::format_value_with_price($raw_value, $field_uuid, $wooptionsfic);
 				$item_data[] = [
 					'key'     => (string) ($line['label'] ?? __('Option', 'wooptionsfic')),
-					'value'   => (string) ($line['value'] ?? ''),
-					'display' => esc_html((string) ($line['value'] ?? '')),
+					'value'   => $value,
+					'display' => esc_html($value),
 				];
 			}
 		}
@@ -232,6 +291,89 @@ final class CartIntegration {
 	}
 
 	/**
+	 * Format an option display value with its price contribution if applicable.
+	 *
+	 * @param string $value Option value string.
+	 * @param string $field_uuid Field UUID.
+	 * @param array<string,mixed> $wooptionsfic Configuration cart item data.
+	 * @return string
+	 */
+	public static function format_value_with_price(string $value, string $field_uuid, array $wooptionsfic): string {
+		$value = trim($value);
+		if ('' === $value || '' === $field_uuid) {
+			return $value;
+		}
+
+		$contributions = (array) ($wooptionsfic['price']['contributions'] ?? []);
+		$scale         = max(0, min(6, (int) ($wooptionsfic['price']['unitPrice']['scale'] ?? 2)));
+		$total_minor   = 0;
+		$found         = false;
+
+		$child_uuids = [];
+		if (isset($wooptionsfic['selection'][$field_uuid]) && is_array($wooptionsfic['selection'][$field_uuid])) {
+			foreach ($wooptionsfic['selection'][$field_uuid] as $row) {
+				if (is_array($row['values'] ?? null)) {
+					foreach (array_keys($row['values']) as $child_id) {
+						$child_uuids[(string) $child_id] = true;
+					}
+				}
+			}
+		}
+
+		foreach ($contributions as $contrib) {
+			if (! is_array($contrib)) {
+				continue;
+			}
+			$source = (string) ($contrib['sourceUuid'] ?? '');
+			if ($source === $field_uuid || isset($child_uuids[$source])) {
+				$total_minor += (int) ($contrib['rounded']['minor'] ?? 0);
+				$found = true;
+			}
+		}
+
+		if (! $found || 0 === $total_minor) {
+			return $value;
+		}
+
+		$amount    = $total_minor / (10 ** $scale);
+		$price_str = self::format_price_string(abs($amount), $scale);
+		if ('' === $price_str) {
+			return $value;
+		}
+
+		$sign      = $total_minor > 0 ? '+' : '-';
+		$price_tag = ' ' . $sign . $price_str;
+
+		if (str_ends_with($value, $price_tag)) {
+			return $value;
+		}
+
+		return $value . $price_tag;
+	}
+
+	/**
+	 * Format price amount using WooCommerce currency formatting.
+	 *
+	 * @param float $amount Absolute price amount.
+	 * @param int $scale Decimal scale.
+	 * @return string
+	 */
+	public static function format_price_string(float $amount, int $scale = 2): string {
+		if (function_exists('wc_price')) {
+			$html     = wc_price($amount, ['decimals' => $scale]);
+			$stripped = wp_strip_all_tags($html);
+			$decoded  = html_entity_decode($stripped, ENT_QUOTES, 'UTF-8');
+			return trim($decoded);
+		}
+
+		$symbol = function_exists('get_woocommerce_currency_symbol')
+			? html_entity_decode(get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8')
+			: '$';
+
+		return number_format($amount, $scale, '.', '') . $symbol;
+	}
+
+	/**
 	 * @param array<string,mixed> $cart_item Cart item.
 	 * @param array<string,mixed> $session_values Session data.
 	 * @return array<string,mixed>
@@ -241,6 +383,16 @@ final class CartIntegration {
 		foreach (['wooptionsfic', 'wooptionsfic_child'] as $key) {
 			if (isset($session_values[$key]) && is_array($session_values[$key])) {
 				$cart_item[$key] = $session_values[$key];
+			}
+		}
+		if (isset($cart_item['wooptionsfic']['price']['unitPrice']['decimal'])) {
+			$decimal = (string) $cart_item['wooptionsfic']['price']['unitPrice']['decimal'];
+			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
+				$product = $cart_item['data'] ?? null;
+				if ($product instanceof \WC_Product) {
+					$product->set_price($decimal);
+					$product->wooptionsfic_custom_price = $decimal;
+				}
 			}
 		}
 		return $cart_item;
@@ -274,6 +426,14 @@ final class CartIntegration {
 				$cart_item['wooptionsfic']['selection'] = $quote['values'];
 				$cart_item['wooptionsfic']['snapshot']  = $quote['snapshot'];
 				$cart_item['wooptionsfic']['price']     = $quote['price'];
+				$decimal = (string) ($quote['price']['unitPrice']['decimal'] ?? '');
+				if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
+					$product = $cart_item['data'] ?? null;
+					if ($product instanceof \WC_Product) {
+						$product->set_price($decimal);
+						$product->wooptionsfic_custom_price = $decimal;
+					}
+				}
 				WC()->cart->cart_contents[$key]         = $cart_item;
 			} catch (Throwable) {
 				wc_add_notice(__('A configured product could not be revalidated. Remove it and add it again.', 'wooptionsfic'), 'error');

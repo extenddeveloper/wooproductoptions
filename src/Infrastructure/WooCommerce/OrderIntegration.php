@@ -53,7 +53,9 @@ final class OrderIntegration {
 				$label = trim((string) ($summary['label'] ?? ''));
 				$value = trim((string) ($summary['value'] ?? ''));
 				if ('' !== $label && '' !== $value) {
-					$item->add_meta_data($label, $value, false);
+					$field_uuid       = (string) ($summary['fieldUuid'] ?? '');
+					$value_with_price = CartIntegration::format_value_with_price($value, $field_uuid, $data);
+					$item->add_meta_data($label, $value_with_price, false);
 				}
 			}
 		}

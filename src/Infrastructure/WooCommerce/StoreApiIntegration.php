@@ -43,9 +43,19 @@ final class StoreApiIntegration {
 				'price'      => null,
 			];
 		}
+		$summary = [];
+		foreach ((array) ($cart_item['wooptionsfic']['snapshot']['summary'] ?? []) as $line) {
+			if (! is_array($line) || ! empty($line['sensitive'])) {
+				continue;
+			}
+			$field_uuid    = (string) ($line['fieldUuid'] ?? '');
+			$raw_value     = (string) ($line['value'] ?? '');
+			$line['value'] = CartIntegration::format_value_with_price($raw_value, $field_uuid, (array) ($cart_item['wooptionsfic'] ?? []));
+			$summary[]     = $line;
+		}
 		return [
 			'configured'  => true,
-			'summary'     => array_values((array) ($cart_item['wooptionsfic']['snapshot']['summary'] ?? [])),
+			'summary'     => $summary,
 			'price'       => (array) ($cart_item['wooptionsfic']['price'] ?? []),
 			'revisionUuid'=> (string) ($cart_item['wooptionsfic']['snapshot']['revisionUuid'] ?? ''),
 		];
