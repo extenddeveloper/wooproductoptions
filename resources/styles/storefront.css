@@ -188,7 +188,7 @@
 
 .wof-field :where(input, select, textarea):focus {
 	border-color: var(--wof-focus);
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-focus) 20%, transparent);
+	box-shadow: none;
 	outline: none;
 }
 
@@ -221,7 +221,7 @@
 
 .wof-choice:has(input:checked) {
 	border-color: var(--wof-primary);
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-primary) 14%, transparent);
+	box-shadow: none;
 }
 
 .wof-choice:has(input:disabled) {
@@ -920,7 +920,7 @@
 .wof-upload:focus-within .wof-upload__surface {
 	background: var(--wof-surface);
 	border-color: color-mix(in srgb, var(--wof-primary) 52%, var(--wof-border));
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--wof-primary) 7%, transparent);
+	box-shadow: none;
 }
 
 .wof-upload__picker {
@@ -1463,7 +1463,7 @@
 
 .wof-configurator .wof-field :where(input, select, textarea):focus {
 	border-color: var(--wof-focus) !important;
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-focus) 20%, transparent) !important;
+	box-shadow: none !important;
 }
 
 .wof-configurator .wof-choice {
@@ -1479,7 +1479,7 @@
 
 .wof-configurator .wof-choice:has(input:checked) {
 	border-color: var(--wof-primary) !important;
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-primary) 14%, transparent) !important;
+	box-shadow: none !important;
 }
 
 .wof-configurator .wof-choice:has(input:checked) .wof-choice__check {
@@ -1566,7 +1566,7 @@
 }
 
 .wof-color-picker input[type=color]:focus-visible {
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--wof-focus) 25%, transparent);
+	box-shadow: none;
 	outline: 0;
 }
 
@@ -1642,7 +1642,7 @@
 
 .wof-swatch-item:has(input:checked) .wof-swatch-item__color {
 	border-color: var(--wof-primary);
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-primary) 18%, transparent);
+	box-shadow: none;
 }
 
 .wof-swatch-item:has(input:focus-visible) .wof-swatch-item__color {
@@ -1743,7 +1743,7 @@
 
 .wof-image-swatch-item:has(input:checked) .wof-image-swatch-item__thumb {
 	border-color: var(--wof-primary);
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-primary) 18%, transparent);
+	box-shadow: none;
 }
 
 .wof-image-swatch-item:has(input:focus-visible) .wof-image-swatch-item__thumb {
@@ -1936,7 +1936,7 @@
 
 .wof-configurator .wof-swatch-item:has(input:checked) .wof-swatch-item__color {
 	border-color: var(--wof-primary) !important;
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-primary) 18%, transparent) !important;
+	box-shadow: none !important;
 }
 
 .wof-configurator .wof-swatch-item__check {
@@ -1951,7 +1951,7 @@
 
 .wof-configurator .wof-image-swatch-item:has(input:checked) .wof-image-swatch-item__thumb {
 	border-color: var(--wof-primary) !important;
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-primary) 18%, transparent) !important;
+	box-shadow: none !important;
 }
 
 .wof-configurator .wof-radio-item>input[type="radio"],
@@ -2125,15 +2125,15 @@
 	height: 44px !important;
 	min-height: 44px !important;
 	overflow: hidden !important;
-	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
-	transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+	box-shadow: none !important;
+	transition: border-color 0.15s ease !important;
 	box-sizing: border-box !important;
 	position: relative !important;
 }
 
 .wof-phone-field-wrap:focus-within {
 	border-color: var(--wof-primary, #5B4FF5) !important;
-	box-shadow: 0 0 0 3px color-mix(in srgb, var(--wof-primary, #5B4FF5) 15%, transparent) !important;
+	box-shadow: none !important;
 }
 
 .wof-phone-picker {
@@ -2251,7 +2251,7 @@
 
 .wof-image-swatch-item:has(input:checked) .wof-image-swatch-item__thumb {
 	border-color: var(--wof-primary, #172033) !important;
-	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-primary, #172033) 25%, transparent) !important;
+	box-shadow: none !important;
 }
 
 /* Swatch Items Horizontal Alignment & Fixed Spacing */

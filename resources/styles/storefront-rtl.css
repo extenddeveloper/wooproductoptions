@@ -110,7 +110,7 @@
 
 .wof-field.is-invalid {
 	border-color: var(--wof-danger);
-	box-shadow: 0 0 0 3px color-mix(in srgb,var(--wof-danger) 12%,transparent);
+	box-shadow: none !important;
 }
 
 .wof-field.is-disabled {
@@ -185,7 +185,7 @@
 
 .wof-field :where(input,select,textarea):focus {
 	border-color: var(--wof-focus);
-	box-shadow: 0 0 0 2px color-mix(in srgb,var(--wof-focus) 20%,transparent);
+	box-shadow: none;
 	outline: none;
 }
 
@@ -218,7 +218,7 @@
 
 .wof-choice:has(input:checked) {
 	border-color: var(--wof-primary);
-	box-shadow: 0 0 0 2px color-mix(in srgb,var(--wof-primary) 14%,transparent);
+	box-shadow: none;
 }
 
 .wof-choice:has(input:disabled) {
@@ -900,7 +900,7 @@
 .wof-upload:hover .wof-upload__surface,.wof-upload:focus-within .wof-upload__surface {
 	background: var(--wof-surface);
 	border-color: color-mix(in srgb,var(--wof-primary) 52%,var(--wof-border));
-	box-shadow: 0 0 0 3px color-mix(in srgb,var(--wof-primary) 7%,transparent);
+	box-shadow: none;
 }
 
 .wof-upload__picker {
@@ -1434,7 +1434,7 @@
 
 .wof-configurator .wof-field :where(input,select,textarea):focus {
 	border-color: var(--wof-focus) !important;
-	box-shadow: 0 0 0 2px color-mix(in srgb,var(--wof-focus) 20%,transparent) !important;
+	box-shadow: none !important;
 }
 
 .wof-configurator .wof-choice {
@@ -1450,7 +1450,7 @@
 
 .wof-configurator .wof-choice:has(input:checked) {
 	border-color: var(--wof-primary) !important;
-	box-shadow: 0 0 0 2px color-mix(in srgb,var(--wof-primary) 14%,transparent) !important;
+	box-shadow: none !important;
 }
 
 .wof-configurator .wof-choice:has(input:checked) .wof-choice__check {
@@ -1496,7 +1496,7 @@
 }
 
 /* beta.29 color picker field */
-.wof-color-picker{align-items:center;background:var(--wof-surface);border:1px solid var(--wof-border);border-radius:10px;display:grid;gap:.75rem;grid-template-columns:46px minmax(0,1fr) auto;min-height:62px;padding:.5rem .7rem}.wof-color-picker input[type=color]{appearance:none;background:transparent;border:0;border-radius:8px;box-shadow:0 0 0 1px var(--wof-border);cursor:pointer;height:42px;margin:0;min-height:42px;padding:0;width:42px}.wof-color-picker input[type=color]::-webkit-color-swatch-wrapper{padding:3px}.wof-color-picker input[type=color]::-webkit-color-swatch{border:0;border-radius:6px}.wof-color-picker input[type=color]::-moz-color-swatch{border:0;border-radius:6px}.wof-color-picker input[type=color]:focus-visible{box-shadow:0 0 0 3px color-mix(in srgb,var(--wof-focus) 25%,transparent);outline:0}.wof-color-picker__value{display:grid;gap:.08rem;min-width:0}.wof-color-picker__value strong{color:var(--wof-text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.82rem}.wof-color-picker__value small{color:var(--wof-muted);font-size:.7rem}.wof-color-picker__icon{color:var(--wof-primary);font-size:19px;height:19px;width:19px}
+.wof-color-picker{align-items:center;background:var(--wof-surface);border:1px solid var(--wof-border);border-radius:10px;display:grid;gap:.75rem;grid-template-columns:46px minmax(0,1fr) auto;min-height:62px;padding:.5rem .7rem}.wof-color-picker input[type=color]{appearance:none;background:transparent;border:0;border-radius:8px;box-shadow:0 0 0 1px var(--wof-border);cursor:pointer;height:42px;margin:0;min-height:42px;padding:0;width:42px}.wof-color-picker input[type=color]::-webkit-color-swatch-wrapper{padding:3px}.wof-color-picker input[type=color]::-webkit-color-swatch{border:0;border-radius:6px}.wof-color-picker input[type=color]::-moz-color-swatch{border:0;border-radius:6px}.wof-color-picker input[type=color]:focus-visible{box-shadow:none;outline:0}.wof-color-picker__value{display:grid;gap:.08rem;min-width:0}.wof-color-picker__value strong{color:var(--wof-text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:.82rem}.wof-color-picker__value small{color:var(--wof-muted);font-size:.7rem}.wof-color-picker__icon{color:var(--wof-primary);font-size:19px;height:19px;width:19px}
 
 /* --- Radio List (standard visible radio buttons) --- */
 .wof-radio-list {
