@@ -111,7 +111,33 @@ namespace WooOptionsFic.Builder {
     if (field.type === 'separator') return <hr className="wof-preview-separator" />;
     if (field.type === 'spacer') return <div className="wof-preview-spacer" style={{ height: `${Number((field.style as any)?.height ?? 24)}px` }} />;
     if (field.type === 'formula' || field.type === 'calculated') return <output className="wof-preview-output">0.00</output>;
-    if (field.type === 'checkbox' || field.type === 'toggle') return <label className="wof-preview-boolean"><input type="checkbox" disabled /><span /><strong>{field.label}</strong></label>;
+    if (field.type === 'toggle') {
+      const isChecked = Boolean(field.default);
+      const priceText = formatChoicePrice(field.pricing);
+      return (
+        <div className={`wof-preview-toggle${isChecked ? ' is-checked' : ''}`}>
+          <span className="wof-preview-toggle__track">
+            <span className="wof-preview-toggle__thumb" />
+          </span>
+          <strong className="wof-preview-toggle__label">{field.label || __('Switch', 'wooptionsfic')}</strong>
+          {priceText ? <span className="wof-preview-boolean__price">{priceText}</span> : null}
+        </div>
+      );
+    }
+
+    if (field.type === 'checkbox') {
+      const isChecked = Boolean(field.default);
+      const priceText = formatChoicePrice(field.pricing);
+      return (
+        <div className={`wof-preview-checkbox${isChecked ? ' is-checked' : ''}`}>
+          <span className="wof-preview-checkbox__box">
+            {isChecked ? renderCheckSvg(10) : null}
+          </span>
+          <strong className="wof-preview-checkbox__label">{field.label || __('Checkbox', 'wooptionsfic')}</strong>
+          {priceText ? <span className="wof-preview-boolean__price">{priceText}</span> : null}
+        </div>
+      );
+    }
 
     if (field.type === 'textarea') {
       return (
@@ -122,9 +148,12 @@ namespace WooOptionsFic.Builder {
     }
 
     if (field.type === 'select' || field.type === 'font') {
+      const selectedChoice = choices.find(c => Boolean(c.default));
       return (
         <div className="wof-preview-select-control">
-          <select aria-disabled="true" tabIndex={-1} value="" onChange={() => undefined}><option value="">{choices[0]?.label ?? __('Choose an option', 'wooptionsfic')}</option></select>
+          <select aria-disabled="true" tabIndex={-1} value="" onChange={() => undefined}>
+            <option value="">{selectedChoice?.label ? choiceLabel(selectedChoice) : __('Choose an option', 'wooptionsfic')}</option>
+          </select>
           <WooOptionsFic.Components.Dashicon name="arrow-down-alt2" />
         </div>
       );

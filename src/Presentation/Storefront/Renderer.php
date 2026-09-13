@@ -240,18 +240,109 @@ final class Renderer {
 	 * @param array<string,mixed> $field Field.
 	 */
 	private function render_select(array $field, string $name, string $description_id): void {
-		$uuid = (string) $field['uuid'];
-		echo '<select id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '"';
+		$uuid         = (string) $field['uuid'];
+		$image_style  = (string) ($field['imageStyle'] ?? 'normal');
+		$img_base_cls = 'circle' === $image_style ? 'wof-choice-img wof-choice-img--circle' : 'wof-choice-img';
+		$choices      = (array) ($field['choices'] ?? []);
+
+		// Find default selected choice
+		$default_uuid  = '';
+		$default_label = __('Choose an option', 'wooptionsfic');
+		$default_img   = '';
+		$default_price = '';
+
+		foreach ($choices as $choice) {
+			$choice_uuid = (string) ($choice['uuid'] ?? '');
+			$selected    = ! empty($choice['default']) || (string) ($field['default'] ?? '') === $choice_uuid;
+			if ($selected) {
+				$default_uuid  = $choice_uuid;
+				$default_label = (string) ($choice['label'] ?? '');
+				$default_img   = ! empty($choice['imageUrl']) ? (string) $choice['imageUrl'] : '';
+				if (empty($default_img) && ! empty($choice['imageId'])) {
+					$default_img = (string) wp_get_attachment_image_url((int) $choice['imageId'], 'thumbnail');
+				}
+				$default_price = $this->choice_price_text((array) $choice, false);
+				break;
+			}
+		}
+
+		echo '<div class="wof-custom-select" data-wof-custom-select>';
+		echo '<div class="wof-custom-select__trigger" data-wof-custom-select-trigger role="combobox" tabindex="0" aria-haspopup="listbox" aria-expanded="false" aria-describedby="' . esc_attr($description_id) . '">';
+		echo '<span class="wof-custom-select__selected" data-wof-custom-select-selected>';
+		$style_img = '' === $default_img ? ' style="display:none;"' : '';
+		echo '<img class="' . esc_attr($img_base_cls . ' wof-custom-select__img') . '" src="' . esc_url($default_img) . '" alt=""' . $style_img . ' data-wof-selected-img>';
+		echo '<span class="wof-custom-select__title" data-wof-selected-title>' . esc_html($default_label) . '</span>';
+		$style_price = '' === $default_price ? ' style="display:none;"' : '';
+		echo '<span class="wof-custom-select__price"' . $style_price . ' data-wof-selected-price>' . esc_html($default_price) . '</span>';
+		echo '</span>';
+		echo '<svg class="wof-custom-select__chevron" viewBox="0 0 20 20" width="16" height="16" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>';
+		echo '</div>';
+
+		echo '<div class="wof-custom-select__dropdown" data-wof-custom-select-dropdown role="listbox" tabindex="-1">';
+		$is_empty_selected = '' === $default_uuid;
+		echo '<div class="wof-custom-select__option' . ($is_empty_selected ? ' is-selected' : '') . '" data-wof-option-value="" data-wof-option-label="' . esc_attr__('Choose an option', 'wooptionsfic') . '" data-wof-option-image="" data-wof-option-price="" role="option" aria-selected="' . ($is_empty_selected ? 'true' : 'false') . '">';
+		echo '<span class="wof-custom-select__option-label">' . esc_html__('Choose an option', 'wooptionsfic') . '</span>';
+		echo '</div>';
+
+		foreach ($choices as $choice) {
+			$choice_uuid = (string) ($choice['uuid'] ?? '');
+			$is_selected = $choice_uuid === $default_uuid;
+			$choice_img  = ! empty($choice['imageUrl']) ? (string) $choice['imageUrl'] : '';
+			if (empty($choice_img) && ! empty($choice['imageId'])) {
+				$choice_img = (string) wp_get_attachment_image_url((int) $choice['imageId'], 'thumbnail');
+			}
+			$price_text  = $this->choice_price_text((array) $choice, false);
+			$is_disabled = ! empty($choice['disabled']);
+
+			$opt_cls = 'wof-custom-select__option' . ($is_selected ? ' is-selected' : '') . ($is_disabled ? ' is-disabled' : '');
+			echo '<div class="' . esc_attr($opt_cls) . '"';
+			echo ' data-wof-option-value="' . esc_attr($choice_uuid) . '"';
+			echo ' data-wof-option-label="' . esc_attr((string) $choice['label']) . '"';
+			if ('' !== $choice_img) {
+				echo ' data-wof-option-image="' . esc_url($choice_img) . '"';
+			}
+			if ('' !== $price_text) {
+				echo ' data-wof-option-price="' . esc_attr($price_text) . '"';
+			}
+			echo ' role="option" aria-selected="' . ($is_selected ? 'true' : 'false') . '"';
+			if ($is_disabled) {
+				echo ' aria-disabled="true"';
+			}
+			echo '>';
+
+			if ('' !== $choice_img) {
+				echo '<img class="' . esc_attr($img_base_cls . ' wof-custom-select__img') . '" src="' . esc_url($choice_img) . '" alt="">';
+			}
+			echo '<span class="wof-custom-select__option-label">' . esc_html((string) $choice['label']) . '</span>';
+			if ('' !== $price_text) {
+				echo '<span class="wof-custom-select__option-price">' . esc_html($price_text) . '</span>';
+			}
+			echo '</div>';
+		}
+		echo '</div>';
+
+		// Native select
+		echo '<select id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '" class="wof-custom-select__native" tabindex="-1" aria-hidden="true"';
 		echo $this->input_attributes($field, $description_id) . '>';
 		echo '<option value="">' . esc_html__('Choose an option', 'wooptionsfic') . '</option>';
-		foreach ((array) ($field['choices'] ?? []) as $choice) {
-			$selected = ! empty($choice['default']) || (string) ($field['default'] ?? '') === (string) ($choice['uuid'] ?? '');
-			echo '<option value="' . esc_attr((string) $choice['uuid']) . '"' . selected($selected, true, false);
+		foreach ($choices as $choice) {
+			$choice_uuid = (string) ($choice['uuid'] ?? '');
+			$selected    = $choice_uuid === $default_uuid;
+			$choice_img  = ! empty($choice['imageUrl']) ? (string) $choice['imageUrl'] : '';
+			if (empty($choice_img) && ! empty($choice['imageId'])) {
+				$choice_img = (string) wp_get_attachment_image_url((int) $choice['imageId'], 'thumbnail');
+			}
+			echo '<option value="' . esc_attr($choice_uuid) . '"' . selected($selected, true, false);
+			if ('' !== $choice_img) {
+				echo ' data-image="' . esc_url($choice_img) . '"';
+			}
 			echo disabled(! empty($choice['disabled']), true, false) . '>';
 			echo esc_html((string) $choice['label'] . $this->choice_price_text((array) $choice));
 			echo '</option>';
 		}
 		echo '</select>';
+
+		echo '</div>';
 	}
 
 	/**
@@ -527,12 +618,23 @@ final class Renderer {
 	 * @param array<string,mixed> $field Field.
 	 */
 	private function render_boolean(array $field, string $name, string $description_id): void {
-		$uuid = (string) $field['uuid'];
-		echo '<label class="wof-boolean" for="wof-' . esc_attr($uuid) . '">';
+		$uuid         = (string) $field['uuid'];
+		$is_checkbox  = 'checkbox' === ((string) ($field['type'] ?? ''));
+		$wrapper_cls  = 'wof-boolean' . ($is_checkbox ? ' wof-boolean--checkbox' : ' wof-boolean--toggle');
+		echo '<label class="' . esc_attr($wrapper_cls) . '" for="wof-' . esc_attr($uuid) . '">';
 		echo '<input id="wof-' . esc_attr($uuid) . '" type="checkbox" name="' . esc_attr($name) . '" value="1"';
 		echo checked(! empty($field['default']), true, false) . $this->input_attributes($field, $description_id) . '>';
-		echo '<span class="wof-boolean__control" aria-hidden="true"></span>';
-		echo '<span><strong>' . esc_html((string) $field['label']) . '</strong>';
+		echo '<span class="wof-boolean__control" aria-hidden="true">';
+		if ($is_checkbox) {
+			echo '<svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
+		}
+		echo '</span>';
+		$price_text   = $this->choice_price_text($field, false);
+		echo '<span><span class="wof-boolean__label-row"><strong>' . esc_html((string) $field['label']) . '</strong>';
+		if ('' !== $price_text) {
+			echo ' <span class="wof-boolean__price">' . esc_html($price_text) . '</span>';
+		}
+		echo '</span>';
 		if ('' !== (string) ($field['description'] ?? '')) {
 			echo '<small>' . esc_html((string) $field['description']) . '</small>';
 		}

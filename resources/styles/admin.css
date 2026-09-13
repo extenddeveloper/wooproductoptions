@@ -9949,6 +9949,7 @@
 	opacity: 1 !important;
 	outline: none !important;
 	transition: all 0.15s ease !important;
+	max-width: 100% !important;
 }
 
 .wof-canvas-field__preview input::placeholder,
@@ -9962,6 +9963,104 @@
 	min-height: 76px !important;
 	padding: 10px 14px !important;
 	line-height: 1.5 !important;
+}
+
+/* --- Modern Toggle / Switch Field Preview in Canvas --- */
+.wof-preview-toggle {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 10px !important;
+	cursor: default !important;
+	user-select: none !important;
+	padding: 4px 0 !important;
+}
+
+.wof-preview-toggle__track {
+	position: relative !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	width: 42px !important;
+	height: 24px !important;
+	min-width: 42px !important;
+	background: #cbd5e1 !important;
+	border-radius: 999px !important;
+	transition: background-color 0.2s ease !important;
+	flex-shrink: 0 !important;
+	box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+}
+
+.wof-preview-toggle.is-checked .wof-preview-toggle__track {
+	background: #5b4ff5 !important;
+}
+
+.wof-preview-toggle__thumb {
+	position: absolute !important;
+	top: 2.5px !important;
+	left: 3px !important;
+	width: 19px !important;
+	height: 19px !important;
+	background: #ffffff !important;
+	border-radius: 50% !important;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+	transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.wof-preview-toggle.is-checked .wof-preview-toggle__thumb {
+	transform: translateX(17px) !important;
+}
+
+.wof-preview-toggle__label {
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
+	color: #1e293b !important;
+	line-height: 1.4 !important;
+}
+
+/* --- Modern Checkbox Field Preview in Canvas --- */
+.wof-preview-checkbox {
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 9px !important;
+	cursor: default !important;
+	user-select: none !important;
+	padding: 4px 0 !important;
+}
+
+.wof-preview-checkbox__box {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	width: 18px !important;
+	height: 18px !important;
+	min-width: 18px !important;
+	border: 1.5px solid #cbd5e1 !important;
+	border-radius: 4px !important;
+	background: #ffffff !important;
+	box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04) !important;
+	transition: all 0.15s ease !important;
+	flex-shrink: 0 !important;
+	box-sizing: border-box !important;
+}
+
+.wof-preview-checkbox.is-checked .wof-preview-checkbox__box {
+	background: #5b4ff5 !important;
+	border-color: #5b4ff5 !important;
+	color: #ffffff !important;
+}
+
+.wof-preview-checkbox__label {
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
+	color: #1e293b !important;
+	line-height: 1.4 !important;
+}
+
+.wof-preview-boolean__price {
+	display: inline-block !important;
+	font-size: 12.5px !important;
+	font-weight: 600 !important;
+	color: #64748b !important;
+	margin-inline-start: 4px !important;
 }
 
 /* Unified International Phone Field on Canvas Preview */

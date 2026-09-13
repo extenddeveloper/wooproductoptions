@@ -242,7 +242,7 @@ namespace WooOptionsFic.Builder {
           </div>
         ) : null}
 
-        {/* Columns and Image Style for Radio and Checkbox Group */}
+        {/* Columns and Image Style for Radio, Checkbox Group, and Dropdown */}
         {['radio', 'checkbox_group'].includes(props.field.type) ? (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '18px' }}>
             <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
@@ -293,29 +293,30 @@ namespace WooOptionsFic.Builder {
               </div>
             </div>
           </div>
-        ) : null}
-
-        {/* Min / Max Restriction for Checkbox Group */}
-        {props.field.type === 'checkbox_group' ? (
-          <div className="wof-checkbox-restrictions-box" style={{ padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '18px' }}>
-            <strong style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#0f172a', marginBottom: '8px' }}>{__('Choice Selection Restrictions', 'wooptionsfic')}</strong>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <TextControl
-                label={__('Min Restriction', 'wooptionsfic')}
-                type="number"
-                min={0}
-                value={String(props.field.minChoices ?? '')}
-                placeholder={__('Min', 'wooptionsfic')}
-                onChange={(val: string) => props.onChange({ ...props.field, minChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
-              />
-              <TextControl
-                label={__('Max Restriction', 'wooptionsfic')}
-                type="number"
-                min={0}
-                value={String(props.field.maxChoices ?? '')}
-                placeholder={__('Max', 'wooptionsfic')}
-                onChange={(val: string) => props.onChange({ ...props.field, maxChoices: val === '' ? 0 : Math.max(0, Number(val)) })}
-              />
+        ) : props.field.type === 'select' ? (
+          <div style={{ marginBottom: '18px' }}>
+            <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
+              <span className="wof-field-width-label">{__('Image Style', 'wooptionsfic')}</span>
+              <div className="wof-field-width-group" role="radiogroup" aria-label={__('Image Style', 'wooptionsfic')}>
+                {([
+                  { label: __('Normal', 'wooptionsfic'), value: 'normal' },
+                  { label: __('Circle', 'wooptionsfic'), value: 'circle' },
+                ] as const).map((st) => {
+                  const isSelected = (props.field.imageStyle || 'normal') === st.value;
+                  return (
+                    <button
+                      type="button"
+                      key={st.value}
+                      role="radio"
+                      aria-checked={isSelected}
+                      className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                      onClick={() => props.onChange({ ...props.field, imageStyle: st.value })}
+                    >
+                      {st.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         ) : null}
@@ -341,7 +342,7 @@ namespace WooOptionsFic.Builder {
               <ChoiceColorControl color={choice.color || '#5B4FF5'} onChange={(color: string) => updateChoice(choice.uuid, { color })} />
             ) : null}
             {/* Note: 'color_swatch' is excluded so 'Choice image (optional)' is removed from color swatches */}
-            {['image_swatch', 'product', 'radio', 'checkbox_group', 'segmented'].includes(props.field.type) ? (
+            {['image_swatch', 'product', 'radio', 'checkbox_group', 'segmented', 'select'].includes(props.field.type) ? (
               <ChoiceMediaControl
                 choice={choice}
                 required={props.field.type === 'image_swatch'}
@@ -592,6 +593,14 @@ namespace WooOptionsFic.Builder {
 
               {field.type === 'color_picker' ? (
                 <ChoiceColorControl label={__('Default color', 'wooptionsfic')} color={String(field.default ?? '#5B4FF5')} onChange={(color: string) => update({ default: color })} />
+              ) : null}
+
+              {['checkbox', 'toggle'].includes(field.type) ? (
+                <ToggleControl
+                  label={__('Checked by default', 'wooptionsfic')}
+                  checked={Boolean(field.default)}
+                  onChange={(defaultVal: boolean) => update({ default: defaultVal })}
+                />
               ) : null}
 
               <TextareaControl label={__('Help text', 'wooptionsfic')} value={field.help} onChange={(help: string) => update({ help })} />

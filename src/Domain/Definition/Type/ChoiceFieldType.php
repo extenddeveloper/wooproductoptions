@@ -78,7 +78,7 @@ final class ChoiceFieldType extends AbstractFieldType {
 		$normalized['maxQuantity']        = max(0, (int) ($definition['maxQuantity'] ?? 100));
 		$normalized['displayDirection']   = 'segmented' === $this->type_key && 'vertical' === (string) ($definition['displayDirection'] ?? '') ? 'vertical' : 'horizontal';
 		$normalized['columns']            = in_array($this->type_key, ['radio', 'checkbox_group'], true) && in_array((string) ($definition['columns'] ?? ''), ['2', 'two'], true) ? 'two' : 'one';
-		$normalized['imageStyle']         = in_array($this->type_key, ['radio', 'checkbox_group'], true) && 'circle' === (string) ($definition['imageStyle'] ?? '') ? 'circle' : 'normal';
+		$normalized['imageStyle']         = in_array($this->type_key, ['radio', 'checkbox_group', 'select'], true) && 'circle' === (string) ($definition['imageStyle'] ?? '') ? 'circle' : 'normal';
 		return $normalized;
 	}
 
