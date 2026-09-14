@@ -127,10 +127,14 @@ namespace WooOptionsFic {
     minQuantity?: number;
     maxQuantity?: number;
     placeholder?: string;
+    enableMinMax?: boolean;
     min?: string | null;
     max?: string | null;
     step?: string | null;
+    minLength?: number;
     maxLength?: number;
+    textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+    rows?: number;
     privacyMode?: boolean;
     choices?: ChoiceDefinition[];
     multiple?: boolean;

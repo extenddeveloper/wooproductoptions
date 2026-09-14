@@ -25,10 +25,21 @@ final class ScalarFieldType extends AbstractFieldType {
 	public function normalize_definition(array $definition): array {
 		$normalized = $this->base_definition($definition);
 		$normalized['placeholder'] = self::plain_text((string) ($definition['placeholder'] ?? ''), 200);
-		$normalized['min']         = $this->decimal_or_null($definition['min'] ?? null);
-		$normalized['max']         = $this->decimal_or_null($definition['max'] ?? null);
+		$enable_min_max            = ! empty($definition['enableMinMax']) || (! isset($definition['enableMinMax']) && (isset($definition['min']) || isset($definition['max'])));
+		$normalized['enableMinMax'] = $enable_min_max;
+		$normalized['min']         = $enable_min_max ? $this->decimal_or_null($definition['min'] ?? null) : null;
+		$normalized['max']         = $enable_min_max ? $this->decimal_or_null($definition['max'] ?? null) : null;
 		$normalized['step']        = $this->decimal_or_null($definition['step'] ?? null);
+		if (isset($definition['default'])) {
+			$normalized['default'] = self::plain_text((string) $definition['default'], 200);
+		}
+		$normalized['minLength']   = max(0, min(10000, (int) ($definition['minLength'] ?? 0)));
 		$normalized['maxLength']   = max(0, min(10000, (int) ($definition['maxLength'] ?? 0)));
+		$text_transform            = (string) ($definition['textTransform'] ?? 'none');
+		$normalized['textTransform'] = in_array($text_transform, ['none', 'uppercase', 'lowercase', 'capitalize'], true) ? $text_transform : 'none';
+		if ('textarea' === $this->type_key) {
+			$normalized['rows'] = max(1, min(100, (int) ($definition['rows'] ?? 4)));
+		}
 		$normalized['privacyMode'] = 'secret' === $this->value_kind;
 		if ('tel' === $this->type_key) {
 			$flag_style = (string) ($definition['flagStyle'] ?? 'number_only');
@@ -137,8 +148,17 @@ final class ScalarFieldType extends AbstractFieldType {
 	}
 
 	private function normalize_string(mixed $value, array $definition): string {
-		$max = (int) ($definition['maxLength'] ?? 0);
-		return self::plain_text((string) $value, $max > 0 ? $max : 5000);
+		$max       = (int) ($definition['maxLength'] ?? 0);
+		$text      = self::plain_text((string) $value, $max > 0 ? $max : 5000);
+		$transform = (string) ($definition['textTransform'] ?? 'none');
+		if ('uppercase' === $transform) {
+			$text = mb_strtoupper($text);
+		} elseif ('lowercase' === $transform) {
+			$text = mb_strtolower($text);
+		} elseif ('capitalize' === $transform) {
+			$text = mb_convert_case($text, MB_CASE_TITLE, 'UTF-8');
+		}
+		return $text;
 	}
 
 	private function normalize_integer(mixed $value): string {
@@ -184,10 +204,11 @@ final class ScalarFieldType extends AbstractFieldType {
 			return [['code' => 'invalid_number', 'params' => []]];
 		}
 		$numeric = (float) $value;
-		if (null !== ($definition['min'] ?? null) && $numeric < (float) $definition['min']) {
+		$check_min_max = ! isset($definition['enableMinMax']) || ! empty($definition['enableMinMax']);
+		if ($check_min_max && null !== ($definition['min'] ?? null) && $numeric < (float) $definition['min']) {
 			$errors[] = ['code' => 'below_minimum', 'params' => ['minimum' => (string) $definition['min']]];
 		}
-		if (null !== ($definition['max'] ?? null) && $numeric > (float) $definition['max']) {
+		if ($check_min_max && null !== ($definition['max'] ?? null) && $numeric > (float) $definition['max']) {
 			$errors[] = ['code' => 'above_maximum', 'params' => ['maximum' => (string) $definition['max']]];
 		}
 		return $errors;
@@ -277,8 +298,13 @@ final class ScalarFieldType extends AbstractFieldType {
 
 	private function validate_string(string $value, array $definition): array {
 		$errors = [];
+		$min    = (int) ($definition['minLength'] ?? 0);
 		$max    = (int) ($definition['maxLength'] ?? 0);
-		if ($max > 0 && mb_strlen($value) > $max) {
+		$length = mb_strlen($value);
+		if ($min > 0 && $length < $min) {
+			$errors[] = ['code' => 'too_short', 'params' => ['minimum' => $min]];
+		}
+		if ($max > 0 && $length > $max) {
 			$errors[] = ['code' => 'too_long', 'params' => ['maximum' => $max]];
 		}
 		return $errors;

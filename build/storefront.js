@@ -1073,10 +1073,10 @@
             if (code === "field_above_maximum" || code === "above_maximum") {
                 return max ? `${name}: Maximum allowed value is ${max}.` : `${name} exceeds the allowed maximum.`;
             }
-            if (code === "field_too_short" || code === "too_short") {
+            if (code === "field_too_short" || code === "too_short" || code.includes("too_short") || code.includes("below_minimum_length")) {
                 return min ? `${name}: Must be at least ${min} character${Number(min) > 1 ? "s" : ""}.` : `${name} is too short.`;
             }
-            if (code === "field_too_long" || code === "too_long") {
+            if (code === "field_too_long" || code === "too_long" || code.includes("too_long") || code.includes("above_maximum_length")) {
                 return max ? `${name}: Cannot exceed ${max} character${Number(max) > 1 ? "s" : ""}.` : `${name} is too long.`;
             }
             if (code === "field_invalid_email" || code === "invalid_email") {

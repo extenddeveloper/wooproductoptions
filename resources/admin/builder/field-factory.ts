@@ -109,6 +109,23 @@ namespace WooOptionsFic.FieldFactory {
       field.maxLength = 0;
     }
 
+    if (type === 'text' || type === 'textarea') {
+      field.minLength = 0;
+      field.maxLength = 0;
+      field.textTransform = 'none';
+      if (type === 'textarea') {
+        field.rows = 4;
+      }
+    }
+
+    if (type === 'number') {
+      field.enableMinMax = true;
+      field.min = '1';
+      field.max = '100';
+      field.step = '1';
+      field.default = '';
+    }
+
     if (type === 'file') {
       field.allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
       field.maxFiles = 1;

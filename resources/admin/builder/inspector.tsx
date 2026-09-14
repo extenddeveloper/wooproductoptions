@@ -1345,6 +1345,105 @@ namespace WooOptionsFic.Builder {
 
               {'placeholder' in field ? <TextControl label={__('Placeholder', 'wooptionsfic')} value={field.placeholder ?? ''} onChange={(placeholder: string) => update({ placeholder })} /> : null}
 
+              {/* Text and Textarea Settings */}
+              {['text', 'textarea'].includes(field.type) ? (
+                <div className="wof-text-settings" style={{ marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                    <TextControl
+                      label={__('Minimum Character', 'wooptionsfic')}
+                      type="number"
+                      min={0}
+                      value={field.minLength ? String(field.minLength) : ''}
+                      placeholder="0"
+                      onChange={(val: string) => update({ minLength: val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0) })}
+                    />
+                    <TextControl
+                      label={__('Maximum Character', 'wooptionsfic')}
+                      type="number"
+                      min={0}
+                      value={field.maxLength ? String(field.maxLength) : ''}
+                      placeholder="0"
+                      onChange={(val: string) => update({ maxLength: val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0) })}
+                    />
+                  </div>
+
+                  <SelectControl
+                    label={__('Text Transform', 'wooptionsfic')}
+                    value={field.textTransform ?? 'none'}
+                    options={[
+                      { label: __('None', 'wooptionsfic'), value: 'none' },
+                      { label: __('Uppercase', 'wooptionsfic'), value: 'uppercase' },
+                      { label: __('Lowercase', 'wooptionsfic'), value: 'lowercase' },
+                      { label: __('Capitalize', 'wooptionsfic'), value: 'capitalize' },
+                    ]}
+                    onChange={(textTransform: 'none' | 'uppercase' | 'lowercase' | 'capitalize') => update({ textTransform })}
+                  />
+
+                  {field.type === 'textarea' ? (
+                    <div style={{ marginTop: '12px' }}>
+                      <TextControl
+                        label={__('Row', 'wooptionsfic')}
+                        type="number"
+                        min={1}
+                        max={50}
+                        value={field.rows ? String(field.rows) : '4'}
+                        placeholder="4"
+                        onChange={(val: string) => update({ rows: val === '' ? 4 : Math.max(1, parseInt(val, 10) || 4) })}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+
+              {/* Number Settings */}
+              {field.type === 'number' ? (
+                <div className="wof-number-settings" style={{ marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>
+                  <ToggleControl
+                    label={__('Enable Min/Max Restriction', 'wooptionsfic')}
+                    checked={field.enableMinMax !== false}
+                    onChange={(enableMinMax: boolean) => update({
+                      enableMinMax,
+                      min: enableMinMax ? (field.min ?? '1') : null,
+                      max: enableMinMax ? (field.max ?? '100') : null,
+                    })}
+                  />
+                  {field.enableMinMax !== false ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px' }}>
+                      <TextControl
+                        label={__('MINIMUM VALUE', 'wooptionsfic')}
+                        type="number"
+                        value={field.min != null ? String(field.min) : '1'}
+                        placeholder="1"
+                        onChange={(min: string) => update({ min })}
+                      />
+                      <TextControl
+                        label={__('MAXIMUM VALUE', 'wooptionsfic')}
+                        type="number"
+                        value={field.max != null ? String(field.max) : '100'}
+                        placeholder="100"
+                        onChange={(max: string) => update({ max })}
+                      />
+                    </div>
+                  ) : null}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                    <TextControl
+                      label={__('STEPS', 'wooptionsfic')}
+                      type="number"
+                      value={field.step != null ? String(field.step) : '1'}
+                      placeholder="1"
+                      onChange={(step: string) => update({ step })}
+                    />
+                    <TextControl
+                      label={__('DEFAULT VALUE', 'wooptionsfic')}
+                      type="number"
+                      value={field.default != null && field.default !== '' ? String(field.default) : ''}
+                      placeholder=""
+                      onChange={(def: string) => update({ default: def })}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
               {/* Phone / Telephone Flag Style & Default Country */}
               {field.type === 'tel' ? (
                 <div className="wof-phone-settings" style={{ marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>

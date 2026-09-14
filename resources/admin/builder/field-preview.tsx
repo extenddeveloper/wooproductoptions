@@ -140,9 +140,19 @@ namespace WooOptionsFic.Builder {
     }
 
     if (field.type === 'textarea') {
+      const rows = field.rows ? Math.max(1, field.rows) : 4;
       return (
         <div className="wof-preview-textarea-wrap">
-          <textarea className="wof-preview-textarea" readOnly tabIndex={-1} placeholder={field.placeholder || __('Enter text…', 'wooptionsfic')} />
+          <textarea
+            className="wof-preview-textarea"
+            readOnly
+            tabIndex={-1}
+            rows={rows}
+            style={{
+              textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
+            }}
+            placeholder={field.placeholder || __('Enter text…', 'wooptionsfic')}
+          />
         </div>
       );
     }
@@ -480,6 +490,21 @@ namespace WooOptionsFic.Builder {
     const inputType: Record<string, string> = {
       password: 'password', tel: 'tel', email: 'email', url: 'url', number: 'number', quantity: 'number', customer_defined_price: 'number',
     };
-    return <input disabled type={inputType[field.type] ?? 'text'} placeholder={field.placeholder || __('Enter value…', 'wooptionsfic')} />;
+    const isNum = field.type === 'number';
+    const defaultValue = field.default != null && field.default !== '' ? String(field.default) : undefined;
+    return (
+      <input
+        disabled
+        type={inputType[field.type] ?? 'text'}
+        value={defaultValue}
+        min={isNum && field.enableMinMax !== false && field.min != null ? String(field.min) : undefined}
+        max={isNum && field.enableMinMax !== false && field.max != null ? String(field.max) : undefined}
+        step={isNum && field.step != null ? String(field.step) : undefined}
+        style={{
+          textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
+        }}
+        placeholder={defaultValue !== undefined ? undefined : (field.placeholder || __('Enter value…', 'wooptionsfic'))}
+      />
+    );
   }
 }

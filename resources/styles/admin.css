@@ -8698,7 +8698,7 @@
 	box-shadow: none !important;
 	color: var(--wof-preview-text, #172033) !important;
 	font: inherit !important;
-	min-height: 86px !important;
+	min-height: 38px !important;
 	padding: 10px 12px !important;
 	resize: none;
 	width: 100% !important;
@@ -11170,4 +11170,19 @@
 	font-size: 14px;
 	font-weight: 600;
 	flex-shrink: 0;
+}
+.wof-number-settings .components-base-control__label {
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	letter-spacing: 0.04em !important;
+	text-transform: uppercase !important;
+	color: #334155 !important;
+	margin-bottom: 6px !important;
+}
+.wof-number-settings .components-toggle-control .components-base-control__label {
+	font-size: 13px !important;
+	font-weight: 600 !important;
+	letter-spacing: normal !important;
+	text-transform: none !important;
+	color: #0f172a !important;
 }

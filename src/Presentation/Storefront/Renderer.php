@@ -669,9 +669,15 @@ final class Renderer {
 			'customer_defined_price' => 'number', 'color_picker' => 'color', 'text' => 'text',
 		];
 		$type = (string) ($field['type'] ?? 'text');
-		$uuid = (string) $field['uuid'];
+		$transform_style = '';
+		$text_transform  = (string) ($field['textTransform'] ?? 'none');
+		if (in_array($text_transform, ['uppercase', 'lowercase', 'capitalize'], true)) {
+			$transform_style = ' style="text-transform: ' . esc_attr($text_transform) . ';"';
+		}
+
 		if ('textarea' === $type) {
-			echo '<textarea id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '" placeholder="' . esc_attr((string) ($field['placeholder'] ?? '')) . '"';
+			$rows = max(1, (int) ($field['rows'] ?? 4));
+			echo '<textarea id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '" rows="' . esc_attr((string) $rows) . '"' . $transform_style . ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? '')) . '"';
 			echo $this->input_attributes($field, $description_id) . '>' . esc_textarea((string) ($field['default'] ?? '')) . '</textarea>';
 			return;
 		}
@@ -717,8 +723,9 @@ final class Renderer {
 				return;
 			}
 		}
-		$html_type = $type_map[$type] ?? 'text';
-		echo '<input id="wof-' . esc_attr($uuid) . '" type="' . esc_attr($html_type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '"';
+		$html_type  = $type_map[$type] ?? 'text';
+		$style_attr = ('text' === $type) ? $transform_style : '';
+		echo '<input id="wof-' . esc_attr($uuid) . '" type="' . esc_attr($html_type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '"' . $style_attr;
 		echo ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? '')) . '"';
 		echo $this->input_attributes($field, $description_id) . '>';
 		if ('range' === $type) {
@@ -1038,10 +1045,19 @@ final class Renderer {
 		if ('' !== (string) ($field['description'] ?? '')) {
 			$attributes .= ' aria-describedby="' . esc_attr($description_id) . '"';
 		}
-		foreach (['min', 'max', 'step'] as $key) {
-			if (null !== ($field[$key] ?? null) && '' !== (string) $field[$key]) {
-				$attributes .= ' ' . $key . '="' . esc_attr((string) $field[$key]) . '"';
-			}
+		$type          = (string) ($field['type'] ?? '');
+		$allow_min_max = 'number' !== $type || ! isset($field['enableMinMax']) || ! empty($field['enableMinMax']);
+		if ($allow_min_max && null !== ($field['min'] ?? null) && '' !== (string) $field['min']) {
+			$attributes .= ' min="' . esc_attr((string) $field['min']) . '"';
+		}
+		if ($allow_min_max && null !== ($field['max'] ?? null) && '' !== (string) $field['max']) {
+			$attributes .= ' max="' . esc_attr((string) $field['max']) . '"';
+		}
+		if (null !== ($field['step'] ?? null) && '' !== (string) $field['step']) {
+			$attributes .= ' step="' . esc_attr((string) $field['step']) . '"';
+		}
+		if ((int) ($field['minLength'] ?? 0) > 0) {
+			$attributes .= ' minlength="' . esc_attr((string) $field['minLength']) . '"';
 		}
 		if ((int) ($field['maxLength'] ?? 0) > 0) {
 			$attributes .= ' maxlength="' . esc_attr((string) $field['maxLength']) . '"';

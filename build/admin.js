@@ -590,6 +590,21 @@ var WooOptionsFic;
                 field.step = ['number', 'range', 'customer_defined_price'].includes(type) ? '1' : null;
                 field.maxLength = 0;
             }
+            if (type === 'text' || type === 'textarea') {
+                field.minLength = 0;
+                field.maxLength = 0;
+                field.textTransform = 'none';
+                if (type === 'textarea') {
+                    field.rows = 4;
+                }
+            }
+            if (type === 'number') {
+                field.enableMinMax = true;
+                field.min = '1';
+                field.max = '100';
+                field.step = '1';
+                field.default = '';
+            }
             if (type === 'file') {
                 field.allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
                 field.maxFiles = 1;
@@ -2053,8 +2068,11 @@ var WooOptionsFic;
                     priceText ? wp.element.createElement("span", { className: "wof-preview-boolean__price" }, priceText) : null));
             }
             if (field.type === 'textarea') {
+                const rows = field.rows ? Math.max(1, field.rows) : 4;
                 return (wp.element.createElement("div", { className: "wof-preview-textarea-wrap" },
-                    wp.element.createElement("textarea", { className: "wof-preview-textarea", readOnly: true, tabIndex: -1, placeholder: field.placeholder || __('Enter text…', 'wooptionsfic') })));
+                    wp.element.createElement("textarea", { className: "wof-preview-textarea", readOnly: true, tabIndex: -1, rows: rows, style: {
+                            textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
+                        }, placeholder: field.placeholder || __('Enter text…', 'wooptionsfic') })));
             }
             if (field.type === 'select' || field.type === 'font') {
                 const selectedChoice = choices.find(c => Boolean(c.default));
@@ -2314,7 +2332,11 @@ var WooOptionsFic;
             const inputType = {
                 password: 'password', tel: 'tel', email: 'email', url: 'url', number: 'number', quantity: 'number', customer_defined_price: 'number',
             };
-            return wp.element.createElement("input", { disabled: true, type: inputType[field.type] ?? 'text', placeholder: field.placeholder || __('Enter value…', 'wooptionsfic') });
+            const isNum = field.type === 'number';
+            const defaultValue = field.default != null && field.default !== '' ? String(field.default) : undefined;
+            return (wp.element.createElement("input", { disabled: true, type: inputType[field.type] ?? 'text', value: defaultValue, min: isNum && field.enableMinMax !== false && field.min != null ? String(field.min) : undefined, max: isNum && field.enableMinMax !== false && field.max != null ? String(field.max) : undefined, step: isNum && field.step != null ? String(field.step) : undefined, style: {
+                    textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
+                }, placeholder: defaultValue !== undefined ? undefined : (field.placeholder || __('Enter value…', 'wooptionsfic')) }));
         }
         Builder.FieldPreview = FieldPreview;
     })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
@@ -3507,6 +3529,30 @@ var WooOptionsFic;
                                 wp.element.createElement(TextControl, { label: __('Height (px)', 'wooptionsfic'), type: "number", min: 0, value: String(field.choiceHeight ?? ''), placeholder: "Auto", onChange: (choiceHeight) => update({ choiceHeight }) }),
                                 wp.element.createElement(TextControl, { label: __('Radius (px)', 'wooptionsfic'), type: "number", min: 0, value: String(field.choiceBorderRadius ?? ''), placeholder: "Default", onChange: (choiceBorderRadius) => update({ choiceBorderRadius }) })))) : null,
                         'placeholder' in field ? wp.element.createElement(TextControl, { label: __('Placeholder', 'wooptionsfic'), value: field.placeholder ?? '', onChange: (placeholder) => update({ placeholder }) }) : null,
+                        ['text', 'textarea'].includes(field.type) ? (wp.element.createElement("div", { className: "wof-text-settings", style: { marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
+                            wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' } },
+                                wp.element.createElement(TextControl, { label: __('Minimum Character', 'wooptionsfic'), type: "number", min: 0, value: field.minLength ? String(field.minLength) : '', placeholder: "0", onChange: (val) => update({ minLength: val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0) }) }),
+                                wp.element.createElement(TextControl, { label: __('Maximum Character', 'wooptionsfic'), type: "number", min: 0, value: field.maxLength ? String(field.maxLength) : '', placeholder: "0", onChange: (val) => update({ maxLength: val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0) }) })),
+                            wp.element.createElement(SelectControl, { label: __('Text Transform', 'wooptionsfic'), value: field.textTransform ?? 'none', options: [
+                                    { label: __('None', 'wooptionsfic'), value: 'none' },
+                                    { label: __('Uppercase', 'wooptionsfic'), value: 'uppercase' },
+                                    { label: __('Lowercase', 'wooptionsfic'), value: 'lowercase' },
+                                    { label: __('Capitalize', 'wooptionsfic'), value: 'capitalize' },
+                                ], onChange: (textTransform) => update({ textTransform }) }),
+                            field.type === 'textarea' ? (wp.element.createElement("div", { style: { marginTop: '12px' } },
+                                wp.element.createElement(TextControl, { label: __('Row', 'wooptionsfic'), type: "number", min: 1, max: 50, value: field.rows ? String(field.rows) : '4', placeholder: "4", onChange: (val) => update({ rows: val === '' ? 4 : Math.max(1, parseInt(val, 10) || 4) }) }))) : null)) : null,
+                        field.type === 'number' ? (wp.element.createElement("div", { className: "wof-number-settings", style: { marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
+                            wp.element.createElement(ToggleControl, { label: __('Enable Min/Max Restriction', 'wooptionsfic'), checked: field.enableMinMax !== false, onChange: (enableMinMax) => update({
+                                    enableMinMax,
+                                    min: enableMinMax ? (field.min ?? '1') : null,
+                                    max: enableMinMax ? (field.max ?? '100') : null,
+                                }) }),
+                            field.enableMinMax !== false ? (wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px' } },
+                                wp.element.createElement(TextControl, { label: __('MINIMUM VALUE', 'wooptionsfic'), type: "number", value: field.min != null ? String(field.min) : '1', placeholder: "1", onChange: (min) => update({ min }) }),
+                                wp.element.createElement(TextControl, { label: __('MAXIMUM VALUE', 'wooptionsfic'), type: "number", value: field.max != null ? String(field.max) : '100', placeholder: "100", onChange: (max) => update({ max }) }))) : null,
+                            wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' } },
+                                wp.element.createElement(TextControl, { label: __('STEPS', 'wooptionsfic'), type: "number", value: field.step != null ? String(field.step) : '1', placeholder: "1", onChange: (step) => update({ step }) }),
+                                wp.element.createElement(TextControl, { label: __('DEFAULT VALUE', 'wooptionsfic'), type: "number", value: field.default != null && field.default !== '' ? String(field.default) : '', placeholder: "", onChange: (def) => update({ default: def }) })))) : null,
                         field.type === 'tel' ? (wp.element.createElement("div", { className: "wof-phone-settings", style: { marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
                             wp.element.createElement(SelectControl, { label: __('Flag Style', 'wooptionsfic'), value: field.flagStyle ?? 'number_only', options: [
                                     { label: __('Number Only', 'wooptionsfic'), value: 'number_only' },
