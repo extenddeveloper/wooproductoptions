@@ -1875,7 +1875,7 @@ var WooOptionsFic;
 (function (WooOptionsFic) {
     var Builder;
     (function (Builder) {
-        const { __ } = wp.i18n;
+        const { __, sprintf } = wp.i18n;
         function formatChoicePrice(pricing) {
             if (!pricing || pricing.strategy === 'none')
                 return '';
@@ -2243,7 +2243,7 @@ var WooOptionsFic;
                                 wp.element.createElement("line", { x1: "12", y1: "3", x2: "12", y2: "15" })),
                             __('Upload', 'wooptionsfic')),
                         wp.element.createElement("span", null, __('Click or drag and drop', 'wooptionsfic')),
-                        wp.element.createElement("small", null, maxFiles === 1 ? `${maxMb} MB max` : `Up to ${maxFiles} files, ${maxMb} MB each`))));
+                        wp.element.createElement("small", null, sprintf(__('Up to %1$d file(s), %2$d MB each', 'wooptionsfic'), maxFiles, maxMb)))));
             }
             if (field.type === 'date_range')
                 return wp.element.createElement("div", { className: "wof-preview-date-range" },

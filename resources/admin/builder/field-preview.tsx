@@ -1,5 +1,5 @@
 namespace WooOptionsFic.Builder {
-  const { __ } = wp.i18n;
+  const { __, sprintf } = wp.i18n;
 
   export function formatChoicePrice(pricing?: WooOptionsFic.PricingDefinition): string {
     if (!pricing || pricing.strategy === 'none') return '';
@@ -197,7 +197,7 @@ namespace WooOptionsFic.Builder {
               {__('Upload', 'wooptionsfic')}
             </button>
             <span>{__('Click or drag and drop', 'wooptionsfic')}</span>
-            <small>{maxFiles === 1 ? `${maxMb} MB max` : `Up to ${maxFiles} files, ${maxMb} MB each`}</small>
+            <small>{sprintf(__('Up to %1$d file(s), %2$d MB each', 'wooptionsfic'), maxFiles, maxMb)}</small>
           </div>
         </div>
       );
