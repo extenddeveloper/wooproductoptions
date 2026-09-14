@@ -77,6 +77,13 @@ final class QuoteService {
 		);
 		$errors = array_merge($errors, $linked['errors']);
 
+		$price = null;
+		try {
+			$price = $this->prices->calculate($compiled, $selection['values'], $context);
+		} catch (RuntimeException $exception) {
+			$errors[] = ['code' => $exception->getMessage(), 'fieldUuid' => ''];
+		}
+
 		if ([] !== $errors) {
 			return [
 				'valid'         => false,
@@ -84,26 +91,11 @@ final class QuoteService {
 				'warnings'      => $selection['warnings'],
 				'values'        => $selection['values'],
 				'states'        => $selection['states'],
+				'price'         => $price,
 				'settings'      => (array) ($compiled['settings'] ?? []),
 				'style'         => (array) ($compiled['style'] ?? []),
 				'revisionUuid'  => (string) ($compiled['revisionUuid'] ?? ''),
 				'revisionHash'  => (string) ($compiled['contentHash'] ?? ''),
-			];
-		}
-
-		try {
-			$price = $this->prices->calculate($compiled, $selection['values'], $context);
-		} catch (RuntimeException $exception) {
-			return [
-				'valid'        => false,
-				'errors'       => [['code' => $exception->getMessage(), 'fieldUuid' => '']],
-				'warnings'     => $selection['warnings'],
-				'values'       => $selection['values'],
-				'states'       => $selection['states'],
-				'settings'     => (array) ($compiled['settings'] ?? []),
-				'style'        => (array) ($compiled['style'] ?? []),
-				'revisionUuid' => (string) ($compiled['revisionUuid'] ?? ''),
-				'revisionHash' => (string) ($compiled['contentHash'] ?? ''),
 			];
 		}
 

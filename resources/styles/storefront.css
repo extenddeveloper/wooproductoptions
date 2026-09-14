@@ -2790,7 +2790,7 @@
 	display: none;
 	left: 0;
 	padding: 14px;
-	position: absolute;
+	position: relative;
 	top: calc(100% + 4px);
 	z-index: 999999 !important;
 	min-width: 280px;
@@ -3072,4 +3072,109 @@
 
 .wof-calendar-day.is-range-start.is-range-end {
 	border-radius: 4px !important;
+}
+
+/* Toast Notification System */
+.wof-toast-container {
+	position: fixed;
+	top: 24px;
+	right: 24px;
+	z-index: 9999999;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	pointer-events: none;
+	max-width: 420px;
+	width: calc(100% - 48px);
+}
+
+.wof-toast {
+	pointer-events: auto;
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	padding: 14px 16px;
+	background: #ffffff;
+	border: 1px solid var(--wof-border, #e2e8f0);
+	border-radius: 8px;
+	box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.16), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
+	border-left: 4px solid var(--wof-danger, #ef4444);
+	color: var(--wof-text, #1e293b);
+	font-size: 13.5px;
+	line-height: 1.45;
+	animation: wof-toast-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+	transition: opacity 0.2s ease, transform 0.2s ease;
+	box-sizing: border-box;
+}
+
+.wof-toast.is-hiding {
+	animation: wof-toast-out 0.2s ease forwards;
+}
+
+.wof-toast--error {
+	border-left-color: var(--wof-danger, #ef4444);
+}
+
+.wof-toast__icon {
+	color: var(--wof-danger, #ef4444);
+	flex-shrink: 0;
+	margin-top: 1px;
+}
+
+.wof-toast__content {
+	flex: 1;
+}
+
+.wof-toast__title {
+	font-weight: 700;
+	font-size: 14px;
+	color: var(--wof-text, #0f172a);
+	margin-bottom: 3px;
+}
+
+.wof-toast__message {
+	color: var(--wof-muted, #475569);
+	font-size: 13px;
+}
+
+.wof-toast__close {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	color: var(--wof-muted, #94a3b8);
+	padding: 2px;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	flex-shrink: 0;
+	transition: color 0.15s ease, background 0.15s ease;
+}
+
+.wof-toast__close:hover {
+	color: var(--wof-text, #1e293b);
+	background: #f1f5f9;
+}
+
+@keyframes wof-toast-in {
+	from {
+		opacity: 0;
+		transform: translateY(-16px) scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes wof-toast-out {
+	from {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(-12px) scale(0.96);
+	}
 }

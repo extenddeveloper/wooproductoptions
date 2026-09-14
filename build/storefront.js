@@ -16,12 +16,13 @@
         isSubmitting = !1;
         savedUuid = "";
         productImageSnapshot = null;
+        hasSubmitted = !1;
         constructor(e) { this.root = e; const t = e.querySelector("[data-wof-config]"); if (!t?.textContent)
             throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.initCustomDateRanges(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
         bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
-            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy") || (e.preventDefault(), this.requestQuote(!0)); }), this.form && window.jQuery) {
+            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); if (this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) return; e.preventDefault(); this.hasSubmitted = !0; if (this.lastQuote && !this.lastQuote.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) { this.renderQuote(this.lastQuote, !0); return; } this.requestQuote(!0); }), this.form && window.jQuery) {
             const e = () => this.scheduleQuote(50);
             window.jQuery(this.form).on("found_variation.wooptionsfic reset_data.wooptionsfic", e);
         } }
@@ -878,25 +879,61 @@
         } return "file" === e.type ? Array.from(o.querySelectorAll("[data-wof-upload-ref]")).map(e => e.value).filter(Boolean) : o.querySelector('input:not([type="file"]), select, textarea')?.value ?? ""; }
         acceptsValue(e) { return !["heading", "paragraph", "help", "separator", "spacer", "formula", "calculated"].includes(e.type); }
         writeSelection(e) { const t = this.root.querySelector("[data-wof-selection-json]"); t && (t.value = JSON.stringify(e)); }
-        renderQuote(e, o) {
+        renderQuote(e, o = false) {
             if (e?.settings && (this.configuration.settings = { ...(this.configuration.settings ?? {}), ...e.settings }), e?.style && (this.configuration.style = e.style), e?.settings || e?.style)
                 this.applyConfigurationSettings(), this.applyConfigurationStyle();
-            if (this.clearAllErrors(), this.applyStates(e.states), !e.valid)
-                return this.renderErrors(e.errors, o), this.setAddToCartEnabled(!1), this.enforceMaxChoices(), void this.setStatus(t.couldNotQuote, "error");
-            this.setAddToCartEnabled(!0), this.setStatus(t.confirmed, "confirmed");
-            const a = this.root.querySelector("[data-wof-total]");
-            a && e.price && (a.textContent = this.money(e.price.unitPrice.decimal, e.price.unitPrice.currency));
-            const i = this.root.querySelector("[data-wof-summary-rows]"), n = !1 !== this.configuration?.settings?.showPriceBreakdown;
-            i && (i.hidden = !n, i.replaceChildren(), n && e.price?.contributions.forEach(e => {
-                const t = document.createElement("div"), o = document.createElement("span"), a = document.createElement("strong");
-                o.textContent = e.label, a.textContent = this.money(e.rounded.decimal, e.rounded.currency), t.append(o, a), i.append(t);
-                const n = this.root.querySelector(`[data-wof-calculated="${r(e.sourceUuid)}"]`);
-                n && (n.value = a.textContent);
-            }));
+
+            this.applyStates(e.states);
+
+            if (e.price) {
+                const a = this.root.querySelector("[data-wof-total]");
+                if (a) a.textContent = this.money(e.price.unitPrice.decimal, e.price.unitPrice.currency);
+                const i = this.root.querySelector("[data-wof-summary-rows]"), n = !1 !== this.configuration?.settings?.showPriceBreakdown;
+                if (i) {
+                    i.hidden = !n;
+                    i.replaceChildren();
+                    if (n && e.price?.contributions) {
+                        e.price.contributions.forEach(item => {
+                            const row = document.createElement("div");
+                            const label = document.createElement("span");
+                            const amount = document.createElement("strong");
+                            label.textContent = item.label;
+                            amount.textContent = this.money(item.rounded.decimal, item.rounded.currency);
+                            row.append(label, amount);
+                            i.append(row);
+                            const calcInput = this.root.querySelector(`[data-wof-calculated="${r(item.sourceUuid)}"]`);
+                            if (calcInput) calcInput.value = amount.textContent;
+                        });
+                    }
+                }
+            }
+
             this.enforceMaxChoices();
+            this.setAddToCartEnabled(true);
+
+            if (!e.valid) {
+                if (o || this.hasSubmitted) {
+                    this.clearAllErrors();
+                    this.renderErrors(e.errors, Boolean(o));
+                    this.setStatus(t.couldNotQuote, "error");
+                    if (o) {
+                        this.showToast(this.getValidationToastMessage(e.errors), "error");
+                    }
+                } else {
+                    this.clearAllErrors();
+                    this.setStatus("Ready for your choices", "ready");
+                }
+                return;
+            }
+
+            // Valid quote
+            this.hasSubmitted = false;
+            this.clearAllErrors();
+            this.setStatus(t.confirmed, "confirmed");
+
             if (o && this.form) {
                 // Final-submit path: quote confirmed mid-submit — re-trigger form submission now.
-                this.isSubmitting = !0;
+                this.isSubmitting = true;
                 const submitBtn = this.form.querySelector('button.single_add_to_cart_button, button[type="submit"][name="add-to-cart"], button[type="submit"]');
                 try {
                     if (typeof this.form.requestSubmit === "function") {
@@ -907,7 +944,7 @@
                         this.form.submit();
                     }
                 } finally {
-                    setTimeout(() => { this.isSubmitting = !1; }, 1000);
+                    setTimeout(() => { this.isSubmitting = false; }, 1000);
                 }
             }
         }
@@ -926,16 +963,96 @@
             });
             this.enforceMaxChoices();
         }
-        renderErrors(e, t) { const o = this.root.querySelector("[data-wof-errors]"), a = []; let i = null; if (e.forEach(e => { const t = e.fieldUuid ? this.root.querySelector(`[data-wof-field="${r(e.fieldUuid)}"]`) : null, msg = this.errorText(e.code, e.label, e.params); if (t) {
-            t.classList.add("is-invalid");
-            const e = t.querySelector("[data-wof-field-error]");
-            e && (e.textContent = msg), t.querySelector("input, select, textarea")?.setAttribute("aria-invalid", "true"), i ??= t;
+        renderErrors(e, t) {
+            const o = this.root.querySelector("[data-wof-errors]"), a = [];
+            let i = null;
+            if (e.forEach(err => {
+                const fieldEl = err.fieldUuid ? this.root.querySelector(`[data-wof-field="${r(err.fieldUuid)}"]`) : null;
+                const msg = this.errorText(err.code, err.label, err.params);
+                if (fieldEl) {
+                    fieldEl.classList.add("is-invalid");
+                    const errEl = fieldEl.querySelector("[data-wof-field-error]");
+                    if (errEl) errEl.textContent = msg;
+                    fieldEl.querySelector("input, select, textarea")?.setAttribute("aria-invalid", "true");
+                    i ??= fieldEl;
+                } else {
+                    a.push(msg);
+                }
+            }), o && (o.hidden = 0 === a.length, o.textContent = a.join(" ")), t) {
+                if (i) {
+                    i.scrollIntoView({ behavior: "smooth", block: "center" });
+                    const inputEl = i.querySelector("input:not([type='hidden']), select, textarea, [tabindex='0']");
+                    inputEl?.focus();
+                } else if (o) {
+                    o.focus();
+                }
+            }
         }
-        else
-            a.push(msg); }), o && (o.hidden = 0 === a.length, o.textContent = a.join(" ")), t) {
-            const e = i, t = e?.querySelector("input, select, textarea") ?? o;
-            t?.focus();
-        } }
+        getValidationToastMessage(errors) {
+            const requiredErrors = (errors || []).filter(e => {
+                const code = String(e.code || "");
+                return code.includes("required") || code.includes("incomplete");
+            });
+
+            if (requiredErrors.length > 0) {
+                const names = [...new Set(requiredErrors.map(e => e.label).filter(Boolean))];
+                if (names.length === 1) {
+                    return `Please select or enter "${names[0]}" before adding to cart.`;
+                }
+                if (names.length > 1) {
+                    return `Please complete the required options: ${names.join(", ")}.`;
+                }
+                return "Please complete all required options before adding to cart.";
+            }
+
+            return "Please review the highlighted options before adding to cart.";
+        }
+        showToast(message, type = "error") {
+            let container = document.querySelector(".wof-toast-container");
+            if (!container) {
+                container = document.createElement("div");
+                container.className = "wof-toast-container";
+                document.body.appendChild(container);
+            }
+
+            container.querySelectorAll(".wof-toast").forEach(t => t.remove());
+
+            const toast = document.createElement("div");
+            toast.className = `wof-toast wof-toast--${type}`;
+            toast.setAttribute("role", "alert");
+            toast.setAttribute("aria-live", "assertive");
+
+            const iconSvg = '<svg class="wof-toast__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+
+            toast.innerHTML = `
+                ${iconSvg}
+                <div class="wof-toast__content">
+                    <div class="wof-toast__title">Required Options</div>
+                    <div class="wof-toast__message">${message}</div>
+                </div>
+                <button type="button" class="wof-toast__close" aria-label="Close notification">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            `;
+
+            const dismiss = () => {
+                toast.classList.add("is-hiding");
+                toast.addEventListener("animationend", () => {
+                    toast.remove();
+                }, { once: true });
+            };
+
+            toast.querySelector(".wof-toast__close")?.addEventListener("click", dismiss);
+
+            let timer = setTimeout(dismiss, 4500);
+
+            toast.addEventListener("mouseenter", () => clearTimeout(timer));
+            toast.addEventListener("mouseleave", () => {
+                timer = setTimeout(dismiss, 2500);
+            });
+
+            container.appendChild(toast);
+        }
         errorText(code, label = "", params = {}) {
             const name = label || "This option";
             const min = params?.minimum ?? "";
