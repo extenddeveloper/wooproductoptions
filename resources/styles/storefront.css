@@ -2008,7 +2008,6 @@
 	left: 0;
 	max-height: 260px;
 	overflow-y: auto;
-	padding: 4px;
 	position: absolute;
 	right: 0;
 	top: calc(100% + 4px);
@@ -2021,7 +2020,6 @@
 
 .wof-custom-select__option {
 	align-items: center;
-	border-radius: 6px;
 	color: var(--wof-text, #1e293b);
 	cursor: pointer;
 	display: flex;

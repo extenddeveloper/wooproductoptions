@@ -2892,12 +2892,6 @@ var WooOptionsFic;
             if (!props.field.choices)
                 return wp.element.createElement("p", { className: "wof-muted-note" }, __('This element has no choices.', 'wooptionsfic'));
             return (wp.element.createElement("div", { className: "wof-choice-editor-list" },
-                !['radio', 'checkbox_group', 'select', 'font'].includes(props.field.type) ? (wp.element.createElement("div", { className: "wof-choice-dimensions-box", style: { padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '16px' } },
-                    wp.element.createElement("strong", { style: { display: 'block', fontSize: '13px', marginBottom: '8px' } }, __('Choice Item Dimensions & Style', 'wooptionsfic')),
-                    wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' } },
-                        wp.element.createElement(TextControl, { label: __('Width (px)', 'wooptionsfic'), value: String(props.field.choiceWidth ?? ''), placeholder: "Auto", onChange: (choiceWidth) => props.onChange({ ...props.field, choiceWidth }) }),
-                        wp.element.createElement(TextControl, { label: __('Height (px)', 'wooptionsfic'), value: String(props.field.choiceHeight ?? ''), placeholder: "Auto", onChange: (choiceHeight) => props.onChange({ ...props.field, choiceHeight }) }),
-                        wp.element.createElement(TextControl, { label: __('Radius (px)', 'wooptionsfic'), value: String(props.field.choiceBorderRadius ?? ''), placeholder: "Default", onChange: (choiceBorderRadius) => props.onChange({ ...props.field, choiceBorderRadius }) })))) : null,
                 props.field.type === 'segmented' ? (wp.element.createElement("div", { className: "wof-field-width-setting" },
                     wp.element.createElement("span", { className: "wof-field-width-label" }, __('Display Direction', 'wooptionsfic')),
                     wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Display Direction', 'wooptionsfic') }, ['vertical', 'horizontal'].map((dir) => {
@@ -3033,6 +3027,12 @@ var WooOptionsFic;
                                 const isSelected = (field.width || '100%') === w;
                                 return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
                             }))),
+                        Boolean(field.choices) && !['radio', 'checkbox_group', 'select', 'font'].includes(field.type) ? (wp.element.createElement("div", { className: "wof-choice-dimensions-box", style: { padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '16px' } },
+                            wp.element.createElement("strong", { style: { display: 'block', fontSize: '13px', marginBottom: '8px' } }, __('Choice Item Dimensions & Style', 'wooptionsfic')),
+                            wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' } },
+                                wp.element.createElement(TextControl, { label: __('Width (px)', 'wooptionsfic'), value: String(field.choiceWidth ?? ''), placeholder: "Auto", onChange: (choiceWidth) => update({ choiceWidth }) }),
+                                wp.element.createElement(TextControl, { label: __('Height (px)', 'wooptionsfic'), value: String(field.choiceHeight ?? ''), placeholder: "Auto", onChange: (choiceHeight) => update({ choiceHeight }) }),
+                                wp.element.createElement(TextControl, { label: __('Radius (px)', 'wooptionsfic'), value: String(field.choiceBorderRadius ?? ''), placeholder: "Default", onChange: (choiceBorderRadius) => update({ choiceBorderRadius }) })))) : null,
                         'placeholder' in field ? wp.element.createElement(TextControl, { label: __('Placeholder', 'wooptionsfic'), value: field.placeholder ?? '', onChange: (placeholder) => update({ placeholder }) }) : null,
                         field.type === 'tel' ? (wp.element.createElement("div", { className: "wof-phone-settings", style: { marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
                             wp.element.createElement(SelectControl, { label: __('Flag Style', 'wooptionsfic'), value: field.flagStyle ?? 'number_only', options: [

@@ -191,33 +191,6 @@ namespace WooOptionsFic.Builder {
 
     return (
       <div className="wof-choice-editor-list">
-        {/* Choice item width, height & border radius options */}
-        {!['radio', 'checkbox_group', 'select', 'font'].includes(props.field.type) ? (
-          <div className="wof-choice-dimensions-box" style={{ padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '16px' }}>
-            <strong style={{ display: 'block', fontSize: '13px', marginBottom: '8px' }}>{__('Choice Item Dimensions & Style', 'wooptionsfic')}</strong>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-              <TextControl
-                label={__('Width (px)', 'wooptionsfic')}
-                value={String(props.field.choiceWidth ?? '')}
-                placeholder="Auto"
-                onChange={(choiceWidth: string) => props.onChange({ ...props.field, choiceWidth })}
-              />
-              <TextControl
-                label={__('Height (px)', 'wooptionsfic')}
-                value={String(props.field.choiceHeight ?? '')}
-                placeholder="Auto"
-                onChange={(choiceHeight: string) => props.onChange({ ...props.field, choiceHeight })}
-              />
-              <TextControl
-                label={__('Radius (px)', 'wooptionsfic')}
-                value={String(props.field.choiceBorderRadius ?? '')}
-                placeholder="Default"
-                onChange={(choiceBorderRadius: string) => props.onChange({ ...props.field, choiceBorderRadius })}
-              />
-            </div>
-          </div>
-        ) : null}
-
         {/* Display Direction option for Button Choices (segmented) */}
         {props.field.type === 'segmented' ? (
           <div className="wof-field-width-setting">
@@ -475,6 +448,33 @@ namespace WooOptionsFic.Builder {
                   })}
                 </div>
               </div>
+
+              {/* Choice Item Dimensions & Style */}
+              {Boolean(field.choices) && !['radio', 'checkbox_group', 'select', 'font'].includes(field.type) ? (
+                <div className="wof-choice-dimensions-box" style={{ padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)', marginBottom: '16px' }}>
+                  <strong style={{ display: 'block', fontSize: '13px', marginBottom: '8px' }}>{__('Choice Item Dimensions & Style', 'wooptionsfic')}</strong>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                    <TextControl
+                      label={__('Width (px)', 'wooptionsfic')}
+                      value={String(field.choiceWidth ?? '')}
+                      placeholder="Auto"
+                      onChange={(choiceWidth: string) => update({ choiceWidth })}
+                    />
+                    <TextControl
+                      label={__('Height (px)', 'wooptionsfic')}
+                      value={String(field.choiceHeight ?? '')}
+                      placeholder="Auto"
+                      onChange={(choiceHeight: string) => update({ choiceHeight })}
+                    />
+                    <TextControl
+                      label={__('Radius (px)', 'wooptionsfic')}
+                      value={String(field.choiceBorderRadius ?? '')}
+                      placeholder="Default"
+                      onChange={(choiceBorderRadius: string) => update({ choiceBorderRadius })}
+                    />
+                  </div>
+                </div>
+              ) : null}
 
               {'placeholder' in field ? <TextControl label={__('Placeholder', 'wooptionsfic')} value={field.placeholder ?? ''} onChange={(placeholder: string) => update({ placeholder })} /> : null}
 
