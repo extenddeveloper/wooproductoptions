@@ -11,9 +11,7 @@ const copyStatic = () => {
   const files = [
     ['resources/storefront/index.js', 'build/storefront.js'],
     ['resources/styles/admin.css', 'build/admin.css'],
-    ['resources/styles/admin-rtl.css', 'build/admin-rtl.css'],
-    ['resources/styles/storefront.css', 'build/storefront.css'],
-    ['resources/styles/storefront-rtl.css', 'build/storefront-rtl.css']
+    ['resources/styles/storefront.css', 'build/storefront.css']
   ];
   for (const [source, target] of files) copyFileSync(resolve(root, source), resolve(root, target));
 };

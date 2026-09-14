@@ -10484,11 +10484,6 @@
 	white-space: nowrap !important;
 }
 
-.wof-preview-radio-item.is-selected,
-.wof-preview-checkbox-item.is-selected {
-	border-color: #f97316 !important;
-	background: #fffaf5 !important;
-}
 
 .wof-preview-checkbox-item__indicator {
 	width: 18px !important;
@@ -11483,4 +11478,49 @@
 		opacity: 0;
 		transform: translateY(12px) scale(0.96);
 	}
+}
+
+/* RTL Support */
+body.rtl .wof-field__tooltip-preview,
+[dir="rtl"] .wof-field__tooltip-preview {
+	margin-right: 6px;
+	margin-left: 0;
+}
+
+body.rtl .wof-toast-container,
+[dir="rtl"] .wof-toast-container {
+	bottom: 24px;
+	left: 24px;
+	right: auto;
+}
+
+body.rtl .wof-toast,
+[dir="rtl"] .wof-toast {
+	border-left: 1px solid #e2e8f0;
+	border-right: 4px solid #ef4444;
+}
+
+body.rtl .wof-toast--error,
+[dir="rtl"] .wof-toast--error {
+	border-right-color: #ef4444;
+}
+
+body.rtl .wof-toast--success,
+[dir="rtl"] .wof-toast--success {
+	border-right-color: #10b981;
+}
+
+body.rtl .wof-toast--warning,
+[dir="rtl"] .wof-toast--warning {
+	border-right-color: #f59e0b;
+}
+
+body.rtl .wof-toast--info,
+[dir="rtl"] .wof-toast--info {
+	border-right-color: #5b4ff5;
+}
+
+body.rtl .wof-toast__progress-bar,
+[dir="rtl"] .wof-toast__progress-bar {
+	transform-origin: right;
 }

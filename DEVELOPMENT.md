@@ -86,9 +86,7 @@ resources/
 │   └── index.js
 └── styles/
     ├── admin.css
-    ├── admin-rtl.css
-    ├── storefront.css
-    └── storefront-rtl.css
+    └── storefront.css
 ```
 
 ## Architecture
@@ -164,7 +162,6 @@ Admin styling:
 
 ```text
 resources/styles/admin.css
-resources/styles/admin-rtl.css
 ```
 
 Storefront behavior and styling:
@@ -172,7 +169,6 @@ Storefront behavior and styling:
 ```text
 resources/storefront/index.js
 resources/styles/storefront.css
-resources/styles/storefront-rtl.css
 ```
 
 ## Build output

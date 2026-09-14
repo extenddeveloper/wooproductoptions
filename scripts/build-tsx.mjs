@@ -21,9 +21,7 @@ try {
 const copies = [
   ['resources/storefront/index.js', 'build/storefront.js'],
   ['resources/styles/admin.css', 'build/admin.css'],
-  ['resources/styles/admin-rtl.css', 'build/admin-rtl.css'],
-  ['resources/styles/storefront.css', 'build/storefront.css'],
-  ['resources/styles/storefront-rtl.css', 'build/storefront-rtl.css']
+  ['resources/styles/storefront.css', 'build/storefront.css']
 ];
 for (const [source, target] of copies) {
   const sourcePath = resolve(root, source);
