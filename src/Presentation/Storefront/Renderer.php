@@ -593,7 +593,7 @@ final class Renderer {
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
-			$checked     = ! empty($choice['default']);
+			$checked     = ! empty($choice['default']) || (is_array($field['default'] ?? null) && in_array($choice_uuid, (array) $field['default'], true)) || (string) ($field['default'] ?? '') === $choice_uuid;
 			echo '<label class="wof-checkbox-item" for="' . esc_attr($id) . '">';
 			echo '<input id="' . esc_attr($id) . '" type="checkbox" name="' . esc_attr($name . '[]') . '" value="' . esc_attr($choice_uuid) . '"';
 			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);

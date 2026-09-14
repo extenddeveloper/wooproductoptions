@@ -62,6 +62,11 @@ namespace WooOptionsFic.FieldFactory {
         field.columns = 'one';
         field.imageStyle = 'normal';
       }
+      if (type === 'checkbox_group') {
+        field.choices.forEach((c) => {
+          c.default = false;
+        });
+      }
     }
 
     if (type === 'tel') {

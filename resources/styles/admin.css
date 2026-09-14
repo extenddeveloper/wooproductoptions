@@ -2230,18 +2230,23 @@
 
 .wof-preview-checkbox-item__indicator {
 	background: var(--wof-preview-surface, #fff);
-	border: 2px solid var(--wof-preview-border, #dfe3ed);
-	border-radius: 3px;
-	display: block;
-	flex: 0 0 auto;
-	height: 15px;
-	transition: border-color .12s ease;
-	width: 15px;
+	border: 1.5px solid var(--wof-preview-border, #cbd5e1);
+	border-radius: 4px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 16px;
+	height: 16px;
+	width: 16px;
+	color: #ffffff;
+	box-sizing: border-box;
+	transition: border-color .12s ease, background-color .12s ease;
 }
 
 .wof-preview-checkbox-item.is-selected .wof-preview-checkbox-item__indicator {
 	background: var(--wof-preview-primary, #5b4ff5);
 	border-color: var(--wof-preview-primary, #5b4ff5);
+	color: #ffffff;
 }
 
 .wof-preview-checkbox-item__label {
@@ -10483,6 +10488,47 @@
 .wof-preview-checkbox-item.is-selected {
 	border-color: #f97316 !important;
 	background: #fffaf5 !important;
+}
+
+.wof-preview-checkbox-item__indicator {
+	width: 18px !important;
+	height: 18px !important;
+	min-width: 18px !important;
+	border-radius: 4px !important;
+	border: 1.5px solid #cbd5e1 !important;
+	background: #ffffff !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	color: #ffffff !important;
+	flex-shrink: 0 !important;
+	box-sizing: border-box !important;
+	transition: all 0.15s ease !important;
+}
+
+.wof-preview-checkbox-item.is-selected .wof-preview-checkbox-item__indicator {
+	background: #5b4ff5 !important;
+	border-color: #5b4ff5 !important;
+	color: #ffffff !important;
+}
+
+.wof-preview-radio-item__indicator {
+	width: 18px !important;
+	height: 18px !important;
+	min-width: 18px !important;
+	border-radius: 50% !important;
+	border: 1.5px solid #cbd5e1 !important;
+	background: #ffffff !important;
+	display: block !important;
+	flex-shrink: 0 !important;
+	box-sizing: border-box !important;
+	transition: all 0.15s ease !important;
+}
+
+.wof-preview-radio-item.is-selected .wof-preview-radio-item__indicator {
+	background: #5b4ff5 !important;
+	border-color: #5b4ff5 !important;
+	box-shadow: inset 0 0 0 4px #ffffff !important;
 }
 
 

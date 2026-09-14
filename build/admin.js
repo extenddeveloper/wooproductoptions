@@ -548,6 +548,11 @@ var WooOptionsFic;
                     field.columns = 'one';
                     field.imageStyle = 'normal';
                 }
+                if (type === 'checkbox_group') {
+                    field.choices.forEach((c) => {
+                        c.default = false;
+                    });
+                }
             }
             if (type === 'tel') {
                 field.flagStyle = 'number_only';
@@ -2270,47 +2275,58 @@ var WooOptionsFic;
                 const isTwoCols = field.columns === 'two' || field.columns === 2;
                 const isCircle = field.imageStyle === 'circle';
                 const listStyle = isTwoCols ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' } : undefined;
-                return (wp.element.createElement("div", { className: `wof-preview-radio-list${isTwoCols ? ' wof-preview-radio-list--cols-2' : ''}`, style: listStyle }, choices.slice(0, 4).map((choice, index) => (wp.element.createElement("label", { className: `wof-preview-radio-item${index === 0 ? ' is-selected' : ''}`, key: choice.uuid },
-                    wp.element.createElement("span", { className: "wof-preview-radio-item__indicator" }),
-                    Boolean(choice.imageId || choice.imageUrl) ? (wp.element.createElement("span", { style: {
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: isCircle ? '50%' : '4px',
-                            overflow: 'hidden',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                            background: '#f1f5f9',
-                            border: '1px solid #d8deea',
-                            marginInlineEnd: '6px',
-                        } },
-                        wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }))) : null,
-                    wp.element.createElement("span", { className: "wof-preview-radio-item__label" }, choice.label),
-                    formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-radio-item__price" }, formatChoicePrice(choice.pricing)) : null)))));
+                return (wp.element.createElement("div", { className: `wof-preview-radio-list${isTwoCols ? ' wof-preview-radio-list--cols-2' : ''}`, style: listStyle }, choices.slice(0, 4).map((choice) => {
+                    const isSelected = Boolean(choice.default ||
+                        choice.selected ||
+                        (typeof field.default === 'string' && field.default === choice.uuid));
+                    return (wp.element.createElement("label", { className: `wof-preview-radio-item${isSelected ? ' is-selected' : ''}`, key: choice.uuid },
+                        wp.element.createElement("span", { className: "wof-preview-radio-item__indicator" }),
+                        Boolean(choice.imageId || choice.imageUrl) ? (wp.element.createElement("span", { style: {
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: isCircle ? '50%' : '4px',
+                                overflow: 'hidden',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                background: '#f1f5f9',
+                                border: '1px solid #d8deea',
+                                marginInlineEnd: '6px',
+                            } },
+                            wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }))) : null,
+                        wp.element.createElement("span", { className: "wof-preview-radio-item__label" }, choice.label),
+                        formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-radio-item__price" }, formatChoicePrice(choice.pricing)) : null));
+                })));
             }
             if (field.type === 'checkbox_group') {
                 const isTwoCols = field.columns === 'two' || field.columns === 2;
                 const isCircle = field.imageStyle === 'circle';
                 const listStyle = isTwoCols ? { display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' } : undefined;
-                return (wp.element.createElement("div", { className: `wof-preview-checkbox-list${isTwoCols ? ' wof-preview-checkbox-list--cols-2' : ''}`, style: listStyle }, choices.slice(0, 4).map((choice, index) => (wp.element.createElement("label", { className: `wof-preview-checkbox-item${index === 0 ? ' is-selected' : ''}`, key: choice.uuid },
-                    wp.element.createElement("span", { className: "wof-preview-checkbox-item__indicator" }),
-                    Boolean(choice.imageId || choice.imageUrl) ? (wp.element.createElement("span", { style: {
-                            width: '32px',
-                            height: '32px',
-                            borderRadius: isCircle ? '50%' : '4px',
-                            overflow: 'hidden',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                            background: '#f1f5f9',
-                            border: '1px solid #d8deea',
-                            marginInlineEnd: '6px',
-                        } },
-                        wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }))) : null,
-                    wp.element.createElement("span", { className: "wof-preview-checkbox-item__label" }, choice.label),
-                    formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-checkbox-item__price" }, formatChoicePrice(choice.pricing)) : null)))));
+                return (wp.element.createElement("div", { className: `wof-preview-checkbox-list${isTwoCols ? ' wof-preview-checkbox-list--cols-2' : ''}`, style: listStyle }, choices.slice(0, 4).map((choice) => {
+                    const isSelected = Boolean(choice.default ||
+                        choice.selected ||
+                        (Array.isArray(field.default) && field.default.includes(choice.uuid)) ||
+                        (typeof field.default === 'string' && field.default === choice.uuid));
+                    return (wp.element.createElement("label", { className: `wof-preview-checkbox-item${isSelected ? ' is-selected' : ''}`, key: choice.uuid },
+                        wp.element.createElement("span", { className: "wof-preview-checkbox-item__indicator" }, isSelected ? renderCheckSvg(10) : null),
+                        Boolean(choice.imageId || choice.imageUrl) ? (wp.element.createElement("span", { style: {
+                                width: '32px',
+                                height: '32px',
+                                borderRadius: isCircle ? '50%' : '4px',
+                                overflow: 'hidden',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                flexShrink: 0,
+                                background: '#f1f5f9',
+                                border: '1px solid #d8deea',
+                                marginInlineEnd: '6px',
+                            } },
+                            wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }))) : null,
+                        wp.element.createElement("span", { className: "wof-preview-checkbox-item__label" }, choice.label),
+                        formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-checkbox-item__price" }, formatChoicePrice(choice.pricing)) : null));
+                })));
             }
             if (field.type === 'segmented') {
                 const isVertical = field.type === 'segmented' && field.displayDirection === 'vertical';
@@ -2378,12 +2394,15 @@ var WooOptionsFic;
                     swatchStyle.height = `${field.choiceHeight}px`;
                 if (hasRadius)
                     swatchStyle.borderRadius = `${field.choiceBorderRadius}px`;
-                return wp.element.createElement("div", { className: "wof-preview-color-blocks" }, choices.slice(0, 5).map((choice, index) => wp.element.createElement("div", { className: `wof-preview-color-block${index === 0 ? ' is-selected' : ''}`, key: choice.uuid, style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
-                    wp.element.createElement("span", { className: "wof-preview-color-block__swatch", style: { background: choice.color || '#ddd', ...swatchStyle, position: 'relative' } }, index === 0 ? wp.element.createElement("span", { className: "wof-preview-color-block__check", style: { position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 } }, renderCheckSvg(10)) : null),
-                    wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px' } }, choice.label),
-                    wp.element.createElement("span", { className: "wof-preview-color-block__price", style: { minHeight: '1.3em' } }, formatChoicePrice(choice.pricing)),
-                    field.enableQuantity ? wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' } },
-                        wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } })) : null)));
+                return (wp.element.createElement("div", { className: "wof-preview-color-blocks" }, choices.slice(0, 5).map((choice) => {
+                    const isSelected = Boolean(choice.default || choice.selected);
+                    return (wp.element.createElement("div", { className: `wof-preview-color-block${isSelected ? ' is-selected' : ''}`, key: choice.uuid, style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+                        wp.element.createElement("span", { className: "wof-preview-color-block__swatch", style: { background: choice.color || '#ddd', ...swatchStyle, position: 'relative' } }, isSelected ? wp.element.createElement("span", { className: "wof-preview-color-block__check", style: { position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 } }, renderCheckSvg(10)) : null),
+                        wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px' } }, choice.label),
+                        wp.element.createElement("span", { className: "wof-preview-color-block__price", style: { minHeight: '1.3em' } }, formatChoicePrice(choice.pricing)),
+                        field.enableQuantity ? (wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' } },
+                            wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } }))) : null));
+                })));
             }
             if (field.type === 'image_swatch' || field.type === 'product') {
                 const thumbStyle = {};
@@ -2396,14 +2415,17 @@ var WooOptionsFic;
                     thumbStyle.height = `${field.choiceHeight}px`;
                 if (hasRadius)
                     thumbStyle.borderRadius = `${field.choiceBorderRadius}px`;
-                return (wp.element.createElement("div", { className: "wof-preview-image-tiles" }, choices.slice(0, 4).map((choice, index) => (wp.element.createElement("div", { className: `wof-preview-image-tile${index === 0 ? ' is-selected' : ''}`, key: choice.uuid, style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
-                    wp.element.createElement("span", { className: "wof-preview-image-tile__thumb", style: { ...thumbStyle, position: 'relative' } },
-                        choice.imageId || choice.imageUrl ? wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }) : wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" }),
-                        index === 0 ? wp.element.createElement("span", { className: "wof-preview-image-tile__check", style: { position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 } }, renderCheckSvg(10)) : null),
-                    wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px' } }, choice.label),
-                    wp.element.createElement("span", { className: "wof-preview-image-tile__price", style: { minHeight: '1.3em' } }, formatChoicePrice(choice.pricing)),
-                    field.enableQuantity ? (wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' } },
-                        wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } }))) : null)))));
+                return (wp.element.createElement("div", { className: "wof-preview-image-tiles" }, choices.slice(0, 4).map((choice) => {
+                    const isSelected = Boolean(choice.default || choice.selected);
+                    return (wp.element.createElement("div", { className: `wof-preview-image-tile${isSelected ? ' is-selected' : ''}`, key: choice.uuid, style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+                        wp.element.createElement("span", { className: "wof-preview-image-tile__thumb", style: { ...thumbStyle, position: 'relative' } },
+                            choice.imageId || choice.imageUrl ? wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }) : wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" }),
+                            isSelected ? wp.element.createElement("span", { className: "wof-preview-image-tile__check", style: { position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 } }, renderCheckSvg(10)) : null),
+                        wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px' } }, choice.label),
+                        wp.element.createElement("span", { className: "wof-preview-image-tile__price", style: { minHeight: '1.3em' } }, formatChoicePrice(choice.pricing)),
+                        field.enableQuantity ? (wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' } },
+                            wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } }))) : null));
+                })));
             }
             if (field.type === 'repeater')
                 return wp.element.createElement("div", { className: "wof-preview-repeater" },

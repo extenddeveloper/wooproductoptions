@@ -10312,3 +10312,45 @@
 .wof-toast__progress-bar {
 	transform-origin: right;
 }
+
+/* Checkbox and Radio Preview Indicators */
+.wof-preview-checkbox-item__indicator {
+	width: 18px !important;
+	height: 18px !important;
+	min-width: 18px !important;
+	border-radius: 4px !important;
+	border: 1.5px solid #cbd5e1 !important;
+	background: #ffffff !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	color: #ffffff !important;
+	flex-shrink: 0 !important;
+	box-sizing: border-box !important;
+	transition: all 0.15s ease !important;
+}
+
+.wof-preview-checkbox-item.is-selected .wof-preview-checkbox-item__indicator {
+	background: #5b4ff5 !important;
+	border-color: #5b4ff5 !important;
+	color: #ffffff !important;
+}
+
+.wof-preview-radio-item__indicator {
+	width: 18px !important;
+	height: 18px !important;
+	min-width: 18px !important;
+	border-radius: 50% !important;
+	border: 1.5px solid #cbd5e1 !important;
+	background: #ffffff !important;
+	display: block !important;
+	flex-shrink: 0 !important;
+	box-sizing: border-box !important;
+	transition: all 0.15s ease !important;
+}
+
+.wof-preview-radio-item.is-selected .wof-preview-radio-item__indicator {
+	background: #5b4ff5 !important;
+	border-color: #5b4ff5 !important;
+	box-shadow: inset 0 0 0 4px #ffffff !important;
+}
