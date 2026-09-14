@@ -196,8 +196,8 @@ namespace WooOptionsFic.Builder {
               </svg>
               {__('Upload', 'wooptionsfic')}
             </button>
-            <span>{__('Click or drag and drop', 'wooptionsfic')}</span>
-            <small>{sprintf(__('Up to %1$d file(s), %2$d MB each', 'wooptionsfic'), maxFiles, maxMb)}</small>
+            <span className="wof-preview-upload__hint">{__('Click or drag and drop', 'wooptionsfic')}</span>
+            <small className="wof-preview-upload__limit">{sprintf(__('Up to %1$d file(s), %2$d MB each', 'wooptionsfic'), maxFiles, maxMb)}</small>
           </div>
         </div>
       );

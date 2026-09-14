@@ -2242,8 +2242,8 @@ var WooOptionsFic;
                                 wp.element.createElement("polyline", { points: "17 8 12 3 7 8" }),
                                 wp.element.createElement("line", { x1: "12", y1: "3", x2: "12", y2: "15" })),
                             __('Upload', 'wooptionsfic')),
-                        wp.element.createElement("span", null, __('Click or drag and drop', 'wooptionsfic')),
-                        wp.element.createElement("small", null, sprintf(__('Up to %1$d file(s), %2$d MB each', 'wooptionsfic'), maxFiles, maxMb)))));
+                        wp.element.createElement("span", { className: "wof-preview-upload__hint" }, __('Click or drag and drop', 'wooptionsfic')),
+                        wp.element.createElement("small", { className: "wof-preview-upload__limit" }, sprintf(__('Up to %1$d file(s), %2$d MB each', 'wooptionsfic'), maxFiles, maxMb)))));
             }
             if (field.type === 'date_range')
                 return wp.element.createElement("div", { className: "wof-preview-date-range" },
