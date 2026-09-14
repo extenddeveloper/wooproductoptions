@@ -100,6 +100,7 @@ namespace WooOptionsFic {
     style: Record<string, unknown>;
     preview: Record<string, unknown>;
     help: string;
+    helpTextPosition?: 'below_title' | 'tooltip' | 'below_field';
     width?: string;
     flagStyle?: 'number_only' | 'number_flag' | 'number_flag_dialcode';
     defaultCountry?: string;

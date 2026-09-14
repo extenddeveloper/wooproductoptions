@@ -10212,3 +10212,103 @@
 	text-transform: none !important;
 	color: #0f172a !important;
 }
+.wof-help-position-control {
+	margin-bottom: 16px;
+}
+.wof-help-position-control .wof-segmented-label {
+	display: block;
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	letter-spacing: 0.04em !important;
+	text-transform: uppercase !important;
+	color: #334155 !important;
+	margin-bottom: 8px !important;
+}
+.wof-help-position-control .wof-segmented-group {
+	display: flex;
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	background: #ffffff;
+	padding: 2px;
+	box-sizing: border-box;
+}
+.wof-help-position-control .wof-segmented-btn {
+	flex: 1;
+	padding: 10px;
+	border: 1px solid transparent;
+	border-radius: 3px;
+	background: transparent;
+	color: #64748b;
+	font-weight: 500;
+	font-size: 13px;
+	cursor: pointer;
+	text-align: center;
+	outline: none;
+	transition: all 0.15s ease;
+	line-height: 1.2;
+}
+.wof-help-position-control .wof-segmented-btn:hover {
+	color: #1e293b;
+}
+.wof-help-position-control .wof-segmented-btn.is-selected {
+	background: #ffffff !important;
+	border-color: #1e293b !important;
+	color: #0f172a !important;
+	font-weight: 600 !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.wof-field__tooltip-preview {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	margin-right: 6px;
+	margin-left: 0;
+	color: #94a3b8;
+	vertical-align: middle;
+	cursor: help;
+}
+.wof-canvas-field__help-text {
+	font-size: 11px;
+	color: #64748b;
+	font-style: italic;
+	line-height: 1.4;
+}
+.wof-canvas-field__help-text--below-title {
+	margin: 2px 0 4px;
+}
+.wof-canvas-field__help-text--below-field {
+	margin: 4px 0 0;
+}
+
+/* Toast Notification System RTL */
+.wof-toast-container {
+	bottom: 24px;
+	left: 24px;
+	right: auto;
+	top: auto;
+}
+
+.wof-toast {
+	border-left: 1px solid #e2e8f0;
+	border-right: 4px solid #ef4444;
+}
+
+.wof-toast--error {
+	border-right-color: #ef4444;
+}
+
+.wof-toast--success {
+	border-right-color: #10b981;
+}
+
+.wof-toast--warning {
+	border-right-color: #f59e0b;
+}
+
+.wof-toast--info {
+	border-right-color: #5b4ff5;
+}
+
+.wof-toast__progress-bar {
+	transform-origin: right;
+}

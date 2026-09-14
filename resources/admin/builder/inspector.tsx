@@ -1286,7 +1286,9 @@ namespace WooOptionsFic.Builder {
           {props.tab === 'content' ? (
             <>
               <TextControl label={__('Label', 'wooptionsfic')} value={field.label} onChange={(label: string) => update({ label })} />
-              <TextareaControl label={__('Description', 'wooptionsfic')} value={field.description} onChange={(description: string) => update({ description })} />
+              {['paragraph', 'help'].includes(field.type) ? (
+                <TextareaControl label={__('Content', 'wooptionsfic')} value={field.description || field.help} onChange={(content: string) => update({ description: content, help: content })} />
+              ) : null}
 
               {/* Block Width options for every block */}
               <div className="wof-field-width-setting">
@@ -1580,6 +1582,32 @@ namespace WooOptionsFic.Builder {
               ) : null}
 
               <TextareaControl label={__('Help text', 'wooptionsfic')} value={field.help} onChange={(help: string) => update({ help })} />
+
+              <div className="wof-help-position-control">
+                <label className="wof-segmented-label">
+                  {__('HELP TEXT POSITION', 'wooptionsfic')}
+                </label>
+                <div className="wof-segmented-group">
+                  {[
+                    { label: __('Below Title', 'wooptionsfic'), value: 'below_title' },
+                    { label: __('Tooltip', 'wooptionsfic'), value: 'tooltip' },
+                    { label: __('Below Field', 'wooptionsfic'), value: 'below_field' },
+                  ].map(opt => {
+                    const isSelected = (field.helpTextPosition ?? 'below_title') === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        className={WooOptionsFic.Utils.classNames('wof-segmented-btn', isSelected && 'is-selected')}
+                        onClick={() => update({ helpTextPosition: opt.value as 'below_title' | 'tooltip' | 'below_field' })}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <ToggleControl label={__('Required', 'wooptionsfic')} checked={field.required} onChange={(required: boolean) => update({ required })} />
             </>
           ) : props.tab === 'choices' ? (

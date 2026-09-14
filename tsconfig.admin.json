@@ -24,6 +24,7 @@
     "resources/admin/builder/field-factory.ts",
     "resources/admin/components/icons.tsx",
     "resources/admin/components/common.tsx",
+    "resources/admin/components/toast.tsx",
     "resources/admin/components/shell.tsx",
     "resources/admin/pages/dashboard.tsx",
     "resources/admin/pages/option-sets.tsx",

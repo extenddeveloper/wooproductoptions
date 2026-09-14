@@ -41,8 +41,11 @@ abstract class AbstractFieldType implements FieldType {
 			'conditions'  => is_array($definition['conditions'] ?? null) ? $definition['conditions'] : [],
 			'style'       => is_array($definition['style'] ?? null) ? $definition['style'] : [],
 			'preview'     => is_array($definition['preview'] ?? null) ? $definition['preview'] : [],
-			'help'        => self::plain_text((string) ($definition['help'] ?? ''), 1000),
-			'width'       => $width,
+			'help'             => self::plain_text((string) ($definition['help'] ?? ''), 1000),
+			'helpTextPosition' => in_array((string) ($definition['helpTextPosition'] ?? 'below_title'), ['below_title', 'tooltip', 'below_field'], true)
+				? (string) $definition['helpTextPosition']
+				: 'below_title',
+			'width'            => $width,
 		];
 	}
 

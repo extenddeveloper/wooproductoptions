@@ -1007,7 +1007,7 @@
 
             return "Please review the highlighted options before adding to cart.";
         }
-        showToast(message, type = "error") {
+        showToast(message, type = "error", title = "") {
             let container = document.querySelector(".wof-toast-container");
             if (!container) {
                 container = document.createElement("div");
@@ -1019,37 +1019,76 @@
 
             const toast = document.createElement("div");
             toast.className = `wof-toast wof-toast--${type}`;
-            toast.setAttribute("role", "alert");
-            toast.setAttribute("aria-live", "assertive");
+            toast.setAttribute("role", type === "error" ? "alert" : "status");
+            toast.setAttribute("aria-live", "polite");
 
-            const iconSvg = '<svg class="wof-toast__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+            let resolvedTitle = title;
+            if (!resolvedTitle) {
+                if (type === "error") resolvedTitle = "Required Options";
+                else if (type === "success") resolvedTitle = "Success";
+                else if (type === "warning") resolvedTitle = "Attention";
+                else resolvedTitle = "Notice";
+            }
+
+            let iconSvg = '';
+            if (type === "success") {
+                iconSvg = '<svg class="wof-toast__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+            } else if (type === "warning") {
+                iconSvg = '<svg class="wof-toast__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+            } else if (type === "info") {
+                iconSvg = '<svg class="wof-toast__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+            } else {
+                iconSvg = '<svg class="wof-toast__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>';
+            }
+
+            const toastDuration = type === "error" ? 5000 : 4000;
 
             toast.innerHTML = `
                 ${iconSvg}
                 <div class="wof-toast__content">
-                    <div class="wof-toast__title">Required Options</div>
+                    ${resolvedTitle ? `<div class="wof-toast__title">${resolvedTitle}</div>` : ''}
                     <div class="wof-toast__message">${message}</div>
                 </div>
                 <button type="button" class="wof-toast__close" aria-label="Close notification">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
+                <div class="wof-toast__progress" aria-hidden="true">
+                    <div class="wof-toast__progress-bar" style="animation-duration: ${toastDuration}ms;"></div>
+                </div>
             `;
 
+            let remaining = toastDuration;
+            let startTime = Date.now();
+            let timer = null;
+
             const dismiss = () => {
+                if (toast.classList.contains("is-hiding")) return;
                 toast.classList.add("is-hiding");
                 toast.addEventListener("animationend", () => {
                     toast.remove();
                 }, { once: true });
             };
 
+            const startTimer = () => {
+                startTime = Date.now();
+                timer = setTimeout(dismiss, remaining);
+            };
+
+            const pauseTimer = () => {
+                if (timer) {
+                    clearTimeout(timer);
+                    timer = null;
+                }
+                remaining -= (Date.now() - startTime);
+                if (remaining < 500) remaining = 500;
+            };
+
             toast.querySelector(".wof-toast__close")?.addEventListener("click", dismiss);
 
-            let timer = setTimeout(dismiss, 4500);
+            startTimer();
 
-            toast.addEventListener("mouseenter", () => clearTimeout(timer));
-            toast.addEventListener("mouseleave", () => {
-                timer = setTimeout(dismiss, 2500);
-            });
+            toast.addEventListener("mouseenter", pauseTimer);
+            toast.addEventListener("mouseleave", startTimer);
 
             container.appendChild(toast);
         }

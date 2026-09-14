@@ -5,7 +5,12 @@ namespace WooOptionsFic.Components {
     const isBuilder = props.route.startsWith('builder/');
     const isTemplateStudio = props.route === 'templates';
     if (isBuilder || isTemplateStudio) {
-      return <div className={isBuilder ? "wof-admin is-builder" : "wof-admin is-template-studio"}><main className="wof-admin__content">{props.children}</main></div>;
+      return (
+        <div className={isBuilder ? "wof-admin is-builder" : "wof-admin is-template-studio"}>
+          <main className="wof-admin__content">{props.children}</main>
+          <ToastContainer />
+        </div>
+      );
     }
     return (
       <div className="wof-admin">
@@ -22,6 +27,7 @@ namespace WooOptionsFic.Components {
         <div className="wof-admin__body">
           <main className="wof-admin__content">{props.children}</main>
         </div>
+        <ToastContainer />
       </div>
     );
   }

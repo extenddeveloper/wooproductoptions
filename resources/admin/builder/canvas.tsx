@@ -105,16 +105,34 @@ namespace WooOptionsFic.Builder {
       </div>
 
       <div className="wof-canvas-field__copy">
-        <strong className="wof-canvas-field__title">{props.field.label || __('Untitled field', 'wooptionsfic')}</strong>
+        <strong className="wof-canvas-field__title">
+          {props.field.label || __('Untitled field', 'wooptionsfic')}
+          {props.field.help && props.field.helpTextPosition === 'tooltip' ? (
+            <span
+              className="wof-field__tooltip-preview"
+              title={props.field.help}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </span>
+          ) : null}
+        </strong>
         {props.field.required ? <span className="wof-canvas-field__required">{__('REQUIRED', 'wooptionsfic')}</span> : null}
+        {props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) ? (
+          <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-title">
+            {props.field.help}
+          </p>
+        ) : null}
         {props.field.choices?.length ? (
           <small className="wof-canvas-field__meta">{props.field.choices.length} {__('Choices', 'wooptionsfic')}</small>
-        ) : (props.field.description ? (
-          <small className="wof-canvas-field__meta">{props.field.description}</small>
-        ) : null)}
+        ) : null}
       </div>
 
       <div className="wof-canvas-field__preview"><FieldPreview field={props.field} /></div>
+      {props.field.help && props.field.helpTextPosition === 'below_field' ? (
+        <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-field">
+          {props.field.help}
+        </p>
+      ) : null}
     </article>;
   }
 

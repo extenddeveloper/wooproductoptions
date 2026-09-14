@@ -42,6 +42,7 @@ namespace WooOptionsFic.FieldFactory {
       style: {},
       preview: {},
       help: '',
+      helpTextPosition: 'below_title',
       width: '100%',
     };
 

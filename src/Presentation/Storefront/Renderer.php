@@ -192,16 +192,22 @@ final class Renderer {
 		}
 		echo '>';
 
+		$help_text = trim((string) ($field['help'] ?? ''));
+		$help_pos  = (string) ($field['helpTextPosition'] ?? 'below_title');
+
 		if (! in_array($type, ['checkbox', 'toggle'], true)) {
 			echo '<label class="wof-field__label" for="wof-' . esc_attr($uuid) . '">';
 			echo esc_html((string) ($field['label'] ?? __('Option', 'wooptionsfic')));
 			if ($required) {
 				echo ' <span class="wof-required" aria-hidden="true">*</span><span class="screen-reader-text">' . esc_html__('required', 'wooptionsfic') . '</span>';
 			}
+			if ('' !== $help_text && 'tooltip' === $help_pos) {
+				echo $this->render_tooltip_icon($help_text);
+			}
 			echo '</label>';
 		}
-		if ('' !== (string) ($field['description'] ?? '')) {
-			echo '<p class="wof-field__description" id="' . esc_attr($description_id) . '">' . esc_html((string) $field['description']) . '</p>';
+		if ('' !== $help_text && 'below_title' === $help_pos && ! in_array($type, ['checkbox', 'toggle'], true)) {
+			echo '<p class="wof-field__help wof-field__help--below-title" id="' . esc_attr($description_id) . '">' . esc_html($help_text) . '</p>';
 		}
 
 		$name = $name_prefix . '[' . $uuid . ']';
@@ -229,8 +235,8 @@ final class Renderer {
 			$this->render_scalar($field, $name, $description_id);
 		}
 
-		if ('' !== (string) ($field['help'] ?? '')) {
-			echo '<p class="wof-field__help">' . esc_html((string) $field['help']) . '</p>';
+		if ('' !== $help_text && 'below_field' === $help_pos) {
+			echo '<p class="wof-field__help wof-field__help--below-field">' . esc_html($help_text) . '</p>';
 		}
 		echo '<p class="wof-field__error" data-wof-field-error aria-live="polite"></p>';
 		echo '</div>';
@@ -629,14 +635,19 @@ final class Renderer {
 			echo '<svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
 		}
 		echo '</span>';
-		$price_text   = $this->choice_price_text($field, false);
+		$help_text  = trim((string) ($field['help'] ?? ''));
+		$help_pos   = (string) ($field['helpTextPosition'] ?? 'below_title');
+		$price_text = $this->choice_price_text($field, false);
 		echo '<span><span class="wof-boolean__label-row"><strong>' . esc_html((string) $field['label']) . '</strong>';
+		if ('' !== $help_text && 'tooltip' === $help_pos) {
+			echo $this->render_tooltip_icon($help_text);
+		}
 		if ('' !== $price_text) {
 			echo ' <span class="wof-boolean__price">' . esc_html($price_text) . '</span>';
 		}
 		echo '</span>';
-		if ('' !== (string) ($field['description'] ?? '')) {
-			echo '<small>' . esc_html((string) $field['description']) . '</small>';
+		if ('' !== $help_text && 'below_title' === $help_pos) {
+			echo '<small class="wof-field__help wof-field__help--below-title">' . esc_html($help_text) . '</small>';
 		}
 		echo '</span></label>';
 	}
@@ -668,6 +679,7 @@ final class Renderer {
 			'date' => 'date', 'time' => 'time', 'datetime' => 'datetime-local',
 			'customer_defined_price' => 'number', 'color_picker' => 'color', 'text' => 'text',
 		];
+		$uuid = (string) ($field['uuid'] ?? '');
 		$type = (string) ($field['type'] ?? 'text');
 		$transform_style = '';
 		$text_transform  = (string) ($field['textTransform'] ?? 'none');
@@ -1063,6 +1075,17 @@ final class Renderer {
 			$attributes .= ' maxlength="' . esc_attr((string) $field['maxLength']) . '"';
 		}
 		return $attributes;
+	}
+
+	/**
+	 * Render a tooltip icon with accessible popup text.
+	 */
+	private function render_tooltip_icon(string $help_text): string {
+		$icon_svg = '<svg class="wof-field__tooltip-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+		return '<span class="wof-field__tooltip" data-wof-tooltip tabindex="0" role="button" aria-label="' . esc_attr($help_text) . '">'
+			. $icon_svg
+			. '<span class="wof-field__tooltip-bubble" role="tooltip"><span class="wof-field__tooltip-content">' . esc_html($help_text) . '</span><span class="wof-field__tooltip-arrow" aria-hidden="true"></span></span>'
+			. '</span>';
 	}
 
 	/**

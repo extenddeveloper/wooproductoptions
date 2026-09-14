@@ -528,6 +528,7 @@ var WooOptionsFic;
                 style: {},
                 preview: {},
                 help: '',
+                helpTextPosition: 'below_title',
                 width: '100%',
             };
             if (choiceTypes.has(type)) {
@@ -810,6 +811,137 @@ var WooOptionsFic;
 })(WooOptionsFic || (WooOptionsFic = {}));
 var WooOptionsFic;
 (function (WooOptionsFic) {
+    var Toast;
+    (function (Toast) {
+        let items = [];
+        const listeners = new Set();
+        function notify() {
+            listeners.forEach((fn) => fn([...items]));
+        }
+        function subscribe(listener) {
+            listeners.add(listener);
+            listener([...items]);
+            return () => {
+                listeners.delete(listener);
+            };
+        }
+        Toast.subscribe = subscribe;
+        function dismiss(id) {
+            const existing = items.find((t) => t.id === id);
+            if (!existing || existing.isHiding)
+                return;
+            items = items.map((t) => (t.id === id ? { ...t, isHiding: true } : t));
+            notify();
+            setTimeout(() => {
+                items = items.filter((t) => t.id !== id);
+                notify();
+            }, 220);
+        }
+        Toast.dismiss = dismiss;
+        function show(options) {
+            const id = 'toast_' + Math.random().toString(36).slice(2, 9);
+            const item = {
+                id,
+                type: options.type ?? 'info',
+                title: options.title,
+                message: options.message,
+                duration: options.duration ?? 4000,
+            };
+            if (items.length >= 3) {
+                items = items.slice(items.length - 2);
+            }
+            items = [...items, item];
+            notify();
+            return id;
+        }
+        Toast.show = show;
+        function success(message, title, duration) {
+            return show({ type: 'success', message, title, duration });
+        }
+        Toast.success = success;
+        function error(message, title, duration) {
+            return show({ type: 'error', message, title: title ?? 'Error', duration: duration ?? 5000 });
+        }
+        Toast.error = error;
+        function warning(message, title, duration) {
+            return show({ type: 'warning', message, title: title ?? 'Attention', duration });
+        }
+        Toast.warning = warning;
+        function info(message, title, duration) {
+            return show({ type: 'info', message, title, duration });
+        }
+        Toast.info = info;
+    })(Toast = WooOptionsFic.Toast || (WooOptionsFic.Toast = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+(function (WooOptionsFic) {
+    var Components;
+    (function (Components) {
+        const { useEffect, useRef, useState } = wp.element;
+        function ToastContainer() {
+            const [toasts, setToasts] = useState([]);
+            useEffect(() => {
+                return WooOptionsFic.Toast.subscribe(setToasts);
+            }, []);
+            if (!toasts.length)
+                return null;
+            return (wp.element.createElement("div", { className: "wof-toast-container", role: "region", "aria-label": "Notifications" }, toasts.map((toast) => (wp.element.createElement(ToastCard, { key: toast.id, toast: toast, onDismiss: () => WooOptionsFic.Toast.dismiss(toast.id) })))));
+        }
+        Components.ToastContainer = ToastContainer;
+        function ToastCard(props) {
+            const { toast, onDismiss } = props;
+            const duration = toast.duration ?? 4000;
+            const remainingRef = useRef(duration);
+            const startTimeRef = useRef(Date.now());
+            const timerRef = useRef(null);
+            const startTimer = () => {
+                if (remainingRef.current > 0 && !toast.isHiding) {
+                    startTimeRef.current = Date.now();
+                    timerRef.current = window.setTimeout(onDismiss, remainingRef.current);
+                }
+            };
+            const pauseTimer = () => {
+                if (timerRef.current) {
+                    window.clearTimeout(timerRef.current);
+                    timerRef.current = null;
+                    remainingRef.current -= (Date.now() - startTimeRef.current);
+                    if (remainingRef.current < 500)
+                        remainingRef.current = 500;
+                }
+            };
+            useEffect(() => {
+                startTimer();
+                return () => {
+                    if (timerRef.current)
+                        window.clearTimeout(timerRef.current);
+                };
+            }, [toast.id, toast.isHiding]);
+            return (wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-toast', `wof-toast--${toast.type}`, toast.isHiding && 'is-hiding'), role: toast.type === 'error' ? 'alert' : 'status', "aria-live": "polite", onMouseEnter: pauseTimer, onMouseLeave: startTimer },
+                wp.element.createElement("span", { className: "wof-toast__icon", "aria-hidden": "true" }, toast.type === 'success' ? (wp.element.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                    wp.element.createElement("path", { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }),
+                    wp.element.createElement("polyline", { points: "22 4 12 14.01 9 11.01" }))) : toast.type === 'error' ? (wp.element.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                    wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                    wp.element.createElement("line", { x1: "12", y1: "8", x2: "12", y2: "12" }),
+                    wp.element.createElement("line", { x1: "12", y1: "16", x2: "12.01", y2: "16" }))) : toast.type === 'warning' ? (wp.element.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                    wp.element.createElement("path", { d: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" }),
+                    wp.element.createElement("line", { x1: "12", y1: "9", x2: "12", y2: "13" }),
+                    wp.element.createElement("line", { x1: "12", y1: "17", x2: "12.01", y2: "17" }))) : (wp.element.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                    wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                    wp.element.createElement("line", { x1: "12", y1: "16", x2: "12", y2: "12" }),
+                    wp.element.createElement("line", { x1: "12", y1: "8", x2: "12.01", y2: "8" })))),
+                wp.element.createElement("div", { className: "wof-toast__content" },
+                    toast.title ? wp.element.createElement("div", { className: "wof-toast__title" }, toast.title) : null,
+                    wp.element.createElement("div", { className: "wof-toast__message" }, toast.message)),
+                wp.element.createElement("button", { type: "button", className: "wof-toast__close", "aria-label": "Close notification", onClick: onDismiss },
+                    wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" },
+                        wp.element.createElement("line", { x1: "18", y1: "6", x2: "6", y2: "18" }),
+                        wp.element.createElement("line", { x1: "6", y1: "6", x2: "18", y2: "18" }))),
+                wp.element.createElement("div", { className: "wof-toast__progress", "aria-hidden": "true" },
+                    wp.element.createElement("div", { className: "wof-toast__progress-bar", style: { animationDuration: `${duration}ms` } }))));
+        }
+    })(Components = WooOptionsFic.Components || (WooOptionsFic.Components = {}));
+})(WooOptionsFic || (WooOptionsFic = {}));
+var WooOptionsFic;
+(function (WooOptionsFic) {
     var Components;
     (function (Components) {
         const { __ } = wp.i18n;
@@ -817,8 +949,9 @@ var WooOptionsFic;
             const isBuilder = props.route.startsWith('builder/');
             const isTemplateStudio = props.route === 'templates';
             if (isBuilder || isTemplateStudio) {
-                return wp.element.createElement("div", { className: isBuilder ? "wof-admin is-builder" : "wof-admin is-template-studio" },
-                    wp.element.createElement("main", { className: "wof-admin__content" }, props.children));
+                return (wp.element.createElement("div", { className: isBuilder ? "wof-admin is-builder" : "wof-admin is-template-studio" },
+                    wp.element.createElement("main", { className: "wof-admin__content" }, props.children),
+                    wp.element.createElement(Components.ToastContainer, null)));
             }
             return (wp.element.createElement("div", { className: "wof-admin" },
                 wp.element.createElement("header", { className: "wof-admin__masthead" },
@@ -832,7 +965,8 @@ var WooOptionsFic;
                         wp.element.createElement("span", { className: "wof-beta-pill" }, window.WooOptionsFicAdmin.version),
                         wp.element.createElement("span", { className: "wof-user-chip" }, window.WooOptionsFicAdmin.currentUser.name))),
                 wp.element.createElement("div", { className: "wof-admin__body" },
-                    wp.element.createElement("main", { className: "wof-admin__content" }, props.children))));
+                    wp.element.createElement("main", { className: "wof-admin__content" }, props.children)),
+                wp.element.createElement(Components.ToastContainer, null)));
         }
         Components.AdminShell = AdminShell;
     })(Components = WooOptionsFic.Components || (WooOptionsFic.Components = {}));
@@ -2483,14 +2617,22 @@ var WooOptionsFic;
                     wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete field', 'wooptionsfic'), title: __('Delete', 'wooptionsfic') },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))),
                 wp.element.createElement("div", { className: "wof-canvas-field__copy" },
-                    wp.element.createElement("strong", { className: "wof-canvas-field__title" }, props.field.label || __('Untitled field', 'wooptionsfic')),
+                    wp.element.createElement("strong", { className: "wof-canvas-field__title" },
+                        props.field.label || __('Untitled field', 'wooptionsfic'),
+                        props.field.help && props.field.helpTextPosition === 'tooltip' ? (wp.element.createElement("span", { className: "wof-field__tooltip-preview", title: props.field.help },
+                            wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                                wp.element.createElement("path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" }),
+                                wp.element.createElement("line", { x1: "12", y1: "17", x2: "12.01", y2: "17" })))) : null),
                     props.field.required ? wp.element.createElement("span", { className: "wof-canvas-field__required" }, __('REQUIRED', 'wooptionsfic')) : null,
+                    props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-title" }, props.field.help)) : null,
                     props.field.choices?.length ? (wp.element.createElement("small", { className: "wof-canvas-field__meta" },
                         props.field.choices.length,
                         " ",
-                        __('Choices', 'wooptionsfic'))) : (props.field.description ? (wp.element.createElement("small", { className: "wof-canvas-field__meta" }, props.field.description)) : null)),
+                        __('Choices', 'wooptionsfic'))) : null),
                 wp.element.createElement("div", { className: "wof-canvas-field__preview" },
-                    wp.element.createElement(Builder.FieldPreview, { field: props.field })));
+                    wp.element.createElement(Builder.FieldPreview, { field: props.field })),
+                props.field.help && props.field.helpTextPosition === 'below_field' ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-field" }, props.field.help)) : null);
         }
         function Canvas(props) {
             const [zoom, setZoom] = useState(100);
@@ -3515,7 +3657,7 @@ var WooOptionsFic;
                 wp.element.createElement("div", { className: "wof-inspector-body" },
                     wp.element.createElement("section", { className: "wof-inspector-section" }, props.tab === 'content' ? (wp.element.createElement(wp.element.Fragment, null,
                         wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
-                        wp.element.createElement(TextareaControl, { label: __('Description', 'wooptionsfic'), value: field.description, onChange: (description) => update({ description }) }),
+                        ['paragraph', 'help'].includes(field.type) ? (wp.element.createElement(TextareaControl, { label: __('Content', 'wooptionsfic'), value: field.description || field.help, onChange: (content) => update({ description: content, help: content }) })) : null,
                         wp.element.createElement("div", { className: "wof-field-width-setting" },
                             wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
                             wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
@@ -3580,6 +3722,16 @@ var WooOptionsFic;
                         field.type === 'color_picker' ? (wp.element.createElement(ChoiceColorControl, { label: __('Default color', 'wooptionsfic'), color: String(field.default ?? '#5B4FF5'), onChange: (color) => update({ default: color }) })) : null,
                         ['checkbox', 'toggle'].includes(field.type) ? (wp.element.createElement(ToggleControl, { label: __('Checked by default', 'wooptionsfic'), checked: Boolean(field.default), onChange: (defaultVal) => update({ default: defaultVal }) })) : null,
                         wp.element.createElement(TextareaControl, { label: __('Help text', 'wooptionsfic'), value: field.help, onChange: (help) => update({ help }) }),
+                        wp.element.createElement("div", { className: "wof-help-position-control" },
+                            wp.element.createElement("label", { className: "wof-segmented-label" }, __('HELP TEXT POSITION', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-segmented-group" }, [
+                                { label: __('Below Title', 'wooptionsfic'), value: 'below_title' },
+                                { label: __('Tooltip', 'wooptionsfic'), value: 'tooltip' },
+                                { label: __('Below Field', 'wooptionsfic'), value: 'below_field' },
+                            ].map(opt => {
+                                const isSelected = (field.helpTextPosition ?? 'below_title') === opt.value;
+                                return (wp.element.createElement("button", { key: opt.value, type: "button", className: WooOptionsFic.Utils.classNames('wof-segmented-btn', isSelected && 'is-selected'), onClick: () => update({ helpTextPosition: opt.value }) }, opt.label));
+                            }))),
                         wp.element.createElement(ToggleControl, { label: __('Required', 'wooptionsfic'), checked: field.required, onChange: (required) => update({ required }) }))) : props.tab === 'choices' ? (wp.element.createElement(ChoiceEditor, { field: field, onChange: props.onFieldChange })) : props.tab === 'pricing' ? (wp.element.createElement(PricingPanel, { field: field, onChange: props.onFieldChange })) : props.tab === 'logic' ? (wp.element.createElement(Builder.LogicEditor, { field: field, allFields: props.document.fields, onChange: props.onFieldChange })) : props.tab === 'style' ? (wp.element.createElement(Builder.StyleStudio, { document: props.document, onChange: props.onDocumentChange })) : (wp.element.createElement(wp.element.Fragment, null,
                         wp.element.createElement(ToggleControl, { label: __('Disable this field', 'wooptionsfic'), checked: field.disabled, onChange: (disabled) => update({ disabled }) }),
                         field.type === 'file' ? (wp.element.createElement(wp.element.Fragment, null,
@@ -3967,7 +4119,6 @@ var WooOptionsFic;
             const actions = wp.data.useDispatch(WooOptionsFic.BuilderStore.STORE_KEY);
             const [loading, setLoading] = useState(true);
             const [fatal, setFatal] = useState('');
-            const [notice, setNotice] = useState('');
             const [historyOpen, setHistoryOpen] = useState(false);
             const [assignmentOpen, setAssignmentOpen] = useState(false);
             const [revisions, setRevisions] = useState([]);
@@ -4001,7 +4152,7 @@ var WooOptionsFic;
                 }
                 catch (reason) {
                     actions.setSaveStatus(reason?.code === 'wooptionsfic_revision_conflict' ? 'conflict' : 'error');
-                    setNotice(WooOptionsFic.Utils.errorMessage(reason));
+                    WooOptionsFic.Toast.error(WooOptionsFic.Utils.errorMessage(reason));
                     throw reason;
                 }
                 finally {
@@ -4024,17 +4175,16 @@ var WooOptionsFic;
                     setDiagnosticsOpen(true);
                     return;
                 }
-                setNotice('');
                 setPublishBusy(true);
                 try {
                     const saved = state.dirty ? await saveNow('Pre-publish save') : state.optionSet;
                     actions.setSaveStatus('saving');
                     const result = await WooOptionsFic.Api.publishOptionSet(saved.uuid, saved.currentRevision?.contentHash ?? '');
                     actions.saved(result, result.currentRevision?.definition ?? state.document);
-                    setNotice(__('Published. This live revision is now immutable.', 'wooptionsfic'));
+                    WooOptionsFic.Toast.success(__('Published. This live revision is now immutable.', 'wooptionsfic'), __('Option Set Published', 'wooptionsfic'));
                 }
                 catch (reason) {
-                    setNotice(WooOptionsFic.Utils.errorMessage(reason));
+                    WooOptionsFic.Toast.error(WooOptionsFic.Utils.errorMessage(reason));
                 }
                 finally {
                     setPublishBusy(false);
@@ -4108,11 +4258,8 @@ var WooOptionsFic;
                                 wp.element.createElement("path", { d: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71", fill: "none", stroke: "currentColor", strokeWidth: "2" }),
                                 wp.element.createElement("path", { d: "M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71", fill: "none", stroke: "currentColor", strokeWidth: "2" })),
                             __('Assignments', 'wooptionsfic')),
-                        wp.element.createElement(Button, { variant: "secondary", className: "wof-header-action wof-header-save", isBusy: state.saveStatus === 'saving', onClick: () => saveNow('Manual save').catch(() => undefined) }, state.saveStatus === 'saving' ? __('Saving…', 'wooptionsfic') : __('Save draft', 'wooptionsfic')),
+                        wp.element.createElement(Button, { variant: "secondary", className: "wof-header-action wof-header-save", isBusy: state.saveStatus === 'saving', onClick: () => saveNow('Manual save').then(() => WooOptionsFic.Toast.success(__('Draft saved.', 'wooptionsfic'))).catch(() => undefined) }, state.saveStatus === 'saving' ? __('Saving…', 'wooptionsfic') : __('Save draft', 'wooptionsfic')),
                         wp.element.createElement(Button, { variant: "primary", className: "wof-header-publish", isBusy: publishBusy, disabled: state.errors.length > 0 || publishBusy, onClick: publish }, publishBusy ? __('Publishing…', 'wooptionsfic') : __('Publish', 'wooptionsfic')))),
-                notice ? wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-builder-notice', state.saveStatus === 'error' || state.saveStatus === 'conflict' ? 'is-error' : 'is-success') },
-                    wp.element.createElement("span", null, notice),
-                    wp.element.createElement("button", { type: "button", onClick: () => setNotice('') }, "\u00D7")) : null,
                 wp.element.createElement("div", { className: "wof-builder-workspace" },
                     wp.element.createElement(Builder.ElementsPanel, { onAdd: addField, onOpenStyle: () => { actions.selectField(null); actions.setInspectorTab('style'); } }),
                     wp.element.createElement(Builder.Canvas, { document: state.document, selectedUuid: state.selectedUuid, device: state.device, onSelect: (uuid) => { actions.selectField(uuid); actions.setInspectorTab('content'); }, onAdd: addField, onMove: actions.moveField, onDuplicate: (field) => addField(WooOptionsFic.FieldFactory.duplicate(field)), onDelete: setDeleteUuid }),
@@ -4193,7 +4340,7 @@ var WooOptionsFic;
                         const result = await WooOptionsFic.Api.rollback(state.optionSet.uuid, revisionUuid);
                         actions.loadSet(result);
                         setHistoryOpen(false);
-                        setNotice(__('A new draft was created from that revision.', 'wooptionsfic'));
+                        WooOptionsFic.Toast.success(__('A new draft was created from that revision.', 'wooptionsfic'));
                     }
                     finally {
                         setModalBusy(false);
@@ -4202,7 +4349,7 @@ var WooOptionsFic;
                         const response = await WooOptionsFic.Api.saveAssignments(state.optionSet.uuid, nextAssignments);
                         setAssignments(response.items);
                         setAssignmentOpen(false);
-                        setNotice(__('Product assignments saved.', 'wooptionsfic'));
+                        WooOptionsFic.Toast.success(__('Product assignments saved.', 'wooptionsfic'));
                     }
                     finally {
                         setModalBusy(false);
