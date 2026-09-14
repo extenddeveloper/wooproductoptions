@@ -409,8 +409,53 @@ namespace WooOptionsFic.Builder {
 
     if (field.type === 'repeater') return <div className="wof-preview-repeater"><div><strong>Item 1</strong><small>{field.children?.length ?? 0} fields</small></div><button type="button" disabled>+ Add item</button></div>;
 
+    if (['datetime', 'date', 'time'].includes(field.type)) {
+      const mode = field.dateTimeType || (field.type === 'time' ? 'time' : 'date');
+      const calendarSvg = (
+        <svg className="wof-picker-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+      );
+      const clockSvg = (
+        <svg className="wof-picker-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      );
+      const timeExample = field.timeFormat === '24' ? '12:00' : '12:00 PM';
+      const dateExample = field.placeholder || (field.dateFormat === 'wp_default' ? 'Jul 30, 2025' : (field.dateFormat || 'DD/MM/YYYY'));
+
+      if (mode === 'date') {
+        return (
+          <div className="wof-custom-picker-preview">
+            <div className="wof-custom-picker-input">
+              {calendarSvg}
+              <span className="wof-picker-text">{dateExample}</span>
+            </div>
+          </div>
+        );
+      }
+      if (mode === 'time') {
+        return (
+          <div className="wof-custom-picker-preview">
+            <div className="wof-custom-picker-input">
+              {clockSvg}
+              <span className="wof-picker-text">{field.placeholder || timeExample}</span>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="wof-custom-picker-preview" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div className="wof-custom-picker-input">
+            {calendarSvg}
+            <span className="wof-picker-text">{dateExample}</span>
+          </div>
+          <div className="wof-custom-picker-input">
+            {clockSvg}
+            <span className="wof-picker-text">{timeExample}</span>
+          </div>
+        </div>
+      );
+    }
+
     const inputType: Record<string, string> = {
-      password: 'password', tel: 'tel', email: 'email', url: 'url', number: 'number', quantity: 'number', date: 'date', time: 'time', datetime: 'datetime-local', customer_defined_price: 'number',
+      password: 'password', tel: 'tel', email: 'email', url: 'url', number: 'number', quantity: 'number', customer_defined_price: 'number',
     };
     return <input disabled type={inputType[field.type] ?? 'text'} placeholder={field.placeholder || __('Enter value…', 'wooptionsfic')} />;
   }

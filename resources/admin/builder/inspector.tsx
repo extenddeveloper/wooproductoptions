@@ -60,6 +60,648 @@ namespace WooOptionsFic.Builder {
     { label: 'Kenya (+254)', value: 'KE' },
   ];
 
+  const DATE_FORMAT_OPTIONS = [
+    { label: 'MMM DD, YYYY ( Jul 30, 2025 )', value: 'MMM DD, YYYY' },
+    { label: 'WordPress Default Date Format', value: 'wp_default' },
+    { label: 'DD/MM/YYYY ( 30/07/2025 )', value: 'DD/MM/YYYY' },
+    { label: 'MM/DD/YYYY ( 07/30/2025 )', value: 'MM/DD/YYYY' },
+    { label: 'YYYY-MM-DD ( 2025-07-30 )', value: 'YYYY-MM-DD' },
+    { label: 'DD MMMM, YYYY ( 30 July, 2025 )', value: 'DD MMMM, YYYY' },
+    { label: 'D.MM.YYYY ( 30.07.2026 )', value: 'D.MM.YYYY' },
+  ];
+
+  const WEEKDAY_OPTIONS = [
+    { label: __('Sunday', 'wooptionsfic'), value: 0 },
+    { label: __('Monday', 'wooptionsfic'), value: 1 },
+    { label: __('Tuesday', 'wooptionsfic'), value: 2 },
+    { label: __('Wednesday', 'wooptionsfic'), value: 3 },
+    { label: __('Thursday', 'wooptionsfic'), value: 4 },
+    { label: __('Friday', 'wooptionsfic'), value: 5 },
+    { label: __('Saturday', 'wooptionsfic'), value: 6 },
+  ];
+
+  const MONTHLY_DAY_OPTIONS = Array.from({ length: 31 }, (_, i) => ({
+    label: `${__('Day', 'wooptionsfic')} ${i + 1}`,
+    value: i + 1,
+  }));
+
+  function DatePickerPopup(props: {
+    value?: string;
+    onSelect: (dateStr: string) => void;
+    onClose: () => void;
+  }): any {
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    const initialDate = useMemo(() => {
+      if (props.value && /^\d{4}-\d{2}-\d{2}$/.test(props.value)) {
+        const parts = props.value.split('-').map(Number);
+        return new Date(parts[0], parts[1] - 1, parts[2]);
+      }
+      return new Date();
+    }, [props.value]);
+
+    const [year, setYear] = useState(initialDate.getFullYear());
+    const [month, setMonth] = useState(initialDate.getMonth());
+
+    useEffect(() => {
+      const handleDown = (e: MouseEvent) => {
+        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+          props.onClose();
+        }
+      };
+      document.addEventListener('mousedown', handleDown);
+      return () => document.removeEventListener('mousedown', handleDown);
+    }, [props.onClose]);
+
+    const prevMonth = (e: any) => {
+      e.stopPropagation();
+      if (month === 0) {
+        setMonth(11);
+        setYear((y) => y - 1);
+      } else {
+        setMonth((m) => m - 1);
+      }
+    };
+
+    const nextMonth = (e: any) => {
+      e.stopPropagation();
+      if (month === 11) {
+        setMonth(0);
+        setYear((y) => y + 1);
+      } else {
+        setMonth((m) => m + 1);
+      }
+    };
+
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const cells: Array<{ day: number; isCurrentMonth: boolean; dateStr: string }> = [];
+
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+      const d = prevMonthDays - i;
+      const prevM = month === 0 ? 11 : month - 1;
+      const prevY = month === 0 ? year - 1 : year;
+      const mStr = String(prevM + 1).padStart(2, '0');
+      const dStr = String(d).padStart(2, '0');
+      cells.push({ day: d, isCurrentMonth: false, dateStr: `${prevY}-${mStr}-${dStr}` });
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const mStr = String(month + 1).padStart(2, '0');
+      const dStr = String(d).padStart(2, '0');
+      cells.push({ day: d, isCurrentMonth: true, dateStr: `${year}-${mStr}-${dStr}` });
+    }
+
+    const remaining = 7 - (cells.length % 7);
+    if (remaining < 7) {
+      for (let d = 1; d <= remaining; d++) {
+        const nextM = month === 11 ? 0 : month + 1;
+        const nextY = month === 11 ? year + 1 : year;
+        const mStr = String(nextM + 1).padStart(2, '0');
+        const dStr = String(d).padStart(2, '0');
+        cells.push({ day: d, isCurrentMonth: false, dateStr: `${nextY}-${mStr}-${dStr}` });
+      }
+    }
+
+    return (
+      <div className="wof-datepicker-popover" ref={containerRef}>
+        <div className="wof-cal-pop-header">
+          <button type="button" className="wof-cal-nav-btn" onClick={prevMonth} aria-label={__('Previous month', 'wooptionsfic')}>
+            ‹
+          </button>
+          <span className="wof-cal-pop-title">{monthNames[month]} {year}</span>
+          <button type="button" className="wof-cal-nav-btn" onClick={nextMonth} aria-label={__('Next month', 'wooptionsfic')}>
+            ›
+          </button>
+        </div>
+        <div className="wof-cal-pop-weekdays">
+          {weekDays.map((wd) => (
+            <span key={wd}>{wd}</span>
+          ))}
+        </div>
+        <div className="wof-cal-pop-days">
+          {cells.map((cell, idx) => {
+            const isSelected = props.value === cell.dateStr;
+            return (
+              <button
+                type="button"
+                key={idx}
+                className={WooOptionsFic.Utils.classNames(
+                  'wof-cal-pop-day',
+                  !cell.isCurrentMonth && 'is-other-month',
+                  isSelected && 'is-selected'
+                )}
+                onClick={(e: any) => {
+                  e.stopPropagation();
+                  props.onSelect(cell.dateStr);
+                }}
+              >
+                {cell.day}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  function DatePickerField(props: {
+    value?: string;
+    placeholder?: string;
+    onChange: (val: string) => void;
+  }): any {
+    const [isOpen, setIsOpen] = useState(false);
+
+    return (
+      <div className="wof-datepicker-field-wrap">
+        <button
+          type="button"
+          className={WooOptionsFic.Utils.classNames('wof-datepicker-field-trigger', isOpen && 'is-open')}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+            <line x1="16" y1="2" x2="16" y2="6" />
+            <line x1="8" y1="2" x2="8" y2="6" />
+            <line x1="3" y1="10" x2="21" y2="10" />
+          </svg>
+          <span className={WooOptionsFic.Utils.classNames('wof-datepicker-field-val', !props.value && 'is-placeholder')}>
+            {props.value || props.placeholder || __('Select date...', 'wooptionsfic')}
+          </span>
+          {props.value ? (
+            <span
+              role="button"
+              tabIndex={0}
+              className="wof-datepicker-field-clear"
+              title={__('Clear date', 'wooptionsfic')}
+              onClick={(e: any) => {
+                e.stopPropagation();
+                props.onChange('');
+              }}
+            >
+              ×
+            </span>
+          ) : null}
+        </button>
+        {isOpen ? (
+          <DatePickerPopup
+            value={props.value}
+            onSelect={(val) => {
+              props.onChange(val);
+              setIsOpen(false);
+            }}
+            onClose={() => setIsOpen(false)}
+          />
+        ) : null}
+      </div>
+    );
+  }
+
+  interface MultiSelectOption {
+    label: string;
+    value: string | number;
+  }
+
+  function MultiSelectDropdown(props: {
+    placeholder: string;
+    options: MultiSelectOption[];
+    selectedValues: Array<string | number>;
+    onChange: (newValues: any[]) => void;
+  }): any {
+    const [isOpen, setIsOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+      const handleDown = (e: MouseEvent) => {
+        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+          setIsOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleDown);
+      return () => document.removeEventListener('mousedown', handleDown);
+    }, []);
+
+    const selectedLabels = useMemo(() => {
+      return props.options
+        .filter((opt) => props.selectedValues.includes(opt.value))
+        .map((opt) => opt.label);
+    }, [props.options, props.selectedValues]);
+
+    const displayText = useMemo(() => {
+      if (selectedLabels.length === 0) return '';
+      if (selectedLabels.length <= 3) return selectedLabels.join(', ');
+      return `${selectedLabels.slice(0, 2).join(', ')} +${selectedLabels.length - 2}`;
+    }, [selectedLabels]);
+
+    const toggleOption = (optVal: string | number) => {
+      if (props.selectedValues.includes(optVal)) {
+        props.onChange(props.selectedValues.filter((v) => v !== optVal));
+      } else {
+        props.onChange([...props.selectedValues, optVal]);
+      }
+    };
+
+    const selectAll = () => {
+      props.onChange(props.options.map((o) => o.value));
+    };
+
+    const clearAll = () => {
+      props.onChange([]);
+    };
+
+    return (
+      <div className="wof-multiselect-container" ref={containerRef}>
+        <button
+          type="button"
+          className={WooOptionsFic.Utils.classNames('wof-multiselect-trigger', isOpen && 'is-open')}
+          onClick={() => setIsOpen(!isOpen)}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+        >
+          <span className={WooOptionsFic.Utils.classNames('wof-multiselect-display', !displayText && 'is-placeholder')}>
+            {displayText || props.placeholder}
+          </span>
+          <svg
+            className={WooOptionsFic.Utils.classNames('wof-multiselect-chevron', isOpen && 'is-open')}
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </button>
+        {isOpen ? (
+          <div className="wof-multiselect-dropdown">
+            <div className="wof-multiselect-header">
+              <button type="button" className="wof-multiselect-link-btn" onClick={selectAll}>
+                {__('Select All', 'wooptionsfic')}
+              </button>
+              <button type="button" className="wof-multiselect-link-btn" onClick={clearAll}>
+                {__('Clear', 'wooptionsfic')}
+              </button>
+            </div>
+            <div className="wof-multiselect-options" role="listbox">
+              {props.options.map((opt) => {
+                const isChecked = props.selectedValues.includes(opt.value);
+                return (
+                  <label key={opt.value} className={WooOptionsFic.Utils.classNames('wof-multiselect-item', isChecked && 'is-checked')}>
+                    <input
+                      type="checkbox"
+                      checked={isChecked}
+                      onChange={() => toggleOption(opt.value)}
+                    />
+                    <span>{opt.label}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  function DateFieldInspector(props: {
+    field: WooOptionsFic.FieldDefinition;
+    update: (patch: Partial<WooOptionsFic.FieldDefinition>) => void;
+  }): any {
+    const { field, update } = props;
+    const [showAddDatePicker, setShowAddDatePicker] = useState(false);
+
+    return (
+      <div className="wof-datetime-settings-wrap">
+        {/* TYPE selector */}
+        <div className="wof-field-width-setting wof-datetime-type-setting">
+          <span className="wof-field-width-label">{__('Type', 'wooptionsfic')}</span>
+          <div className="wof-field-width-group" role="radiogroup" aria-label={__('Type', 'wooptionsfic')}>
+            {([
+              { label: __('Date', 'wooptionsfic'), value: 'date' },
+              { label: __('Date & Time', 'wooptionsfic'), value: 'datetime' },
+              { label: __('Time', 'wooptionsfic'), value: 'time' },
+            ] as const).map((t) => {
+              const isSelected = (field.dateTimeType || (field.type === 'time' ? 'time' : 'date')) === t.value;
+              return (
+                <button
+                  type="button"
+                  key={t.value}
+                  role="radio"
+                  aria-checked={isSelected}
+                  className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                  onClick={() => update({ dateTimeType: t.value })}
+                >
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Date Settings Box (visible for 'date' and 'datetime') */}
+        {(field.dateTimeType || (field.type === 'time' ? 'time' : 'date')) !== 'time' ? (
+          <div className="wof-datetime-box">
+            <SelectControl
+              label={__('Date Format', 'wooptionsfic')}
+              value={field.dateFormat ?? 'DD/MM/YYYY'}
+              options={DATE_FORMAT_OPTIONS}
+              onChange={(dateFormat: string) => update({ dateFormat })}
+            />
+
+            {/* Min Date (Stacked full width for comfortable spacing) */}
+            <div style={{ marginBottom: '14px' }}>
+              <span className="wof-datetime-label">{__('Min Date', 'wooptionsfic')}</span>
+              <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
+                <div className="wof-field-width-group" role="radiogroup" aria-label={__('Min Date', 'wooptionsfic')}>
+                  {([
+                    { label: __('None', 'wooptionsfic'), value: 'none' },
+                    { label: __('Current Day', 'wooptionsfic'), value: 'current_day' },
+                    { label: __('Custom', 'wooptionsfic'), value: 'custom' },
+                  ] as const).map((m) => {
+                    const isSelected = (field.minDateType || 'none') === m.value;
+                    return (
+                      <button
+                        type="button"
+                        key={m.value}
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                        onClick={() => update({ minDateType: m.value })}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {field.minDateType === 'custom' ? (
+                <div style={{ marginTop: '8px' }}>
+                  <DatePickerField
+                    value={field.minDateCustom ?? ''}
+                    placeholder={__('Select min date...', 'wooptionsfic')}
+                    onChange={(minDateCustom: string) => update({ minDateCustom })}
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            {/* Max Date (Stacked full width for comfortable spacing) */}
+            <div style={{ marginBottom: '14px' }}>
+              <span className="wof-datetime-label">{__('Max Date', 'wooptionsfic')}</span>
+              <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
+                <div className="wof-field-width-group" role="radiogroup" aria-label={__('Max Date', 'wooptionsfic')}>
+                  {([
+                    { label: __('None', 'wooptionsfic'), value: 'none' },
+                    { label: __('Current Day', 'wooptionsfic'), value: 'current_day' },
+                    { label: __('Custom', 'wooptionsfic'), value: 'custom' },
+                  ] as const).map((m) => {
+                    const isSelected = (field.maxDateType || 'none') === m.value;
+                    return (
+                      <button
+                        type="button"
+                        key={m.value}
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                        onClick={() => update({ maxDateType: m.value })}
+                      >
+                        {m.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              {field.maxDateType === 'custom' ? (
+                <div style={{ marginTop: '8px' }}>
+                  <DatePickerField
+                    value={field.maxDateCustom ?? ''}
+                    placeholder={__('Select max date...', 'wooptionsfic')}
+                    onChange={(maxDateCustom: string) => update({ maxDateCustom })}
+                  />
+                </div>
+              ) : null}
+            </div>
+
+            <ToggleControl
+              label={__('Disable Today', 'wooptionsfic')}
+              checked={Boolean(field.disableToday)}
+              onChange={(disableToday: boolean) => update({ disableToday })}
+            />
+
+            <TextControl
+              label={__('Disable Next N Days', 'wooptionsfic')}
+              type="number"
+              min={0}
+              value={String(field.disableNextNDays ?? 0)}
+              help={__('Disable N days after today (e.g. 3 disables tomorrow, day after tomorrow, and one more)', 'wooptionsfic')}
+              onChange={(val: string) => update({ disableNextNDays: Math.max(0, parseInt(val, 10) || 0) })}
+            />
+
+            {/* Disable Specific Dates with Custom Datepicker Popover */}
+            <div style={{ marginBottom: '14px' }}>
+              <span className="wof-datetime-label" style={{ marginBottom: '8px' }}>{__('Disable Specific Dates', 'wooptionsfic')}</span>
+              <div style={{ position: 'relative', display: 'inline-block' }}>
+                <button
+                  type="button"
+                  className="wof-btn-add-date"
+                  onClick={() => setShowAddDatePicker(!showAddDatePicker)}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                  {__('Add Date', 'wooptionsfic')}
+                </button>
+                {showAddDatePicker ? (
+                  <DatePickerPopup
+                    onSelect={(dateStr) => {
+                      const current = Array.isArray(field.disabledDates) ? [...field.disabledDates] : [];
+                      if (!current.includes(dateStr)) {
+                        update({ disabledDates: [...current, dateStr] });
+                      }
+                      setShowAddDatePicker(false);
+                    }}
+                    onClose={() => setShowAddDatePicker(false)}
+                  />
+                ) : null}
+              </div>
+              {Array.isArray(field.disabledDates) && field.disabledDates.length > 0 ? (
+                <div className="wof-disabled-dates-list">
+                  {field.disabledDates.map((dateVal, idx) => (
+                    <div key={idx} className="wof-disabled-date-item">
+                      <div className="wof-disabled-date-badge">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        <span>{dateVal}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="wof-disabled-date-delete-btn"
+                        title={__('Remove date', 'wooptionsfic')}
+                        onClick={() => {
+                          const next = [...(field.disabledDates ?? [])];
+                          next.splice(idx, 1);
+                          update({ disabledDates: next });
+                        }}
+                      >
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            {/* Disable Weekdays Multiselect */}
+            <div style={{ marginBottom: '14px' }}>
+              <span className="wof-datetime-label">{__('Disable Weekdays', 'wooptionsfic')}</span>
+              <MultiSelectDropdown
+                placeholder={__('Select weekdays to disable...', 'wooptionsfic')}
+                options={WEEKDAY_OPTIONS}
+                selectedValues={Array.isArray(field.disabledWeekdays) ? field.disabledWeekdays : []}
+                onChange={(selected) => update({ disabledWeekdays: selected.map(Number) })}
+              />
+            </div>
+
+            {/* Disable Monthly Days Multiselect */}
+            <div style={{ marginBottom: '4px' }}>
+              <span className="wof-datetime-label">{__('Disable Monthly Days', 'wooptionsfic')}</span>
+              <MultiSelectDropdown
+                placeholder={__('Select monthly days to disable...', 'wooptionsfic')}
+                options={MONTHLY_DAY_OPTIONS}
+                selectedValues={
+                  String(field.disabledMonthlyDays || '')
+                    .split(',')
+                    .map((s) => parseInt(s.trim(), 10))
+                    .filter((n) => !isNaN(n))
+                }
+                onChange={(selected) => {
+                  const sorted = [...selected].map(Number).sort((a, b) => a - b);
+                  update({ disabledMonthlyDays: sorted.join(', ') });
+                }}
+              />
+            </div>
+          </div>
+        ) : null}
+
+        {/* Time Settings Box (visible for 'time' and 'datetime') */}
+        {(field.dateTimeType || (field.type === 'time' ? 'time' : 'date')) !== 'date' ? (
+          <div className="wof-datetime-box">
+            {/* Time Range Min */}
+            <div style={{ marginBottom: '14px' }}>
+              <span className="wof-datetime-label">{__('Time Range (Min)', 'wooptionsfic')}</span>
+              {renderTimeInput(
+                field.minTime || '12:00 AM',
+                field.timeFormat || '12',
+                (val: string) => update({ minTime: val })
+              )}
+            </div>
+
+            {/* Time Range Max */}
+            <div style={{ marginBottom: '14px' }}>
+              <span className="wof-datetime-label">{__('Time Range (Max)', 'wooptionsfic')}</span>
+              {renderTimeInput(
+                field.maxTime || '12:00 PM',
+                field.timeFormat || '12',
+                (val: string) => update({ maxTime: val })
+              )}
+            </div>
+
+            {/* Time Format */}
+            <div>
+              <span className="wof-datetime-label">{__('Time Format', 'wooptionsfic')}</span>
+              <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
+                <div className="wof-field-width-group" role="radiogroup" aria-label={__('Time Format', 'wooptionsfic')}>
+                  {([
+                    { label: __('12 Hours', 'wooptionsfic'), value: '12' },
+                    { label: __('24 Hours', 'wooptionsfic'), value: '24' },
+                  ] as const).map((fmt) => {
+                    const isSelected = (field.timeFormat || '12') === fmt.value;
+                    return (
+                      <button
+                        type="button"
+                        key={fmt.value}
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                        onClick={() => update({ timeFormat: fmt.value })}
+                      >
+                        {fmt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+  function renderTimeInput(value: string, format: '12' | '24', onChange: (val: string) => void) {
+    const is12 = format === '12';
+    const match = (value || '').match(/(\d{1,2}):(\d{2})(?:\s*([AP]M))?/i);
+    let hours = match ? match[1].padStart(2, '0') : '12';
+    let minutes = match ? match[2].padStart(2, '0') : '00';
+    let meridiem = (match && match[3] ? match[3].toUpperCase() : 'AM') as 'AM' | 'PM';
+
+    const commit = (h: string, m: string, mer: 'AM' | 'PM') => {
+      onChange(is12 ? `${h}:${m} ${mer}` : `${h}:${m}`);
+    };
+
+    return (
+      <div className="wof-time-input-group">
+        <div className="wof-time-spinner-box">
+          <input
+            type="text"
+            maxLength={2}
+            value={hours}
+            aria-label={__('Hours', 'wooptionsfic')}
+            onChange={(e: any) => {
+              const v = e.target.value.replace(/\D/g, '').slice(0, 2);
+              commit(v.padStart(2, '0'), minutes, meridiem);
+            }}
+          />
+          <span className="wof-time-colon">:</span>
+          <input
+            type="text"
+            maxLength={2}
+            value={minutes}
+            aria-label={__('Minutes', 'wooptionsfic')}
+            onChange={(e: any) => {
+              const v = e.target.value.replace(/\D/g, '').slice(0, 2);
+              commit(hours, v.padStart(2, '0'), meridiem);
+            }}
+          />
+        </div>
+        {is12 ? (
+          <div className="wof-meridiem-group">
+            <button
+              type="button"
+              className={WooOptionsFic.Utils.classNames('wof-meridiem-btn', meridiem === 'AM' && 'is-active')}
+              onClick={() => commit(hours, minutes, 'AM')}
+            >
+              AM
+            </button>
+            <button
+              type="button"
+              className={WooOptionsFic.Utils.classNames('wof-meridiem-btn', meridiem === 'PM' && 'is-active')}
+              onClick={() => commit(hours, minutes, 'PM')}
+            >
+              PM
+            </button>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   function normalizeHexColor(value: string, fallback = '#5B4FF5'): string {
     const color = String(value || '').trim().toUpperCase();
     return /^#[0-9A-F]{6}$/.test(color) ? color : fallback;
@@ -506,6 +1148,11 @@ namespace WooOptionsFic.Builder {
                     />
                   ) : null}
                 </div>
+              ) : null}
+
+              {/* Date and Time Settings */}
+              {['datetime', 'date', 'time'].includes(field.type) ? (
+                <DateFieldInspector field={field} update={update} />
               ) : null}
 
               {/* Allow Multiple Choices for color, image, and button choices */}

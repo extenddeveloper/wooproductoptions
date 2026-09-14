@@ -2717,3 +2717,285 @@
 	color: var(--wof-muted) !important;
 	font-family: var(--wof-font) !important;
 }
+
+/* Custom Date & Time Picker */
+.wof-custom-datetime {
+	position: relative;
+	width: 100%;
+}
+
+.wof-custom-datetime__dual {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 10px;
+}
+
+@media (max-width: 480px) {
+	.wof-custom-datetime__dual {
+		grid-template-columns: 1fr;
+	}
+}
+
+.wof-custom-datetime__trigger {
+	align-items: center;
+	background: var(--wof-surface, #ffffff);
+	border: 1px solid var(--wof-border, #d8deea);
+	box-shadow: none;
+	color: var(--wof-text, #1e293b);
+	cursor: pointer;
+	display: flex;
+	font-size: .92rem;
+	gap: 10px;
+	min-height: 42px;
+	outline: none;
+	padding: 8px 14px;
+	transition: border-color .15s ease, box-shadow .15s ease;
+	user-select: none;
+	box-sizing: border-box;
+}
+
+.wof-custom-datetime__trigger:hover {
+	border-color: color-mix(in srgb, var(--wof-primary, #5b4ff5) 45%, var(--wof-border, #d8deea));
+}
+
+.wof-custom-datetime__trigger:focus-visible,
+.wof-custom-datetime.is-open .wof-custom-datetime__trigger[aria-expanded="true"] {
+	border-color: var(--wof-primary, #5b4ff5);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--wof-primary, #5b4ff5) 15%, transparent);
+}
+
+.wof-custom-datetime__icon {
+	color: var(--wof-muted, #64748b);
+	flex-shrink: 0;
+}
+
+.wof-custom-datetime__display {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.wof-custom-datetime.is-open {
+	z-index: 1050;
+}
+
+.wof-custom-datetime__dropdown {
+	background: #ffffff !important;
+	background-color: #ffffff !important;
+	opacity: 1 !important;
+	border: 1px solid var(--wof-border, #d8deea);
+	border-radius: 8px;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.18), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+	display: none;
+	left: 0;
+	padding: 14px;
+	position: absolute;
+	top: calc(100% + 4px);
+	z-index: 999999 !important;
+	min-width: 280px;
+	max-width: 320px;
+	box-sizing: border-box;
+}
+
+.wof-custom-datetime.is-open .wof-custom-datetime__dropdown {
+	display: block;
+}
+
+.wof-custom-datetime[data-wof-active-mode="time"] .wof-custom-datetime__dropdown {
+	left: auto;
+	right: 0;
+}
+
+.wof-custom-datetime[data-wof-active-mode="date"] .wof-custom-datetime__dropdown {
+	left: 0;
+	right: auto;
+}
+
+.wof-calendar,
+.wof-timepicker,
+.wof-timepicker-list {
+	background: #ffffff !important;
+	background-color: #ffffff !important;
+}
+
+/* Calendar styling */
+.wof-calendar-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 12px;
+}
+
+.wof-calendar-title {
+	font-weight: 700;
+	font-size: 14px;
+	color: var(--wof-text, #1e293b);
+}
+
+.wof-calendar-nav {
+	align-items: center;
+	background: transparent;
+	border: 1px solid var(--wof-border, #e2e8f0);
+	border-radius: 4px;
+	color: var(--wof-text, #1e293b);
+	cursor: pointer;
+	display: flex;
+	height: 28px;
+	justify-content: center;
+	padding: 0;
+	width: 28px;
+	transition: background-color .15s ease;
+}
+
+.wof-calendar-nav:hover {
+	background: #f1f5f9;
+}
+
+.wof-calendar-weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	margin-bottom: 6px;
+	text-align: center;
+}
+
+.wof-calendar-weekdays span {
+	color: var(--wof-muted, #94a3b8);
+	font-size: 11px;
+	font-weight: 600;
+}
+
+.wof-calendar-days {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 2px;
+}
+
+.wof-calendar-day {
+	align-items: center;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	color: var(--wof-text, #1e293b);
+	cursor: pointer;
+	display: flex;
+	font-size: 13px;
+	height: 32px;
+	justify-content: center;
+	padding: 0;
+	transition: all .12s ease;
+	width: 100%;
+}
+
+.wof-calendar-day:hover:not(.is-disabled):not(.is-selected) {
+	background: color-mix(in srgb, var(--wof-primary, #5b4ff5) 8%, var(--wof-surface, #ffffff));
+}
+
+.wof-calendar-day.is-today {
+	border-color: var(--wof-primary, #5b4ff5);
+	font-weight: 700;
+}
+
+.wof-calendar-day.is-selected {
+	background: var(--wof-primary, #5b4ff5) !important;
+	color: #ffffff !important;
+	font-weight: 700 !important;
+}
+
+.wof-calendar-day.is-disabled {
+	color: #cbd5e1 !important;
+	cursor: not-allowed !important;
+	opacity: 0.35 !important;
+	pointer-events: none !important;
+}
+
+.wof-calendar-day.is-other-month {
+	color: #cbd5e1;
+}
+
+/* Time Picker styling */
+.wof-timepicker-header {
+	font-weight: 700;
+	font-size: 13px;
+	color: var(--wof-text, #1e293b);
+	margin-bottom: 10px;
+	text-align: center;
+}
+
+.wof-timepicker-body {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+	margin-bottom: 12px;
+}
+
+.wof-timepicker-col {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	flex: 1;
+}
+
+.wof-timepicker-col-title {
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--wof-muted, #64748b);
+	margin-bottom: 6px;
+	text-transform: uppercase;
+}
+
+.wof-timepicker-list {
+	max-height: 160px;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+	padding: 2px;
+	border: 1px solid var(--wof-border, #e2e8f0);
+	border-radius: 4px;
+}
+
+.wof-timepicker-btn {
+	background: transparent;
+	border: none;
+	border-radius: 4px;
+	color: var(--wof-text, #1e293b);
+	cursor: pointer;
+	font-size: 12px;
+	padding: 5px 8px;
+	text-align: center;
+	transition: background-color .12s ease;
+	width: 100%;
+}
+
+.wof-timepicker-btn:hover:not(.is-selected) {
+	background: #f1f5f9;
+}
+
+.wof-timepicker-btn.is-selected {
+	background: var(--wof-primary, #5b4ff5);
+	color: #ffffff;
+	font-weight: 700;
+}
+
+.wof-timepicker-footer {
+	margin-top: 8px;
+}
+
+.wof-timepicker-apply-btn {
+	background: var(--wof-primary, #5b4ff5);
+	border: none;
+	border-radius: 6px;
+	color: #ffffff;
+	cursor: pointer;
+	font-size: 13px;
+	font-weight: 600;
+	padding: 8px;
+	width: 100%;
+	transition: opacity .15s ease;
+}
+
+.wof-timepicker-apply-btn:hover {
+	opacity: 0.9;
+}

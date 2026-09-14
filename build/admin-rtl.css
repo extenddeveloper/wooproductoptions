@@ -9720,3 +9720,471 @@
 	gap: 6px !important;
 	margin-top: 8px !important;
 }
+
+/* Date and Time Inspector Controls */
+.wof-datetime-type-setting {
+	margin-bottom: 16px;
+}
+.wof-datetime-box {
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 4px;
+	padding: 16px;
+	margin-bottom: 16px;
+}
+.wof-datetime-box .components-base-control {
+	margin-bottom: 14px;
+}
+.wof-datetime-box .components-base-control__label {
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: #1e293b;
+	letter-spacing: 0.5px;
+	margin-bottom: 6px;
+}
+.wof-datetime-grid-2 {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 12px;
+	margin-bottom: 14px;
+}
+.wof-datetime-grid-3 {
+	display: grid;
+	grid-template-columns: 1fr 1fr 1fr;
+	gap: 12px;
+	align-items: start;
+}
+.wof-datetime-label {
+	display: block;
+	font-size: 11px;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: #1e293b;
+	letter-spacing: 0.5px;
+	margin-bottom: 6px;
+}
+.wof-btn-add-date {
+	background: #2563eb !important;
+	color: #ffffff !important;
+	border: none !important;
+	border-radius: 4px !important;
+	font-weight: 600 !important;
+	font-size: 13px !important;
+	padding: 7px 16px !important;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	transition: background-color 0.15s ease;
+}
+.wof-btn-add-date:hover {
+	background: #1d4ed8 !important;
+}
+.wof-disabled-dates-list {
+	margin-top: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.wof-disabled-date-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.wof-disabled-date-item input[type="date"],
+.wof-disabled-date-item input[type="text"] {
+	flex: 1;
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	padding: 6px 10px;
+	font-size: 13px;
+	height: 36px;
+	box-sizing: border-box;
+}
+.wof-disabled-date-badge {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: #f8fafc;
+	border: 1px solid #e2e8f0;
+	border-radius: 4px;
+	padding: 6px 10px;
+	font-size: 13px;
+	font-weight: 500;
+	color: #1e293b;
+	flex: 1;
+}
+.wof-disabled-date-badge svg {
+	color: #64748b;
+	flex-shrink: 0;
+}
+.wof-disabled-date-delete-btn {
+	background: transparent;
+	border: 1px solid #fecaca;
+	color: #ef4444;
+	cursor: pointer;
+	padding: 6px 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 4px;
+	height: 32px;
+	transition: all 0.15s ease;
+}
+.wof-disabled-date-delete-btn:hover {
+	background: #fee2e2;
+}
+
+/* Date Picker in Admin */
+.wof-datepicker-field-wrap {
+	position: relative;
+	width: 100%;
+}
+.wof-datepicker-field-trigger {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	background: #ffffff;
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	padding: 6px 10px;
+	font-size: 13px;
+	color: #1e293b;
+	cursor: pointer;
+	min-height: 36px;
+	box-sizing: border-box;
+	text-align: right;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.wof-datepicker-field-trigger:hover {
+	border-color: #94a3b8;
+}
+.wof-datepicker-field-trigger.is-open {
+	border-color: #2563eb;
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+.wof-datepicker-field-trigger svg {
+	color: #64748b;
+	flex-shrink: 0;
+}
+.wof-datepicker-field-val {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.wof-datepicker-field-val.is-placeholder {
+	color: #94a3b8;
+}
+.wof-datepicker-field-clear {
+	color: #94a3b8;
+	font-size: 16px;
+	line-height: 1;
+	padding: 2px 4px;
+	cursor: pointer;
+	border-radius: 3px;
+}
+.wof-datepicker-field-clear:hover {
+	color: #ef4444;
+	background: #fee2e2;
+}
+
+/* Floating Datepicker Popover */
+.wof-datepicker-popover {
+	position: absolute;
+	top: calc(100% + 4px);
+	right: 0;
+	left: auto;
+	z-index: 1050;
+	background: #ffffff;
+	border: 1px solid #d1d5db;
+	border-radius: 8px;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+	padding: 12px;
+	width: 250px;
+	box-sizing: border-box;
+}
+.wof-cal-pop-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8px;
+}
+.wof-cal-pop-title {
+	font-weight: 700;
+	font-size: 13px;
+	color: #1e293b;
+}
+.wof-cal-nav-btn {
+	background: transparent;
+	border: 1px solid #e2e8f0;
+	border-radius: 4px;
+	color: #334155;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	font-size: 16px;
+	font-weight: 600;
+	padding: 0;
+	transition: background-color 0.15s ease;
+}
+.wof-cal-nav-btn:hover {
+	background: #f1f5f9;
+}
+.wof-cal-pop-weekdays {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	margin-bottom: 4px;
+	text-align: center;
+}
+.wof-cal-pop-weekdays span {
+	color: #94a3b8;
+	font-size: 10px;
+	font-weight: 600;
+}
+.wof-cal-pop-days {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+	gap: 2px;
+}
+.wof-cal-pop-day {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 28px;
+	font-size: 11px;
+	background: transparent;
+	border: 1px solid transparent;
+	border-radius: 4px;
+	color: #1e293b;
+	cursor: pointer;
+	padding: 0;
+	transition: all 0.12s ease;
+}
+.wof-cal-pop-day:hover:not(.is-selected) {
+	background: #f1f5f9;
+}
+.wof-cal-pop-day.is-selected {
+	background: #2563eb !important;
+	color: #ffffff !important;
+	font-weight: 700 !important;
+}
+.wof-cal-pop-day.is-other-month {
+	color: #cbd5e1;
+}
+
+/* MultiSelect Dropdown in Admin */
+.wof-multiselect-container {
+	position: relative;
+	width: 100%;
+}
+.wof-multiselect-trigger {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	width: 100%;
+	background: #ffffff;
+	border: 1px solid #d1d5db;
+	border-radius: 4px;
+	padding: 6px 10px;
+	font-size: 13px;
+	color: #1e293b;
+	cursor: pointer;
+	min-height: 36px;
+	box-sizing: border-box;
+	text-align: right;
+	transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.wof-multiselect-trigger:hover {
+	border-color: #94a3b8;
+}
+.wof-multiselect-trigger.is-open {
+	border-color: #2563eb;
+	box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+.wof-multiselect-display {
+	flex: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: 12px;
+}
+.wof-multiselect-display.is-placeholder {
+	color: #94a3b8;
+}
+.wof-multiselect-chevron {
+	color: #64748b;
+	transition: transform 0.15s ease;
+	flex-shrink: 0;
+	margin-right: 6px;
+}
+.wof-multiselect-chevron.is-open {
+	transform: rotate(180deg);
+}
+.wof-multiselect-dropdown {
+	position: absolute;
+	top: calc(100% + 4px);
+	right: 0;
+	left: 0;
+	z-index: 1050;
+	background: #ffffff;
+	border: 1px solid #d1d5db;
+	border-radius: 6px;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+	padding: 6px;
+	box-sizing: border-box;
+}
+.wof-multiselect-header {
+	display: flex;
+	justify-content: space-between;
+	padding: 4px 6px 6px;
+	border-bottom: 1px solid #f1f5f9;
+}
+.wof-multiselect-link-btn {
+	background: transparent;
+	border: none;
+	color: #2563eb;
+	font-size: 11px;
+	font-weight: 600;
+	cursor: pointer;
+	padding: 0;
+}
+.wof-multiselect-link-btn:hover {
+	text-decoration: underline;
+}
+.wof-multiselect-options {
+	max-height: 180px;
+	overflow-y: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	padding: 4px 0 0;
+}
+.wof-multiselect-item {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 5px 8px;
+	border-radius: 4px;
+	font-size: 12px;
+	cursor: pointer;
+	color: #334155;
+	transition: background-color 0.1s ease;
+}
+.wof-multiselect-item:hover {
+	background: #f1f5f9;
+}
+.wof-multiselect-item input[type="checkbox"] {
+	margin: 0;
+	cursor: pointer;
+}
+
+.wof-time-input-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+.wof-time-spinner-box {
+	display: inline-flex;
+	align-items: center;
+	border: 1px solid #d1d5db !important;
+	border-radius: 4px !important;
+	padding: 0 8px !important;
+	background: #ffffff !important;
+	height: 38px !important;
+	box-sizing: border-box !important;
+	overflow: hidden !important;
+}
+.wof-time-spinner-box input {
+	width: 28px !important;
+	min-width: 0 !important;
+	max-width: 32px !important;
+	height: 26px !important;
+	line-height: 26px !important;
+	text-align: center !important;
+	border: 0 !important;
+	border-width: 0 !important;
+	outline: none !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	background-color: transparent !important;
+	font-size: 13px !important;
+	font-weight: 500 !important;
+	color: #1e293b !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	-moz-appearance: textfield;
+}
+.wof-time-spinner-box input:focus {
+	outline: none !important;
+	box-shadow: none !important;
+	border: none !important;
+	background: transparent !important;
+}
+.wof-time-spinner-box input::-webkit-outer-spin-button,
+.wof-time-spinner-box input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+.wof-time-colon {
+	font-weight: 700;
+	color: #64748b;
+	padding: 0 4px;
+}
+.wof-meridiem-group {
+	display: inline-flex;
+	border: 1px solid #d1d5db !important;
+	border-radius: 4px !important;
+	overflow: hidden !important;
+	height: 38px !important;
+	box-sizing: border-box !important;
+}
+.wof-meridiem-btn {
+	background: #ffffff !important;
+	border: none !important;
+	padding: 0 14px !important;
+	font-size: 12px !important;
+	font-weight: 500 !important;
+	cursor: pointer;
+	color: #64748b !important;
+	transition: all 0.15s ease;
+	line-height: 36px !important;
+	height: 36px !important;
+}
+.wof-meridiem-btn.is-active {
+	background: #0f172a !important;
+	color: #ffffff !important;
+	font-weight: 700 !important;
+}
+
+/* Custom Date & Time Picker Canvas Preview */
+.wof-custom-picker-preview {
+	width: 100%;
+}
+.wof-custom-picker-input {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 12px;
+	background: #ffffff;
+	border: 1px solid #d1d5db;
+	color: #64748b;
+	font-size: 14px;
+	min-height: 40px;
+	box-sizing: border-box;
+	cursor: default;
+}
+.wof-picker-icon {
+	color: #64748b;
+	flex-shrink: 0;
+}
+.wof-picker-text {
+	color: #475569;
+	font-size: 13px;
+}

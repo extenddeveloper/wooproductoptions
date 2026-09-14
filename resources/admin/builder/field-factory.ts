@@ -68,6 +68,23 @@ namespace WooOptionsFic.FieldFactory {
       field.defaultCountry = 'US';
     }
 
+    if (type === 'datetime' || type === 'date' || type === 'time') {
+      field.dateTimeType = type === 'time' ? 'time' : 'date';
+      field.dateFormat = 'DD/MM/YYYY';
+      field.minDateType = 'none';
+      field.minDateCustom = '';
+      field.maxDateType = 'none';
+      field.maxDateCustom = '';
+      field.disableToday = false;
+      field.disableNextNDays = 0;
+      field.disabledDates = [];
+      field.disabledWeekdays = [];
+      field.disabledMonthlyDays = '';
+      field.minTime = '12:00 AM';
+      field.maxTime = '12:00 PM';
+      field.timeFormat = '12';
+    }
+
     if (['text', 'textarea', 'password', 'tel', 'email', 'url', 'number', 'range', 'quantity', 'date', 'date_range', 'time', 'datetime', 'customer_defined_price', 'color_picker'].includes(type)) {
       field.placeholder = '';
       field.min = null;

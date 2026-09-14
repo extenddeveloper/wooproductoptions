@@ -35,6 +35,28 @@ final class ScalarFieldType extends AbstractFieldType {
 			$normalized['flagStyle']      = in_array($flag_style, ['number_only', 'number_flag', 'number_flag_dialcode'], true) ? $flag_style : 'number_only';
 			$normalized['defaultCountry'] = self::plain_text((string) ($definition['defaultCountry'] ?? 'US'), 10);
 		}
+		if (in_array($this->type_key, ['datetime', 'date', 'time'], true)) {
+			$date_time_type = (string) ($definition['dateTimeType'] ?? ('time' === $this->type_key ? 'time' : 'date'));
+			$normalized['dateTimeType']        = in_array($date_time_type, ['date', 'datetime', 'time'], true) ? $date_time_type : 'date';
+			$normalized['dateFormat']          = self::plain_text((string) ($definition['dateFormat'] ?? 'DD/MM/YYYY'), 50);
+			$min_date_type                     = (string) ($definition['minDateType'] ?? 'none');
+			$normalized['minDateType']         = in_array($min_date_type, ['none', 'current_day', 'custom'], true) ? $min_date_type : 'none';
+			$normalized['minDateCustom']       = self::plain_text((string) ($definition['minDateCustom'] ?? ''), 50);
+			$max_date_type                     = (string) ($definition['maxDateType'] ?? 'none');
+			$normalized['maxDateType']         = in_array($max_date_type, ['none', 'current_day', 'custom'], true) ? $max_date_type : 'none';
+			$normalized['maxDateCustom']       = self::plain_text((string) ($definition['maxDateCustom'] ?? ''), 50);
+			$normalized['disableToday']        = ! empty($definition['disableToday']);
+			$normalized['disableNextNDays']    = max(0, (int) ($definition['disableNextNDays'] ?? 0));
+			$disabled_dates                    = is_array($definition['disabledDates'] ?? null) ? $definition['disabledDates'] : [];
+			$normalized['disabledDates']       = array_values(array_filter(array_map(fn ($d) => self::plain_text((string) $d, 50), $disabled_dates)));
+			$disabled_weekdays                 = is_array($definition['disabledWeekdays'] ?? null) ? $definition['disabledWeekdays'] : [];
+			$normalized['disabledWeekdays']    = array_values(array_filter(array_map('intval', $disabled_weekdays), fn ($w) => $w >= 0 && $w <= 6));
+			$normalized['disabledMonthlyDays'] = self::plain_text((string) ($definition['disabledMonthlyDays'] ?? ''), 100);
+			$normalized['minTime']             = self::plain_text((string) ($definition['minTime'] ?? ''), 20);
+			$normalized['maxTime']             = self::plain_text((string) ($definition['maxTime'] ?? ''), 20);
+			$time_format                       = (string) ($definition['timeFormat'] ?? '12');
+			$normalized['timeFormat']          = in_array($time_format, ['12', '24'], true) ? $time_format : '12';
+		}
 		return $normalized;
 	}
 
@@ -78,9 +100,9 @@ final class ScalarFieldType extends AbstractFieldType {
 			'url'        => $this->validate_url((string) $value),
 			'integer'    => $this->validate_number((string) $value, $definition, true),
 			'decimal'    => $this->validate_number((string) $value, $definition, false),
-			'date'       => $this->validate_date((string) $value),
-			'time'       => $this->validate_time((string) $value),
-			'datetime'   => $this->validate_datetime((string) $value),
+			'date'       => $this->validate_datetime_field((string) $value, $definition),
+			'time'       => $this->validate_datetime_field((string) $value, $definition),
+			'datetime'   => $this->validate_datetime_field((string) $value, $definition),
 			'date_range' => $this->validate_date_range(is_array($value) ? $value : []),
 			'color'      => $this->validate_color((string) $value),
 			default      => $this->validate_string((string) $value, $definition),
@@ -162,22 +184,46 @@ final class ScalarFieldType extends AbstractFieldType {
 		return $errors;
 	}
 
+	private function validate_datetime_field(string $value, array $definition): array {
+		$type = (string) ($definition['dateTimeType'] ?? ('time' === $this->type_key ? 'time' : 'date'));
+		if ('time' === $type) {
+			return $this->validate_time($value);
+		}
+		if ('date' === $type) {
+			return $this->validate_date($value);
+		}
+		return $this->validate_datetime($value);
+	}
+
 	private function validate_date(string $value): array {
-		return false !== DateTimeImmutable::createFromFormat('Y-m-d', $value)
-			? []
-			: [['code' => 'invalid_date', 'params' => []]];
+		if (false !== DateTimeImmutable::createFromFormat('Y-m-d', $value)) {
+			return [];
+		}
+		try {
+			new DateTimeImmutable($value);
+			return [];
+		} catch (\Exception) {
+			return [['code' => 'invalid_date', 'params' => []]];
+		}
 	}
 
 	private function validate_time(string $value): array {
-		return 1 === preg_match('/\A\d{2}:\d{2}(?::\d{2})?\z/', $value)
-			? []
-			: [['code' => 'invalid_time', 'params' => []]];
+		if (1 === preg_match('/\A\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?\z/i', $value)) {
+			return [];
+		}
+		return [['code' => 'invalid_time', 'params' => []]];
 	}
 
 	private function validate_datetime(string $value): array {
-		return 1 === preg_match('/\A\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?\z/', $value)
-			? []
-			: [['code' => 'invalid_datetime', 'params' => []]];
+		if (1 === preg_match('/\A\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AP]M)?\z/i', $value)) {
+			return [];
+		}
+		try {
+			new DateTimeImmutable($value);
+			return [];
+		} catch (\Exception) {
+			return [['code' => 'invalid_datetime', 'params' => []]];
+		}
 	}
 
 	private function validate_date_range(array $value): array {

@@ -680,6 +680,10 @@ final class Renderer {
 			echo '<span aria-hidden="true">→</span><input type="date" name="' . esc_attr($name . '[end]') . '" aria-label="' . esc_attr__('End date', 'wooptionsfic') . '"></div>';
 			return;
 		}
+		if (in_array($type, ['datetime', 'date', 'time'], true)) {
+			$this->render_custom_datetime($field, $name, $description_id);
+			return;
+		}
 		if ('tel' === $type) {
 			$flag_style      = (string) ($field['flagStyle'] ?? 'number_only');
 			$default_country = strtoupper((string) ($field['defaultCountry'] ?? 'US'));
@@ -721,6 +725,72 @@ final class Renderer {
 		if ('range' === $type) {
 			echo '<output class="wof-range-output" data-wof-range-output>—</output>';
 		}
+	}
+
+	/**
+	 * @param array<string,mixed> $field Field.
+	 */
+	private function render_custom_datetime(array $field, string $name, string $description_id): void {
+		$type            = (string) ($field['type'] ?? 'datetime');
+		$date_time_type  = (string) ($field['dateTimeType'] ?? ('time' === $type ? 'time' : 'date'));
+		$uuid            = (string) $field['uuid'];
+		$default_val     = (string) ($field['default'] ?? '');
+		$placeholder     = (string) ($field['placeholder'] ?? '');
+		$date_format     = (string) ($field['dateFormat'] ?? 'DD/MM/YYYY');
+		$time_format     = (string) ($field['timeFormat'] ?? '12');
+
+		$config = [
+			'type'                => $date_time_type,
+			'dateFormat'          => $date_format,
+			'wpDateFormat'        => get_option('date_format', 'F j, Y'),
+			'minDateType'         => (string) ($field['minDateType'] ?? 'none'),
+			'minDateCustom'       => (string) ($field['minDateCustom'] ?? ''),
+			'maxDateType'         => (string) ($field['maxDateType'] ?? 'none'),
+			'maxDateCustom'       => (string) ($field['maxDateCustom'] ?? ''),
+			'disableToday'        => ! empty($field['disableToday']),
+			'disableNextNDays'    => (int) ($field['disableNextNDays'] ?? 0),
+			'disabledDates'       => is_array($field['disabledDates'] ?? null) ? array_values($field['disabledDates']) : [],
+			'disabledWeekdays'    => is_array($field['disabledWeekdays'] ?? null) ? array_values(array_map('intval', $field['disabledWeekdays'])) : [],
+			'disabledMonthlyDays' => (string) ($field['disabledMonthlyDays'] ?? ''),
+			'minTime'             => (string) ($field['minTime'] ?? ''),
+			'maxTime'             => (string) ($field['maxTime'] ?? ''),
+			'timeFormat'          => $time_format,
+		];
+
+		$cal_icon   = '<svg class="wof-custom-datetime__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+		$clock_icon = '<svg class="wof-custom-datetime__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>';
+
+		$date_ph = '' !== $placeholder ? $placeholder : ('wp_default' === $date_format ? date_i18n(get_option('date_format', 'F j, Y')) : $date_format);
+		$time_ph = '' !== $placeholder ? $placeholder : ('24' === $time_format ? '12:00' : '12:00 PM');
+
+		echo '<div class="wof-custom-datetime" data-wof-custom-datetime data-wof-datetime-config="' . esc_attr(wp_json_encode($config)) . '">';
+		echo '<input type="hidden" id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '" value="' . esc_attr($default_val) . '" ' . $this->input_attributes($field, $description_id) . ' data-wof-datetime-value>';
+
+		if ('date' === $date_time_type) {
+			echo '<div class="wof-custom-datetime__trigger" data-wof-datetime-trigger="date" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
+			echo $cal_icon;
+			echo '<span class="wof-custom-datetime__display" data-wof-datetime-display="date" data-wof-placeholder="' . esc_attr($date_ph) . '">' . esc_html($default_val ?: $date_ph) . '</span>';
+			echo '</div>';
+		} elseif ('time' === $date_time_type) {
+			echo '<div class="wof-custom-datetime__trigger" data-wof-datetime-trigger="time" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
+			echo $clock_icon;
+			echo '<span class="wof-custom-datetime__display" data-wof-datetime-display="time" data-wof-placeholder="' . esc_attr($time_ph) . '">' . esc_html($default_val ?: $time_ph) . '</span>';
+			echo '</div>';
+		} else {
+			echo '<div class="wof-custom-datetime__dual">';
+			echo '<div class="wof-custom-datetime__trigger" data-wof-datetime-trigger="date" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
+			echo $cal_icon;
+			echo '<span class="wof-custom-datetime__display" data-wof-datetime-display="date" data-wof-placeholder="' . esc_attr($date_ph) . '">' . esc_html($date_ph) . '</span>';
+			echo '</div>';
+			echo '<div class="wof-custom-datetime__trigger" data-wof-datetime-trigger="time" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
+			echo $clock_icon;
+			echo '<span class="wof-custom-datetime__display" data-wof-datetime-display="time" data-wof-placeholder="' . esc_attr($time_ph) . '">' . esc_html($time_ph) . '</span>';
+			echo '</div>';
+			echo '</div>';
+		}
+
+		echo '<div class="wof-custom-datetime__dropdown" data-wof-datetime-dropdown role="dialog" aria-modal="false" tabindex="-1"></div>';
+		echo '</div>';
 	}
 
 	public function country_definitions(): array {

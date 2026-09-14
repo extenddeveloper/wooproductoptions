@@ -17,11 +17,11 @@
         savedUuid = "";
         productImageSnapshot = null;
         constructor(e) { this.root = e; const t = e.querySelector("[data-wof-config]"); if (!t?.textContent)
-            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
-        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
+            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
+        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
-            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy") || (e.preventDefault(), this.requestQuote(!0)); }), this.form && window.jQuery) {
+            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy") || (e.preventDefault(), this.requestQuote(!0)); }), this.form && window.jQuery) {
             const e = () => this.scheduleQuote(50);
             window.jQuery(this.form).on("found_variation.wooptionsfic reset_data.wooptionsfic", e);
         } }
@@ -147,6 +147,372 @@
                     cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false");
                 }
             });
+        }
+        initCustomDateTimes() {
+            this.root.querySelectorAll("[data-wof-custom-datetime]").forEach(elem => {
+                this.syncCustomDateTime(elem);
+            });
+        }
+        syncCustomDateTime(elem) {
+            const hiddenInput = elem.querySelector("[data-wof-datetime-value]");
+            if (!hiddenInput) return;
+            const config = this.getDateTimeConfig(elem);
+            const val = hiddenInput.value.trim();
+            if (!val) return;
+            if (config.type === 'date') {
+                const display = elem.querySelector('[data-wof-datetime-display="date"]');
+                if (display) display.textContent = this.formatDateDisplay(val, config.dateFormat, config.wpDateFormat);
+            } else if (config.type === 'time') {
+                const display = elem.querySelector('[data-wof-datetime-display="time"]');
+                if (display) display.textContent = val;
+            } else {
+                const parts = val.split(' ');
+                if (parts[0]) {
+                    const dDisplay = elem.querySelector('[data-wof-datetime-display="date"]');
+                    if (dDisplay) dDisplay.textContent = this.formatDateDisplay(parts[0], config.dateFormat, config.wpDateFormat);
+                }
+                const timeStr = parts.slice(1).join(' ');
+                if (timeStr) {
+                    const tDisplay = elem.querySelector('[data-wof-datetime-display="time"]');
+                    if (tDisplay) tDisplay.textContent = timeStr;
+                }
+            }
+        }
+        getDateTimeConfig(elem) {
+            try {
+                return JSON.parse(elem.dataset.wofDatetimeConfig || "{}");
+            } catch {
+                return {};
+            }
+        }
+        closeAllCustomDateTimes(except = null) {
+            document.querySelectorAll("[data-wof-custom-datetime].is-open").forEach(elem => {
+                if (elem !== except) {
+                    elem.classList.remove("is-open");
+                    elem.querySelectorAll("[data-wof-datetime-trigger]").forEach(t => t.setAttribute("aria-expanded", "false"));
+                }
+            });
+        }
+        toggleCustomDateTime(trigger) {
+            const container = trigger.closest("[data-wof-custom-datetime]");
+            if (!container) return;
+            const mode = trigger.dataset.wofDatetimeTrigger || "date";
+            const dropdown = container.querySelector("[data-wof-datetime-dropdown]");
+            if (!dropdown) return;
+            const isCurrentlyOpen = container.classList.contains("is-open") && container.dataset.wofActiveMode === mode;
+            if (isCurrentlyOpen) {
+                this.closeAllCustomDateTimes();
+                return;
+            }
+            this.closeAllCustomDateTimes(container);
+            this.closeAllCustomSelects();
+            container.classList.add("is-open");
+            container.dataset.wofActiveMode = mode;
+            trigger.setAttribute("aria-expanded", "true");
+
+            const isDual = Boolean(container.querySelector(".wof-custom-datetime__dual"));
+            const isRtl = document.documentElement.dir === "rtl" || document.body.classList.contains("rtl");
+            if (isDual) {
+                if (mode === "time") {
+                    dropdown.style.left = isRtl ? "0" : "auto";
+                    dropdown.style.right = isRtl ? "auto" : "0";
+                } else {
+                    dropdown.style.left = isRtl ? "auto" : "0";
+                    dropdown.style.right = isRtl ? "0" : "auto";
+                }
+            } else {
+                dropdown.style.left = isRtl ? "auto" : "0";
+                dropdown.style.right = isRtl ? "0" : "auto";
+            }
+
+            const config = this.getDateTimeConfig(container);
+            if (mode === "date") {
+                this.openCalendar(container, dropdown, config);
+            } else {
+                this.openTimePicker(container, dropdown, config);
+            }
+        }
+        openCalendar(container, dropdown, config, viewDate = null) {
+            const hiddenInput = container.querySelector("[data-wof-datetime-value]");
+            const currentVal = hiddenInput ? hiddenInput.value.split(" ")[0] : "";
+            const activeDate = currentVal && !isNaN(new Date(currentVal).getTime()) ? new Date(currentVal) : new Date();
+            const dateToView = viewDate || activeDate;
+            const year = dateToView.getFullYear();
+            const month = dateToView.getMonth();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const prevMonthDays = new Date(year, month, 0).getDate();
+
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            let html = '<div class="wof-calendar">';
+            html += '<div class="wof-calendar-header">';
+            html += '<button type="button" class="wof-calendar-nav is-prev" aria-label="Previous month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>';
+            html += `<span class="wof-calendar-title">${monthNames[month]} ${year}</span>`;
+            html += '<button type="button" class="wof-calendar-nav is-next" aria-label="Next month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>';
+            html += '</div>';
+
+            html += '<div class="wof-calendar-weekdays">';
+            dayNames.forEach(d => { html += `<span>${d}</span>`; });
+            html += '</div>';
+
+            html += '<div class="wof-calendar-days">';
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                const dayNum = prevMonthDays - i;
+                html += `<span class="wof-calendar-day is-other-month is-disabled">${dayNum}</span>`;
+            }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isDisabled = this.isDateDisabled(dateStr, year, month, day, config);
+                const isSelected = currentVal === dateStr;
+                const isToday = dateStr === todayStr;
+                const classes = ["wof-calendar-day"];
+                if (isDisabled) classes.push("is-disabled");
+                if (isSelected) classes.push("is-selected");
+                if (isToday) classes.push("is-today");
+
+                html += `<button type="button" class="${classes.join(' ')}" data-wof-cal-date="${dateStr}" ${isDisabled ? 'disabled' : ''}>${day}</button>`;
+            }
+            html += '</div>';
+            html += '</div>';
+
+            dropdown.innerHTML = html;
+
+            dropdown.querySelector(".is-prev")?.addEventListener("click", e => {
+                e.stopPropagation();
+                this.openCalendar(container, dropdown, config, new Date(year, month - 1, 1));
+            });
+            dropdown.querySelector(".is-next")?.addEventListener("click", e => {
+                e.stopPropagation();
+                this.openCalendar(container, dropdown, config, new Date(year, month + 1, 1));
+            });
+            dropdown.querySelectorAll("[data-wof-cal-date]").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    const selectedDate = btn.dataset.wofCalDate;
+                    this.onDateSelected(container, selectedDate, config);
+                });
+            });
+        }
+        isDateDisabled(dateStr, year, month, day, config) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const curDate = new Date(year, month, day);
+            curDate.setHours(0, 0, 0, 0);
+
+            if (config.minDateType === "current_day" && curDate < today) return true;
+            if (config.minDateType === "custom" && config.minDateCustom) {
+                const minCustom = this.parseDateString(config.minDateCustom);
+                if (minCustom && curDate < minCustom) return true;
+            }
+
+            if (config.maxDateType === "current_day" && curDate > today) return true;
+            if (config.maxDateType === "custom" && config.maxDateCustom) {
+                const maxCustom = this.parseDateString(config.maxDateCustom);
+                if (maxCustom && curDate > maxCustom) return true;
+            }
+
+            if (config.disableToday && curDate.getTime() === today.getTime()) return true;
+
+            if (config.disableNextNDays > 0) {
+                const diffTime = curDate.getTime() - today.getTime();
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                if (diffDays >= 1 && diffDays <= config.disableNextNDays) return true;
+            }
+
+            if (Array.isArray(config.disabledDates) && config.disabledDates.includes(dateStr)) return true;
+
+            const dayOfWeek = curDate.getDay();
+            if (Array.isArray(config.disabledWeekdays) && config.disabledWeekdays.includes(dayOfWeek)) return true;
+
+            if (config.disabledMonthlyDays) {
+                const days = String(config.disabledMonthlyDays).split(",").map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n));
+                if (days.includes(day)) return true;
+            }
+
+            return false;
+        }
+        parseDateString(str) {
+            if (!str) return null;
+            if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+                const [y, m, d] = str.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            }
+            if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+                const [d, m, y] = str.split('/').map(Number);
+                return new Date(y, m - 1, d);
+            }
+            if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(str)) {
+                const [m, d, y] = str.split('-').map(Number);
+                return new Date(y, m - 1, d);
+            }
+            const parsed = new Date(str);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+        formatDateDisplay(dateStr, format = "DD/MM/YYYY", wpFormat = "") {
+            if (!dateStr) return "";
+            const d = this.parseDateString(dateStr) || new Date(dateStr);
+            if (isNaN(d.getTime())) return dateStr;
+            const day = String(d.getDate()).padStart(2, '0');
+            const daySingle = String(d.getDate());
+            const monthNum = String(d.getMonth() + 1).padStart(2, '0');
+            const year = String(d.getFullYear());
+            const shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const longMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const shortMonth = shortMonths[d.getMonth()];
+            const longMonth = longMonths[d.getMonth()];
+
+            if (format === "MMM DD, YYYY") return `${shortMonth} ${day}, ${year}`;
+            if (format === "DD/MM/YYYY") return `${day}/${monthNum}/${year}`;
+            if (format === "MM/DD/YYYY") return `${monthNum}/${day}/${year}`;
+            if (format === "YYYY-MM-DD") return `${year}-${monthNum}-${day}`;
+            if (format === "DD MMMM, YYYY") return `${daySingle} ${longMonth}, ${year}`;
+            if (format === "D.MM.YYYY") return `${daySingle}.${monthNum}.${year}`;
+            if (format === "wp_default") return `${shortMonth} ${daySingle}, ${year}`;
+            return `${day}/${monthNum}/${year}`;
+        }
+        onDateSelected(container, selectedDate, config) {
+            const hiddenInput = container.querySelector("[data-wof-datetime-value]");
+            const dateDisplay = container.querySelector('[data-wof-datetime-display="date"]');
+            if (dateDisplay) {
+                dateDisplay.textContent = this.formatDateDisplay(selectedDate, config.dateFormat, config.wpDateFormat);
+            }
+            let newVal = selectedDate;
+            if (config.type === "datetime") {
+                const currentVal = hiddenInput ? hiddenInput.value : "";
+                const existingTime = currentVal.includes(" ") ? currentVal.split(" ").slice(1).join(" ") : (config.timeFormat === "24" ? "12:00" : "12:00 PM");
+                newVal = `${selectedDate} ${existingTime}`;
+                const timeDisplay = container.querySelector('[data-wof-datetime-display="time"]');
+                if (timeDisplay && !currentVal.includes(" ")) {
+                    timeDisplay.textContent = existingTime;
+                    const dropdown = container.querySelector("[data-wof-datetime-dropdown]");
+                    if (dropdown) {
+                        this.openTimePicker(container, dropdown, config);
+                        container.dataset.wofActiveMode = "time";
+                        return;
+                    }
+                }
+            }
+            if (hiddenInput) {
+                hiddenInput.value = newVal;
+                hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            this.closeAllCustomDateTimes();
+            this.selectionChanged(hiddenInput);
+        }
+        openTimePicker(container, dropdown, config) {
+            const hiddenInput = container.querySelector("[data-wof-datetime-value]");
+            const currentVal = hiddenInput ? hiddenInput.value : "";
+            let timeVal = config.type === "datetime" && currentVal.includes(" ") ? currentVal.split(" ").slice(1).join(" ") : currentVal;
+            if (!timeVal) timeVal = config.timeFormat === "24" ? "12:00" : "12:00 PM";
+
+            const is12 = config.timeFormat !== "24";
+            const match = timeVal.match(/(\d{1,2}):(\d{2})(?:\s*([AP]M))?/i);
+            let hours = match ? parseInt(match[1], 10) : 12;
+            let minutes = match ? parseInt(match[2], 10) : 0;
+            let meridiem = match && match[3] ? match[3].toUpperCase() : "AM";
+
+            const hoursRange = is12 ? Array.from({ length: 12 }, (_, i) => i + 1) : Array.from({ length: 24 }, (_, i) => i);
+            const minutesSteps = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+
+            let html = '<div class="wof-timepicker">';
+            html += '<div class="wof-timepicker-header"><span>Select Time</span></div>';
+            html += '<div class="wof-timepicker-body">';
+
+            html += '<div class="wof-timepicker-col">';
+            html += '<span class="wof-timepicker-col-title">Hour</span>';
+            html += '<div class="wof-timepicker-list is-hours">';
+            hoursRange.forEach(h => {
+                const isSelected = h === hours;
+                html += `<button type="button" class="wof-timepicker-btn ${isSelected ? 'is-selected' : ''}" data-wof-time-hour="${h}">${String(h).padStart(2, '0')}</button>`;
+            });
+            html += '</div></div>';
+
+            html += '<div class="wof-timepicker-col">';
+            html += '<span class="wof-timepicker-col-title">Minute</span>';
+            html += '<div class="wof-timepicker-list is-minutes">';
+            minutesSteps.forEach(m => {
+                const isSelected = m === minutes;
+                html += `<button type="button" class="wof-timepicker-btn ${isSelected ? 'is-selected' : ''}" data-wof-time-min="${m}">${String(m).padStart(2, '0')}</button>`;
+            });
+            html += '</div></div>';
+
+            if (is12) {
+                html += '<div class="wof-timepicker-col is-ampm">';
+                html += '<span class="wof-timepicker-col-title">Period</span>';
+                html += '<div class="wof-timepicker-list is-ampm-list">';
+                html += `<button type="button" class="wof-timepicker-btn ${meridiem === 'AM' ? 'is-selected' : ''}" data-wof-time-mer="AM">AM</button>`;
+                html += `<button type="button" class="wof-timepicker-btn ${meridiem === 'PM' ? 'is-selected' : ''}" data-wof-time-mer="PM">PM</button>`;
+                html += '</div></div>';
+            }
+
+            html += '</div>';
+            html += '<div class="wof-timepicker-footer">';
+            html += '<button type="button" class="wof-timepicker-apply-btn" data-wof-time-apply>Apply Time</button>';
+            html += '</div>';
+            html += '</div>';
+
+            dropdown.innerHTML = html;
+
+            let curH = hours;
+            let curM = minutes;
+            let curMer = meridiem;
+
+            dropdown.querySelectorAll("[data-wof-time-hour]").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    dropdown.querySelectorAll("[data-wof-time-hour]").forEach(b => b.classList.remove("is-selected"));
+                    btn.classList.add("is-selected");
+                    curH = parseInt(btn.dataset.wofTimeHour, 10);
+                });
+            });
+            dropdown.querySelectorAll("[data-wof-time-min]").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    dropdown.querySelectorAll("[data-wof-time-min]").forEach(b => b.classList.remove("is-selected"));
+                    btn.classList.add("is-selected");
+                    curM = parseInt(btn.dataset.wofTimeMin, 10);
+                });
+            });
+            dropdown.querySelectorAll("[data-wof-time-mer]").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    dropdown.querySelectorAll("[data-wof-time-mer]").forEach(b => b.classList.remove("is-selected"));
+                    btn.classList.add("is-selected");
+                    curMer = btn.dataset.wofTimeMer;
+                });
+            });
+            dropdown.querySelector("[data-wof-time-apply]")?.addEventListener("click", e => {
+                e.stopPropagation();
+                const formattedTime = is12
+                    ? `${String(curH).padStart(2, '0')}:${String(curM).padStart(2, '0')} ${curMer}`
+                    : `${String(curH).padStart(2, '0')}:${String(curM).padStart(2, '0')}`;
+                this.onTimeSelected(container, formattedTime, config);
+            });
+        }
+        onTimeSelected(container, selectedTime, config) {
+            const hiddenInput = container.querySelector("[data-wof-datetime-value]");
+            const timeDisplay = container.querySelector('[data-wof-datetime-display="time"]');
+            if (timeDisplay) {
+                timeDisplay.textContent = selectedTime;
+            }
+            let newVal = selectedTime;
+            if (config.type === "datetime") {
+                const currentVal = hiddenInput ? hiddenInput.value : "";
+                const existingDate = currentVal.includes(" ") ? currentVal.split(" ")[0] : "";
+                newVal = existingDate ? `${existingDate} ${selectedTime}` : selectedTime;
+            }
+            if (hiddenInput) {
+                hiddenInput.value = newVal;
+                hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            this.closeAllCustomDateTimes();
+            this.selectionChanged(hiddenInput);
         }
         selectionChanged(e) { this.updateColorOutputs(), this.updateProductImage(e), this.enforceMaxChoices(); if (this.clearFieldError(e.closest("[data-wof-field]")), this.scheduleQuote(), !this.interactionRecorded) {
             this.interactionRecorded = !0;
