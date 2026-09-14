@@ -2237,7 +2237,10 @@ var WooOptionsFic;
                 return (wp.element.createElement("div", { className: "wof-preview-upload" },
                     wp.element.createElement("div", { className: "wof-preview-upload__picker" },
                         wp.element.createElement("button", { type: "button", className: "wof-preview-upload__button", tabIndex: -1, "aria-disabled": "true" },
-                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "upload" }),
+                            wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                wp.element.createElement("path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }),
+                                wp.element.createElement("polyline", { points: "17 8 12 3 7 8" }),
+                                wp.element.createElement("line", { x1: "12", y1: "3", x2: "12", y2: "15" })),
                             __('Upload', 'wooptionsfic')),
                         wp.element.createElement("span", null, __('Click or drag and drop', 'wooptionsfic')),
                         wp.element.createElement("small", null, maxFiles === 1 ? `${maxMb} MB max` : `Up to ${maxFiles} files, ${maxMb} MB each`))));

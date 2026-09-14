@@ -984,7 +984,7 @@ final class Renderer {
 		echo $maximum_files > 1 ? ' multiple' : '';
 		echo '>';
 		echo '<span class="wof-upload__button" aria-hidden="true">';
-		echo '<svg viewBox="0 0 24 24" focusable="false" aria-hidden="true"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4.25A1.75 1.75 0 0 0 6.75 20h10.5A1.75 1.75 0 0 0 19 18.25V14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+		echo '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>';
 		echo esc_html__('Upload', 'wooptionsfic') . '</span>';
 		echo '<span class="wof-upload__hint">' . esc_html__('Click or drag and drop', 'wooptionsfic') . '</span>';
 		echo '<small class="wof-upload__limit">' . sprintf(esc_html__('Up to %1$d file(s), %2$d MB each', 'wooptionsfic'), $maximum_files, $maximum_mb) . '</small>';
