@@ -568,6 +568,21 @@ var WooOptionsFic;
                 field.maxTime = '12:00 PM';
                 field.timeFormat = '12';
             }
+            if (type === 'date_range') {
+                field.dateFormat = 'DD/MM/YYYY';
+                field.minDateType = 'none';
+                field.minDateCustom = '';
+                field.maxDateType = 'none';
+                field.maxDateCustom = '';
+                field.disableToday = false;
+                field.disableNextNDays = 0;
+                field.disabledDates = [];
+                field.disabledWeekdays = [];
+                field.disabledMonthlyDays = '';
+                field.minDays = 0;
+                field.maxDays = 0;
+                field.allowSameDay = true;
+            }
             if (['text', 'textarea', 'password', 'tel', 'email', 'url', 'number', 'range', 'quantity', 'date', 'date_range', 'time', 'datetime', 'customer_defined_price', 'color_picker'].includes(type)) {
                 field.placeholder = '';
                 field.min = null;
@@ -2278,6 +2293,24 @@ var WooOptionsFic;
                         clockSvg,
                         wp.element.createElement("span", { className: "wof-picker-text" }, timeExample))));
             }
+            if (field.type === 'date_range') {
+                const calendarSvg = (wp.element.createElement("svg", { className: "wof-picker-icon", width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                    wp.element.createElement("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2", ry: "2" }),
+                    wp.element.createElement("line", { x1: "16", y1: "2", x2: "16", y2: "6" }),
+                    wp.element.createElement("line", { x1: "8", y1: "2", x2: "8", y2: "6" }),
+                    wp.element.createElement("line", { x1: "3", y1: "10", x2: "21", y2: "10" })));
+                const sampleFormat = field.dateFormat === 'wp_default' ? 'Jul 30, 2025' : (field.dateFormat || 'DD/MM/YYYY');
+                const startPlaceholder = field.placeholder || sampleFormat;
+                const endPlaceholder = sampleFormat;
+                return (wp.element.createElement("div", { className: "wof-custom-daterange-preview", style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+                    wp.element.createElement("div", { className: "wof-custom-picker-input", style: { flex: 1 } },
+                        calendarSvg,
+                        wp.element.createElement("span", { className: "wof-picker-text" }, startPlaceholder)),
+                    wp.element.createElement("span", { className: "wof-custom-daterange-preview__sep", style: { color: '#94a3b8', fontSize: '13px', fontWeight: 600 } }, "\u2192"),
+                    wp.element.createElement("div", { className: "wof-custom-picker-input", style: { flex: 1 } },
+                        calendarSvg,
+                        wp.element.createElement("span", { className: "wof-picker-text" }, endPlaceholder))));
+            }
             const inputType = {
                 password: 'password', tel: 'tel', email: 'email', url: 'url', number: 'number', quantity: 'number', customer_defined_price: 'number',
             };
@@ -3132,6 +3165,88 @@ var WooOptionsFic;
                                 return (wp.element.createElement("button", { type: "button", key: fmt.value, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ timeFormat: fmt.value }) }, fmt.label));
                             })))))) : null));
         }
+        function DateRangeFieldInspector(props) {
+            const { field, update } = props;
+            const [showAddDatePicker, setShowAddDatePicker] = useState(false);
+            return (wp.element.createElement("div", { className: "wof-datetime-settings-wrap" },
+                wp.element.createElement("div", { className: "wof-datetime-box" },
+                    wp.element.createElement(SelectControl, { label: __('Date Format', 'wooptionsfic'), value: field.dateFormat ?? 'DD/MM/YYYY', options: DATE_FORMAT_OPTIONS, onChange: (dateFormat) => update({ dateFormat }) }),
+                    wp.element.createElement("div", { style: { marginBottom: '14px' } },
+                        wp.element.createElement("span", { className: "wof-datetime-label" }, __('Min Date', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: 0 } },
+                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Min Date', 'wooptionsfic') }, [
+                                { label: __('None', 'wooptionsfic'), value: 'none' },
+                                { label: __('Current Day', 'wooptionsfic'), value: 'current_day' },
+                                { label: __('Custom', 'wooptionsfic'), value: 'custom' },
+                            ].map((m) => {
+                                const isSelected = (field.minDateType || 'none') === m.value;
+                                return (wp.element.createElement("button", { type: "button", key: m.value, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ minDateType: m.value }) }, m.label));
+                            }))),
+                        field.minDateType === 'custom' ? (wp.element.createElement("div", { style: { marginTop: '8px' } },
+                            wp.element.createElement(DatePickerField, { value: field.minDateCustom ?? '', placeholder: __('Select min date...', 'wooptionsfic'), onChange: (minDateCustom) => update({ minDateCustom }) }))) : null),
+                    wp.element.createElement("div", { style: { marginBottom: '14px' } },
+                        wp.element.createElement("span", { className: "wof-datetime-label" }, __('Max Date', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: 0 } },
+                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Max Date', 'wooptionsfic') }, [
+                                { label: __('None', 'wooptionsfic'), value: 'none' },
+                                { label: __('Current Day', 'wooptionsfic'), value: 'current_day' },
+                                { label: __('Custom', 'wooptionsfic'), value: 'custom' },
+                            ].map((m) => {
+                                const isSelected = (field.maxDateType || 'none') === m.value;
+                                return (wp.element.createElement("button", { type: "button", key: m.value, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ maxDateType: m.value }) }, m.label));
+                            }))),
+                        field.maxDateType === 'custom' ? (wp.element.createElement("div", { style: { marginTop: '8px' } },
+                            wp.element.createElement(DatePickerField, { value: field.maxDateCustom ?? '', placeholder: __('Select max date...', 'wooptionsfic'), onChange: (maxDateCustom) => update({ maxDateCustom }) }))) : null),
+                    wp.element.createElement(ToggleControl, { label: __('Disable Today', 'wooptionsfic'), checked: Boolean(field.disableToday), onChange: (disableToday) => update({ disableToday }) }),
+                    wp.element.createElement(TextControl, { label: __('Disable Next N Days', 'wooptionsfic'), type: "number", min: 0, value: String(field.disableNextNDays ?? 0), help: __('Disable N days after today (e.g. 3 disables tomorrow, day after tomorrow, and one more)', 'wooptionsfic'), onChange: (val) => update({ disableNextNDays: Math.max(0, parseInt(val, 10) || 0) }) }),
+                    wp.element.createElement("div", { style: { marginBottom: '14px' } },
+                        wp.element.createElement("span", { className: "wof-datetime-label", style: { marginBottom: '8px' } }, __('Disable Specific Dates', 'wooptionsfic')),
+                        wp.element.createElement("div", { style: { position: 'relative', display: 'inline-block' } },
+                            wp.element.createElement("button", { type: "button", className: "wof-btn-add-date", onClick: () => setShowAddDatePicker(!showAddDatePicker) },
+                                wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                    wp.element.createElement("line", { x1: "12", y1: "5", x2: "12", y2: "19" }),
+                                    wp.element.createElement("line", { x1: "5", y1: "12", x2: "19", y2: "12" })),
+                                __('Add Date', 'wooptionsfic')),
+                            showAddDatePicker ? (wp.element.createElement(DatePickerPopup, { onSelect: (dateStr) => {
+                                    const current = Array.isArray(field.disabledDates) ? [...field.disabledDates] : [];
+                                    if (!current.includes(dateStr)) {
+                                        update({ disabledDates: [...current, dateStr] });
+                                    }
+                                    setShowAddDatePicker(false);
+                                }, onClose: () => setShowAddDatePicker(false) })) : null),
+                        Array.isArray(field.disabledDates) && field.disabledDates.length > 0 ? (wp.element.createElement("div", { className: "wof-disabled-dates-list" }, field.disabledDates.map((dateVal, idx) => (wp.element.createElement("div", { key: idx, className: "wof-disabled-date-item" },
+                            wp.element.createElement("div", { className: "wof-disabled-date-badge" },
+                                wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                    wp.element.createElement("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2", ry: "2" }),
+                                    wp.element.createElement("line", { x1: "16", y1: "2", x2: "16", y2: "6" }),
+                                    wp.element.createElement("line", { x1: "8", y1: "2", x2: "8", y2: "6" }),
+                                    wp.element.createElement("line", { x1: "3", y1: "10", x2: "21", y2: "10" })),
+                                wp.element.createElement("span", null, dateVal)),
+                            wp.element.createElement("button", { type: "button", className: "wof-disabled-date-delete-btn", title: __('Remove date', 'wooptionsfic'), onClick: () => {
+                                    const next = [...(field.disabledDates ?? [])];
+                                    next.splice(idx, 1);
+                                    update({ disabledDates: next });
+                                } },
+                                wp.element.createElement("svg", { width: "15", height: "15", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                    wp.element.createElement("line", { x1: "18", y1: "6", x2: "6", y2: "18" }),
+                                    wp.element.createElement("line", { x1: "6", y1: "6", x2: "18", y2: "18" })))))))) : null),
+                    wp.element.createElement("div", { style: { marginBottom: '14px' } },
+                        wp.element.createElement("span", { className: "wof-datetime-label" }, __('Disable Weekdays', 'wooptionsfic')),
+                        wp.element.createElement(MultiSelectDropdown, { placeholder: __('Select weekdays to disable...', 'wooptionsfic'), options: WEEKDAY_OPTIONS, selectedValues: Array.isArray(field.disabledWeekdays) ? field.disabledWeekdays : [], onChange: (selected) => update({ disabledWeekdays: selected.map(Number) }) })),
+                    wp.element.createElement("div", { style: { marginBottom: '14px' } },
+                        wp.element.createElement("span", { className: "wof-datetime-label" }, __('Disable Monthly Days', 'wooptionsfic')),
+                        wp.element.createElement(MultiSelectDropdown, { placeholder: __('Select monthly days to disable...', 'wooptionsfic'), options: MONTHLY_DAY_OPTIONS, selectedValues: String(field.disabledMonthlyDays || '')
+                                .split(',')
+                                .map((s) => parseInt(s.trim(), 10))
+                                .filter((n) => !isNaN(n)), onChange: (selected) => {
+                                const sorted = [...selected].map(Number).sort((a, b) => a - b);
+                                update({ disabledMonthlyDays: sorted.join(', ') });
+                            } })),
+                    wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px' } },
+                        wp.element.createElement(TextControl, { label: __('Min Days', 'wooptionsfic'), type: "number", min: 0, value: String(field.minDays ?? 0), help: __('Min duration (0 for none)', 'wooptionsfic'), onChange: (val) => update({ minDays: Math.max(0, parseInt(val, 10) || 0) }) }),
+                        wp.element.createElement(TextControl, { label: __('Max Days', 'wooptionsfic'), type: "number", min: 0, value: String(field.maxDays ?? 0), help: __('Max duration (0 for none)', 'wooptionsfic'), onChange: (val) => update({ maxDays: Math.max(0, parseInt(val, 10) || 0) }) })),
+                    wp.element.createElement(ToggleControl, { label: __('Allow Same Day Selection', 'wooptionsfic'), help: __('Allow start and end date to be on the same day', 'wooptionsfic'), checked: field.allowSameDay !== false, onChange: (allowSameDay) => update({ allowSameDay }) }))));
+        }
         function renderTimeInput(value, format, onChange) {
             const is12 = format === '12';
             const match = (value || '').match(/(\d{1,2}):(\d{2})(?:\s*([AP]M))?/i);
@@ -3400,6 +3515,7 @@ var WooOptionsFic;
                                 ], onChange: (flagStyle) => update({ flagStyle }) }),
                             (field.flagStyle === 'number_flag' || field.flagStyle === 'number_flag_dialcode') ? (wp.element.createElement(SelectControl, { label: __('Default Country', 'wooptionsfic'), value: field.defaultCountry ?? 'US', options: COUNTRY_OPTIONS, onChange: (defaultCountry) => update({ defaultCountry }) })) : null)) : null,
                         ['datetime', 'date', 'time'].includes(field.type) ? (wp.element.createElement(DateFieldInspector, { field: field, update: update })) : null,
+                        field.type === 'date_range' ? (wp.element.createElement(DateRangeFieldInspector, { field: field, update: update })) : null,
                         ['color_swatch', 'image_swatch', 'segmented'].includes(field.type) ? (wp.element.createElement("div", { className: "wof-multiple-choice-settings", style: { marginBottom: '16px' } },
                             wp.element.createElement(ToggleControl, { label: __('Allow Multiple Choices', 'wooptionsfic'), help: __('Allow customers to select more than one option.', 'wooptionsfic'), checked: Boolean(field.multiple), onChange: (multiple) => update({ multiple }) }),
                             field.multiple ? (wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' } },

@@ -17,11 +17,11 @@
         savedUuid = "";
         productImageSnapshot = null;
         constructor(e) { this.root = e; const t = e.querySelector("[data-wof-config]"); if (!t?.textContent)
-            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
-        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
+            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.initCustomDateRanges(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
+        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
-            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy") || (e.preventDefault(), this.requestQuote(!0)); }), this.form && window.jQuery) {
+            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy") || (e.preventDefault(), this.requestQuote(!0)); }), this.form && window.jQuery) {
             const e = () => this.scheduleQuote(50);
             window.jQuery(this.form).on("found_variation.wooptionsfic reset_data.wooptionsfic", e);
         } }
@@ -514,6 +514,288 @@
             this.closeAllCustomDateTimes();
             this.selectionChanged(hiddenInput);
         }
+        initCustomDateRanges() {
+            this.root.querySelectorAll("[data-wof-custom-daterange]").forEach(elem => {
+                this.syncCustomDateRange(elem);
+            });
+        }
+        syncCustomDateRange(elem) {
+            const startInput = elem.querySelector("[data-wof-daterange-start]");
+            const endInput = elem.querySelector("[data-wof-daterange-end]");
+            const config = this.getDateRangeConfig(elem);
+            if (startInput && startInput.value) {
+                const sDisplay = elem.querySelector('[data-wof-daterange-display="start"]');
+                if (sDisplay) sDisplay.textContent = this.formatDateDisplay(startInput.value, config.dateFormat, config.wpDateFormat);
+            }
+            if (endInput && endInput.value) {
+                const eDisplay = elem.querySelector('[data-wof-daterange-display="end"]');
+                if (eDisplay) eDisplay.textContent = this.formatDateDisplay(endInput.value, config.dateFormat, config.wpDateFormat);
+            }
+        }
+        getDateRangeConfig(elem) {
+            try {
+                return JSON.parse(elem.dataset.wofDaterangeConfig || "{}");
+            } catch {
+                return {};
+            }
+        }
+        closeAllCustomDateRanges(except = null) {
+            document.querySelectorAll("[data-wof-custom-daterange].is-open").forEach(elem => {
+                if (elem !== except) {
+                    elem.classList.remove("is-open");
+                    elem.querySelectorAll("[data-wof-daterange-trigger]").forEach(t => t.setAttribute("aria-expanded", "false"));
+                }
+            });
+        }
+        toggleCustomDateRange(trigger) {
+            const container = trigger.closest("[data-wof-custom-daterange]");
+            if (!container) return;
+            const mode = trigger.dataset.wofDaterangeTrigger || "start";
+            const dropdown = container.querySelector("[data-wof-daterange-dropdown]");
+            if (!dropdown) return;
+            const isCurrentlyOpen = container.classList.contains("is-open") && container.dataset.wofActiveRangeMode === mode;
+            if (isCurrentlyOpen) {
+                this.closeAllCustomDateRanges();
+                return;
+            }
+            this.closeAllCustomDateRanges(container);
+            this.closeAllCustomDateTimes();
+            this.closeAllCustomSelects();
+            container.classList.add("is-open");
+            container.dataset.wofActiveRangeMode = mode;
+            container.querySelectorAll("[data-wof-daterange-trigger]").forEach(t => {
+                t.setAttribute("aria-expanded", t === trigger ? "true" : "false");
+            });
+
+            const isRtl = document.documentElement.dir === "rtl" || document.body.classList.contains("rtl");
+            if (mode === "end") {
+                dropdown.style.left = isRtl ? "0" : "auto";
+                dropdown.style.right = isRtl ? "auto" : "0";
+            } else {
+                dropdown.style.left = isRtl ? "auto" : "0";
+                dropdown.style.right = isRtl ? "0" : "auto";
+            }
+
+            const config = this.getDateRangeConfig(container);
+            this.openDateRangeCalendar(container, dropdown, config, null, mode);
+        }
+        openDateRangeCalendar(container, dropdown, config, viewDate = null, activeMode = "start") {
+            const startInput = container.querySelector("[data-wof-daterange-start]");
+            const endInput = container.querySelector("[data-wof-daterange-end]");
+            const startVal = startInput ? startInput.value : "";
+            const endVal = endInput ? endInput.value : "";
+
+            let dateToView = viewDate;
+            if (!dateToView) {
+                if (activeMode === "end" && endVal) {
+                    dateToView = this.parseDateString(endVal);
+                } else if (startVal) {
+                    dateToView = this.parseDateString(startVal);
+                }
+            }
+            if (!dateToView || isNaN(dateToView.getTime())) {
+                dateToView = new Date();
+            }
+
+            const year = dateToView.getFullYear();
+            const month = dateToView.getMonth();
+
+            const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+            const dayNames = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+
+            const firstDayIndex = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const prevMonthDays = new Date(year, month, 0).getDate();
+
+            const today = new Date();
+            const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+            let html = '<div class="wof-calendar">';
+            html += '<div class="wof-calendar-header">';
+            html += '<button type="button" class="wof-calendar-nav is-prev" aria-label="Previous month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg></button>';
+            html += `<span class="wof-calendar-title">${monthNames[month]} ${year}</span>`;
+            html += '<button type="button" class="wof-calendar-nav is-next" aria-label="Next month"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></button>';
+            html += '</div>';
+
+            html += '<div class="wof-calendar-weekdays">';
+            dayNames.forEach(d => { html += `<span>${d}</span>`; });
+            html += '</div>';
+
+            html += '<div class="wof-calendar-days">';
+            for (let i = firstDayIndex - 1; i >= 0; i--) {
+                const dayNum = prevMonthDays - i;
+                html += `<span class="wof-calendar-day is-other-month is-disabled">${dayNum}</span>`;
+            }
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const isDisabled = this.isDateRangeDateDisabled(dateStr, year, month, day, config, activeMode, startVal, endVal);
+                const isToday = dateStr === todayStr;
+                const isStart = dateStr === startVal;
+                const isEnd = dateStr === endVal;
+                const isInRange = startVal && endVal && dateStr > startVal && dateStr < endVal;
+
+                const classes = ["wof-calendar-day"];
+                if (isDisabled) classes.push("is-disabled");
+                if (isStart) classes.push("is-range-start", "is-selected");
+                if (isEnd) classes.push("is-range-end", "is-selected");
+                if (isInRange) classes.push("is-in-range");
+                if (isToday) classes.push("is-today");
+
+                html += `<button type="button" class="${classes.join(' ')}" data-wof-cal-date="${dateStr}" ${isDisabled ? 'disabled' : ''}>${day}</button>`;
+            }
+            html += '</div>';
+            html += '</div>';
+
+            dropdown.innerHTML = html;
+
+            dropdown.querySelector(".is-prev")?.addEventListener("click", e => {
+                e.stopPropagation();
+                this.openDateRangeCalendar(container, dropdown, config, new Date(year, month - 1, 1), activeMode);
+            });
+            dropdown.querySelector(".is-next")?.addEventListener("click", e => {
+                e.stopPropagation();
+                this.openDateRangeCalendar(container, dropdown, config, new Date(year, month + 1, 1), activeMode);
+            });
+            dropdown.querySelectorAll("[data-wof-cal-date]").forEach(btn => {
+                btn.addEventListener("click", e => {
+                    e.stopPropagation();
+                    const selectedDate = btn.dataset.wofCalDate;
+                    this.onDateRangeSelected(container, selectedDate, config, activeMode);
+                });
+
+                if (activeMode === "end" && startVal) {
+                    btn.addEventListener("mouseenter", () => {
+                        const hoveredDate = btn.dataset.wofCalDate;
+                        if (!hoveredDate || hoveredDate <= startVal) return;
+                        dropdown.querySelectorAll("[data-wof-cal-date]").forEach(cell => {
+                            const d = cell.dataset.wofCalDate;
+                            if (d > startVal && d < hoveredDate && !cell.classList.contains("is-disabled")) {
+                                cell.classList.add("is-in-range-preview");
+                            } else {
+                                cell.classList.remove("is-in-range-preview");
+                            }
+                        });
+                    });
+                }
+            });
+
+            if (activeMode === "end" && startVal) {
+                dropdown.querySelector(".wof-calendar-days")?.addEventListener("mouseleave", () => {
+                    dropdown.querySelectorAll(".is-in-range-preview").forEach(cell => {
+                        cell.classList.remove("is-in-range-preview");
+                    });
+                });
+            }
+        }
+        isDateRangeDateDisabled(dateStr, year, month, day, config, activeMode, startVal, endVal) {
+            if (this.isDateDisabled(dateStr, year, month, day, config)) return true;
+
+            const curDate = new Date(year, month, day);
+            curDate.setHours(0, 0, 0, 0);
+
+            if (activeMode === "end" && startVal) {
+                const startDate = this.parseDateString(startVal);
+                if (startDate) {
+                    startDate.setHours(0, 0, 0, 0);
+                    if (!config.allowSameDay && curDate.getTime() <= startDate.getTime()) return true;
+                    if (config.allowSameDay && curDate.getTime() < startDate.getTime()) return true;
+
+                    const diffMs = curDate.getTime() - startDate.getTime();
+                    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+
+                    if (config.minDays > 0 && diffDays < config.minDays) return true;
+                    if (config.maxDays > 0 && diffDays > config.maxDays) return true;
+                }
+            } else if (activeMode === "start" && endVal) {
+                const endDate = this.parseDateString(endVal);
+                if (endDate) {
+                    endDate.setHours(0, 0, 0, 0);
+                    if (!config.allowSameDay && curDate.getTime() >= endDate.getTime()) return true;
+                    if (config.allowSameDay && curDate.getTime() > endDate.getTime()) return true;
+
+                    const diffMs = endDate.getTime() - curDate.getTime();
+                    const diffDays = Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1;
+
+                    if (config.minDays > 0 && diffDays < config.minDays) return true;
+                    if (config.maxDays > 0 && diffDays > config.maxDays) return true;
+                }
+            }
+
+            return false;
+        }
+        onDateRangeSelected(container, selectedDate, config, activeMode) {
+            const startInput = container.querySelector("[data-wof-daterange-start]");
+            const endInput = container.querySelector("[data-wof-daterange-end]");
+            const startDisplay = container.querySelector('[data-wof-daterange-display="start"]');
+            const endDisplay = container.querySelector('[data-wof-daterange-display="end"]');
+            const dropdown = container.querySelector("[data-wof-daterange-dropdown]");
+
+            let startVal = startInput ? startInput.value : "";
+            let endVal = endInput ? endInput.value : "";
+
+            if (activeMode === "start") {
+                startVal = selectedDate;
+                if (startInput) startInput.value = startVal;
+                if (startDisplay) {
+                    startDisplay.textContent = this.formatDateDisplay(startVal, config.dateFormat, config.wpDateFormat);
+                }
+
+                let needNewEnd = false;
+                if (endVal) {
+                    const sDate = this.parseDateString(startVal);
+                    const eDate = this.parseDateString(endVal);
+                    if (sDate && eDate) {
+                        const diffDays = Math.round((eDate.getTime() - sDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                        if ((!config.allowSameDay && eDate <= sDate) || (config.allowSameDay && eDate < sDate) ||
+                            (config.minDays > 0 && diffDays < config.minDays) ||
+                            (config.maxDays > 0 && diffDays > config.maxDays)) {
+                            needNewEnd = true;
+                        }
+                    } else {
+                        needNewEnd = true;
+                    }
+                } else {
+                    needNewEnd = true;
+                }
+
+                if (needNewEnd) {
+                    endVal = "";
+                    if (endInput) endInput.value = "";
+                    if (endDisplay) {
+                        endDisplay.textContent = endDisplay.dataset.wofPlaceholder || (config.dateFormat === "wp_default" ? "Jul 30, 2025" : (config.dateFormat || "DD/MM/YYYY"));
+                    }
+                    container.dataset.wofActiveRangeMode = "end";
+                    const isRtl = document.documentElement.dir === "rtl" || document.body.classList.contains("rtl");
+                    if (dropdown) {
+                        dropdown.style.left = isRtl ? "0" : "auto";
+                        dropdown.style.right = isRtl ? "auto" : "0";
+                    }
+                    const startTrigger = container.querySelector('[data-wof-daterange-trigger="start"]');
+                    const endTrigger = container.querySelector('[data-wof-daterange-trigger="end"]');
+                    startTrigger?.setAttribute("aria-expanded", "false");
+                    endTrigger?.setAttribute("aria-expanded", "true");
+                    if (dropdown) {
+                        this.openDateRangeCalendar(container, dropdown, config, this.parseDateString(startVal), "end");
+                    }
+                    return;
+                }
+
+                if (startInput) startInput.dispatchEvent(new Event("change", { bubbles: true }));
+                this.closeAllCustomDateRanges();
+                this.selectionChanged(startInput);
+            } else {
+                endVal = selectedDate;
+                if (endInput) endInput.value = endVal;
+                if (endDisplay) {
+                    endDisplay.textContent = this.formatDateDisplay(endVal, config.dateFormat, config.wpDateFormat);
+                }
+
+                if (startInput) startInput.dispatchEvent(new Event("change", { bubbles: true }));
+                if (endInput) endInput.dispatchEvent(new Event("change", { bubbles: true }));
+                this.closeAllCustomDateRanges();
+                this.selectionChanged(startInput || endInput);
+            }
+        }
         selectionChanged(e) { this.updateColorOutputs(), this.updateProductImage(e), this.enforceMaxChoices(); if (this.clearFieldError(e.closest("[data-wof-field]")), this.scheduleQuote(), !this.interactionRecorded) {
             this.interactionRecorded = !0;
             const t = e.closest("[data-wof-field]"), r = { setUuid: this.configuration.setUuid, revisionUuid: this.configuration.revisionUuid, variationId: this.variationId(), token: this.payload.token, fieldUuid: t?.dataset.wofField ?? "", choiceUuid: e.matches('input[type="radio"],input[type="checkbox"]') && /^[0-9a-f-]{36}$/i.test(e.value) ? e.value : "" };
@@ -580,8 +862,9 @@
                 return o.querySelector('input[type="radio"]:checked')?.value ?? "";
             } if ("product" === e.type)
             return Array.from(o.querySelectorAll("input:checked")).map(e => e.value); if ("date_range" === e.type) {
-            const e = o.querySelectorAll('input[type="date"]');
-            return { start: e[0]?.value ?? "", end: e[1]?.value ?? "" };
+            const start = o.querySelector('[data-wof-daterange-start]')?.value ?? o.querySelectorAll('input[type="date"]')[0]?.value ?? "";
+            const end = o.querySelector('[data-wof-daterange-end]')?.value ?? o.querySelectorAll('input[type="date"]')[1]?.value ?? "";
+            return { start, end };
         } if ("tel" === e.type) {
             const wrap = o.querySelector("[data-wof-phone-wrap]");
             if (wrap) {
@@ -699,6 +982,21 @@
             }
             if (code === "field_invalid_datetime" || code === "invalid_datetime") {
                 return `Please select a valid date and time for ${name}.`;
+            }
+            if (code.includes("incomplete_date_range")) {
+                return `Please select both start and end dates for ${name}.`;
+            }
+            if (code.includes("invalid_date_range_order")) {
+                return `${name}: End date must be on or after start date.`;
+            }
+            if (code.includes("same_day_not_allowed")) {
+                return `${name}: Start and end date cannot be the same day.`;
+            }
+            if (code.includes("date_range_too_short")) {
+                return min ? `${name}: Date range must be at least ${min} days.` : `${name}: Date range is too short.`;
+            }
+            if (code.includes("date_range_too_long")) {
+                return max ? `${name}: Date range cannot exceed ${max} days.` : `${name}: Date range is too long.`;
             }
             if (code === "field_invalid_date_range" || code === "invalid_date_range") {
                 return `${name}: End date must be on or after start date.`;

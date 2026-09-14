@@ -2999,3 +2999,77 @@
 .wof-timepicker-apply-btn:hover {
 	opacity: 0.9;
 }
+
+/* Custom Date Range Picker */
+.wof-custom-daterange {
+	position: relative;
+	width: 100%;
+}
+
+.wof-custom-daterange__group {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.wof-custom-daterange__group .wof-custom-datetime__trigger {
+	flex: 1;
+}
+
+.wof-custom-daterange__sep {
+	color: var(--wof-muted, #94a3b8);
+	font-size: 14px;
+	font-weight: 600;
+	flex-shrink: 0;
+	user-select: none;
+}
+
+.wof-custom-daterange.is-open {
+	z-index: 1050;
+}
+
+.wof-custom-daterange.is-open .wof-custom-datetime__dropdown {
+	display: block;
+}
+
+.wof-custom-daterange[data-wof-active-range-mode="end"] .wof-custom-datetime__dropdown {
+	left: auto;
+	right: 0;
+}
+
+.wof-custom-daterange[data-wof-active-range-mode="start"] .wof-custom-datetime__dropdown {
+	left: 0;
+	right: auto;
+}
+
+/* Range calendar day styles */
+.wof-calendar-day.is-in-range {
+	background: color-mix(in srgb, var(--wof-primary, #5b4ff5) 14%, var(--wof-surface, #ffffff)) !important;
+	color: var(--wof-text, #1e293b) !important;
+	border-radius: 0 !important;
+}
+
+.wof-calendar-day.is-in-range-preview {
+	background: color-mix(in srgb, var(--wof-primary, #5b4ff5) 8%, var(--wof-surface, #ffffff)) !important;
+	border-radius: 0 !important;
+}
+
+.wof-calendar-day.is-range-start {
+	background: var(--wof-primary, #5b4ff5) !important;
+	color: #ffffff !important;
+	font-weight: 700 !important;
+	border-top-right-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
+}
+
+.wof-calendar-day.is-range-end {
+	background: var(--wof-primary, #5b4ff5) !important;
+	color: #ffffff !important;
+	font-weight: 700 !important;
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
+}
+
+.wof-calendar-day.is-range-start.is-range-end {
+	border-radius: 4px !important;
+}

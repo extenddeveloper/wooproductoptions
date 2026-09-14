@@ -10188,3 +10188,12 @@
 	color: #475569;
 	font-size: 13px;
 }
+.wof-custom-daterange-preview {
+	width: 100%;
+}
+.wof-custom-daterange-preview__sep {
+	color: #94a3b8;
+	font-size: 14px;
+	font-weight: 600;
+	flex-shrink: 0;
+}

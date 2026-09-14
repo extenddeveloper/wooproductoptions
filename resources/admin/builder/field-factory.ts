@@ -85,6 +85,22 @@ namespace WooOptionsFic.FieldFactory {
       field.timeFormat = '12';
     }
 
+    if (type === 'date_range') {
+      field.dateFormat = 'DD/MM/YYYY';
+      field.minDateType = 'none';
+      field.minDateCustom = '';
+      field.maxDateType = 'none';
+      field.maxDateCustom = '';
+      field.disableToday = false;
+      field.disableNextNDays = 0;
+      field.disabledDates = [];
+      field.disabledWeekdays = [];
+      field.disabledMonthlyDays = '';
+      field.minDays = 0;
+      field.maxDays = 0;
+      field.allowSameDay = true;
+    }
+
     if (['text', 'textarea', 'password', 'tel', 'email', 'url', 'number', 'range', 'quantity', 'date', 'date_range', 'time', 'datetime', 'customer_defined_price', 'color_picker'].includes(type)) {
       field.placeholder = '';
       field.min = null;

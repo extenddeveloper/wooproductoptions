@@ -644,6 +644,225 @@ namespace WooOptionsFic.Builder {
     );
   }
 
+  function DateRangeFieldInspector(props: {
+    field: WooOptionsFic.FieldDefinition;
+    update: (patch: Partial<WooOptionsFic.FieldDefinition>) => void;
+  }): any {
+    const { field, update } = props;
+    const [showAddDatePicker, setShowAddDatePicker] = useState(false);
+
+    return (
+      <div className="wof-datetime-settings-wrap">
+        <div className="wof-datetime-box">
+          <SelectControl
+            label={__('Date Format', 'wooptionsfic')}
+            value={field.dateFormat ?? 'DD/MM/YYYY'}
+            options={DATE_FORMAT_OPTIONS}
+            onChange={(dateFormat: string) => update({ dateFormat })}
+          />
+
+          {/* Min Date */}
+          <div style={{ marginBottom: '14px' }}>
+            <span className="wof-datetime-label">{__('Min Date', 'wooptionsfic')}</span>
+            <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
+              <div className="wof-field-width-group" role="radiogroup" aria-label={__('Min Date', 'wooptionsfic')}>
+                {([
+                  { label: __('None', 'wooptionsfic'), value: 'none' },
+                  { label: __('Current Day', 'wooptionsfic'), value: 'current_day' },
+                  { label: __('Custom', 'wooptionsfic'), value: 'custom' },
+                ] as const).map((m) => {
+                  const isSelected = (field.minDateType || 'none') === m.value;
+                  return (
+                    <button
+                      type="button"
+                      key={m.value}
+                      role="radio"
+                      aria-checked={isSelected}
+                      className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                      onClick={() => update({ minDateType: m.value })}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            {field.minDateType === 'custom' ? (
+              <div style={{ marginTop: '8px' }}>
+                <DatePickerField
+                  value={field.minDateCustom ?? ''}
+                  placeholder={__('Select min date...', 'wooptionsfic')}
+                  onChange={(minDateCustom: string) => update({ minDateCustom })}
+                />
+              </div>
+            ) : null}
+          </div>
+
+          {/* Max Date */}
+          <div style={{ marginBottom: '14px' }}>
+            <span className="wof-datetime-label">{__('Max Date', 'wooptionsfic')}</span>
+            <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
+              <div className="wof-field-width-group" role="radiogroup" aria-label={__('Max Date', 'wooptionsfic')}>
+                {([
+                  { label: __('None', 'wooptionsfic'), value: 'none' },
+                  { label: __('Current Day', 'wooptionsfic'), value: 'current_day' },
+                  { label: __('Custom', 'wooptionsfic'), value: 'custom' },
+                ] as const).map((m) => {
+                  const isSelected = (field.maxDateType || 'none') === m.value;
+                  return (
+                    <button
+                      type="button"
+                      key={m.value}
+                      role="radio"
+                      aria-checked={isSelected}
+                      className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                      onClick={() => update({ maxDateType: m.value })}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            {field.maxDateType === 'custom' ? (
+              <div style={{ marginTop: '8px' }}>
+                <DatePickerField
+                  value={field.maxDateCustom ?? ''}
+                  placeholder={__('Select max date...', 'wooptionsfic')}
+                  onChange={(maxDateCustom: string) => update({ maxDateCustom })}
+                />
+              </div>
+            ) : null}
+          </div>
+
+          <ToggleControl
+            label={__('Disable Today', 'wooptionsfic')}
+            checked={Boolean(field.disableToday)}
+            onChange={(disableToday: boolean) => update({ disableToday })}
+          />
+
+          <TextControl
+            label={__('Disable Next N Days', 'wooptionsfic')}
+            type="number"
+            min={0}
+            value={String(field.disableNextNDays ?? 0)}
+            help={__('Disable N days after today (e.g. 3 disables tomorrow, day after tomorrow, and one more)', 'wooptionsfic')}
+            onChange={(val: string) => update({ disableNextNDays: Math.max(0, parseInt(val, 10) || 0) })}
+          />
+
+          {/* Disable Specific Dates with Custom Datepicker Popover */}
+          <div style={{ marginBottom: '14px' }}>
+            <span className="wof-datetime-label" style={{ marginBottom: '8px' }}>{__('Disable Specific Dates', 'wooptionsfic')}</span>
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <button
+                type="button"
+                className="wof-btn-add-date"
+                onClick={() => setShowAddDatePicker(!showAddDatePicker)}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                {__('Add Date', 'wooptionsfic')}
+              </button>
+              {showAddDatePicker ? (
+                <DatePickerPopup
+                  onSelect={(dateStr) => {
+                    const current = Array.isArray(field.disabledDates) ? [...field.disabledDates] : [];
+                    if (!current.includes(dateStr)) {
+                      update({ disabledDates: [...current, dateStr] });
+                    }
+                    setShowAddDatePicker(false);
+                  }}
+                  onClose={() => setShowAddDatePicker(false)}
+                />
+              ) : null}
+            </div>
+            {Array.isArray(field.disabledDates) && field.disabledDates.length > 0 ? (
+              <div className="wof-disabled-dates-list">
+                {field.disabledDates.map((dateVal, idx) => (
+                  <div key={idx} className="wof-disabled-date-item">
+                    <div className="wof-disabled-date-badge">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                      <span>{dateVal}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="wof-disabled-date-delete-btn"
+                      title={__('Remove date', 'wooptionsfic')}
+                      onClick={() => {
+                        const next = [...(field.disabledDates ?? [])];
+                        next.splice(idx, 1);
+                        update({ disabledDates: next });
+                      }}
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          {/* Disable Weekdays Multiselect */}
+          <div style={{ marginBottom: '14px' }}>
+            <span className="wof-datetime-label">{__('Disable Weekdays', 'wooptionsfic')}</span>
+            <MultiSelectDropdown
+              placeholder={__('Select weekdays to disable...', 'wooptionsfic')}
+              options={WEEKDAY_OPTIONS}
+              selectedValues={Array.isArray(field.disabledWeekdays) ? field.disabledWeekdays : []}
+              onChange={(selected) => update({ disabledWeekdays: selected.map(Number) })}
+            />
+          </div>
+
+          {/* Disable Monthly Days Multiselect */}
+          <div style={{ marginBottom: '14px' }}>
+            <span className="wof-datetime-label">{__('Disable Monthly Days', 'wooptionsfic')}</span>
+            <MultiSelectDropdown
+              placeholder={__('Select monthly days to disable...', 'wooptionsfic')}
+              options={MONTHLY_DAY_OPTIONS}
+              selectedValues={
+                String(field.disabledMonthlyDays || '')
+                  .split(',')
+                  .map((s) => parseInt(s.trim(), 10))
+                  .filter((n) => !isNaN(n))
+              }
+              onChange={(selected) => {
+                const sorted = [...selected].map(Number).sort((a, b) => a - b);
+                update({ disabledMonthlyDays: sorted.join(', ') });
+              }}
+            />
+          </div>
+
+          {/* Min Days & Max Days Duration */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '14px' }}>
+            <TextControl
+              label={__('Min Days', 'wooptionsfic')}
+              type="number"
+              min={0}
+              value={String(field.minDays ?? 0)}
+              help={__('Min duration (0 for none)', 'wooptionsfic')}
+              onChange={(val: string) => update({ minDays: Math.max(0, parseInt(val, 10) || 0) })}
+            />
+            <TextControl
+              label={__('Max Days', 'wooptionsfic')}
+              type="number"
+              min={0}
+              value={String(field.maxDays ?? 0)}
+              help={__('Max duration (0 for none)', 'wooptionsfic')}
+              onChange={(val: string) => update({ maxDays: Math.max(0, parseInt(val, 10) || 0) })}
+            />
+          </div>
+
+          {/* Allow Same Day Selection */}
+          <ToggleControl
+            label={__('Allow Same Day Selection', 'wooptionsfic')}
+            help={__('Allow start and end date to be on the same day', 'wooptionsfic')}
+            checked={field.allowSameDay !== false}
+            onChange={(allowSameDay: boolean) => update({ allowSameDay })}
+          />
+        </div>
+      </div>
+    );
+  }
+
   function renderTimeInput(value: string, format: '12' | '24', onChange: (val: string) => void) {
     const is12 = format === '12';
     const match = (value || '').match(/(\d{1,2}):(\d{2})(?:\s*([AP]M))?/i);
@@ -1153,6 +1372,11 @@ namespace WooOptionsFic.Builder {
               {/* Date and Time Settings */}
               {['datetime', 'date', 'time'].includes(field.type) ? (
                 <DateFieldInspector field={field} update={update} />
+              ) : null}
+
+              {/* Date Range Settings */}
+              {field.type === 'date_range' ? (
+                <DateRangeFieldInspector field={field} update={update} />
               ) : null}
 
               {/* Allow Multiple Choices for color, image, and button choices */}

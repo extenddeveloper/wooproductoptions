@@ -117,6 +117,9 @@ namespace WooOptionsFic {
     minTime?: string;
     maxTime?: string;
     timeFormat?: '12' | '24';
+    minDays?: number;
+    maxDays?: number;
+    allowSameDay?: boolean;
     choiceWidth?: string | number;
     choiceHeight?: string | number;
     choiceBorderRadius?: string | number;

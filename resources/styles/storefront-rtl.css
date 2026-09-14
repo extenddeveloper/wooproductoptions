@@ -1988,3 +1988,32 @@
 	opacity: 0.9;
 }
 
+/* Custom Date Range Picker RTL */
+.wof-custom-daterange[data-wof-active-range-mode="end"] .wof-custom-datetime__dropdown {
+	left: 0;
+	right: auto;
+}
+
+.wof-custom-daterange[data-wof-active-range-mode="start"] .wof-custom-datetime__dropdown {
+	left: auto;
+	right: 0;
+}
+
+.wof-calendar-day.is-range-start {
+	border-top-left-radius: 0 !important;
+	border-bottom-left-radius: 0 !important;
+	border-top-right-radius: 4px !important;
+	border-bottom-right-radius: 4px !important;
+}
+
+.wof-calendar-day.is-range-end {
+	border-top-right-radius: 0 !important;
+	border-bottom-right-radius: 0 !important;
+	border-top-left-radius: 4px !important;
+	border-bottom-left-radius: 4px !important;
+}
+
+.wof-calendar-day.is-range-start.is-range-end {
+	border-radius: 4px !important;
+}
+

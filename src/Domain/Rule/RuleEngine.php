@@ -296,7 +296,13 @@ final class RuleEngine {
 	}
 
 	private function empty(mixed $value): bool {
-		return null === $value || '' === $value || [] === $value || false === $value;
+		if (is_array($value)) {
+			if (isset($value['start']) || isset($value['end'])) {
+				return '' === trim((string) ($value['start'] ?? '')) && '' === trim((string) ($value['end'] ?? ''));
+			}
+			return [] === $value;
+		}
+		return null === $value || '' === $value || false === $value;
 	}
 
 	private function date_compare(mixed $left, mixed $right): int {

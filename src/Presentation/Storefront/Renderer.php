@@ -676,8 +676,7 @@ final class Renderer {
 			return;
 		}
 		if ('date_range' === $type) {
-			echo '<div class="wof-date-range"><input type="date" name="' . esc_attr($name . '[start]') . '" aria-label="' . esc_attr__('Start date', 'wooptionsfic') . '">';
-			echo '<span aria-hidden="true">→</span><input type="date" name="' . esc_attr($name . '[end]') . '" aria-label="' . esc_attr__('End date', 'wooptionsfic') . '"></div>';
+			$this->render_custom_date_range($field, $name, $description_id);
 			return;
 		}
 		if (in_array($type, ['datetime', 'date', 'time'], true)) {
@@ -790,6 +789,60 @@ final class Renderer {
 		}
 
 		echo '<div class="wof-custom-datetime__dropdown" data-wof-datetime-dropdown role="dialog" aria-modal="false" tabindex="-1"></div>';
+		echo '</div>';
+	}
+
+	/**
+	 * @param array<string,mixed> $field Field.
+	 */
+	private function render_custom_date_range(array $field, string $name, string $description_id): void {
+		$uuid          = (string) $field['uuid'];
+		$placeholder   = (string) ($field['placeholder'] ?? '');
+		$date_format   = (string) ($field['dateFormat'] ?? 'DD/MM/YYYY');
+		$default       = $field['default'] ?? null;
+		$default_start = is_array($default) ? (string) ($default['start'] ?? '') : '';
+		$default_end   = is_array($default) ? (string) ($default['end'] ?? '') : '';
+
+		$config = [
+			'dateFormat'          => $date_format,
+			'wpDateFormat'        => get_option('date_format', 'F j, Y'),
+			'minDateType'         => (string) ($field['minDateType'] ?? 'none'),
+			'minDateCustom'       => (string) ($field['minDateCustom'] ?? ''),
+			'maxDateType'         => (string) ($field['maxDateType'] ?? 'none'),
+			'maxDateCustom'       => (string) ($field['maxDateCustom'] ?? ''),
+			'disableToday'        => ! empty($field['disableToday']),
+			'disableNextNDays'    => (int) ($field['disableNextNDays'] ?? 0),
+			'disabledDates'       => is_array($field['disabledDates'] ?? null) ? array_values($field['disabledDates']) : [],
+			'disabledWeekdays'    => is_array($field['disabledWeekdays'] ?? null) ? array_values(array_map('intval', $field['disabledWeekdays'])) : [],
+			'disabledMonthlyDays' => (string) ($field['disabledMonthlyDays'] ?? ''),
+			'minDays'             => (int) ($field['minDays'] ?? 0),
+			'maxDays'             => (int) ($field['maxDays'] ?? 0),
+			'allowSameDay'        => ! isset($field['allowSameDay']) || ! empty($field['allowSameDay']),
+		];
+
+		$cal_icon = '<svg class="wof-custom-datetime__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
+
+		$date_ph = '' !== $placeholder ? $placeholder : ('wp_default' === $date_format ? date_i18n(get_option('date_format', 'F j, Y')) : $date_format);
+
+		echo '<div class="wof-custom-daterange" data-wof-custom-daterange data-wof-daterange-config="' . esc_attr(wp_json_encode($config)) . '">';
+		echo '<input type="hidden" id="wof-' . esc_attr($uuid) . '-start" name="' . esc_attr($name . '[start]') . '" value="' . esc_attr($default_start) . '" ' . $this->input_attributes($field, $description_id) . ' data-wof-daterange-start>';
+		echo '<input type="hidden" id="wof-' . esc_attr($uuid) . '-end" name="' . esc_attr($name . '[end]') . '" value="' . esc_attr($default_end) . '" data-wof-daterange-end>';
+
+		echo '<div class="wof-custom-daterange__group">';
+		echo '<div class="wof-custom-datetime__trigger wof-custom-daterange__trigger--start" data-wof-daterange-trigger="start" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="' . esc_attr__('Start date', 'wooptionsfic') . '">';
+		echo $cal_icon;
+		echo '<span class="wof-custom-datetime__display" data-wof-daterange-display="start" data-wof-placeholder="' . esc_attr($date_ph) . '">' . esc_html($default_start ?: $date_ph) . '</span>';
+		echo '</div>';
+
+		echo '<span class="wof-custom-daterange__sep" aria-hidden="true">→</span>';
+
+		echo '<div class="wof-custom-datetime__trigger wof-custom-daterange__trigger--end" data-wof-daterange-trigger="end" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="' . esc_attr__('End date', 'wooptionsfic') . '">';
+		echo $cal_icon;
+		echo '<span class="wof-custom-datetime__display" data-wof-daterange-display="end" data-wof-placeholder="' . esc_attr($date_ph) . '">' . esc_html($default_end ?: $date_ph) . '</span>';
+		echo '</div>';
+		echo '</div>';
+
+		echo '<div class="wof-custom-datetime__dropdown" data-wof-daterange-dropdown role="dialog" aria-modal="false" tabindex="-1"></div>';
 		echo '</div>';
 	}
 

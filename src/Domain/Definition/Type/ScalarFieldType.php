@@ -35,7 +35,7 @@ final class ScalarFieldType extends AbstractFieldType {
 			$normalized['flagStyle']      = in_array($flag_style, ['number_only', 'number_flag', 'number_flag_dialcode'], true) ? $flag_style : 'number_only';
 			$normalized['defaultCountry'] = self::plain_text((string) ($definition['defaultCountry'] ?? 'US'), 10);
 		}
-		if (in_array($this->type_key, ['datetime', 'date', 'time'], true)) {
+		if (in_array($this->type_key, ['datetime', 'date', 'time', 'date_range'], true)) {
 			$date_time_type = (string) ($definition['dateTimeType'] ?? ('time' === $this->type_key ? 'time' : 'date'));
 			$normalized['dateTimeType']        = in_array($date_time_type, ['date', 'datetime', 'time'], true) ? $date_time_type : 'date';
 			$normalized['dateFormat']          = self::plain_text((string) ($definition['dateFormat'] ?? 'DD/MM/YYYY'), 50);
@@ -56,6 +56,9 @@ final class ScalarFieldType extends AbstractFieldType {
 			$normalized['maxTime']             = self::plain_text((string) ($definition['maxTime'] ?? ''), 20);
 			$time_format                       = (string) ($definition['timeFormat'] ?? '12');
 			$normalized['timeFormat']          = in_array($time_format, ['12', '24'], true) ? $time_format : '12';
+			$normalized['minDays']             = max(0, (int) ($definition['minDays'] ?? 0));
+			$normalized['maxDays']             = max(0, (int) ($definition['maxDays'] ?? 0));
+			$normalized['allowSameDay']        = ! isset($definition['allowSameDay']) || ! empty($definition['allowSameDay']);
 		}
 		return $normalized;
 	}
@@ -87,7 +90,8 @@ final class ScalarFieldType extends AbstractFieldType {
 
 	public function validate(mixed $value, array $definition): array {
 		$errors = [];
-		$empty  = null === $value || '' === $value || ([] === $value);
+		$empty  = null === $value || '' === $value || ([] === $value)
+			|| ('date_range' === $this->value_kind && is_array($value) && '' === trim((string) ($value['start'] ?? '')) && '' === trim((string) ($value['end'] ?? '')));
 		if (! empty($definition['required']) && $empty) {
 			return [['code' => 'required', 'params' => []]];
 		}
@@ -103,7 +107,7 @@ final class ScalarFieldType extends AbstractFieldType {
 			'date'       => $this->validate_datetime_field((string) $value, $definition),
 			'time'       => $this->validate_datetime_field((string) $value, $definition),
 			'datetime'   => $this->validate_datetime_field((string) $value, $definition),
-			'date_range' => $this->validate_date_range(is_array($value) ? $value : []),
+			'date_range' => $this->validate_date_range(is_array($value) ? $value : [], $definition),
 			'color'      => $this->validate_color((string) $value),
 			default      => $this->validate_string((string) $value, $definition),
 		};
@@ -111,7 +115,12 @@ final class ScalarFieldType extends AbstractFieldType {
 
 	public function format_value(mixed $value, array $definition): string {
 		if ('date_range' === $this->value_kind && is_array($value)) {
-			return trim(($value['start'] ?? '') . ' → ' . ($value['end'] ?? ''));
+			$start = trim((string) ($value['start'] ?? ''));
+			$end   = trim((string) ($value['end'] ?? ''));
+			if ('' === $start && '' === $end) {
+				return '';
+			}
+			return trim($start . ' → ' . $end);
 		}
 		return is_scalar($value) ? (string) $value : '';
 	}
@@ -226,9 +235,12 @@ final class ScalarFieldType extends AbstractFieldType {
 		}
 	}
 
-	private function validate_date_range(array $value): array {
-		$start = (string) ($value['start'] ?? '');
-		$end   = (string) ($value['end'] ?? '');
+	private function validate_date_range(array $value, array $definition = []): array {
+		$start = trim((string) ($value['start'] ?? ''));
+		$end   = trim((string) ($value['end'] ?? ''));
+		if ('' === $start && '' === $end) {
+			return ! empty($definition['required']) ? [['code' => 'required', 'params' => []]] : [];
+		}
 		if ('' === $start || '' === $end) {
 			return [['code' => 'incomplete_date_range', 'params' => []]];
 		}
@@ -239,6 +251,20 @@ final class ScalarFieldType extends AbstractFieldType {
 		}
 		if ($d_end < $d_start) {
 			return [['code' => 'invalid_date_range_order', 'params' => []]];
+		}
+		$allow_same_day = ! isset($definition['allowSameDay']) || ! empty($definition['allowSameDay']);
+		if (! $allow_same_day && $start === $end) {
+			return [['code' => 'same_day_not_allowed', 'params' => []]];
+		}
+		$interval = $d_start->diff($d_end);
+		$days     = (int) $interval->days + 1;
+		$min_days = (int) ($definition['minDays'] ?? 0);
+		if ($min_days > 0 && $days < $min_days) {
+			return [['code' => 'date_range_too_short', 'params' => ['min' => (string) $min_days]]];
+		}
+		$max_days = (int) ($definition['maxDays'] ?? 0);
+		if ($max_days > 0 && $days > $max_days) {
+			return [['code' => 'date_range_too_long', 'params' => ['max' => (string) $max_days]]];
 		}
 		return [];
 	}
