@@ -37,7 +37,7 @@ final class AdminController {
 		private readonly ContrastValidator $contrast,
 		private readonly TemplateService $templates,
 		private readonly AnalyticsService $analytics,
-		private readonly DiagnosticsService $diagnostics
+		private readonly ?DiagnosticsService $diagnostics = null
 	) {
 	}
 
@@ -250,24 +250,7 @@ final class AdminController {
 				],
 			]
 		);
-		register_rest_route(
-			self::NAMESPACE,
-			'/integrations',
-			[
-				'methods'             => \WP_REST_Server::READABLE,
-				'callback'            => [$this, 'integrations'],
-				'permission_callback' => [$this, 'can_manage'],
-			]
-		);
-		register_rest_route(
-			self::NAMESPACE,
-			'/diagnostics',
-			[
-				'methods'             => \WP_REST_Server::READABLE,
-				'callback'            => [$this, 'diagnostics'],
-				'permission_callback' => [$this, 'can_manage'],
-			]
-		);
+
 		register_rest_route(
 			self::NAMESPACE,
 			'/settings',
@@ -627,13 +610,7 @@ final class AdminController {
 		));
 	}
 
-	public function integrations(): \WP_REST_Response|\WP_Error {
-		return $this->respond(fn (): array => ['items' => $this->diagnostics->integrations()]);
-	}
 
-	public function diagnostics(): \WP_REST_Response|\WP_Error {
-		return $this->respond(fn (): array => $this->diagnostics->report());
-	}
 
 	public function get_settings(): \WP_REST_Response|\WP_Error {
 		return $this->respond(fn (): array => Settings::all());

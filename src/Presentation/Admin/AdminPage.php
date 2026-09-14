@@ -31,8 +31,6 @@ final class AdminPage {
 			['option-sets', __('Option Sets', 'wooptionsfic'), 'edit_wooptionsfic_sets'],
 			['templates', __('Templates', 'wooptionsfic'), 'edit_wooptionsfic_sets'],
 			['analytics', __('Analytics', 'wooptionsfic'), 'view_wooptionsfic_analytics'],
-			['integrations', __('Integrations', 'wooptionsfic'), 'manage_wooptionsfic'],
-			['diagnostics', __('Diagnostics', 'wooptionsfic'), 'manage_wooptionsfic'],
 			['settings', __('Settings', 'wooptionsfic'), 'manage_wooptionsfic_settings'],
 			['help', __('Help & onboarding', 'wooptionsfic'), 'manage_wooptionsfic'],
 		];

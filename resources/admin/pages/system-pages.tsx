@@ -3,20 +3,6 @@ namespace WooOptionsFic.Pages {
   const { __ } = wp.i18n;
   const { useEffect, useState } = wp.element;
 
-  export function Integrations(): any {
-    const [items, setItems] = useState<any[] | null>(null);
-    useEffect(() => { WooOptionsFic.Api.integrations().then((response) => setItems(response.items)).catch(() => setItems([])); }, []);
-    return <div className="wof-page"><WooOptionsFic.Components.PageHeader eyebrow={__('Connected commerce surface', 'wooptionsfic')} title={__('Integrations', 'wooptionsfic')} description={__('See the WooCommerce and WordPress services WooOptionsFic can use.', 'wooptionsfic')} />{items === null ? <WooOptionsFic.Components.Loading /> : <div className="wof-integration-grid">{items.map((item, index) => <article className="wof-integration-card" key={item.id ?? index}><span><WooOptionsFic.Components.Dashicon name="admin-links" /></span><h2>{item.name ?? item.label ?? `Integration ${index + 1}`}</h2><p>{item.description ?? item.detail ?? ''}</p><WooOptionsFic.Components.StatusPill status={item.available || item.connected ? __('Connected', 'wooptionsfic') : __('Unavailable', 'wooptionsfic')} /></article>)}</div>}</div>;
-  }
-
-  export function Diagnostics(): any {
-    const [data, setData] = useState<Record<string, any> | null>(null);
-    const [loading, setLoading] = useState(true);
-    const refresh = () => { setLoading(true); WooOptionsFic.Api.diagnostics().then(setData).finally(() => setLoading(false)); };
-    useEffect(refresh, []);
-    return <div className="wof-page"><WooOptionsFic.Components.PageHeader eyebrow={__('System confidence', 'wooptionsfic')} title={__('Diagnostics', 'wooptionsfic')} description={__('Verify database tables, sessions, REST routes, and WooCommerce services.', 'wooptionsfic')} actions={<Button variant="secondary" onClick={refresh}>{__('Run again', 'wooptionsfic')}</Button>} />{loading ? <WooOptionsFic.Components.Loading /> : <section className="wof-panel"><pre className="wof-code-panel">{JSON.stringify(data, null, 2)}</pre></section>}</div>;
-  }
-
   export function Settings(): any {
     const [settings, setSettings] = useState<Record<string, any> | null>(null);
     const [saving, setSaving] = useState(false);

@@ -47,9 +47,9 @@ final class SiteHealth {
 			'description' => '<p>' . esc_html(
 				[] === $critical
 					? __('Database, assets, and private storage passed the runtime checks.', 'wooptionsfic')
-					: __('One or more required WooOptionsFic services are unavailable. Open WooOptionsFic Diagnostics for details.', 'wooptionsfic')
+					: __('One or more required WooOptionsFic services are unavailable.', 'wooptionsfic')
 			) . '</p>',
-			'actions'     => '<p><a href="' . esc_url(admin_url('admin.php?page=wooptionsfic#/diagnostics')) . '">' . esc_html__('Open diagnostics', 'wooptionsfic') . '</a></p>',
+			'actions'     => '<p><a href="' . esc_url(admin_url('admin.php?page=wooptionsfic')) . '">' . esc_html__('Open WooOptionsFic', 'wooptionsfic') . '</a></p>',
 			'test'        => 'wooptionsfic_runtime',
 		];
 	}

@@ -239,14 +239,6 @@ var WooOptionsFic;
             return request('/analytics');
         }
         Api.analytics = analytics;
-        function integrations() {
-            return request('/integrations');
-        }
-        Api.integrations = integrations;
-        function diagnostics() {
-            return request('/diagnostics');
-        }
-        Api.diagnostics = diagnostics;
         function getSettings() {
             return request('/settings');
         }
@@ -1796,30 +1788,6 @@ var WooOptionsFic;
         const { Button, TextControl, ToggleControl } = wp.components;
         const { __ } = wp.i18n;
         const { useEffect, useState } = wp.element;
-        function Integrations() {
-            const [items, setItems] = useState(null);
-            useEffect(() => { WooOptionsFic.Api.integrations().then((response) => setItems(response.items)).catch(() => setItems([])); }, []);
-            return wp.element.createElement("div", { className: "wof-page" },
-                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Connected commerce surface', 'wooptionsfic'), title: __('Integrations', 'wooptionsfic'), description: __('See the WooCommerce and WordPress services WooOptionsFic can use.', 'wooptionsfic') }),
-                items === null ? wp.element.createElement(WooOptionsFic.Components.Loading, null) : wp.element.createElement("div", { className: "wof-integration-grid" }, items.map((item, index) => wp.element.createElement("article", { className: "wof-integration-card", key: item.id ?? index },
-                    wp.element.createElement("span", null,
-                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-links" })),
-                    wp.element.createElement("h2", null, item.name ?? item.label ?? `Integration ${index + 1}`),
-                    wp.element.createElement("p", null, item.description ?? item.detail ?? ''),
-                    wp.element.createElement(WooOptionsFic.Components.StatusPill, { status: item.available || item.connected ? __('Connected', 'wooptionsfic') : __('Unavailable', 'wooptionsfic') })))));
-        }
-        Pages.Integrations = Integrations;
-        function Diagnostics() {
-            const [data, setData] = useState(null);
-            const [loading, setLoading] = useState(true);
-            const refresh = () => { setLoading(true); WooOptionsFic.Api.diagnostics().then(setData).finally(() => setLoading(false)); };
-            useEffect(refresh, []);
-            return wp.element.createElement("div", { className: "wof-page" },
-                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('System confidence', 'wooptionsfic'), title: __('Diagnostics', 'wooptionsfic'), description: __('Verify database tables, sessions, REST routes, and WooCommerce services.', 'wooptionsfic'), actions: wp.element.createElement(Button, { variant: "secondary", onClick: refresh }, __('Run again', 'wooptionsfic')) }),
-                loading ? wp.element.createElement(WooOptionsFic.Components.Loading, null) : wp.element.createElement("section", { className: "wof-panel" },
-                    wp.element.createElement("pre", { className: "wof-code-panel" }, JSON.stringify(data, null, 2))));
-        }
-        Pages.Diagnostics = Diagnostics;
         function Settings() {
             const [settings, setSettings] = useState(null);
             const [saving, setSaving] = useState(false);
@@ -4423,12 +4391,6 @@ var WooOptionsFic;
                     break;
                 case 'analytics':
                     page = wp.element.createElement(WooOptionsFic.Pages.Analytics, null);
-                    break;
-                case 'integrations':
-                    page = wp.element.createElement(WooOptionsFic.Pages.Integrations, null);
-                    break;
-                case 'diagnostics':
-                    page = wp.element.createElement(WooOptionsFic.Pages.Diagnostics, null);
                     break;
                 case 'settings':
                     page = wp.element.createElement(WooOptionsFic.Pages.Settings, null);

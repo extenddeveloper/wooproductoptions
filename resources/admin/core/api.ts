@@ -126,14 +126,6 @@ namespace WooOptionsFic.Api {
     return request('/analytics');
   }
 
-  export function integrations(): Promise<{ items: any[] }> {
-    return request('/integrations');
-  }
-
-  export function diagnostics(): Promise<Record<string, any>> {
-    return request('/diagnostics');
-  }
-
   export function getSettings(): Promise<Record<string, any>> {
     return request('/settings');
   }

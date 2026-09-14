@@ -30,8 +30,6 @@ namespace WooOptionsFic {
         case 'option-sets': page = <WooOptionsFic.Pages.OptionSets navigate={navigate} />; break;
         case 'templates': page = <WooOptionsFic.Pages.Templates navigate={navigate} />; break;
         case 'analytics': page = <WooOptionsFic.Pages.Analytics />; break;
-        case 'integrations': page = <WooOptionsFic.Pages.Integrations />; break;
-        case 'diagnostics': page = <WooOptionsFic.Pages.Diagnostics />; break;
         case 'settings': page = <WooOptionsFic.Pages.Settings />; break;
         case 'help': page = <WooOptionsFic.Pages.Help navigate={navigate} />; break;
         default: page = <div className="wof-fatal"><h1>{__('Page not found', 'wooptionsfic')}</h1><p>{__('This WooOptionsFic route does not exist.', 'wooptionsfic')}</p><button type="button" onClick={() => navigate('dashboard')}>{__('Open dashboard', 'wooptionsfic')}</button></div>;
