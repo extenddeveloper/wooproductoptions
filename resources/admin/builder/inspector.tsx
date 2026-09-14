@@ -456,18 +456,24 @@ namespace WooOptionsFic.Builder {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
                     <TextControl
                       label={__('Width (px)', 'wooptionsfic')}
+                      type="number"
+                      min={0}
                       value={String(field.choiceWidth ?? '')}
                       placeholder="Auto"
                       onChange={(choiceWidth: string) => update({ choiceWidth })}
                     />
                     <TextControl
                       label={__('Height (px)', 'wooptionsfic')}
+                      type="number"
+                      min={0}
                       value={String(field.choiceHeight ?? '')}
                       placeholder="Auto"
                       onChange={(choiceHeight: string) => update({ choiceHeight })}
                     />
                     <TextControl
                       label={__('Radius (px)', 'wooptionsfic')}
+                      type="number"
+                      min={0}
                       value={String(field.choiceBorderRadius ?? '')}
                       placeholder="Default"
                       onChange={(choiceBorderRadius: string) => update({ choiceBorderRadius })}
