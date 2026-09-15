@@ -159,6 +159,7 @@ namespace WooOptionsFic.FieldFactory {
       field.description = 'Helpful information for customers.';
     }
     if (type === 'spacer') {
+      field.height = 24;
       field.style = { height: 24 };
     }
 

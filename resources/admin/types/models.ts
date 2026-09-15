@@ -102,6 +102,7 @@ namespace WooOptionsFic {
     help: string;
     helpTextPosition?: 'below_title' | 'tooltip' | 'below_field';
     width?: string;
+    height?: number | string;
     flagStyle?: 'number_only' | 'number_flag' | 'number_flag_dialcode';
     defaultCountry?: string;
     dateTimeType?: 'date' | 'datetime' | 'time';

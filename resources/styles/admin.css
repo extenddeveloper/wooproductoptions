@@ -1835,8 +1835,18 @@
 .wof-preview-spacer {
 	border: 1px dashed var(--wof-preview-border, #dfe3ed);
 	border-radius: 6px;
+	box-sizing: border-box;
 	display: block;
 	height: 20px;
+	width: 100%;
+}
+
+.wof-canvas-field--spacer {
+	min-height: auto;
+}
+
+.wof-canvas-field--spacer .wof-canvas-field__preview {
+	width: 100%;
 }
 
 .wof-preview-color,
@@ -2388,6 +2398,117 @@
 .wof-admin-wrap .components-textarea-control__input:focus {
 	border-color: var(--wof-admin-primary);
 	box-shadow: 0 0 0 1px var(--wof-admin-primary);
+}
+
+/* Spacer Field Settings */
+.wof-spacer-settings {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 18px;
+}
+
+.wof-spacer-height-control {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 22px;
+}
+
+.wof-spacer-height-label {
+	color: #0f172a;
+	display: block;
+	font-size: 11px;
+	font-weight: 700;
+	letter-spacing: .05em;
+	margin-bottom: 12px;
+	text-transform: uppercase;
+}
+
+.wof-spacer-height-row {
+	align-items: center;
+	display: flex;
+	gap: 20px;
+	width: 100%;
+}
+
+.wof-spacer-slider {
+	-webkit-appearance: none;
+	appearance: none;
+	background: transparent;
+	border: none;
+	border-radius: 2px;
+	cursor: pointer;
+	flex: 1 1 0%;
+	height: 3px;
+	margin: 0;
+	outline: none;
+	padding: 0;
+}
+
+.wof-spacer-slider::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	background: #2563eb;
+	border: none;
+	border-radius: 50%;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+	cursor: pointer;
+	height: 14px;
+	transition: transform .1s ease, box-shadow .1s ease;
+	width: 14px;
+}
+
+.wof-spacer-slider::-webkit-slider-thumb:hover {
+	box-shadow: 0 2px 5px rgba(37, 99, 235, .45);
+	transform: scale(1.15);
+}
+
+.wof-spacer-slider::-moz-range-thumb {
+	background: #2563eb;
+	border: none;
+	border-radius: 50%;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, .2);
+	cursor: pointer;
+	height: 14px;
+	transition: transform .1s ease, box-shadow .1s ease;
+	width: 14px;
+}
+
+.wof-spacer-slider::-moz-range-thumb:hover {
+	box-shadow: 0 2px 5px rgba(37, 99, 235, .45);
+	transform: scale(1.15);
+}
+
+.wof-spacer-slider::-moz-range-track {
+	background: transparent;
+	border: none;
+	height: 3px;
+}
+
+.wof-spacer-slider:focus-visible {
+	outline: 2px solid #2563eb;
+	outline-offset: 4px;
+}
+
+.wof-spacer-number-input {
+	background: #fff;
+	border: 1px solid #94a3b8;
+	border-radius: 2px;
+	box-sizing: border-box;
+	color: #0f172a;
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 500;
+	height: 38px;
+	outline: none;
+	padding: 0 6px 0 12px;
+	text-align: left;
+	transition: border-color .15s ease, box-shadow .15s ease;
+	width: 72px;
+}
+
+.wof-spacer-number-input:focus {
+	border-color: #2563eb;
+	box-shadow: 0 0 0 1px #2563eb;
 }
 
 /* Block Width Setting Segmented Control (Image 2 style) */

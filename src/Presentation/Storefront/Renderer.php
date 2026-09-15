@@ -160,7 +160,21 @@ final class Renderer {
 		if ('' === $uuid) {
 			return;
 		}
-		if (in_array($type, ['heading', 'paragraph', 'help', 'separator', 'spacer'], true)) {
+		if ('spacer' === $type) {
+			$height = (int) ($field['height'] ?? ($field['style']['height'] ?? 24));
+			if ($height < 0) {
+				$height = 24;
+			}
+			$width = (string) ($field['width'] ?? '100%');
+			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
+				$width = '100%';
+			}
+			$classes = 'wof-field wof-field--spacer wof-spacer wof-field--width-' . str_replace('%', '', $width);
+			$style   = 'height:' . $height . 'px;min-height:' . $height . 'px;';
+			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="spacer" style="' . esc_attr($style) . '" aria-hidden="true"></div>';
+			return;
+		}
+		if (in_array($type, ['heading', 'paragraph', 'help', 'separator'], true)) {
 			$this->render_content($field);
 			return;
 		}

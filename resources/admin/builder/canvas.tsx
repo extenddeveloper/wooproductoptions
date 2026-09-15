@@ -82,6 +82,7 @@ namespace WooOptionsFic.Builder {
         props.field.disabled && 'is-disabled',
         dropEdge === 'before' && 'is-drop-before',
         dropEdge === 'after' && 'is-drop-after',
+        props.field.type === 'spacer' && 'wof-canvas-field--spacer',
         `wof-canvas-field--width-${width.replace('%', '')}`
       )}
       style={widthStyle}
@@ -104,28 +105,30 @@ namespace WooOptionsFic.Builder {
         <button type="button" className="is-destructive" onClick={props.onDelete} aria-label={__('Delete field', 'wooptionsfic')} title={__('Delete', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="trash" /></button>
       </div>
 
-      <div className="wof-canvas-field__copy">
-        <strong className="wof-canvas-field__title">
-          {props.field.label || __('Untitled field', 'wooptionsfic')}
-          {props.field.help && props.field.helpTextPosition === 'tooltip' ? (
-            <span
-              className="wof-field__tooltip-preview"
-              title={props.field.help}
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            </span>
+      {props.field.type !== 'spacer' ? (
+        <div className="wof-canvas-field__copy">
+          <strong className="wof-canvas-field__title">
+            {props.field.label || __('Untitled field', 'wooptionsfic')}
+            {props.field.help && props.field.helpTextPosition === 'tooltip' ? (
+              <span
+                className="wof-field__tooltip-preview"
+                title={props.field.help}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </span>
+            ) : null}
+          </strong>
+          {props.field.required ? <span className="wof-canvas-field__required">{__('REQUIRED', 'wooptionsfic')}</span> : null}
+          {props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) ? (
+            <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-title">
+              {props.field.help}
+            </p>
           ) : null}
-        </strong>
-        {props.field.required ? <span className="wof-canvas-field__required">{__('REQUIRED', 'wooptionsfic')}</span> : null}
-        {props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) ? (
-          <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-title">
-            {props.field.help}
-          </p>
-        ) : null}
-        {props.field.choices?.length ? (
-          <small className="wof-canvas-field__meta">{props.field.choices.length} {__('Choices', 'wooptionsfic')}</small>
-        ) : null}
-      </div>
+          {props.field.choices?.length ? (
+            <small className="wof-canvas-field__meta">{props.field.choices.length} {__('Choices', 'wooptionsfic')}</small>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="wof-canvas-field__preview"><FieldPreview field={props.field} /></div>
       {props.field.help && props.field.helpTextPosition === 'below_field' ? (

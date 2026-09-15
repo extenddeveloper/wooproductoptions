@@ -89,7 +89,7 @@
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.wof-layout--grid .wof-fields>:where(.wof-content-heading, .wof-content, .wof-separator, .wof-spacer) {
+.wof-layout--grid .wof-fields>:where(.wof-content-heading, .wof-content, .wof-separator, .wof-spacer:not(.wof-field--width-33):not(.wof-field--width-50):not(.wof-field--width-66)) {
 	grid-column: 1/-1;
 }
 

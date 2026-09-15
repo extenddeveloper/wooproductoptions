@@ -627,6 +627,7 @@ var WooOptionsFic;
                 field.description = 'Helpful information for customers.';
             }
             if (type === 'spacer') {
+                field.height = 24;
                 field.style = { height: 24 };
             }
             return field;
@@ -2153,8 +2154,10 @@ var WooOptionsFic;
                 return wp.element.createElement("div", { className: "wof-preview-help" }, field.description || field.help || field.label);
             if (field.type === 'separator')
                 return wp.element.createElement("hr", { className: "wof-preview-separator" });
-            if (field.type === 'spacer')
-                return wp.element.createElement("div", { className: "wof-preview-spacer", style: { height: `${Number(field.style?.height ?? 24)}px` } });
+            if (field.type === 'spacer') {
+                const h = Number(field.height ?? field.style?.height ?? 24);
+                return wp.element.createElement("div", { className: "wof-preview-spacer", style: { height: `${Math.max(0, h)}px` } });
+            }
             if (field.type === 'formula' || field.type === 'calculated')
                 return wp.element.createElement("output", { className: "wof-preview-output" }, "0.00");
             if (field.type === 'toggle') {
@@ -2605,7 +2608,7 @@ var WooOptionsFic;
                 boxSizing: 'border-box',
             };
             const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.field.type]?.label ?? props.field.type;
-            return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
+            return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', props.field.type === 'spacer' && 'wof-canvas-field--spacer', `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
                 props.selected ? (wp.element.createElement("span", { className: "wof-canvas-field__type-badge" }, typeLabel)) : null,
                 wp.element.createElement("div", { className: "wof-canvas-field__toolbar", onClick: (event) => event.stopPropagation() },
                     wp.element.createElement("button", { type: "button", draggable: true, className: "wof-canvas-field__drag-handle", onDragStart: dragStart, onDragEnd: () => setDropEdge(null), "aria-label": __('Drag field', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
@@ -2616,7 +2619,7 @@ var WooOptionsFic;
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-page" })),
                     wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete field', 'wooptionsfic'), title: __('Delete', 'wooptionsfic') },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))),
-                wp.element.createElement("div", { className: "wof-canvas-field__copy" },
+                props.field.type !== 'spacer' ? (wp.element.createElement("div", { className: "wof-canvas-field__copy" },
                     wp.element.createElement("strong", { className: "wof-canvas-field__title" },
                         props.field.label || __('Untitled field', 'wooptionsfic'),
                         props.field.help && props.field.helpTextPosition === 'tooltip' ? (wp.element.createElement("span", { className: "wof-field__tooltip-preview", title: props.field.help },
@@ -2629,7 +2632,7 @@ var WooOptionsFic;
                     props.field.choices?.length ? (wp.element.createElement("small", { className: "wof-canvas-field__meta" },
                         props.field.choices.length,
                         " ",
-                        __('Choices', 'wooptionsfic'))) : null),
+                        __('Choices', 'wooptionsfic'))) : null)) : null,
                 wp.element.createElement("div", { className: "wof-canvas-field__preview" },
                     wp.element.createElement(Builder.FieldPreview, { field: props.field })),
                 props.field.help && props.field.helpTextPosition === 'below_field' ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-field" }, props.field.help)) : null);
@@ -3699,6 +3702,22 @@ var WooOptionsFic;
                 wp.element.createElement(SelectControl, { label: __('Price mode', 'wooptionsfic'), value: pricing.mode, options: [{ label: __('Add to product price', 'wooptionsfic'), value: 'adjustment' }, { label: __('Replace unit price', 'wooptionsfic'), value: 'unit_price' }], onChange: (mode) => update({ mode }) }),
                 pricing.strategy === 'percentage' ? wp.element.createElement(TextControl, { label: __('Percentage', 'wooptionsfic'), type: "number", value: pricing.percent, onChange: (percent) => update({ percent }) }) : pricing.strategy === 'formula' ? wp.element.createElement(TextareaControl, { label: __('Formula expression', 'wooptionsfic'), value: pricing.expression ?? '0', onChange: (expression) => update({ expression }), help: __('Use server-supported FIELD("uuid") and arithmetic expressions.', 'wooptionsfic') }) : pricing.strategy !== 'none' ? wp.element.createElement(TextControl, { label: __('Amount', 'wooptionsfic'), type: "number", value: pricing.amount, onChange: (amount) => update({ amount }) }) : null);
         }
+        function SpacerHeightControl(props) {
+            const min = 0;
+            const max = 300;
+            const currentVal = Number.isFinite(props.value) ? Math.max(0, props.value) : 24;
+            const pct = Math.min(100, Math.max(0, ((currentVal - min) / (max - min)) * 100));
+            return (wp.element.createElement("div", { className: "wof-spacer-height-control" },
+                wp.element.createElement("label", { className: "wof-spacer-height-label", htmlFor: "wof-spacer-height-slider" }, __('HEIGHT (PX)', 'wooptionsfic')),
+                wp.element.createElement("div", { className: "wof-spacer-height-row" },
+                    wp.element.createElement("input", { id: "wof-spacer-height-slider", type: "range", min: min, max: max, value: currentVal, style: {
+                            background: `linear-gradient(to right, #2563eb 0%, #2563eb ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`,
+                        }, className: "wof-spacer-slider", onChange: (e) => props.onChange(Number(e.target.value)), "aria-label": __('Height in pixels', 'wooptionsfic') }),
+                    wp.element.createElement("input", { type: "number", min: 0, value: currentVal, className: "wof-spacer-number-input", onChange: (e) => {
+                            const val = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0);
+                            props.onChange(val);
+                        }, "aria-label": __('Height in pixels input', 'wooptionsfic') }))));
+        }
         function Inspector(props) {
             const scrollerRef = useRef(null);
             const [canLeft, setCanLeft] = useState(false);
@@ -3728,12 +3747,15 @@ var WooOptionsFic;
                             wp.element.createElement(Builder.StyleStudio, { document: props.document, onChange: props.onDocumentChange }))));
             const field = props.field;
             const update = (patch) => props.onFieldChange({ ...field, ...patch });
-            const visibleTabs = tabs.filter(([tab]) => tab !== 'choices' || Boolean(field.choices));
+            const visibleTabs = field.type === 'spacer'
+                ? tabs.filter(([tab]) => tab === 'content' || tab === 'logic')
+                : tabs.filter(([tab]) => tab !== 'choices' || Boolean(field.choices));
+            const activeTab = (field.type === 'spacer' && props.tab !== 'logic') ? 'content' : props.tab;
             return wp.element.createElement("aside", { className: "wof-builder-inspector" },
                 wp.element.createElement("div", { className: "wof-builder-pane__heading" },
                     wp.element.createElement("div", null,
                         wp.element.createElement("span", { className: "wof-eyebrow" }, window.WooOptionsFicAdmin.fieldTypes[field.type]?.label ?? field.type),
-                        wp.element.createElement("h2", null, field.label)),
+                        wp.element.createElement("h2", null, field.type === 'spacer' ? __('Spacer', 'wooptionsfic') : field.label)),
                     wp.element.createElement("div", { className: "wof-inspector-heading-actions" },
                         wp.element.createElement("button", { type: "button", onClick: props.onDuplicate, "aria-label": __('Duplicate field', 'wooptionsfic'), title: __('Duplicate', 'wooptionsfic') },
                             wp.element.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.9", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
@@ -3748,14 +3770,21 @@ var WooOptionsFic;
                 wp.element.createElement("div", { className: "wof-inspector-tabs-shell" },
                     canLeft ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-left", onClick: () => scrollerRef.current?.scrollBy({ left: -180, behavior: 'smooth' }) },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-left-alt2" })) : null,
-                    wp.element.createElement("div", { className: "wof-inspector-tabs", ref: scrollerRef }, visibleTabs.map(([tab, label]) => (wp.element.createElement("button", { type: "button", key: tab, className: props.tab === tab ? 'is-active' : '', onClick: (event) => {
+                    wp.element.createElement("div", { className: "wof-inspector-tabs", ref: scrollerRef }, visibleTabs.map(([tab, label]) => (wp.element.createElement("button", { type: "button", key: tab, className: activeTab === tab ? 'is-active' : '', onClick: (event) => {
                             props.onTabChange(tab);
                             event.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                         } }, label)))),
                     canRight ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-right", onClick: () => scrollerRef.current?.scrollBy({ left: 180, behavior: 'smooth' }) },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-right-alt2" })) : null),
                 wp.element.createElement("div", { className: "wof-inspector-body" },
-                    wp.element.createElement("section", { className: "wof-inspector-section" }, props.tab === 'content' ? (wp.element.createElement(wp.element.Fragment, null,
+                    wp.element.createElement("section", { className: "wof-inspector-section" }, activeTab === 'content' ? (field.type === 'spacer' ? (wp.element.createElement("div", { className: "wof-spacer-settings" },
+                        wp.element.createElement(SpacerHeightControl, { value: Number(field.height ?? field.style?.height ?? 24), onChange: (height) => update({ height, style: { ...(field.style ?? {}), height } }) }),
+                        wp.element.createElement("div", { className: "wof-field-width-setting" },
+                            wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
+                                const isSelected = (field.width || '100%') === w;
+                                return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
+                            }))))) : (wp.element.createElement(wp.element.Fragment, null,
                         wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
                         ['paragraph', 'help'].includes(field.type) ? (wp.element.createElement(TextareaControl, { label: __('Content', 'wooptionsfic'), value: field.description || field.help, onChange: (content) => update({ description: content, help: content }) })) : null,
                         wp.element.createElement("div", { className: "wof-field-width-setting" },
@@ -3832,7 +3861,7 @@ var WooOptionsFic;
                                 const isSelected = (field.helpTextPosition ?? 'below_title') === opt.value;
                                 return (wp.element.createElement("button", { key: opt.value, type: "button", className: WooOptionsFic.Utils.classNames('wof-segmented-btn', isSelected && 'is-selected'), onClick: () => update({ helpTextPosition: opt.value }) }, opt.label));
                             }))),
-                        wp.element.createElement(ToggleControl, { label: __('Required', 'wooptionsfic'), checked: field.required, onChange: (required) => update({ required }) }))) : props.tab === 'choices' ? (wp.element.createElement(ChoiceEditor, { field: field, onChange: props.onFieldChange })) : props.tab === 'pricing' ? (wp.element.createElement(PricingPanel, { field: field, onChange: props.onFieldChange })) : props.tab === 'logic' ? (wp.element.createElement(Builder.LogicEditor, { field: field, allFields: props.document.fields, onChange: props.onFieldChange })) : props.tab === 'style' ? (wp.element.createElement(Builder.StyleStudio, { document: props.document, onChange: props.onDocumentChange })) : (wp.element.createElement(wp.element.Fragment, null,
+                        wp.element.createElement(ToggleControl, { label: __('Required', 'wooptionsfic'), checked: field.required, onChange: (required) => update({ required }) })))) : activeTab === 'choices' ? (wp.element.createElement(ChoiceEditor, { field: field, onChange: props.onFieldChange })) : activeTab === 'pricing' ? (wp.element.createElement(PricingPanel, { field: field, onChange: props.onFieldChange })) : activeTab === 'logic' ? (wp.element.createElement(Builder.LogicEditor, { field: field, allFields: props.document.fields, onChange: props.onFieldChange })) : activeTab === 'style' ? (wp.element.createElement(Builder.StyleStudio, { document: props.document, onChange: props.onDocumentChange })) : (wp.element.createElement(wp.element.Fragment, null,
                         wp.element.createElement(ToggleControl, { label: __('Disable this field', 'wooptionsfic'), checked: field.disabled, onChange: (disabled) => update({ disabled }) }),
                         field.type === 'file' ? (wp.element.createElement(wp.element.Fragment, null,
                             wp.element.createElement(TextControl, { label: __('Allowed extensions', 'wooptionsfic'), value: (field.allowedExtensions ?? []).join(', '), onChange: (value) => update({ allowedExtensions: value.split(',').map((item) => item.trim().replace(/^\./, '')).filter(Boolean) }) }),

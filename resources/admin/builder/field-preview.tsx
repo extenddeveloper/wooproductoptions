@@ -109,7 +109,10 @@ namespace WooOptionsFic.Builder {
     if (field.type === 'paragraph') return <p className="wof-preview-paragraph">{field.description || field.label}</p>;
     if (field.type === 'help') return <div className="wof-preview-help">{field.description || field.help || field.label}</div>;
     if (field.type === 'separator') return <hr className="wof-preview-separator" />;
-    if (field.type === 'spacer') return <div className="wof-preview-spacer" style={{ height: `${Number((field.style as any)?.height ?? 24)}px` }} />;
+    if (field.type === 'spacer') {
+      const h = Number(field.height ?? (field.style as any)?.height ?? 24);
+      return <div className="wof-preview-spacer" style={{ height: `${Math.max(0, h)}px` }} />;
+    }
     if (field.type === 'formula' || field.type === 'calculated') return <output className="wof-preview-output">0.00</output>;
     if (field.type === 'toggle') {
       const isChecked = Boolean(field.default);

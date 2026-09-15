@@ -1437,6 +1437,50 @@ namespace WooOptionsFic.Builder {
     return <div><SelectControl label={__('Pricing strategy', 'wooptionsfic')} value={pricing.strategy} options={[{ label: __('No price change', 'wooptionsfic'), value: 'none' }, { label: __('Fixed amount', 'wooptionsfic'), value: 'fixed' }, { label: __('Percentage', 'wooptionsfic'), value: 'percentage' }, { label: __('Per character', 'wooptionsfic'), value: 'per_character' }, { label: __('Per unit', 'wooptionsfic'), value: 'per_unit' }, { label: __('Setup fee', 'wooptionsfic'), value: 'setup' }, { label: __('Formula', 'wooptionsfic'), value: 'formula' }]} onChange={(strategy: WooOptionsFic.PricingDefinition['strategy']) => update({ strategy })} /><SelectControl label={__('Price mode', 'wooptionsfic')} value={pricing.mode} options={[{ label: __('Add to product price', 'wooptionsfic'), value: 'adjustment' }, { label: __('Replace unit price', 'wooptionsfic'), value: 'unit_price' }]} onChange={(mode: WooOptionsFic.PricingDefinition['mode']) => update({ mode })} />{pricing.strategy === 'percentage' ? <TextControl label={__('Percentage', 'wooptionsfic')} type="number" value={pricing.percent} onChange={(percent: string) => update({ percent })} /> : pricing.strategy === 'formula' ? <TextareaControl label={__('Formula expression', 'wooptionsfic')} value={pricing.expression ?? '0'} onChange={(expression: string) => update({ expression })} help={__('Use server-supported FIELD("uuid") and arithmetic expressions.', 'wooptionsfic')} /> : pricing.strategy !== 'none' ? <TextControl label={__('Amount', 'wooptionsfic')} type="number" value={pricing.amount} onChange={(amount: string) => update({ amount })} /> : null}</div>;
   }
 
+  function SpacerHeightControl(props: {
+    value: number;
+    onChange: (value: number) => void;
+  }): any {
+    const min = 0;
+    const max = 300;
+    const currentVal = Number.isFinite(props.value) ? Math.max(0, props.value) : 24;
+    const pct = Math.min(100, Math.max(0, ((currentVal - min) / (max - min)) * 100));
+
+    return (
+      <div className="wof-spacer-height-control">
+        <label className="wof-spacer-height-label" htmlFor="wof-spacer-height-slider">
+          {__('HEIGHT (PX)', 'wooptionsfic')}
+        </label>
+        <div className="wof-spacer-height-row">
+          <input
+            id="wof-spacer-height-slider"
+            type="range"
+            min={min}
+            max={max}
+            value={currentVal}
+            style={{
+              background: `linear-gradient(to right, #2563eb 0%, #2563eb ${pct}%, #e2e8f0 ${pct}%, #e2e8f0 100%)`,
+            }}
+            className="wof-spacer-slider"
+            onChange={(e: any) => props.onChange(Number(e.target.value))}
+            aria-label={__('Height in pixels', 'wooptionsfic')}
+          />
+          <input
+            type="number"
+            min={0}
+            value={currentVal}
+            className="wof-spacer-number-input"
+            onChange={(e: any) => {
+              const val = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0);
+              props.onChange(val);
+            }}
+            aria-label={__('Height in pixels input', 'wooptionsfic')}
+          />
+        </div>
+      </div>
+    );
+  }
+
   export function Inspector(props: {
     field: WooOptionsFic.FieldDefinition | null;
     document: WooOptionsFic.OptionSetDefinition;
@@ -1467,13 +1511,16 @@ namespace WooOptionsFic.Builder {
     if (!props.field) return <aside className="wof-builder-inspector"><div className="wof-builder-pane__heading"><div><span className="wof-eyebrow">{__('Style', 'wooptionsfic')}</span><h2>{__('Option set styling', 'wooptionsfic')}</h2></div></div><div className="wof-inspector-body"><section className="wof-inspector-section"><StyleStudio document={props.document} onChange={props.onDocumentChange} /></section></div></aside>;
     const field = props.field;
     const update = (patch: Partial<WooOptionsFic.FieldDefinition>) => props.onFieldChange({ ...field, ...patch });
-    const visibleTabs = tabs.filter(([tab]) => tab !== 'choices' || Boolean(field.choices));
+    const visibleTabs = field.type === 'spacer'
+      ? tabs.filter(([tab]) => tab === 'content' || tab === 'logic')
+      : tabs.filter(([tab]) => tab !== 'choices' || Boolean(field.choices));
+    const activeTab = (field.type === 'spacer' && props.tab !== 'logic') ? 'content' : props.tab;
 
     return <aside className="wof-builder-inspector">
       <div className="wof-builder-pane__heading">
         <div>
           <span className="wof-eyebrow">{window.WooOptionsFicAdmin.fieldTypes[field.type]?.label ?? field.type}</span>
-          <h2>{field.label}</h2>
+          <h2>{field.type === 'spacer' ? __('Spacer', 'wooptionsfic') : field.label}</h2>
         </div>
         <div className="wof-inspector-heading-actions">
           <button type="button" onClick={props.onDuplicate} aria-label={__('Duplicate field', 'wooptionsfic')} title={__('Duplicate', 'wooptionsfic')}>
@@ -1491,7 +1538,7 @@ namespace WooOptionsFic.Builder {
             <button
               type="button"
               key={tab}
-              className={props.tab === tab ? 'is-active' : ''}
+              className={activeTab === tab ? 'is-active' : ''}
               onClick={(event: Event) => {
                 props.onTabChange(tab);
                 (event.currentTarget as HTMLElement).scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
@@ -1505,9 +1552,38 @@ namespace WooOptionsFic.Builder {
       </div>
       <div className="wof-inspector-body">
         <section className="wof-inspector-section">
-          {props.tab === 'content' ? (
-            <>
-              <TextControl label={__('Label', 'wooptionsfic')} value={field.label} onChange={(label: string) => update({ label })} />
+          {activeTab === 'content' ? (
+            field.type === 'spacer' ? (
+              <div className="wof-spacer-settings">
+                <SpacerHeightControl
+                  value={Number(field.height ?? (field.style as any)?.height ?? 24)}
+                  onChange={(height: number) => update({ height, style: { ...(field.style ?? {}), height } })}
+                />
+
+                <div className="wof-field-width-setting">
+                  <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+                  <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+                    {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+                      const isSelected = (field.width || '100%') === w;
+                      return (
+                        <button
+                          type="button"
+                          key={w}
+                          role="radio"
+                          aria-checked={isSelected}
+                          className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                          onClick={() => update({ width: w })}
+                        >
+                          {w}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <TextControl label={__('Label', 'wooptionsfic')} value={field.label} onChange={(label: string) => update({ label })} />
               {['paragraph', 'help'].includes(field.type) ? (
                 <TextareaControl label={__('Content', 'wooptionsfic')} value={field.description || field.help} onChange={(content: string) => update({ description: content, help: content })} />
               ) : null}
@@ -1832,15 +1908,16 @@ namespace WooOptionsFic.Builder {
 
               <ToggleControl label={__('Required', 'wooptionsfic')} checked={field.required} onChange={(required: boolean) => update({ required })} />
             </>
-          ) : props.tab === 'choices' ? (
-            <ChoiceEditor field={field} onChange={props.onFieldChange} />
-          ) : props.tab === 'pricing' ? (
-            <PricingPanel field={field} onChange={props.onFieldChange} />
-          ) : props.tab === 'logic' ? (
-            <LogicEditor field={field} allFields={props.document.fields} onChange={props.onFieldChange} />
-          ) : props.tab === 'style' ? (
-            <StyleStudio document={props.document} onChange={props.onDocumentChange} />
-          ) : (
+          )
+        ) : activeTab === 'choices' ? (
+          <ChoiceEditor field={field} onChange={props.onFieldChange} />
+        ) : activeTab === 'pricing' ? (
+          <PricingPanel field={field} onChange={props.onFieldChange} />
+        ) : activeTab === 'logic' ? (
+          <LogicEditor field={field} allFields={props.document.fields} onChange={props.onFieldChange} />
+        ) : activeTab === 'style' ? (
+          <StyleStudio document={props.document} onChange={props.onDocumentChange} />
+        ) : (
             <>
               <ToggleControl label={__('Disable this field', 'wooptionsfic')} checked={field.disabled} onChange={(disabled: boolean) => update({ disabled })} />
               {field.type === 'file' ? (
