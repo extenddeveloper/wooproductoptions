@@ -1033,8 +1033,232 @@ namespace WooOptionsFic.Builder {
     );
   }
 
+  const CHOICE_INDEX_MIME = 'application/x-wooptionsfic-choice-index';
+
+  function ChoiceItemCard(props: {
+    choice: WooOptionsFic.ChoiceDefinition;
+    index: number;
+    count: number;
+    fieldType: string;
+    isOpen: boolean;
+    onToggle: () => void;
+    onUpdate: (patch: Partial<WooOptionsFic.ChoiceDefinition>) => void;
+    onRemove: () => void;
+    onMove: (from: number, to: number) => void;
+  }): any {
+    const [dropEdge, setDropEdge] = useState<'before' | 'after' | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const cardRef = useRef<HTMLElement | null>(null);
+
+    const dragStart = (event: any) => {
+      event.stopPropagation();
+      event.dataTransfer?.setData(CHOICE_INDEX_MIME, String(props.index));
+      event.dataTransfer?.setData('text/plain', String(props.index));
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        if (cardRef.current && event.dataTransfer.setDragImage) {
+          const bounds = cardRef.current.getBoundingClientRect();
+          event.dataTransfer.setDragImage(cardRef.current, event.clientX - bounds.left, event.clientY - bounds.top);
+        }
+      }
+      setIsDragging(true);
+    };
+
+    const dragEnd = () => {
+      setIsDragging(false);
+      setDropEdge(null);
+    };
+
+    const dragOver = (event: any) => {
+      const types = Array.from(event.dataTransfer?.types ?? []);
+      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+      const element = event.currentTarget as HTMLElement;
+      const bounds = element.getBoundingClientRect();
+      setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+    };
+
+    const dragLeave = (event: any) => {
+      const element = event.currentTarget as HTMLElement;
+      if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget)) return;
+      setDropEdge(null);
+    };
+
+    const drop = (event: any) => {
+      const types = Array.from(event.dataTransfer?.types ?? []);
+      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const sourceText = event.dataTransfer?.getData(CHOICE_INDEX_MIME) || event.dataTransfer?.getData('text/plain') || '';
+      const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+      setDropEdge(null);
+      setIsDragging(false);
+
+      const source = Number(sourceText);
+      if (!Number.isInteger(source)) return;
+      let finalIndex = insertIndex;
+      if (source < insertIndex) finalIndex -= 1;
+      finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+      if (finalIndex !== source) props.onMove(source, finalIndex);
+    };
+
+    return (
+      <article
+        ref={cardRef}
+        className={WooOptionsFic.Utils.classNames(
+          'wof-choice-card',
+          !props.isOpen && 'is-collapsed',
+          isDragging && 'is-dragging',
+          dropEdge === 'before' && 'is-drop-before',
+          dropEdge === 'after' && 'is-drop-after'
+        )}
+        onDragOver={dragOver}
+        onDragLeave={dragLeave}
+        onDrop={drop}
+      >
+        <header className="wof-choice-card__header">
+          <button
+            type="button"
+            draggable
+            className="wof-choice-drag-handle"
+            onDragStart={dragStart}
+            onDragEnd={dragEnd}
+            aria-label={__('Drag choice to reorder', 'wooptionsfic')}
+            title={__('Drag to reorder', 'wooptionsfic')}
+          >
+            <WooOptionsFic.Components.GripIcon />
+            <strong>{__('Choice', 'wooptionsfic')} {props.index + 1}</strong>
+            {props.choice.label ? (
+              <span className="wof-choice-header-label-badge" title={props.choice.label}>
+                {props.choice.label}
+              </span>
+            ) : null}
+          </button>
+          <div className="wof-choice-header-actions">
+            <button
+              type="button"
+              className="wof-choice-accordion-toggle"
+              onClick={props.onToggle}
+              aria-expanded={props.isOpen}
+              aria-label={props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic')}
+              title={props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic')}
+            >
+              <WooOptionsFic.Components.Dashicon name={props.isOpen ? 'arrow-up-alt2' : 'arrow-down-alt2'} />
+            </button>
+            <button
+              type="button"
+              className="wof-choice-delete-btn"
+              onClick={props.onRemove}
+              aria-label={__('Delete choice', 'wooptionsfic')}
+              title={__('Delete choice', 'wooptionsfic')}
+            >
+              <WooOptionsFic.Components.Dashicon name="trash" />
+            </button>
+          </div>
+        </header>
+
+        {props.isOpen ? (
+          <div className="wof-choice-card__body">
+            <TextControl
+              label={__('Label', 'wooptionsfic')}
+              value={props.choice.label}
+              onChange={(label: string) => props.onUpdate({ label })}
+            />
+
+            <TextControl
+              label={__('Description', 'wooptionsfic')}
+              value={props.choice.description}
+              onChange={(description: string) => props.onUpdate({ description })}
+            />
+
+            {props.fieldType === 'color_swatch' ? (
+              <ChoiceColorControl
+                color={props.choice.color || '#5B4FF5'}
+                onChange={(color: string) => props.onUpdate({ color })}
+              />
+            ) : null}
+
+            {['image_swatch', 'product', 'radio', 'checkbox_group', 'segmented', 'select'].includes(props.fieldType) ? (
+              <ChoiceMediaControl
+                choice={props.choice}
+                required={props.fieldType === 'image_swatch'}
+                onChange={(patch) => props.onUpdate(patch)}
+              />
+            ) : null}
+
+            <div className="wof-choice-pricing-row">
+              <SelectControl
+                label={__('Price type', 'wooptionsfic')}
+                value={props.choice.pricing.strategy}
+                options={[
+                  { label: __('No adjustment', 'wooptionsfic'), value: 'none' },
+                  { label: __('Fixed amount', 'wooptionsfic'), value: 'fixed' },
+                  { label: __('Percentage', 'wooptionsfic'), value: 'percentage' },
+                ]}
+                onChange={(strategy: WooOptionsFic.PricingDefinition['strategy']) =>
+                  props.onUpdate({ pricing: { ...props.choice.pricing, strategy } })
+                }
+              />
+              {props.choice.pricing.strategy === 'percentage' ? (
+                <TextControl
+                  label={__('Percent', 'wooptionsfic')}
+                  type="number"
+                  value={props.choice.pricing.percent}
+                  onChange={(percent: string) =>
+                    props.onUpdate({ pricing: { ...props.choice.pricing, percent } })
+                  }
+                />
+              ) : props.choice.pricing.strategy !== 'none' ? (
+                <TextControl
+                  label={__('Amount', 'wooptionsfic')}
+                  type="number"
+                  value={props.choice.pricing.amount}
+                  onChange={(amount: string) =>
+                    props.onUpdate({ pricing: { ...props.choice.pricing, amount } })
+                  }
+                />
+              ) : null}
+            </div>
+
+            <div className="wof-choice-toggles-row">
+              <ToggleControl
+                label={__('Default choice', 'wooptionsfic')}
+                checked={props.choice.default}
+                onChange={(val: boolean) => props.onUpdate({ default: val })}
+              />
+              <ToggleControl
+                label={__('Disable choice', 'wooptionsfic')}
+                checked={props.choice.disabled}
+                onChange={(val: boolean) => props.onUpdate({ disabled: val })}
+              />
+            </div>
+          </div>
+        ) : null}
+      </article>
+    );
+  }
+
   function ChoiceEditor(props: { field: WooOptionsFic.FieldDefinition; onChange: (field: WooOptionsFic.FieldDefinition) => void }): any {
     const choices = props.field.choices ?? [];
+    const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>({});
+
+    const toggleChoice = (uuid: string) => {
+      setCollapsedMap((prev) => ({ ...prev, [uuid]: !prev[uuid] }));
+    };
+
+    const isAllCollapsed = choices.length > 0 && choices.every((c) => Boolean(collapsedMap[c.uuid]));
+
+    const toggleAll = () => {
+      const nextState = !isAllCollapsed;
+      const nextMap: Record<string, boolean> = {};
+      choices.forEach((c) => {
+        nextMap[c.uuid] = nextState;
+      });
+      setCollapsedMap(nextMap);
+    };
+
     const updateChoice = (uuid: string, patch: Partial<WooOptionsFic.ChoiceDefinition>) => props.onChange({
       ...props.field,
       choices: choices.map((choice) => choice.uuid === uuid ? { ...choice, ...patch } : choice),
@@ -1043,10 +1267,21 @@ namespace WooOptionsFic.Builder {
       ...props.field,
       choices: choices.filter((choice) => choice.uuid !== uuid),
     });
-    const addChoice = () => props.onChange({
-      ...props.field,
-      choices: [...choices, WooOptionsFic.FieldFactory.choice(`Choice ${choices.length + 1}`, choices.length)],
-    });
+    const addChoice = () => {
+      const newChoice = WooOptionsFic.FieldFactory.choice(`Choice ${choices.length + 1}`, choices.length);
+      props.onChange({
+        ...props.field,
+        choices: [...choices, newChoice],
+      });
+      setCollapsedMap((prev) => ({ ...prev, [newChoice.uuid]: false }));
+    };
+    const moveChoice = (from: number, to: number) => {
+      if (from === to || from < 0 || to < 0 || from >= choices.length || to >= choices.length) return;
+      const reordered = [...choices];
+      const [moved] = reordered.splice(from, 1);
+      reordered.splice(to, 0, moved);
+      props.onChange({ ...props.field, choices: reordered });
+    };
 
     if (!props.field.choices) return <p className="wof-muted-note">{__('This element has no choices.', 'wooptionsfic')}</p>;
 
@@ -1163,46 +1398,33 @@ namespace WooOptionsFic.Builder {
             onChange={(updateProductImage: boolean) => props.onChange({ ...props.field, updateProductImage })}
           />
         </div> : null}
+
+        {choices.length > 1 ? (
+          <div className="wof-choice-list-toolbar">
+            <span className="wof-choice-list-count">{choices.length} {__('Choices', 'wooptionsfic')}</span>
+            <button
+              type="button"
+              className="wof-choice-collapse-all-btn"
+              onClick={toggleAll}
+            >
+              {isAllCollapsed ? __('Expand all', 'wooptionsfic') : __('Collapse all', 'wooptionsfic')}
+            </button>
+          </div>
+        ) : null}
+
         {choices.map((choice, index) => (
-          <article key={choice.uuid}>
-            <header>
-              <WooOptionsFic.Components.GripIcon />
-              <strong>{__('Choice', 'wooptionsfic')} {index + 1}</strong>
-              <button type="button" onClick={() => removeChoice(choice.uuid)}><WooOptionsFic.Components.Dashicon name="trash" /></button>
-            </header>
-            <TextControl label={__('Label', 'wooptionsfic')} value={choice.label} onChange={(label: string) => updateChoice(choice.uuid, { label })} />
-            <TextControl label={__('Description', 'wooptionsfic')} value={choice.description} onChange={(description: string) => updateChoice(choice.uuid, { description })} />
-            {props.field.type === 'color_swatch' ? (
-              <ChoiceColorControl color={choice.color || '#5B4FF5'} onChange={(color: string) => updateChoice(choice.uuid, { color })} />
-            ) : null}
-            {/* Note: 'color_swatch' is excluded so 'Choice image (optional)' is removed from color swatches */}
-            {['image_swatch', 'product', 'radio', 'checkbox_group', 'segmented', 'select'].includes(props.field.type) ? (
-              <ChoiceMediaControl
-                choice={choice}
-                required={props.field.type === 'image_swatch'}
-                onChange={(patch) => updateChoice(choice.uuid, patch)}
-              />
-            ) : null}
-            <div className="wof-choice-pricing-row">
-              <SelectControl
-                label={__('Price type', 'wooptionsfic')}
-                value={choice.pricing.strategy}
-                options={[
-                  { label: __('No adjustment', 'wooptionsfic'), value: 'none' },
-                  { label: __('Fixed amount', 'wooptionsfic'), value: 'fixed' },
-                  { label: __('Percentage', 'wooptionsfic'), value: 'percentage' },
-                ]}
-                onChange={(strategy: WooOptionsFic.PricingDefinition['strategy']) => updateChoice(choice.uuid, { pricing: { ...choice.pricing, strategy } })}
-              />
-              {choice.pricing.strategy === 'percentage' ? (
-                <TextControl label={__('Percent', 'wooptionsfic')} type="number" value={choice.pricing.percent} onChange={(percent: string) => updateChoice(choice.uuid, { pricing: { ...choice.pricing, percent } })} />
-              ) : choice.pricing.strategy !== 'none' ? (
-                <TextControl label={__('Amount', 'wooptionsfic')} type="number" value={choice.pricing.amount} onChange={(amount: string) => updateChoice(choice.uuid, { pricing: { ...choice.pricing, amount } })} />
-              ) : null}
-            </div>
-            <ToggleControl label={__('Default choice', 'wooptionsfic')} checked={choice.default} onChange={(value: boolean) => updateChoice(choice.uuid, { default: value })} />
-            <ToggleControl label={__('Disable choice', 'wooptionsfic')} checked={choice.disabled} onChange={(value: boolean) => updateChoice(choice.uuid, { disabled: value })} />
-          </article>
+          <ChoiceItemCard
+            key={choice.uuid}
+            choice={choice}
+            index={index}
+            count={choices.length}
+            fieldType={props.field.type}
+            isOpen={!collapsedMap[choice.uuid]}
+            onToggle={() => toggleChoice(choice.uuid)}
+            onUpdate={(patch) => updateChoice(choice.uuid, patch)}
+            onRemove={() => removeChoice(choice.uuid)}
+            onMove={moveChoice}
+          />
         ))}
         <Button variant="secondary" onClick={addChoice}><WooOptionsFic.Components.Dashicon name="plus-alt2" />{__('Add choice', 'wooptionsfic')}</Button>
       </div>

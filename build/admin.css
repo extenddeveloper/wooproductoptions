@@ -2496,6 +2496,42 @@
 	border: 1px solid var(--wof-admin-line);
 	border-radius: 9px;
 	padding: 10px;
+	position: relative;
+	transition: opacity 0.15s, border-color 0.15s, padding 0.15s;
+}
+
+.wof-choice-editor-list article.is-collapsed {
+	padding: 7px 10px;
+}
+
+.wof-choice-editor-list article.is-collapsed > header {
+	margin-bottom: 0;
+}
+
+.wof-choice-editor-list article.is-dragging {
+	opacity: 0.45;
+	border-style: dashed;
+}
+
+.wof-choice-editor-list article.is-drop-before::before,
+.wof-choice-editor-list article.is-drop-after::after {
+	background: var(--wof-admin-primary, #5b4ff5);
+	border-radius: 999px;
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--wof-admin-primary, #5b4ff5) 18%, transparent);
+	content: "";
+	height: 3px;
+	left: 4px;
+	right: 4px;
+	position: absolute;
+	z-index: 10;
+}
+
+.wof-choice-editor-list article.is-drop-before::before {
+	top: -6px;
+}
+
+.wof-choice-editor-list article.is-drop-after::after {
+	bottom: -6px;
 }
 
 .wof-choice-editor-list article>header {
@@ -2505,14 +2541,182 @@
 	font-size: 10px;
 	gap: 7px;
 	margin: -2px 0 8px;
+	user-select: none;
 }
 
-.wof-choice-editor-list article>header button {
+.wof-choice-drag-handle {
+	align-items: center;
+	background: transparent;
+	border: 0;
+	color: var(--wof-admin-muted, #64748b);
+	cursor: grab;
+	display: inline-flex;
+	font-size: 11px;
+	font-weight: 700;
+	gap: 6px;
+	margin: 0;
+	padding: 2px 6px 2px 2px;
+	border-radius: 4px;
+	line-height: 1;
+	max-width: calc(100% - 60px);
+	transition: background 0.15s, color 0.15s;
+}
+
+.wof-choice-drag-handle strong {
+	color: #475569;
+	font-size: 11px;
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+.wof-choice-drag-handle:hover {
+	background: #e2e8f0;
+	color: var(--wof-admin-ink, #0f172a);
+}
+
+.wof-choice-drag-handle:hover strong {
+	color: var(--wof-admin-ink, #0f172a);
+}
+
+.wof-choice-drag-handle:active {
+	cursor: grabbing;
+}
+
+.wof-choice-header-label-badge {
+	background: color-mix(in srgb, var(--wof-admin-primary, #5b4ff5) 8%, #ffffff);
+	border: 1px solid color-mix(in srgb, var(--wof-admin-primary, #5b4ff5) 20%, #cbd5e1);
+	border-radius: 4px;
+	color: #334155;
+	font-size: 10.5px;
+	font-weight: 500;
+	max-width: 140px;
+	overflow: hidden;
+	padding: 1px 6px;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.wof-choice-header-actions {
+	align-items: center;
+	display: inline-flex;
+	gap: 3px;
+	margin-left: auto;
+}
+
+.wof-choice-accordion-toggle {
+	align-items: center;
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	color: var(--wof-admin-muted, #64748b);
+	cursor: pointer;
+	display: inline-flex;
+	justify-content: center;
+	line-height: 1;
+	padding: 3px;
+	transition: background 0.15s, color 0.15s;
+}
+
+.wof-choice-accordion-toggle:hover {
+	background: #e2e8f0;
+	color: var(--wof-admin-ink, #0f172a);
+}
+
+.wof-choice-accordion-toggle .dashicons {
+	font-size: 16px;
+	height: 16px;
+	width: 16px;
+}
+
+.wof-choice-editor-list article>header button.wof-choice-delete-btn,
+.wof-choice-editor-list article>header button:not(.wof-choice-drag-handle):not(.wof-choice-accordion-toggle) {
 	background: transparent;
 	border: 0;
 	color: var(--wof-admin-danger);
 	cursor: pointer;
-	margin-left: auto;
+	padding: 3px;
+	border-radius: 4px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 1;
+	transition: background 0.15s, opacity 0.15s;
+}
+
+.wof-choice-editor-list article>header button.wof-choice-delete-btn:hover,
+.wof-choice-editor-list article>header button:not(.wof-choice-drag-handle):not(.wof-choice-accordion-toggle):hover {
+	background: #fee2e2;
+	opacity: 1;
+}
+
+.wof-choice-editor-list article>header button.wof-choice-delete-btn .dashicons {
+	font-size: 16px;
+	height: 16px;
+	width: 16px;
+}
+
+.wof-choice-list-toolbar {
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+	margin-bottom: 6px;
+	padding: 0 2px;
+}
+
+.wof-choice-list-count {
+	color: var(--wof-admin-muted, #64748b);
+	font-size: 11px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.wof-choice-collapse-all-btn {
+	background: transparent;
+	border: 0;
+	border-radius: 4px;
+	color: var(--wof-admin-primary, #5b4ff5);
+	cursor: pointer;
+	font-size: 11px;
+	font-weight: 600;
+	padding: 2px 6px;
+	transition: background 0.15s;
+}
+
+.wof-choice-collapse-all-btn:hover {
+	background: color-mix(in srgb, var(--wof-admin-primary, #5b4ff5) 10%, transparent);
+}
+
+.wof-choice-toggles-row {
+	align-items: center;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	margin-top: 6px;
+}
+
+.wof-choice-toggles-row .components-base-control {
+	margin-bottom: 0 !important;
+}
+
+.wof-choice-toggles-row .components-toggle-control {
+	display: inline-flex;
+	margin-bottom: 0 !important;
+}
+
+.wof-choice-toggles-row .components-toggle-control .components-base-control__field {
+	align-items: center;
+	display: flex;
+	gap: 8px;
+	margin-bottom: 0 !important;
+}
+
+.wof-choice-toggles-row .components-toggle-control .components-base-control__label {
+	color: #334155;
+	font-size: 12px;
+	font-weight: 500;
+	margin: 0 !important;
+	white-space: nowrap;
 }
 
 .wof-choice-editor-list .components-base-control {

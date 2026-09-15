@@ -270,7 +270,12 @@ namespace WooOptionsFic.Builder {
                     <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" />
                   </span>
                 ) : null}
-                <span className="wof-preview-radio-item__label">{choice.label}</span>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                  <span className="wof-preview-radio-item__label">{choice.label}</span>
+                  {choice.description ? (
+                    <small style={{ color: '#64748b', fontSize: '11px', lineHeight: 1.3 }}>{choice.description}</small>
+                  ) : null}
+                </span>
                 {formatChoicePrice(choice.pricing) ? <span className="wof-preview-radio-item__price">{formatChoicePrice(choice.pricing)}</span> : null}
               </label>
             );
@@ -317,7 +322,12 @@ namespace WooOptionsFic.Builder {
                     <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" />
                   </span>
                 ) : null}
-                <span className="wof-preview-checkbox-item__label">{choice.label}</span>
+                <span style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                  <span className="wof-preview-checkbox-item__label">{choice.label}</span>
+                  {choice.description ? (
+                    <small style={{ color: '#64748b', fontSize: '11px', lineHeight: 1.3 }}>{choice.description}</small>
+                  ) : null}
+                </span>
                 {formatChoicePrice(choice.pricing) ? <span className="wof-preview-checkbox-item__price">{formatChoicePrice(choice.pricing)}</span> : null}
               </label>
             );
@@ -388,7 +398,12 @@ namespace WooOptionsFic.Builder {
                     <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" />
                   </span>
                 ) : null}
-                <span>{choice.label}</span>
+                <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1px' }}>
+                  <span>{choice.label}</span>
+                  {choice.description ? (
+                    <small style={{ fontSize: '11px', opacity: 0.72, fontWeight: 400 }}>{choice.description}</small>
+                  ) : null}
+                </span>
                 {priceText ? <span style={{ fontSize: '11px', opacity: 0.72 }}>{priceText}</span> : null}
               </span>
             );
@@ -450,7 +465,10 @@ namespace WooOptionsFic.Builder {
                   {choice.imageId || choice.imageUrl ? <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" /> : <WooOptionsFic.Components.Dashicon name="format-image" />}
                   {isSelected ? <span className="wof-preview-image-tile__check" style={{ position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 }}>{renderCheckSvg(10)}</span> : null}
                 </span>
-                <small style={{ minHeight: '1.3em', marginTop: '4px' }}>{choice.label}</small>
+                <small style={{ minHeight: '1.3em', marginTop: '4px', textAlign: 'center' }}>{choice.label}</small>
+                {choice.description ? (
+                  <small style={{ color: '#64748b', fontSize: '10px', textAlign: 'center', lineHeight: 1.2 }}>{choice.description}</small>
+                ) : null}
                 <span className="wof-preview-image-tile__price" style={{ minHeight: '1.3em' }}>{formatChoicePrice(choice.pricing)}</span>
                 {field.enableQuantity ? (
                   <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' }}>

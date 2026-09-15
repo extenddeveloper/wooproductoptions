@@ -320,6 +320,9 @@ final class Renderer {
 				echo '<img class="' . esc_attr($img_base_cls . ' wof-custom-select__img') . '" src="' . esc_url($choice_img) . '" alt="">';
 			}
 			echo '<span class="wof-custom-select__option-label">' . esc_html((string) $choice['label']) . '</span>';
+			if ('' !== (string) ($choice['description'] ?? '')) {
+				echo '<small class="wof-custom-select__option-desc">' . esc_html((string) $choice['description']) . '</small>';
+			}
 			if ('' !== $price_text) {
 				echo '<span class="wof-custom-select__option-price">' . esc_html($price_text) . '</span>';
 			}
@@ -401,7 +404,7 @@ final class Renderer {
 			echo wp_kses_post($image_html);
 			echo '<span class="wof-choice__body"><strong>' . esc_html((string) $choice['label']) . '</strong>';
 			if ('' !== (string) ($choice['description'] ?? '')) {
-				echo '<small>' . esc_html((string) $choice['description']) . '</small>';
+				echo '<small class="wof-choice__description">' . esc_html((string) $choice['description']) . '</small>';
 			}
 			echo '<span class="wof-choice__price">' . esc_html($this->choice_price_text((array) $choice)) . '</span>';
 			if (! empty($field['enableQuantity'])) {
@@ -449,6 +452,9 @@ final class Renderer {
 			echo '<span class="wof-swatch-item__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="11" height="11" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>';
 			echo '</span>';
 			echo '<span class="wof-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
+			if ('' !== (string) ($choice['description'] ?? '')) {
+				echo '<small class="wof-choice__description">' . esc_html((string) $choice['description']) . '</small>';
+			}
 			$price_text = $this->choice_price_text((array) $choice, false);
 			echo '<span class="wof-swatch-item__price">' . ('' !== $price_text ? esc_html($price_text) : '&nbsp;') . '</span>';
 			if (! empty($field['enableQuantity'])) {
@@ -522,6 +528,9 @@ final class Renderer {
 			echo '<span class="wof-image-swatch-item__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="11" height="11" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>';
 			echo '</span>';
 			echo '<span class="wof-image-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
+			if ('' !== (string) ($choice['description'] ?? '')) {
+				echo '<small class="wof-choice__description">' . esc_html((string) $choice['description']) . '</small>';
+			}
 			$price_text = $this->choice_price_text((array) $choice, false);
 			echo '<span class="wof-image-swatch-item__price">' . ('' !== $price_text ? esc_html($price_text) : '&nbsp;') . '</span>';
 			if (! empty($field['enableQuantity'])) {
@@ -567,7 +576,12 @@ final class Renderer {
 				echo wp_kses_post($image_html);
 			}
 
+			echo '<span class="wof-radio-item__text">';
 			echo '<span class="wof-radio-item__label">' . esc_html((string) $choice['label']) . '</span>';
+			if ('' !== (string) ($choice['description'] ?? '')) {
+				echo '<small class="wof-choice__description">' . esc_html((string) $choice['description']) . '</small>';
+			}
+			echo '</span>';
 			$price_text = $this->choice_price_text((array) $choice, false);
 			if ('' !== $price_text) {
 				echo '<span class="wof-radio-item__price">' . esc_html($price_text) . '</span>';
@@ -610,7 +624,12 @@ final class Renderer {
 				echo wp_kses_post($image_html);
 			}
 
+			echo '<span class="wof-checkbox-item__text">';
 			echo '<span class="wof-checkbox-item__label">' . esc_html((string) $choice['label']) . '</span>';
+			if ('' !== (string) ($choice['description'] ?? '')) {
+				echo '<small class="wof-choice__description">' . esc_html((string) $choice['description']) . '</small>';
+			}
+			echo '</span>';
 			$price_text = $this->choice_price_text((array) $choice, false);
 			if ('' !== $price_text) {
 				echo '<span class="wof-checkbox-item__price">' . esc_html($price_text) . '</span>';

@@ -2266,7 +2266,9 @@ var WooOptionsFic;
                                 marginInlineEnd: '6px',
                             } },
                             wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }))) : null,
-                        wp.element.createElement("span", { className: "wof-preview-radio-item__label" }, choice.label),
+                        wp.element.createElement("span", { style: { display: 'flex', flexDirection: 'column', gap: '1px' } },
+                            wp.element.createElement("span", { className: "wof-preview-radio-item__label" }, choice.label),
+                            choice.description ? (wp.element.createElement("small", { style: { color: '#64748b', fontSize: '11px', lineHeight: 1.3 } }, choice.description)) : null),
                         formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-radio-item__price" }, formatChoicePrice(choice.pricing)) : null));
                 })));
             }
@@ -2295,7 +2297,9 @@ var WooOptionsFic;
                                 marginInlineEnd: '6px',
                             } },
                             wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }))) : null,
-                        wp.element.createElement("span", { className: "wof-preview-checkbox-item__label" }, choice.label),
+                        wp.element.createElement("span", { style: { display: 'flex', flexDirection: 'column', gap: '1px' } },
+                            wp.element.createElement("span", { className: "wof-preview-checkbox-item__label" }, choice.label),
+                            choice.description ? (wp.element.createElement("small", { style: { color: '#64748b', fontSize: '11px', lineHeight: 1.3 } }, choice.description)) : null),
                         formatChoicePrice(choice.pricing) ? wp.element.createElement("span", { className: "wof-preview-checkbox-item__price" }, formatChoicePrice(choice.pricing)) : null));
                 })));
             }
@@ -2350,7 +2354,9 @@ var WooOptionsFic;
                                 background: '#f1f5f9',
                             } },
                             wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }))) : null,
-                        wp.element.createElement("span", null, choice.label),
+                        wp.element.createElement("span", { style: { display: 'inline-flex', flexDirection: 'column', alignItems: 'flex-start', gap: '1px' } },
+                            wp.element.createElement("span", null, choice.label),
+                            choice.description ? (wp.element.createElement("small", { style: { fontSize: '11px', opacity: 0.72, fontWeight: 400 } }, choice.description)) : null),
                         priceText ? wp.element.createElement("span", { style: { fontSize: '11px', opacity: 0.72 } }, priceText) : null));
                 })));
             }
@@ -2392,7 +2398,8 @@ var WooOptionsFic;
                         wp.element.createElement("span", { className: "wof-preview-image-tile__thumb", style: { ...thumbStyle, position: 'relative' } },
                             choice.imageId || choice.imageUrl ? wp.element.createElement(WooOptionsFic.Components.MediaImage, { attachmentId: choice.imageId, src: choice.imageUrl, alt: "" }) : wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" }),
                             isSelected ? wp.element.createElement("span", { className: "wof-preview-image-tile__check", style: { position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 } }, renderCheckSvg(10)) : null),
-                        wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px' } }, choice.label),
+                        wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px', textAlign: 'center' } }, choice.label),
+                        choice.description ? (wp.element.createElement("small", { style: { color: '#64748b', fontSize: '10px', textAlign: 'center', lineHeight: 1.2 } }, choice.description)) : null,
                         wp.element.createElement("span", { className: "wof-preview-image-tile__price", style: { minHeight: '1.3em' } }, formatChoicePrice(choice.pricing)),
                         field.enableQuantity ? (wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' } },
                             wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' } }))) : null));
@@ -3505,8 +3512,111 @@ var WooOptionsFic;
                                 props.onChange({ imageId: 0, imageUrl: '' });
                             } }, __('Remove', 'wooptionsfic'))) : null))));
         }
+        const CHOICE_INDEX_MIME = 'application/x-wooptionsfic-choice-index';
+        function ChoiceItemCard(props) {
+            const [dropEdge, setDropEdge] = useState(null);
+            const [isDragging, setIsDragging] = useState(false);
+            const cardRef = useRef(null);
+            const dragStart = (event) => {
+                event.stopPropagation();
+                event.dataTransfer?.setData(CHOICE_INDEX_MIME, String(props.index));
+                event.dataTransfer?.setData('text/plain', String(props.index));
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = 'move';
+                    if (cardRef.current && event.dataTransfer.setDragImage) {
+                        const bounds = cardRef.current.getBoundingClientRect();
+                        event.dataTransfer.setDragImage(cardRef.current, event.clientX - bounds.left, event.clientY - bounds.top);
+                    }
+                }
+                setIsDragging(true);
+            };
+            const dragEnd = () => {
+                setIsDragging(false);
+                setDropEdge(null);
+            };
+            const dragOver = (event) => {
+                const types = Array.from(event.dataTransfer?.types ?? []);
+                if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain'))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.dataTransfer)
+                    event.dataTransfer.dropEffect = 'move';
+                const element = event.currentTarget;
+                const bounds = element.getBoundingClientRect();
+                setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+            };
+            const dragLeave = (event) => {
+                const element = event.currentTarget;
+                if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget))
+                    return;
+                setDropEdge(null);
+            };
+            const drop = (event) => {
+                const types = Array.from(event.dataTransfer?.types ?? []);
+                if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain'))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                const sourceText = event.dataTransfer?.getData(CHOICE_INDEX_MIME) || event.dataTransfer?.getData('text/plain') || '';
+                const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+                setDropEdge(null);
+                setIsDragging(false);
+                const source = Number(sourceText);
+                if (!Number.isInteger(source))
+                    return;
+                let finalIndex = insertIndex;
+                if (source < insertIndex)
+                    finalIndex -= 1;
+                finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+                if (finalIndex !== source)
+                    props.onMove(source, finalIndex);
+            };
+            return (wp.element.createElement("article", { ref: cardRef, className: WooOptionsFic.Utils.classNames('wof-choice-card', !props.isOpen && 'is-collapsed', isDragging && 'is-dragging', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after'), onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop },
+                wp.element.createElement("header", { className: "wof-choice-card__header" },
+                    wp.element.createElement("button", { type: "button", draggable: true, className: "wof-choice-drag-handle", onDragStart: dragStart, onDragEnd: dragEnd, "aria-label": __('Drag choice to reorder', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.GripIcon, null),
+                        wp.element.createElement("strong", null,
+                            __('Choice', 'wooptionsfic'),
+                            " ",
+                            props.index + 1),
+                        props.choice.label ? (wp.element.createElement("span", { className: "wof-choice-header-label-badge", title: props.choice.label }, props.choice.label)) : null),
+                    wp.element.createElement("div", { className: "wof-choice-header-actions" },
+                        wp.element.createElement("button", { type: "button", className: "wof-choice-accordion-toggle", onClick: props.onToggle, "aria-expanded": props.isOpen, "aria-label": props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic'), title: props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: props.isOpen ? 'arrow-up-alt2' : 'arrow-down-alt2' })),
+                        wp.element.createElement("button", { type: "button", className: "wof-choice-delete-btn", onClick: props.onRemove, "aria-label": __('Delete choice', 'wooptionsfic'), title: __('Delete choice', 'wooptionsfic') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" })))),
+                props.isOpen ? (wp.element.createElement("div", { className: "wof-choice-card__body" },
+                    wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: props.choice.label, onChange: (label) => props.onUpdate({ label }) }),
+                    wp.element.createElement(TextControl, { label: __('Description', 'wooptionsfic'), value: props.choice.description, onChange: (description) => props.onUpdate({ description }) }),
+                    props.fieldType === 'color_swatch' ? (wp.element.createElement(ChoiceColorControl, { color: props.choice.color || '#5B4FF5', onChange: (color) => props.onUpdate({ color }) })) : null,
+                    ['image_swatch', 'product', 'radio', 'checkbox_group', 'segmented', 'select'].includes(props.fieldType) ? (wp.element.createElement(ChoiceMediaControl, { choice: props.choice, required: props.fieldType === 'image_swatch', onChange: (patch) => props.onUpdate(patch) })) : null,
+                    wp.element.createElement("div", { className: "wof-choice-pricing-row" },
+                        wp.element.createElement(SelectControl, { label: __('Price type', 'wooptionsfic'), value: props.choice.pricing.strategy, options: [
+                                { label: __('No adjustment', 'wooptionsfic'), value: 'none' },
+                                { label: __('Fixed amount', 'wooptionsfic'), value: 'fixed' },
+                                { label: __('Percentage', 'wooptionsfic'), value: 'percentage' },
+                            ], onChange: (strategy) => props.onUpdate({ pricing: { ...props.choice.pricing, strategy } }) }),
+                        props.choice.pricing.strategy === 'percentage' ? (wp.element.createElement(TextControl, { label: __('Percent', 'wooptionsfic'), type: "number", value: props.choice.pricing.percent, onChange: (percent) => props.onUpdate({ pricing: { ...props.choice.pricing, percent } }) })) : props.choice.pricing.strategy !== 'none' ? (wp.element.createElement(TextControl, { label: __('Amount', 'wooptionsfic'), type: "number", value: props.choice.pricing.amount, onChange: (amount) => props.onUpdate({ pricing: { ...props.choice.pricing, amount } }) })) : null),
+                    wp.element.createElement("div", { className: "wof-choice-toggles-row" },
+                        wp.element.createElement(ToggleControl, { label: __('Default choice', 'wooptionsfic'), checked: props.choice.default, onChange: (val) => props.onUpdate({ default: val }) }),
+                        wp.element.createElement(ToggleControl, { label: __('Disable choice', 'wooptionsfic'), checked: props.choice.disabled, onChange: (val) => props.onUpdate({ disabled: val }) })))) : null));
+        }
         function ChoiceEditor(props) {
             const choices = props.field.choices ?? [];
+            const [collapsedMap, setCollapsedMap] = useState({});
+            const toggleChoice = (uuid) => {
+                setCollapsedMap((prev) => ({ ...prev, [uuid]: !prev[uuid] }));
+            };
+            const isAllCollapsed = choices.length > 0 && choices.every((c) => Boolean(collapsedMap[c.uuid]));
+            const toggleAll = () => {
+                const nextState = !isAllCollapsed;
+                const nextMap = {};
+                choices.forEach((c) => {
+                    nextMap[c.uuid] = nextState;
+                });
+                setCollapsedMap(nextMap);
+            };
             const updateChoice = (uuid, patch) => props.onChange({
                 ...props.field,
                 choices: choices.map((choice) => choice.uuid === uuid ? { ...choice, ...patch } : choice),
@@ -3515,10 +3625,22 @@ var WooOptionsFic;
                 ...props.field,
                 choices: choices.filter((choice) => choice.uuid !== uuid),
             });
-            const addChoice = () => props.onChange({
-                ...props.field,
-                choices: [...choices, WooOptionsFic.FieldFactory.choice(`Choice ${choices.length + 1}`, choices.length)],
-            });
+            const addChoice = () => {
+                const newChoice = WooOptionsFic.FieldFactory.choice(`Choice ${choices.length + 1}`, choices.length);
+                props.onChange({
+                    ...props.field,
+                    choices: [...choices, newChoice],
+                });
+                setCollapsedMap((prev) => ({ ...prev, [newChoice.uuid]: false }));
+            };
+            const moveChoice = (from, to) => {
+                if (from === to || from < 0 || to < 0 || from >= choices.length || to >= choices.length)
+                    return;
+                const reordered = [...choices];
+                const [moved] = reordered.splice(from, 1);
+                reordered.splice(to, 0, moved);
+                props.onChange({ ...props.field, choices: reordered });
+            };
             if (!props.field.choices)
                 return wp.element.createElement("p", { className: "wof-muted-note" }, __('This element has no choices.', 'wooptionsfic'));
             return (wp.element.createElement("div", { className: "wof-choice-editor-list" },
@@ -3558,28 +3680,13 @@ var WooOptionsFic;
                         }))))) : null,
                 props.field.type === 'image_swatch' ? wp.element.createElement("div", { className: "wof-image-swatch-behavior" },
                     wp.element.createElement(ToggleControl, { label: __('Update product image on selection', 'wooptionsfic'), help: __('Replace the main WooCommerce product image with the selected swatch image.', 'wooptionsfic'), checked: Boolean(props.field.updateProductImage), onChange: (updateProductImage) => props.onChange({ ...props.field, updateProductImage }) })) : null,
-                choices.map((choice, index) => (wp.element.createElement("article", { key: choice.uuid },
-                    wp.element.createElement("header", null,
-                        wp.element.createElement(WooOptionsFic.Components.GripIcon, null),
-                        wp.element.createElement("strong", null,
-                            __('Choice', 'wooptionsfic'),
-                            " ",
-                            index + 1),
-                        wp.element.createElement("button", { type: "button", onClick: () => removeChoice(choice.uuid) },
-                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))),
-                    wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: choice.label, onChange: (label) => updateChoice(choice.uuid, { label }) }),
-                    wp.element.createElement(TextControl, { label: __('Description', 'wooptionsfic'), value: choice.description, onChange: (description) => updateChoice(choice.uuid, { description }) }),
-                    props.field.type === 'color_swatch' ? (wp.element.createElement(ChoiceColorControl, { color: choice.color || '#5B4FF5', onChange: (color) => updateChoice(choice.uuid, { color }) })) : null,
-                    ['image_swatch', 'product', 'radio', 'checkbox_group', 'segmented', 'select'].includes(props.field.type) ? (wp.element.createElement(ChoiceMediaControl, { choice: choice, required: props.field.type === 'image_swatch', onChange: (patch) => updateChoice(choice.uuid, patch) })) : null,
-                    wp.element.createElement("div", { className: "wof-choice-pricing-row" },
-                        wp.element.createElement(SelectControl, { label: __('Price type', 'wooptionsfic'), value: choice.pricing.strategy, options: [
-                                { label: __('No adjustment', 'wooptionsfic'), value: 'none' },
-                                { label: __('Fixed amount', 'wooptionsfic'), value: 'fixed' },
-                                { label: __('Percentage', 'wooptionsfic'), value: 'percentage' },
-                            ], onChange: (strategy) => updateChoice(choice.uuid, { pricing: { ...choice.pricing, strategy } }) }),
-                        choice.pricing.strategy === 'percentage' ? (wp.element.createElement(TextControl, { label: __('Percent', 'wooptionsfic'), type: "number", value: choice.pricing.percent, onChange: (percent) => updateChoice(choice.uuid, { pricing: { ...choice.pricing, percent } }) })) : choice.pricing.strategy !== 'none' ? (wp.element.createElement(TextControl, { label: __('Amount', 'wooptionsfic'), type: "number", value: choice.pricing.amount, onChange: (amount) => updateChoice(choice.uuid, { pricing: { ...choice.pricing, amount } }) })) : null),
-                    wp.element.createElement(ToggleControl, { label: __('Default choice', 'wooptionsfic'), checked: choice.default, onChange: (value) => updateChoice(choice.uuid, { default: value }) }),
-                    wp.element.createElement(ToggleControl, { label: __('Disable choice', 'wooptionsfic'), checked: choice.disabled, onChange: (value) => updateChoice(choice.uuid, { disabled: value }) })))),
+                choices.length > 1 ? (wp.element.createElement("div", { className: "wof-choice-list-toolbar" },
+                    wp.element.createElement("span", { className: "wof-choice-list-count" },
+                        choices.length,
+                        " ",
+                        __('Choices', 'wooptionsfic')),
+                    wp.element.createElement("button", { type: "button", className: "wof-choice-collapse-all-btn", onClick: toggleAll }, isAllCollapsed ? __('Expand all', 'wooptionsfic') : __('Collapse all', 'wooptionsfic')))) : null,
+                choices.map((choice, index) => (wp.element.createElement(ChoiceItemCard, { key: choice.uuid, choice: choice, index: index, count: choices.length, fieldType: props.field.type, isOpen: !collapsedMap[choice.uuid], onToggle: () => toggleChoice(choice.uuid), onUpdate: (patch) => updateChoice(choice.uuid, patch), onRemove: () => removeChoice(choice.uuid), onMove: moveChoice }))),
                 wp.element.createElement(Button, { variant: "secondary", onClick: addChoice },
                     wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
                     __('Add choice', 'wooptionsfic'))));
