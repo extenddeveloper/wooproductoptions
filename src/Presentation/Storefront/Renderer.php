@@ -439,7 +439,7 @@ final class Renderer {
 			if (! empty($field['enableQuantity'])) {
 				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
 				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
-				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
+				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr('wooptionsfic_qty[' . $choice_uuid . ']') . '" data-wof-choice-uuid="' . esc_attr($choice_uuid) . '" data-wof-field-uuid="' . esc_attr((string) $field['uuid']) . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
 			}
 			echo '</span>';
 			echo '<span class="wof-choice__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span></label>';
@@ -468,6 +468,16 @@ final class Renderer {
 			$thumb_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;overflow:hidden;';
 		}
 
+		$has_any_variable = false;
+		foreach ((array) ($field['choices'] ?? []) as $c) {
+			$c_is_var   = ! empty($c['isVariable']) || ! empty($c['productInfo']['isVariable']);
+			$c_sel_vars = array_map('absint', (array) ($c['selectedVariationIds'] ?? []));
+			if ($c_is_var && ($merge_vars || ! empty($c_sel_vars))) {
+				$has_any_variable = true;
+				break;
+			}
+		}
+
 		echo '<div class="wof-product-choices" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid  = (string) ($choice['uuid'] ?? '');
@@ -475,6 +485,50 @@ final class Renderer {
 			$checked      = ! empty($choice['default']);
 			$is_variable  = ! empty($choice['isVariable']) || ! empty($choice['productInfo']['isVariable']);
 			$product_info = is_array($choice['productInfo'] ?? null) ? $choice['productInfo'] : [];
+
+			// Variations setup early to support price display
+			$selected_var_ids = array_map('absint', (array) ($choice['selectedVariationIds'] ?? []));
+			$variations       = (array) ($product_info['variations'] ?? []);
+			$target_prod_id   = ! empty($choice['productId']) ? (int) $choice['productId'] : (int) ($choice['linkedProductId'] ?? 0);
+
+			if (empty($variations) && $target_prod_id > 0 && function_exists('wc_get_product')) {
+				$wc_p = wc_get_product($target_prod_id);
+				if ($wc_p && $wc_p->is_type('variable') && method_exists($wc_p, 'get_children')) {
+					$is_variable = true;
+					foreach ($wc_p->get_children() as $var_id) {
+						$var = wc_get_product((int) $var_id);
+						if (! $var) {
+							continue;
+						}
+						$var_attrs = [];
+						if (method_exists($var, 'get_variation_attributes')) {
+							foreach ($var->get_variation_attributes() as $attr_key => $attr_val) {
+								$var_attrs[wc_attribute_label(str_replace('attribute_', '', $attr_key))] = $attr_val;
+							}
+						}
+						$var_label = $var->get_name();
+						if ($var_label === $wc_p->get_name() && ! empty($var_attrs)) {
+							$var_label = implode(', ', array_values($var_attrs));
+						}
+						$variations[] = [
+							'id'           => (int) $var_id,
+							'label'        => wp_strip_all_tags((string) $var_label),
+							'price'        => (string) $var->get_price(),
+							'regularPrice' => (string) $var->get_regular_price(),
+							'salePrice'    => (string) $var->get_sale_price(),
+						];
+					}
+				}
+			}
+
+			// If specific variations are selected (unmerged), filter to only those selected
+			if ($is_variable && ! $merge_vars) {
+				$variations = array_values(array_filter($variations, function ($v) use ($selected_var_ids) {
+					return in_array((int) ($v['id'] ?? 0), $selected_var_ids, true);
+				}));
+			}
+
+			$has_active_vars = $is_variable && ($merge_vars || ! empty($selected_var_ids));
 
 			// Image from productInfo first, then choice imageUrl
 			$image_url = (string) ($product_info['image'] ?? '');
@@ -486,6 +540,16 @@ final class Renderer {
 			$regular_price = (string) ($product_info['regularPrice'] ?? '');
 			$sale_price    = (string) ($product_info['salePrice'] ?? '');
 			$price         = (string) ($product_info['price'] ?? '');
+
+			// Fallback: if variable product has empty price, use first variation's price
+			if ('' === $price && '' === $regular_price && '' === $sale_price && ! empty($variations)) {
+				$first_v = reset($variations);
+				if (is_array($first_v)) {
+					$price         = (string) ($first_v['price'] ?? '');
+					$regular_price = (string) ($first_v['regularPrice'] ?? '');
+					$sale_price    = (string) ($first_v['salePrice'] ?? '');
+				}
+			}
 			// Fallback to choice pricing helper
 			$choice_price_text = $this->choice_price_text((array) $choice, false);
 
@@ -528,27 +592,28 @@ final class Renderer {
 			}
 			echo '</span>';
 
-			// Variation dropdown for merged variable products
-			if ($is_variable && $merge_vars) {
-				$variations = (array) ($product_info['variations'] ?? []);
-				if (! empty($variations)) {
-					echo '<select class="wof-product-variation-select" name="' . esc_attr($name . '_var[' . $choice_uuid . ']') . '" onclick="event.stopPropagation();" aria-label="' . esc_attr__('Select variation', 'wooptionsfic') . '">';
-					echo '<option value="">' . esc_html__('Select variation', 'wooptionsfic') . '</option>';
-					foreach ($variations as $var) {
-						$var_id    = (int) ($var['id'] ?? 0);
-						$var_label = (string) ($var['label'] ?? '');
-						$var_price = (string) ($var['price'] ?? '');
-						echo '<option value="' . esc_attr((string) $var_id) . '">' . esc_html($var_label . ('' !== $var_price ? ' — ' . get_woocommerce_currency_symbol() . $var_price : '')) . '</option>';
-					}
-					echo '</select>';
+			if ($has_active_vars && ! empty($variations)) {
+				echo '<select class="wof-product-variation-select" name="' . esc_attr('wooptionsfic_var[' . $choice_uuid . ']') . '" data-wof-choice-uuid="' . esc_attr($choice_uuid) . '" data-wof-field-uuid="' . esc_attr((string) $field['uuid']) . '" onclick="event.stopPropagation();" aria-label="' . esc_attr__('Select variation', 'wooptionsfic') . '">';
+				echo '<option value="">' . esc_html__('Select variation', 'wooptionsfic') . '</option>';
+				foreach ($variations as $var) {
+					$var_id      = (int) ($var['id'] ?? 0);
+					$var_label   = (string) ($var['label'] ?? '');
+					$var_price   = (string) ($var['price'] ?? '');
+					$var_regular = (string) ($var['regularPrice'] ?? '');
+					$var_sale    = (string) ($var['salePrice'] ?? '');
+					$currency    = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '';
+					echo '<option value="' . esc_attr((string) $var_id) . '" data-price="' . esc_attr($var_price) . '" data-regular-price="' . esc_attr($var_regular) . '" data-sale-price="' . esc_attr($var_sale) . '">' . esc_html($var_label . ('' !== $var_price ? ' — ' . $currency . $var_price : '')) . '</option>';
 				}
+				echo '</select>';
+			} elseif ($has_any_variable) {
+				echo '<div class="wof-product-variation-spacer" aria-hidden="true"></div>';
 			}
 
 			// Quantity spinner
 			if (! empty($field['enableQuantity'])) {
 				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
 				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
-				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
+				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr('wooptionsfic_qty[' . $choice_uuid . ']') . '" data-wof-choice-uuid="' . esc_attr($choice_uuid) . '" data-wof-field-uuid="' . esc_attr((string) $field['uuid']) . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
 			}
 
 			echo '</label>';

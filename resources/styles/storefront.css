@@ -266,8 +266,8 @@
 	display: none;
 }
 
-.wof-field :where(input[type=text], input[type=password], input[type=tel], input[type=email], input[type=url], input[type=number]:not(.wof-choice-qty-input), input[type=date], input[type=time], input[type=datetime-local], select, textarea) {
-	background: var(--wof-surface);
+.wof-field :where(input[type=text], input[type=password], input[type=tel], input[type=email], input[type=url], input[type=number]:not(.wof-choice-qty-input), input[type=date], input[type=time], input[type=datetime-local], select:not(.wof-product-variation-select), textarea) {
+	background-color: var(--wof-surface);
 	border: 1px solid var(--wof-border);
 	border-radius: 9px;
 	box-shadow: none;
@@ -284,7 +284,7 @@
 	resize: vertical;
 }
 
-.wof-field select {
+.wof-field select:not(.wof-product-variation-select) {
 	cursor: pointer;
 	padding-right: 2.25rem;
 }
@@ -1619,7 +1619,7 @@
 	font-family: var(--wof-font) !important;
 }
 
-.wof-configurator .wof-field :where(input[type=text], input[type=password], input[type=tel], input[type=email], input[type=url], input[type=number], input[type=date], input[type=time], input[type=datetime-local], select, textarea) {
+.wof-configurator .wof-field :where(input[type=text], input[type=password], input[type=tel], input[type=email], input[type=url], input[type=number]:not(.wof-choice-qty-input), input[type=date], input[type=time], input[type=datetime-local], select:not(.wof-product-variation-select), textarea) {
 	background-color: var(--wof-surface) !important;
 	border-color: var(--wof-border) !important;
 	color: var(--wof-text) !important;
@@ -3648,17 +3648,23 @@
 	display: flex;
 	flex-wrap: wrap;
 	gap: .75rem;
+	align-items: stretch;
 }
 
 .wof-product-choice-tile {
 	cursor: pointer;
 	display: flex;
 	flex-direction: column;
-	width: 100px;
+	width: 108px;
 	border-radius: 8px;
-	/* overflow: hidden; */
 	margin: 0;
 	transition: opacity .12s;
+	box-sizing: border-box;
+}
+
+.wof-product-choice-tile .wof-choice-qty-wrap {
+	margin-top: auto;
+	width: 100%;
 }
 
 .wof-product-choice-tile > input {
@@ -3677,7 +3683,7 @@
 }
 
 .wof-product-choice-tile__img {
-	background: var(--wof-background, #f9fafb);
+	background-color: var(--wof-background, #f9fafb);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -3699,7 +3705,7 @@
 	position: absolute;
 	top: 6px;
 	right: 6px;
-	background: var(--wof-primary);
+	background-color: var(--wof-primary);
 	color: #fff;
 	border-radius: 50%;
 	width: 18px;
@@ -3781,14 +3787,47 @@
 }
 
 .wof-product-variation-select {
-	width: 100%;
-	font-size: .75rem;
-	padding: 4px 6px;
-	border: 1px solid var(--wof-border, #d8deea);
-	border-radius: 4px;
-	background: var(--wof-background, #f9fafb);
-	color: var(--wof-text);
-	margin: 4px 0 0;
+	width: 100% !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	max-height: 28px !important;
+	font-size: 11.5px !important;
+	line-height: 26px !important;
+	padding: 0 20px 0 6px !important;
+	border: 1px solid var(--wof-border, #cbd5e1) !important;
+	border-radius: 4px !important;
+	background-color: var(--wof-surface, #ffffff) !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 20 20' fill='%2364748b'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd'/%3E%3C/svg%3E") !important;
+	background-repeat: no-repeat !important;
+	background-position: right 6px center !important;
+	background-size: 10px 10px !important;
+	color: var(--wof-text, #1e293b) !important;
+	margin: 4px 0 0 !important;
+	box-sizing: border-box !important;
+	cursor: pointer !important;
+	outline: none !important;
+	appearance: none !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+	overflow: hidden !important;
+}
+
+.wof-product-variation-select:focus {
+	border-color: var(--wof-primary, #5b4ff5) !important;
+	box-shadow: 0 0 0 1px var(--wof-primary, #5b4ff5) !important;
+}
+
+.wof-product-variation-spacer {
+	width: 100% !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	max-height: 28px !important;
+	margin: 4px 0 0 !important;
+	box-sizing: border-box !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
 }
 
 /* Image style — overlay */

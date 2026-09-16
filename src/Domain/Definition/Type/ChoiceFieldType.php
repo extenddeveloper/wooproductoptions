@@ -62,8 +62,8 @@ final class ChoiceFieldType extends AbstractFieldType {
 				'preview'           => is_array($choice['preview'] ?? null) ? $choice['preview'] : [],
 			];
 			if ($is_product_type) {
-				$choice_entry['productId']           = max(0, (int) ($choice['productId'] ?? 0));
-				$choice_entry['isVariable']          = ! empty($choice['isVariable']);
+				$choice_entry['productId']           = max(0, (int) ($choice['productId'] ?? ($choice['linkedProductId'] ?? 0)));
+				$choice_entry['isVariable']          = ! empty($choice['isVariable']) || ! empty($choice['productInfo']['isVariable']);
 				$choice_entry['selectedVariationIds'] = array_values(
 					array_unique(
 						array_filter(
@@ -72,13 +72,62 @@ final class ChoiceFieldType extends AbstractFieldType {
 					)
 				);
 				$raw_info = is_array($choice['productInfo'] ?? null) ? $choice['productInfo'] : [];
+				$norm_variations = [];
+				if (! empty($raw_info['variations']) && is_array($raw_info['variations'])) {
+					foreach ($raw_info['variations'] as $v) {
+						if (! is_array($v)) {
+							continue;
+						}
+						$norm_variations[] = [
+							'id'           => (int) ($v['id'] ?? 0),
+							'label'        => self::plain_text((string) ($v['label'] ?? ''), 200),
+							'price'        => self::plain_text((string) ($v['price'] ?? ''), 50),
+							'regularPrice' => self::plain_text((string) ($v['regularPrice'] ?? ''), 50),
+							'salePrice'    => self::plain_text((string) ($v['salePrice'] ?? ''), 50),
+							'image'        => esc_url_raw((string) ($v['image'] ?? '')),
+							'attributes'   => is_array($v['attributes'] ?? null) ? $v['attributes'] : [],
+						];
+					}
+				}
+				if (empty($norm_variations) && $choice_entry['productId'] > 0 && function_exists('wc_get_product')) {
+					$wc_p = wc_get_product($choice_entry['productId']);
+					if ($wc_p && $wc_p->is_type('variable') && method_exists($wc_p, 'get_children')) {
+						$choice_entry['isVariable'] = true;
+						foreach (array_slice($wc_p->get_children(), 0, 50) as $var_id) {
+							$var = wc_get_product((int) $var_id);
+							if (! $var) {
+								continue;
+							}
+							$var_attrs = [];
+							if (method_exists($var, 'get_variation_attributes')) {
+								foreach ($var->get_variation_attributes() as $attr_key => $attr_val) {
+									$var_attrs[wc_attribute_label(str_replace('attribute_', '', $attr_key))] = $attr_val;
+								}
+							}
+							$var_img = get_the_post_thumbnail_url((int) $var_id, 'thumbnail');
+							$var_label = $var->get_name();
+							if ($var_label === $wc_p->get_name() && ! empty($var_attrs)) {
+								$var_label = implode(', ', array_values($var_attrs));
+							}
+							$norm_variations[] = [
+								'id'           => (int) $var_id,
+								'label'        => wp_strip_all_tags((string) $var_label),
+								'price'        => (string) $var->get_price(),
+								'regularPrice' => (string) $var->get_regular_price(),
+								'salePrice'    => (string) $var->get_sale_price(),
+								'image'        => $var_img ? esc_url_raw($var_img) : '',
+								'attributes'   => $var_attrs,
+							];
+						}
+					}
+				}
 				$choice_entry['productInfo'] = [
 					'price'        => self::plain_text((string) ($raw_info['price'] ?? ''), 50),
 					'regularPrice' => self::plain_text((string) ($raw_info['regularPrice'] ?? ''), 50),
 					'salePrice'    => self::plain_text((string) ($raw_info['salePrice'] ?? ''), 50),
 					'image'        => esc_url_raw((string) ($raw_info['image'] ?? '')),
-					'isVariable'   => ! empty($raw_info['isVariable']),
-					'variations'   => [],
+					'isVariable'   => ! empty($raw_info['isVariable']) || ! empty($choice_entry['isVariable']),
+					'variations'   => $norm_variations,
 				];
 				if ($choice_entry['productId'] > 0 && empty($choice_entry['linkedProductId'])) {
 					$choice_entry['linkedProductId'] = $choice_entry['productId'];
@@ -88,10 +137,23 @@ final class ChoiceFieldType extends AbstractFieldType {
 					$wc_p = wc_get_product($choice_entry['productId']);
 					if ($wc_p) {
 						$prod_price = (string) $wc_p->get_price();
+						if ('' === $prod_price && $wc_p->is_type('variable') && method_exists($wc_p, 'get_variation_price')) {
+							$prod_price = (string) $wc_p->get_variation_price('min');
+						}
 						$choice_entry['productInfo']['price'] = $prod_price;
 					}
 				}
-				if ('' !== $prod_price && '0' !== $prod_price && ('none' === ($choice_entry['pricing']['strategy'] ?? 'none') || '0' === ($choice_entry['pricing']['amount'] ?? '0'))) {
+				if ('' === $prod_price && ! empty($norm_variations)) {
+					foreach ($norm_variations as $v) {
+						$vp = (string) (((isset($v['salePrice']) && '' !== (string) $v['salePrice']) ? $v['salePrice'] : ($v['price'] ?? '')) ?? '');
+						if ('' !== $vp) {
+							$prod_price = $vp;
+							$choice_entry['productInfo']['price'] = $prod_price;
+							break;
+						}
+					}
+				}
+				if ('' !== $prod_price && is_numeric($prod_price) && ('none' === ($choice_entry['pricing']['strategy'] ?? 'none') || '0' === ($choice_entry['pricing']['amount'] ?? '0'))) {
 					$choice_entry['pricing']['strategy'] = 'fixed';
 					$choice_entry['pricing']['amount']   = $prod_price;
 				}

@@ -2426,19 +2426,52 @@ var WooOptionsFic;
                     thumbStyle.height = `${field.choiceHeight}px`;
                 if (field.choiceBorderRadius && String(field.choiceBorderRadius).trim())
                     thumbStyle.borderRadius = `${field.choiceBorderRadius}px`;
-                return (wp.element.createElement("div", { className: "wof-preview-image-tiles" }, (choices.length > 0 ? choices : [{ uuid: 'ph', label: 'Product', imageUrl: '', imageId: 0, productInfo: null, default: true }]).slice(0, 4).map((choice) => {
+                const mergeVars = Boolean(field.mergeVariationProducts);
+                const hasAnyVariable = (choices.length > 0 ? choices : []).some((c) => {
+                    const isVar = Boolean(c.isVariable || c.productInfo?.isVariable);
+                    const selIds = (c.selectedVariationIds || []).map(Number);
+                    return isVar && (mergeVars || selIds.length > 0);
+                });
+                return (wp.element.createElement("div", { className: `wof-preview-image-tiles${hasAnyVariable ? ' wof-preview-image-tiles--has-variables' : ''}` }, (choices.length > 0 ? choices : [{ uuid: 'ph', label: 'Product', imageUrl: '', imageId: 0, productInfo: null, default: true }]).slice(0, 4).map((choice) => {
                     const isSelected = Boolean(choice.default || choice.selected);
                     const imgSrc = choice.productInfo?.image || choice.imageUrl || '';
                     const priceText = formatChoicePrice(choice.pricing) || (choice.productInfo?.price ? `${choice.productInfo.price}` : '');
                     const tileStyle = { ...thumbStyle, position: 'relative' };
-                    return (wp.element.createElement("div", { className: `wof-preview-image-tile${isSelected ? ' is-selected' : ''}`, key: choice.uuid, style: { display: 'flex', flexDirection: 'column', alignItems: 'center' } },
+                    const isVariable = Boolean(choice.isVariable || choice.productInfo?.isVariable);
+                    const selIdNums = (choice.selectedVariationIds || []).map(Number);
+                    const hasActiveVariations = isVariable && (mergeVars || selIdNums.length > 0);
+                    return (wp.element.createElement("div", { className: `wof-preview-image-tile${isSelected ? ' is-selected' : ''}${hasActiveVariations ? ' wof-preview-image-tile--variable' : ''}`, key: choice.uuid, style: {
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            minWidth: hasAnyVariable ? '100px' : '68px',
+                            maxWidth: hasAnyVariable ? '135px' : '82px',
+                        } },
                         wp.element.createElement("span", { className: "wof-preview-image-tile__thumb", style: tileStyle },
                             imgSrc ? (wp.element.createElement("img", { src: imgSrc, alt: "", style: { width: '100%', height: '100%', objectFit: 'cover' } })) : (wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" })),
                             isSelected ? (wp.element.createElement("span", { className: "wof-preview-image-tile__check", style: { position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 } }, renderCheckSvg(10))) : null,
                             imageStyle === 'overlay' ? (wp.element.createElement("span", { style: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: '4px 6px', background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)', color: '#fff', fontSize: '9px', fontWeight: 600, textAlign: 'center', lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word' } }, choice.label)) : null),
                         imageStyle !== 'only_image' && imageStyle !== 'overlay' ? (wp.element.createElement(wp.element.Fragment, null,
-                            wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word' } }, choice.label),
+                            wp.element.createElement("small", { style: { minHeight: '1.3em', marginTop: '4px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word', maxWidth: hasAnyVariable ? '110px' : '80px' } }, choice.label),
                             priceText ? wp.element.createElement("span", { className: "wof-preview-image-tile__price", style: { minHeight: '1.3em' } }, priceText) : null)) : null,
+                        hasActiveVariations ? (() => {
+                            const allVars = choice.productInfo?.variations || [];
+                            let displayVars = (!mergeVars && selIdNums.length > 0)
+                                ? allVars.filter((v) => selIdNums.includes(Number(v.id)))
+                                : allVars;
+                            if (displayVars.length === 0 && selIdNums.length > 0) {
+                                displayVars = selIdNums.map((id) => ({ id, label: `Variation #${id}`, price: '' }));
+                            }
+                            if (displayVars.length === 0) {
+                                return hasAnyVariable ? wp.element.createElement("div", { className: "wof-product-variation-spacer", "aria-hidden": "true" }) : null;
+                            }
+                            return (wp.element.createElement("div", { style: { width: '100%', marginTop: '4px' }, onClick: (e) => e.stopPropagation() },
+                                wp.element.createElement("select", { className: "wof-product-variation-select", disabled: true },
+                                    wp.element.createElement("option", { value: "" }, __('Select variation', 'wooptionsfic')),
+                                    displayVars.map((v) => (wp.element.createElement("option", { key: v.id, value: v.id },
+                                        v.label,
+                                        v.price ? ` — ${v.price}` : ''))))));
+                        })() : (hasAnyVariable ? (wp.element.createElement("div", { className: "wof-product-variation-spacer", "aria-hidden": "true" })) : null),
                         field.enableQuantity ? (wp.element.createElement("span", { className: "wof-choice-qty-wrap", style: { marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' } },
                             wp.element.createElement("input", { disabled: true, type: "number", className: "wof-choice-qty-input", defaultValue: field.minQuantity ?? 1, style: { width: '100%', height: '28px', fontSize: '12px', textAlign: 'center' } }))) : null));
                 })));

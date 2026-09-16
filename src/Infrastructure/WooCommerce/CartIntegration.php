@@ -119,12 +119,14 @@ final class CartIntegration {
 				return $cart_item_data;
 			}
 			$cart_item_data['wooptionsfic'] = [
-				'selection'      => (array) $quote['values'],
-				'snapshot'       => (array) $quote['snapshot'],
-				'price'          => (array) $quote['price'],
-				'uploadRefs'     => array_values(array_map('strval', (array) ($quote['uploadRefs'] ?? []))),
-				'linkedProducts' => array_values(array_filter((array) ($quote['linkedProducts'] ?? []), 'is_array')),
-				'configurationKey'=> hash('sha256', CanonicalJson::encode([$quote['revisionHash'], $quote['values'], microtime(true)])),
+				'selection'         => (array) $quote['values'],
+				'snapshot'          => (array) $quote['snapshot'],
+				'price'             => (array) $quote['price'],
+				'productVariations' => (array) ($context['productVariations'] ?? []),
+				'choiceQuantities'  => (array) ($context['choiceQuantities'] ?? []),
+				'uploadRefs'        => array_values(array_map('strval', (array) ($quote['uploadRefs'] ?? []))),
+				'linkedProducts'    => array_values(array_filter((array) ($quote['linkedProducts'] ?? []), 'is_array')),
+				'configurationKey'  => hash('sha256', CanonicalJson::encode([$quote['revisionHash'], $quote['values'], microtime(true)])),
 			];
 		} catch (Throwable) {
 			return $cart_item_data;
@@ -320,6 +322,7 @@ final class CartIntegration {
 			}
 		}
 
+		$enhanced_label = '';
 		foreach ($contributions as $contrib) {
 			if (! is_array($contrib)) {
 				continue;
@@ -328,27 +331,32 @@ final class CartIntegration {
 			if ($source === $field_uuid || isset($child_uuids[$source])) {
 				$total_minor += (int) ($contrib['rounded']['minor'] ?? 0);
 				$found = true;
+				if (! empty($contrib['operands']['choiceLabel']) && is_string($contrib['operands']['choiceLabel'])) {
+					$enhanced_label = (string) $contrib['operands']['choiceLabel'];
+				}
 			}
 		}
 
+		$base_display = '' !== $enhanced_label ? $enhanced_label : $value;
+
 		if (! $found || 0 === $total_minor) {
-			return $value;
+			return $base_display;
 		}
 
 		$amount    = $total_minor / (10 ** $scale);
 		$price_str = self::format_price_string(abs($amount), $scale);
 		if ('' === $price_str) {
-			return $value;
+			return $base_display;
 		}
 
 		$sign      = $total_minor > 0 ? '+' : '-';
 		$price_tag = ' ' . $sign . $price_str;
 
-		if (str_ends_with($value, $price_tag)) {
-			return $value;
+		if (str_ends_with($base_display, $price_tag)) {
+			return $base_display;
 		}
 
-		return $value . $price_tag;
+		return $base_display . $price_tag;
 	}
 
 	/**
@@ -411,6 +419,12 @@ final class CartIntegration {
 				$variation_id = (int) ($cart_item['variation_id'] ?? 0);
 				$quantity     = max(1, (int) ($cart_item['quantity'] ?? 1));
 				$context      = $this->context($product_id, $variation_id, $quantity);
+				if (! empty($cart_item['wooptionsfic']['productVariations']) && is_array($cart_item['wooptionsfic']['productVariations'])) {
+					$context['productVariations'] = (array) $cart_item['wooptionsfic']['productVariations'];
+				}
+				if (! empty($cart_item['wooptionsfic']['choiceQuantities']) && is_array($cart_item['wooptionsfic']['choiceQuantities'])) {
+					$context['choiceQuantities'] = (array) $cart_item['wooptionsfic']['choiceQuantities'];
+				}
 				$quote        = $this->quotes->quote((array) $cart_item['wooptionsfic']['selection'], $context);
 				if (empty($quote['valid'])) {
 					wc_add_notice(
@@ -499,6 +513,8 @@ final class CartIntegration {
 		);
 		$vars = [];
 		$qtys = [];
+
+		// 1. Direct POST arrays: e.g. name="wooptionsfic_var[CHOICE_UUID]" or name="xyz_var[CHOICE_UUID]"
 		foreach ($_POST as $k => $v) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
 			if (str_ends_with((string) $k, '_var') && is_array($v)) {
 				foreach ($v as $cuuid => $var_id) {
@@ -514,6 +530,32 @@ final class CartIntegration {
 				}
 			}
 		}
+
+		// 2. Hidden JSON inputs populated by storefront JS
+		$raw_vars_json = $this->posted_string('wooptionsfic_product_variations');
+		if ('' !== $raw_vars_json && strlen($raw_vars_json) <= 65536) {
+			$decoded_vars = json_decode($raw_vars_json, true);
+			if (is_array($decoded_vars)) {
+				foreach ($decoded_vars as $cuuid => $var_id) {
+					if (is_scalar($var_id) && '' !== (string) $var_id) {
+						$vars[sanitize_text_field((string) $cuuid)] = (int) $var_id;
+					}
+				}
+			}
+		}
+
+		$raw_qtys_json = $this->posted_string('wooptionsfic_choice_quantities');
+		if ('' !== $raw_qtys_json && strlen($raw_qtys_json) <= 65536) {
+			$decoded_qtys = json_decode($raw_qtys_json, true);
+			if (is_array($decoded_qtys)) {
+				foreach ($decoded_qtys as $cuuid => $qty_val) {
+					if (is_scalar($qty_val) && (int) $qty_val > 0) {
+						$qtys[sanitize_text_field((string) $cuuid)] = (int) $qty_val;
+					}
+				}
+			}
+		}
+
 		if (! empty($vars)) {
 			$context['productVariations'] = $vars;
 		}

@@ -30,9 +30,10 @@ final class Assets {
 			'wooptionsfic-storefront',
 			'window.WooOptionsFicStorefront=' . wp_json_encode(
 				[
-					'restRoot' => esc_url_raw(rest_url('wooptionsfic/v1/')),
-					'locale'   => determine_locale(),
-					'i18n'     => [
+					'restRoot'       => esc_url_raw(rest_url('wooptionsfic/v1/')),
+					'locale'         => determine_locale(),
+					'currencySymbol' => function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '$',
+					'i18n'           => [
 						'checking'       => __('Checking your configuration…', 'wooptionsfic'),
 						'confirmed'      => __('Price confirmed', 'wooptionsfic'),
 						'couldNotQuote'  => __('We could not confirm this configuration. Check the highlighted options and try again.', 'wooptionsfic'),

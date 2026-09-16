@@ -210,26 +210,70 @@ final class PriceEngine {
 						$var_prod = wc_get_product($selected_var_id);
 						if ($var_prod) {
 							$product_price = (string) $var_prod->get_price();
+							$var_attrs = method_exists($var_prod, 'get_variation_attributes') ? $var_prod->get_variation_attributes() : [];
+							$clean_attrs = [];
+							if (! empty($var_attrs)) {
+								foreach ($var_attrs as $attr_k => $attr_v) {
+									if ('' !== (string) $attr_v) {
+										$attr_lbl = function_exists('wc_attribute_label') ? wc_attribute_label(str_replace('attribute_', '', (string) $attr_k)) : (string) $attr_k;
+										$clean_attrs[] = $attr_lbl . ': ' . $attr_v;
+									}
+								}
+							}
+							if (! empty($clean_attrs)) {
+								$choice_label .= ' (' . implode(', ', $clean_attrs) . ')';
+							} else {
+								$var_name = $var_prod->get_name();
+								if ($var_name) {
+									$choice_label .= ' (' . $var_name . ')';
+								}
+							}
+							$display_label = $this->choice_line_label($field, $choice_label);
 						}
 					}
-					if ('' === $product_price || '0' === $product_price) {
+					// Fallback to choice productInfo variations array if wc_get_product didn't return a price
+					if ('' === $product_price && $selected_var_id > 0 && ! empty($choice['productInfo']['variations']) && is_array($choice['productInfo']['variations'])) {
+						foreach ($choice['productInfo']['variations'] as $v) {
+							if ((int) ($v['id'] ?? 0) === $selected_var_id) {
+								$product_price = (string) (((isset($v['salePrice']) && '' !== (string) $v['salePrice']) ? $v['salePrice'] : ($v['price'] ?? '')) ?? '');
+								if (! empty($v['label'])) {
+									$choice_label .= ' (' . $v['label'] . ')';
+									$display_label = $this->choice_line_label($field, $choice_label);
+								}
+								break;
+							}
+						}
+					}
+					if ('' === $product_price) {
 						$product_id = (int) ($choice['productId'] ?? ($choice['linkedProductId'] ?? 0));
 						if ($product_id > 0 && function_exists('wc_get_product')) {
 							$wc_prod = wc_get_product($product_id);
 							if ($wc_prod) {
 								$product_price = (string) $wc_prod->get_price();
+								if ('' === $product_price && $wc_prod->is_type('variable') && method_exists($wc_prod, 'get_variation_price')) {
+									$product_price = (string) $wc_prod->get_variation_price('min');
+								}
 							}
 						}
 					}
-					if ('' === $product_price || '0' === $product_price) {
+					if ('' === $product_price) {
 						$pinfo = is_array($choice['productInfo'] ?? null) ? $choice['productInfo'] : [];
-						$product_price = (string) ($pinfo['salePrice'] ?: ($pinfo['price'] ?: ''));
+						$product_price = (string) (((isset($pinfo['salePrice']) && '' !== (string) $pinfo['salePrice']) ? $pinfo['salePrice'] : ($pinfo['price'] ?? '')) ?? '');
+						if ('' === $product_price && ! empty($pinfo['variations']) && is_array($pinfo['variations'])) {
+							foreach ($pinfo['variations'] as $v) {
+								$vp = (string) (((isset($v['salePrice']) && '' !== (string) $v['salePrice']) ? $v['salePrice'] : ($v['price'] ?? '')) ?? '');
+								if ('' !== $vp) {
+									$product_price = $vp;
+									break;
+								}
+							}
+						}
 					}
-					if ('' === $product_price || '0' === $product_price) {
+					if ('' === $product_price) {
 						$product_price = (string) ($choice_pricing['amount'] ?? '0');
 					}
 
-					if ('' !== $product_price && '0' !== $product_price && 0.0 !== (float) $product_price) {
+					if ('' !== $product_price && is_numeric($product_price)) {
 						$choice_strategy = 'fixed';
 						$choice_pricing['amount'] = $product_price;
 					}
@@ -238,14 +282,19 @@ final class PriceEngine {
 				if ('fixed' === $choice_strategy) {
 					$raw_amount = (string) ($choice_pricing['amount'] ?? '0');
 					$qty_multiplier = 1;
-					if (! empty($field['enableQuantity']) && ! empty($context['choiceQuantities'][$choice_uuid])) {
-						$qty_multiplier = max(1, (int) $context['choiceQuantities'][$choice_uuid]);
+					$qty_val = $context['choiceQuantities'][$choice_uuid] ?? null;
+					if (! empty($field['enableQuantity']) && ! empty($qty_val)) {
+						$qty_multiplier = max(1, (int) $qty_val);
 					}
 					$money = Money::from_decimal($raw_amount, $currency, $scale);
 					if ($qty_multiplier > 1) {
 						$money = $money->multiply(Decimal::from_string((string) $qty_multiplier));
 					}
-					$line = $this->line($field, 'choice_fixed', $money, ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_label], $money->to_decimal());
+					$line_meta = ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_label];
+					if ($selected_var_id > 0) {
+						$line_meta['variationId'] = $selected_var_id;
+					}
+					$line = $this->line($field, 'choice_fixed', $money, $line_meta, $money->to_decimal());
 					$line['label'] = $display_label;
 					$lines[] = $line;
 				} elseif ('percentage' === $choice_strategy) {

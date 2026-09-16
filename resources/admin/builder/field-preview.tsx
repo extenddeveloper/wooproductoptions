@@ -492,18 +492,34 @@ namespace WooOptionsFic.Builder {
       if (field.choiceHeight && String(field.choiceHeight).trim()) thumbStyle.height = `${field.choiceHeight}px`;
       if (field.choiceBorderRadius && String(field.choiceBorderRadius).trim()) thumbStyle.borderRadius = `${field.choiceBorderRadius}px`;
 
+      const mergeVars = Boolean(field.mergeVariationProducts);
+      const hasAnyVariable = (choices.length > 0 ? choices : []).some((c: any) => {
+        const isVar = Boolean(c.isVariable || c.productInfo?.isVariable);
+        const selIds = (c.selectedVariationIds || []).map(Number);
+        return isVar && (mergeVars || selIds.length > 0);
+      });
+
       return (
-        <div className="wof-preview-image-tiles">
+        <div className={`wof-preview-image-tiles${hasAnyVariable ? ' wof-preview-image-tiles--has-variables' : ''}`}>
           {(choices.length > 0 ? choices : [{ uuid: 'ph', label: 'Product', imageUrl: '', imageId: 0, productInfo: null as any, default: true } as any]).slice(0, 4).map((choice: any) => {
             const isSelected = Boolean(choice.default || (choice as any).selected);
             const imgSrc = choice.productInfo?.image || choice.imageUrl || '';
             const priceText = formatChoicePrice(choice.pricing) || (choice.productInfo?.price ? `${choice.productInfo.price}` : '');
             const tileStyle: any = { ...thumbStyle, position: 'relative' };
+            const isVariable = Boolean(choice.isVariable || choice.productInfo?.isVariable);
+            const selIdNums = (choice.selectedVariationIds || []).map(Number);
+            const hasActiveVariations = isVariable && (mergeVars || selIdNums.length > 0);
             return (
               <div
-                className={`wof-preview-image-tile${isSelected ? ' is-selected' : ''}`}
+                className={`wof-preview-image-tile${isSelected ? ' is-selected' : ''}${hasActiveVariations ? ' wof-preview-image-tile--variable' : ''}`}
                 key={choice.uuid}
-                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  minWidth: hasAnyVariable ? '100px' : '68px',
+                  maxWidth: hasAnyVariable ? '135px' : '82px',
+                }}
               >
                 <span className="wof-preview-image-tile__thumb" style={tileStyle}>
                   {imgSrc ? (
@@ -524,10 +540,41 @@ namespace WooOptionsFic.Builder {
                 </span>
                 {imageStyle !== 'only_image' && imageStyle !== 'overlay' ? (
                   <>
-                    <small style={{ minHeight: '1.3em', marginTop: '4px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word' }}>{choice.label}</small>
+                    <small style={{ minHeight: '1.3em', marginTop: '4px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word', maxWidth: hasAnyVariable ? '110px' : '80px' }}>{choice.label}</small>
                     {priceText ? <span className="wof-preview-image-tile__price" style={{ minHeight: '1.3em' }}>{priceText}</span> : null}
                   </>
                 ) : null}
+                {hasActiveVariations ? (() => {
+                  const allVars: any[] = choice.productInfo?.variations || [];
+                  let displayVars = (!mergeVars && selIdNums.length > 0)
+                    ? allVars.filter((v: any) => selIdNums.includes(Number(v.id)))
+                    : allVars;
+                  if (displayVars.length === 0 && selIdNums.length > 0) {
+                    displayVars = selIdNums.map((id: number) => ({ id, label: `Variation #${id}`, price: '' }));
+                  }
+                  if (displayVars.length === 0) {
+                    return hasAnyVariable ? <div className="wof-product-variation-spacer" aria-hidden="true" /> : null;
+                  }
+                  return (
+                    <div style={{ width: '100%', marginTop: '4px' }} onClick={(e: any) => e.stopPropagation()}>
+                      <select
+                        className="wof-product-variation-select"
+                        disabled
+                      >
+                        <option value="">{__('Select variation', 'wooptionsfic')}</option>
+                        {displayVars.map((v: any) => (
+                          <option key={v.id} value={v.id}>
+                            {v.label}{v.price ? ` — ${v.price}` : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  );
+                })() : (
+                  hasAnyVariable ? (
+                    <div className="wof-product-variation-spacer" aria-hidden="true" />
+                  ) : null
+                )}
                 {field.enableQuantity ? (
                   <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' }}>
                     <input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '100%', height: '28px', fontSize: '12px', textAlign: 'center' }} />

@@ -19,10 +19,10 @@
         hasSubmitted = !1;
         constructor(e) { this.root = e; const t = e.querySelector("[data-wof-config]"); if (!t?.textContent)
             throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.initCustomDateRanges(), this.initCustomColorPickers(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
-        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
+        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } if (t.matches(".wof-product-variation-select")) { this.updateChoiceVariationPrice(t); if (t.value) { const tile = t.closest(".wof-product-choice-tile"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } } if (t.matches(".wof-choice-qty-input") && t.value) { const tile = t.closest(".wof-product-choice-tile, .wof-choice"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
-            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } if (!e.target.closest("[data-wof-color-picker]")) { this.closeAllCustomColorPickers(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); if (this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) return; e.preventDefault(); this.hasSubmitted = !0; if (this.lastQuote && !this.lastQuote.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) { this.renderQuote(this.lastQuote, !0); return; } this.requestQuote(!0); }), this.form && window.jQuery) {
+            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } if (!e.target.closest("[data-wof-color-picker]")) { this.closeAllCustomColorPickers(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const vars = this.readProductVariations(); const qtys = this.readChoiceQuantities(); const o = JSON.stringify({ selection: t, productVariations: vars, choiceQuantities: qtys }); if (this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) return; e.preventDefault(); this.hasSubmitted = !0; if (this.lastQuote && !this.lastQuote.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) { this.renderQuote(this.lastQuote, !0); return; } this.requestQuote(!0); }), this.form && window.jQuery) {
             const e = () => this.scheduleQuote(50);
             window.jQuery(this.form).on("found_variation.wooptionsfic reset_data.wooptionsfic", e);
         } }
@@ -821,26 +821,58 @@
                 });
             });
         }
+        readProductVariations() {
+            const productVariations = {};
+            this.root.querySelectorAll(".wof-product-variation-select").forEach(sel => {
+                const choiceUuid = sel.dataset.wofChoiceUuid || (sel.name.match(/_var\[([a-zA-Z0-9_-]+)\]/) || [])[1] || "";
+                if (choiceUuid && sel.value) {
+                    productVariations[choiceUuid] = sel.value;
+                }
+            });
+            return productVariations;
+        }
+        readChoiceQuantities() {
+            const choiceQuantities = {};
+            this.root.querySelectorAll(".wof-choice-qty-input").forEach(inp => {
+                const choiceUuid = inp.dataset.wofChoiceUuid || (inp.name.match(/_qty\[([a-zA-Z0-9_-]+)\]/) || [])[1] || "";
+                if (choiceUuid && inp.value) {
+                    choiceQuantities[choiceUuid] = inp.value;
+                }
+            });
+            return choiceQuantities;
+        }
+        updateChoiceVariationPrice(sel) {
+            const tile = sel.closest(".wof-product-choice-tile");
+            if (!tile) return;
+            const priceEl = tile.querySelector(".wof-choice__price");
+            if (!priceEl) return;
+            if (!priceEl.dataset.wofOriginalHtml) {
+                priceEl.dataset.wofOriginalHtml = priceEl.innerHTML;
+            }
+            const opt = sel.selectedOptions?.[0];
+            const price = opt?.dataset?.price ?? "";
+            const regPrice = opt?.dataset?.regularPrice ?? "";
+            const salePrice = opt?.dataset?.salePrice ?? "";
+            const currency = window.WooOptionsFicStorefront?.currencySymbol || "$";
+
+            if (price && sel.value) {
+                if (regPrice && salePrice && regPrice !== salePrice) {
+                    priceEl.className = "wof-choice__price wof-choice__price--sale";
+                    priceEl.innerHTML = `<del>${currency}${regPrice}</del> <ins>${currency}${salePrice}</ins>`;
+                } else {
+                    priceEl.className = "wof-choice__price";
+                    priceEl.textContent = `${currency}${price}`;
+                }
+            } else {
+                priceEl.innerHTML = priceEl.dataset.wofOriginalHtml;
+            }
+        }
         scheduleQuote(e = 320) { window.clearTimeout(this.quoteTimer), this.quoteTimer = window.setTimeout(() => { this.requestQuote(); }, e); }
         async requestQuote(e = !1, r = !1) {
             const a = this.readSelection();
             this.writeSelection(a);
-            const productVariations = {};
-            this.root.querySelectorAll(".wof-product-variation-select").forEach(sel => {
-                const name = sel.name || "";
-                const match = name.match(/\[([a-zA-Z0-9_-]+)\]/);
-                if (match && match[1] && sel.value) {
-                    productVariations[match[1]] = sel.value;
-                }
-            });
-            const choiceQuantities = {};
-            this.root.querySelectorAll(".wof-choice-qty-input").forEach(inp => {
-                const name = inp.name || "";
-                const match = name.match(/\[([a-zA-Z0-9_-]+)\]/);
-                if (match && match[1] && inp.value) {
-                    choiceQuantities[match[1]] = inp.value;
-                }
-            });
+            const productVariations = this.readProductVariations();
+            const choiceQuantities = this.readChoiceQuantities();
             const i = JSON.stringify({ selection: a, productVariations, choiceQuantities });
             this.aborter?.abort(), this.aborter = new AbortController, this.setPending(!0);
             try {
@@ -917,7 +949,27 @@
             return o.querySelector('input[type="tel"]')?.value ?? "";
         } return "file" === e.type ? Array.from(o.querySelectorAll("[data-wof-upload-ref]")).map(e => e.value).filter(Boolean) : o.querySelector('input:not([type="file"]), select, textarea')?.value ?? ""; }
         acceptsValue(e) { return !["heading", "paragraph", "help", "separator", "spacer", "formula", "calculated"].includes(e.type); }
-        writeSelection(e) { const t = this.root.querySelector("[data-wof-selection-json]"); t && (t.value = JSON.stringify(e)); }
+        writeSelection(e) {
+            const t = this.root.querySelector("[data-wof-selection-json]");
+            t && (t.value = JSON.stringify(e));
+            let varInput = this.root.querySelector('input[name="wooptionsfic_product_variations"]');
+            if (!varInput) {
+                varInput = document.createElement("input");
+                varInput.type = "hidden";
+                varInput.name = "wooptionsfic_product_variations";
+                this.root.appendChild(varInput);
+            }
+            varInput.value = JSON.stringify(this.readProductVariations());
+
+            let qtyInput = this.root.querySelector('input[name="wooptionsfic_choice_quantities"]');
+            if (!qtyInput) {
+                qtyInput = document.createElement("input");
+                qtyInput.type = "hidden";
+                qtyInput.name = "wooptionsfic_choice_quantities";
+                this.root.appendChild(qtyInput);
+            }
+            qtyInput.value = JSON.stringify(this.readChoiceQuantities());
+        }
         renderQuote(e, o = false) {
             if (e?.settings && (this.configuration.settings = { ...(this.configuration.settings ?? {}), ...e.settings }), e?.style && (this.configuration.style = e.style), e?.settings || e?.style)
                 this.applyConfigurationSettings(), this.applyConfigurationStyle();

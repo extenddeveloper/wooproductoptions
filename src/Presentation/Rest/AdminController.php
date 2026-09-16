@@ -500,6 +500,17 @@ final class AdminController {
 					$regular_price = (string) $product->get_regular_price();
 					$sale_price    = (string) $product->get_sale_price();
 					$is_variable   = $product->is_type('variable');
+					if ($is_variable && method_exists($product, 'get_variation_price')) {
+						if ('' === $price) {
+							$price = (string) $product->get_variation_price('min');
+						}
+						if ('' === $regular_price && method_exists($product, 'get_variation_regular_price')) {
+							$regular_price = (string) $product->get_variation_regular_price('min');
+						}
+						if ('' === $sale_price && method_exists($product, 'get_variation_sale_price')) {
+							$sale_price = (string) $product->get_variation_sale_price('min');
+						}
+					}
 					$variations    = [];
 					if ($is_variable && method_exists($product, 'get_children')) {
 						foreach (array_slice($product->get_children(), 0, 50) as $var_id) {
