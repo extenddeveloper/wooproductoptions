@@ -11407,24 +11407,40 @@
 	cursor: pointer;
 }
 
+.wof-time-range-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 10px;
+	margin-bottom: 14px;
+}
+.wof-time-range-col {
+	flex: 1;
+	min-width: 0;
+}
+.wof-time-range-col .wof-datetime-label {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
 .wof-time-input-group {
 	display: flex;
 	align-items: center;
-	gap: 6px;
+	gap: 4px;
 }
 .wof-time-spinner-box {
 	display: inline-flex;
 	align-items: center;
 	border: 1px solid #d1d5db !important;
 	border-radius: 4px !important;
-	padding: 0 8px !important;
+	padding: 0 6px !important;
 	background: #ffffff !important;
 	height: 38px !important;
 	box-sizing: border-box !important;
 	overflow: hidden !important;
 }
 .wof-time-spinner-box input {
-	width: 28px !important;
+	width: 16px !important;
 	min-width: 0 !important;
 	max-width: 32px !important;
 	height: 26px !important;
@@ -11457,7 +11473,7 @@
 .wof-time-colon {
 	font-weight: 700;
 	color: #64748b;
-	padding: 0 4px;
+	padding: 0 2px;
 }
 .wof-meridiem-group {
 	display: inline-flex;
@@ -11470,7 +11486,7 @@
 .wof-meridiem-btn {
 	background: #ffffff !important;
 	border: none !important;
-	padding: 0 14px !important;
+	padding: 0 8px !important;
 	font-size: 12px !important;
 	font-weight: 500 !important;
 	cursor: pointer;

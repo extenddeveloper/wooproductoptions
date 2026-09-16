@@ -592,24 +592,25 @@ namespace WooOptionsFic.Builder {
         {/* Time Settings Box (visible for 'time' and 'datetime') */}
         {(field.dateTimeType || (field.type === 'time' ? 'time' : 'date')) !== 'date' ? (
           <div className="wof-datetime-box">
-            {/* Time Range Min */}
-            <div style={{ marginBottom: '14px' }}>
-              <span className="wof-datetime-label">{__('Time Range (Min)', 'wooptionsfic')}</span>
-              {renderTimeInput(
-                field.minTime || '12:00 AM',
-                field.timeFormat || '12',
-                (val: string) => update({ minTime: val })
-              )}
-            </div>
+            {/* Time Range Min & Max (Side by side) */}
+            <div className="wof-time-range-row">
+              <div className="wof-time-range-col">
+                <span className="wof-datetime-label">{__('Time Range (Min)', 'wooptionsfic')}</span>
+                {renderTimeInput(
+                  field.minTime || '12:00 AM',
+                  field.timeFormat || '12',
+                  (val: string) => update({ minTime: val })
+                )}
+              </div>
 
-            {/* Time Range Max */}
-            <div style={{ marginBottom: '14px' }}>
-              <span className="wof-datetime-label">{__('Time Range (Max)', 'wooptionsfic')}</span>
-              {renderTimeInput(
-                field.maxTime || '12:00 PM',
-                field.timeFormat || '12',
-                (val: string) => update({ maxTime: val })
-              )}
+              <div className="wof-time-range-col">
+                <span className="wof-datetime-label">{__('Time Range (Max)', 'wooptionsfic')}</span>
+                {renderTimeInput(
+                  field.maxTime || '12:00 PM',
+                  field.timeFormat || '12',
+                  (val: string) => update({ maxTime: val })
+                )}
+              </div>
             </div>
 
             {/* Time Format */}
