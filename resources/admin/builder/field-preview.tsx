@@ -443,6 +443,7 @@ namespace WooOptionsFic.Builder {
     }
 
     if (field.type === 'color_swatch') {
+      const imageStyle = field.imageStyle || 'default';
       const swatchStyle: any = {};
       const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
       const hasWidth = field.choiceWidth !== undefined && field.choiceWidth !== null && String(field.choiceWidth).trim() !== '';
@@ -454,18 +455,27 @@ namespace WooOptionsFic.Builder {
 
       return (
         <div className="wof-preview-color-blocks">
-          {choices.slice(0, 5).map((choice) => {
+          {(choices.length > 0 ? choices : [{ uuid: 'ph', label: 'Color', color: '#5b4ff5', default: true } as any]).slice(0, 5).map((choice) => {
             const isSelected = Boolean(choice.default || (choice as any).selected);
             return (
               <div className={`wof-preview-color-block${isSelected ? ' is-selected' : ''}`} key={choice.uuid} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span className="wof-preview-color-block__swatch" style={{ background: choice.color || '#ddd', ...swatchStyle, position: 'relative' }}>
+                <span className="wof-preview-color-block__swatch" style={{ background: choice.color || '#ddd', ...swatchStyle, position: 'relative', overflow: 'hidden' }}>
                   {isSelected ? <span className="wof-preview-color-block__check" style={{ position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 }}>{renderCheckSvg(10)}</span> : null}
+                  {imageStyle === 'overlay' ? (
+                    <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '4px 6px', background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)', color: '#fff', fontSize: '9px', fontWeight: 600, textAlign: 'center', lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      {choice.label}
+                    </span>
+                  ) : null}
                 </span>
-                <small style={{ minHeight: '1.3em', marginTop: '4px' }}>{choice.label}</small>
-                <span className="wof-preview-color-block__price" style={{ minHeight: '1.3em' }}>{formatChoicePrice(choice.pricing)}</span>
+                {imageStyle !== 'only_image' && imageStyle !== 'overlay' ? (
+                  <>
+                    <small style={{ minHeight: '1.3em', marginTop: '4px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word' }}>{choice.label}</small>
+                    <span className="wof-preview-color-block__price" style={{ minHeight: '1.3em' }}>{formatChoicePrice(choice.pricing)}</span>
+                  </>
+                ) : null}
                 {field.enableQuantity ? (
                   <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    <input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} />
+                    <input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '100%', height: '28px', fontSize: '12px', textAlign: 'center' }} />
                   </span>
                 ) : null}
               </div>
@@ -475,7 +485,63 @@ namespace WooOptionsFic.Builder {
       );
     }
 
-    if (field.type === 'image_swatch' || field.type === 'product') {
+    if (field.type === 'product') {
+      const imageStyle = field.imageStyle || 'default';
+      const thumbStyle: any = {};
+      if (field.choiceWidth && String(field.choiceWidth).trim()) thumbStyle.width = `${field.choiceWidth}px`;
+      if (field.choiceHeight && String(field.choiceHeight).trim()) thumbStyle.height = `${field.choiceHeight}px`;
+      if (field.choiceBorderRadius && String(field.choiceBorderRadius).trim()) thumbStyle.borderRadius = `${field.choiceBorderRadius}px`;
+
+      return (
+        <div className="wof-preview-image-tiles">
+          {(choices.length > 0 ? choices : [{ uuid: 'ph', label: 'Product', imageUrl: '', imageId: 0, productInfo: null as any, default: true } as any]).slice(0, 4).map((choice: any) => {
+            const isSelected = Boolean(choice.default || (choice as any).selected);
+            const imgSrc = choice.productInfo?.image || choice.imageUrl || '';
+            const priceText = formatChoicePrice(choice.pricing) || (choice.productInfo?.price ? `${choice.productInfo.price}` : '');
+            const tileStyle: any = { ...thumbStyle, position: 'relative' };
+            return (
+              <div
+                className={`wof-preview-image-tile${isSelected ? ' is-selected' : ''}`}
+                key={choice.uuid}
+                style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+              >
+                <span className="wof-preview-image-tile__thumb" style={tileStyle}>
+                  {imgSrc ? (
+                    <img src={imgSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    <WooOptionsFic.Components.Dashicon name="format-image" />
+                  )}
+                  {isSelected ? (
+                    <span className="wof-preview-image-tile__check" style={{ position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 }}>
+                      {renderCheckSvg(10)}
+                    </span>
+                  ) : null}
+                  {imageStyle === 'overlay' ? (
+                    <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '4px 6px', background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)', color: '#fff', fontSize: '9px', fontWeight: 600, textAlign: 'center', lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      {choice.label}
+                    </span>
+                  ) : null}
+                </span>
+                {imageStyle !== 'only_image' && imageStyle !== 'overlay' ? (
+                  <>
+                    <small style={{ minHeight: '1.3em', marginTop: '4px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word' }}>{choice.label}</small>
+                    {priceText ? <span className="wof-preview-image-tile__price" style={{ minHeight: '1.3em' }}>{priceText}</span> : null}
+                  </>
+                ) : null}
+                {field.enableQuantity ? (
+                  <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' }}>
+                    <input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '100%', height: '28px', fontSize: '12px', textAlign: 'center' }} />
+                  </span>
+                ) : null}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    if (field.type === 'image_swatch') {
+      const imageStyle = field.imageStyle || 'default';
       const thumbStyle: any = {};
       const hasRadius = field.choiceBorderRadius !== undefined && field.choiceBorderRadius !== null && String(field.choiceBorderRadius).trim() !== '';
       const hasWidth = field.choiceWidth !== undefined && field.choiceWidth !== null && String(field.choiceWidth).trim() !== '';
@@ -487,22 +553,31 @@ namespace WooOptionsFic.Builder {
 
       return (
         <div className="wof-preview-image-tiles">
-          {choices.slice(0, 4).map((choice) => {
+          {(choices.length > 0 ? choices : [{ uuid: 'ph', label: 'Option 1', imageUrl: '', imageId: 0, default: true } as any]).slice(0, 4).map((choice) => {
             const isSelected = Boolean(choice.default || (choice as any).selected);
             return (
               <div className={`wof-preview-image-tile${isSelected ? ' is-selected' : ''}`} key={choice.uuid} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <span className="wof-preview-image-tile__thumb" style={{ ...thumbStyle, position: 'relative' }}>
+                <span className="wof-preview-image-tile__thumb" style={{ ...thumbStyle, position: 'relative', overflow: 'hidden' }}>
                   {choice.imageId || choice.imageUrl ? <WooOptionsFic.Components.MediaImage attachmentId={choice.imageId} src={choice.imageUrl} alt="" /> : <WooOptionsFic.Components.Dashicon name="format-image" />}
                   {isSelected ? <span className="wof-preview-image-tile__check" style={{ position: 'absolute', top: '2px', right: '2px', background: '#172033', color: '#fff', borderRadius: '50%', width: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', zIndex: 3 }}>{renderCheckSvg(10)}</span> : null}
+                  {imageStyle === 'overlay' ? (
+                    <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '4px 6px', background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)', color: '#fff', fontSize: '9px', fontWeight: 600, textAlign: 'center', lineHeight: 1.25, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word' }}>
+                      {choice.label}
+                    </span>
+                  ) : null}
                 </span>
-                <small style={{ minHeight: '1.3em', marginTop: '4px', textAlign: 'center' }}>{choice.label}</small>
-                {choice.description ? (
-                  <small style={{ color: '#64748b', fontSize: '10px', textAlign: 'center', lineHeight: 1.2 }}>{choice.description}</small>
+                {imageStyle !== 'only_image' && imageStyle !== 'overlay' ? (
+                  <>
+                    <small style={{ minHeight: '1.3em', marginTop: '4px', textAlign: 'center', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal', wordBreak: 'break-word' }}>{choice.label}</small>
+                    {choice.description ? (
+                      <small style={{ color: '#64748b', fontSize: '10px', textAlign: 'center', lineHeight: 1.2 }}>{choice.description}</small>
+                    ) : null}
+                    <span className="wof-preview-image-tile__price" style={{ minHeight: '1.3em' }}>{formatChoicePrice(choice.pricing)}</span>
+                  </>
                 ) : null}
-                <span className="wof-preview-image-tile__price" style={{ minHeight: '1.3em' }}>{formatChoicePrice(choice.pricing)}</span>
                 {field.enableQuantity ? (
                   <span className="wof-choice-qty-wrap" style={{ marginTop: 'auto', paddingTop: '6px', display: 'flex', justifyContent: 'center', width: '100%' }}>
-                    <input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '52px', height: '26px', fontSize: '12px', textAlign: 'center' }} />
+                    <input disabled type="number" className="wof-choice-qty-input" defaultValue={field.minQuantity ?? 1} style={{ width: '100%', height: '28px', fontSize: '12px', textAlign: 'center' }} />
                   </span>
                 ) : null}
               </div>

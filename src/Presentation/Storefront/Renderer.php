@@ -193,6 +193,13 @@ final class Renderer {
 		}
 		$classes        = 'wof-field wof-field--' . sanitize_html_class($type);
 		$classes       .= ' wof-field--width-' . str_replace('%', '', $width);
+		// Apply imageStyle modifier class for visual style variants.
+		if (in_array($type, ['color_swatch', 'image_swatch', 'product'], true)) {
+			$img_style_val = (string) ($field['imageStyle'] ?? 'default');
+			if (in_array($img_style_val, ['overlay', 'only_image'], true)) {
+				$classes .= ' wof-image-style--' . sanitize_html_class($img_style_val);
+			}
+		}
 
 		echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="' . esc_attr($type) . '"';
 		if ('image_swatch' === $type && ! empty($field['updateProductImage'])) {
@@ -205,6 +212,7 @@ final class Renderer {
 			echo ' data-wof-max-choices="' . esc_attr((string) $field['maxChoices']) . '"';
 		}
 		echo '>';
+
 
 		$help_text = trim((string) ($field['help'] ?? ''));
 		$help_pos  = (string) ($field['helpTextPosition'] ?? 'below_title');
@@ -240,8 +248,10 @@ final class Renderer {
 			$this->render_radio_list($field, $name, $description_id);
 		} elseif ('checkbox_group' === $type) {
 			$this->render_checkbox_list($field, $name, $description_id);
-		} elseif (in_array($type, ['segmented', 'product'], true)) {
+		} elseif (in_array($type, ['segmented'], true)) {
 			$this->render_choices($field, $name, $description_id);
+		} elseif ('product' === $type) {
+			$this->render_product_choices($field, $name, $description_id);
 		} elseif (in_array($type, ['checkbox', 'toggle'], true)) {
 			$this->render_boolean($field, $name, $description_id);
 		} elseif ('file' === $type) {
@@ -438,6 +448,115 @@ final class Renderer {
 	}
 
 	/**
+	 * Render product choices as image tiles with title, price (with sale), variation dropdown, and quantity.
+	 *
+	 * @param array<string,mixed> $field Field.
+	 */
+	private function render_product_choices(array $field, string $name, string $description_id): void {
+		$multiple     = ! empty($field['multiple']);
+		$merge_vars   = ! empty($field['mergeVariationProducts']);
+		$input        = $multiple ? 'checkbox' : 'radio';
+		$group        = $multiple ? $name . '[]' : $name;
+		$thumb_style  = '';
+		if (isset($field['choiceWidth']) && '' !== (string) $field['choiceWidth']) {
+			$thumb_style .= 'width:' . esc_attr((string) $field['choiceWidth']) . 'px;';
+		}
+		if (isset($field['choiceHeight']) && '' !== (string) $field['choiceHeight']) {
+			$thumb_style .= 'height:' . esc_attr((string) $field['choiceHeight']) . 'px;';
+		}
+		if (isset($field['choiceBorderRadius']) && '' !== (string) $field['choiceBorderRadius']) {
+			$thumb_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;overflow:hidden;';
+		}
+
+		echo '<div class="wof-product-choices" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
+		foreach ((array) ($field['choices'] ?? []) as $choice) {
+			$choice_uuid  = (string) ($choice['uuid'] ?? '');
+			$id           = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$checked      = ! empty($choice['default']);
+			$is_variable  = ! empty($choice['isVariable']) || ! empty($choice['productInfo']['isVariable']);
+			$product_info = is_array($choice['productInfo'] ?? null) ? $choice['productInfo'] : [];
+
+			// Image from productInfo first, then choice imageUrl
+			$image_url = (string) ($product_info['image'] ?? '');
+			if ('' === $image_url && '' !== (string) ($choice['imageUrl'] ?? '')) {
+				$image_url = (string) $choice['imageUrl'];
+			}
+
+			// Pricing: use productInfo prices if available, else fallback to choice pricing
+			$regular_price = (string) ($product_info['regularPrice'] ?? '');
+			$sale_price    = (string) ($product_info['salePrice'] ?? '');
+			$price         = (string) ($product_info['price'] ?? '');
+			// Fallback to choice pricing helper
+			$choice_price_text = $this->choice_price_text((array) $choice, false);
+
+			echo '<label class="wof-product-choice-tile" for="' . esc_attr($id) . '"' . ('' !== $thumb_style ? ' style="' . $thumb_style . '"' : '') . '>';
+			echo '<input id="' . esc_attr($id) . '" type="' . esc_attr($input) . '" name="' . esc_attr($group) . '" value="' . esc_attr($choice_uuid) . '"';
+			echo checked($checked, true, false) . disabled(! empty($choice['disabled']), true, false);
+			echo ' aria-describedby="' . esc_attr($description_id) . '"';
+			if ('' !== (string) ($choice['productId'] ?? '')) {
+				echo ' data-wof-product-id="' . esc_attr((string) $choice['productId']) . '"';
+			}
+			echo '>';
+
+			// Product thumbnail
+			echo '<span class="wof-product-choice-tile__img" aria-hidden="true">';
+			if ('' !== $image_url) {
+				echo '<img src="' . esc_url($image_url) . '" alt="" loading="lazy">';
+			}
+			echo '<span class="wof-choice__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>';
+			echo '</span>';
+
+			// Body: title, description, price
+			echo '<span class="wof-choice__body">';
+			echo '<strong>' . esc_html((string) $choice['label']) . '</strong>';
+			if ('' !== (string) ($choice['description'] ?? '')) {
+				echo '<small class="wof-choice__description">' . esc_html((string) $choice['description']) . '</small>';
+			}
+
+			// Price display: if both regular and sale price available, show del+ins
+			if ('' !== $regular_price && '' !== $sale_price && $regular_price !== $sale_price) {
+				$currency = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '';
+				echo '<span class="wof-choice__price wof-choice__price--sale">';
+				echo '<del>' . esc_html($currency . $regular_price) . '</del> ';
+				echo '<ins>' . esc_html($currency . $sale_price) . '</ins>';
+				echo '</span>';
+			} elseif ('' !== $price) {
+				$currency = function_exists('get_woocommerce_currency_symbol') ? get_woocommerce_currency_symbol() : '';
+				echo '<span class="wof-choice__price">' . esc_html($currency . $price) . '</span>';
+			} elseif ('' !== $choice_price_text) {
+				echo '<span class="wof-choice__price">' . esc_html($choice_price_text) . '</span>';
+			}
+			echo '</span>';
+
+			// Variation dropdown for merged variable products
+			if ($is_variable && $merge_vars) {
+				$variations = (array) ($product_info['variations'] ?? []);
+				if (! empty($variations)) {
+					echo '<select class="wof-product-variation-select" name="' . esc_attr($name . '_var[' . $choice_uuid . ']') . '" onclick="event.stopPropagation();" aria-label="' . esc_attr__('Select variation', 'wooptionsfic') . '">';
+					echo '<option value="">' . esc_html__('Select variation', 'wooptionsfic') . '</option>';
+					foreach ($variations as $var) {
+						$var_id    = (int) ($var['id'] ?? 0);
+						$var_label = (string) ($var['label'] ?? '');
+						$var_price = (string) ($var['price'] ?? '');
+						echo '<option value="' . esc_attr((string) $var_id) . '">' . esc_html($var_label . ('' !== $var_price ? ' — ' . get_woocommerce_currency_symbol() . $var_price : '')) . '</option>';
+					}
+					echo '</select>';
+				}
+			}
+
+			// Quantity spinner
+			if (! empty($field['enableQuantity'])) {
+				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
+				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
+				echo '<span class="wof-choice-qty-wrap" onclick="event.stopPropagation();"><input type="number" class="wof-choice-qty-input" name="' . esc_attr($name . '_qty[' . $choice_uuid . ']') . '" value="' . esc_attr((string) $min_qty) . '" min="' . esc_attr((string) $min_qty) . '" max="' . esc_attr((string) $max_qty) . '" aria-label="' . esc_attr__('Quantity', 'wooptionsfic') . '"></span>';
+			}
+
+			echo '</label>';
+		}
+		echo '</div>';
+	}
+
+	/**
 	 * Render color swatches as color blocks with label + price below.
 	 *
 	 * @param array<string,mixed> $field Field.
@@ -454,7 +573,7 @@ final class Renderer {
 			$swatch_style .= 'height:' . esc_attr((string) $field['choiceHeight']) . 'px;';
 		}
 		if (isset($field['choiceBorderRadius']) && '' !== (string) $field['choiceBorderRadius']) {
-			$swatch_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;';
+			$swatch_style .= 'border-radius:' . esc_attr((string) $field['choiceBorderRadius']) . 'px;overflow:hidden;';
 		}
 
 		echo '<div class="wof-swatches" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
@@ -470,12 +589,16 @@ final class Renderer {
 			echo '<span class="wof-swatch-item__color" style="background:' . esc_attr($color) . ';' . $swatch_style . '" aria-hidden="true">';
 			echo '<span class="wof-swatch-item__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="11" height="11" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>';
 			echo '</span>';
+			echo '<span class="wof-choice__body">';
 			echo '<span class="wof-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
 			if ('' !== (string) ($choice['description'] ?? '')) {
 				echo '<small class="wof-choice__description">' . esc_html((string) $choice['description']) . '</small>';
 			}
 			$price_text = $this->choice_price_text((array) $choice, false);
-			echo '<span class="wof-swatch-item__price">' . ('' !== $price_text ? esc_html($price_text) : '&nbsp;') . '</span>';
+			if ('' !== $price_text) {
+				echo '<span class="wof-swatch-item__price">' . esc_html($price_text) . '</span>';
+			}
+			echo '</span>';
 			if (! empty($field['enableQuantity'])) {
 				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
 				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;
@@ -546,12 +669,16 @@ final class Renderer {
 			}
 			echo '<span class="wof-image-swatch-item__check" aria-hidden="true"><svg viewBox="0 0 20 20" width="11" height="11" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg></span>';
 			echo '</span>';
+			echo '<span class="wof-choice__body">';
 			echo '<span class="wof-image-swatch-item__label">' . esc_html((string) $choice['label']) . '</span>';
 			if ('' !== (string) ($choice['description'] ?? '')) {
 				echo '<small class="wof-choice__description">' . esc_html((string) $choice['description']) . '</small>';
 			}
 			$price_text = $this->choice_price_text((array) $choice, false);
-			echo '<span class="wof-image-swatch-item__price">' . ('' !== $price_text ? esc_html($price_text) : '&nbsp;') . '</span>';
+			if ('' !== $price_text) {
+				echo '<span class="wof-image-swatch-item__price">' . esc_html($price_text) . '</span>';
+			}
+			echo '</span>';
 			if (! empty($field['enableQuantity'])) {
 				$min_qty = max(1, (int) ($field['minQuantity'] ?? 1));
 				$max_qty = ! empty($field['maxQuantity']) ? max($min_qty, (int) $field['maxQuantity']) : 9999;

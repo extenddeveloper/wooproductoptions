@@ -41,6 +41,16 @@ namespace WooOptionsFic {
     tiers?: Array<{ min: string; amount: string }>;
   }
 
+  export interface ProductVariationInfo {
+    id: number;
+    label: string;
+    price: string;
+    regularPrice: string;
+    salePrice: string;
+    image: string;
+    attributes: Record<string, string>;
+  }
+
   export interface ChoiceDefinition {
     uuid: UUID;
     label: string;
@@ -57,6 +67,18 @@ namespace WooOptionsFic {
     linkedVariationId: number;
     linkedQuantity: number;
     preview: Record<string, unknown>;
+    // Product field specific
+    productId?: number;
+    isVariable?: boolean;
+    selectedVariationIds?: number[];
+    productInfo?: {
+      price: string;
+      regularPrice: string;
+      salePrice: string;
+      image: string;
+      isVariable: boolean;
+      variations: ProductVariationInfo[];
+    };
   }
 
   export interface ConditionLeaf {
@@ -150,7 +172,8 @@ namespace WooOptionsFic {
     displayMode?: 'number' | 'currency' | 'text';
     displayDirection?: 'horizontal' | 'vertical';
     columns?: 'one' | 'two' | 1 | 2;
-    imageStyle?: 'normal' | 'circle';
+    imageStyle?: 'normal' | 'circle' | 'default' | 'overlay' | 'only_image';
+    mergeVariationProducts?: boolean;
     children?: FieldDefinition[];
     minRows?: number;
     maxRows?: number;

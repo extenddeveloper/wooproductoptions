@@ -1373,7 +1373,469 @@ namespace WooOptionsFic.Builder {
     );
   }
 
+  // ─── Product Choice Editor ────────────────────────────────────────────────
+
+  function ProductChoiceRow(props: {
+    choice: WooOptionsFic.ChoiceDefinition;
+    index: number;
+    count: number;
+    mergeVariations: boolean;
+    onUpdate: (patch: Partial<WooOptionsFic.ChoiceDefinition>) => void;
+    onRemove: () => void;
+    onMove: (from: number, to: number) => void;
+  }): any {
+    const [showVarPopup, setShowVarPopup] = useState(false);
+    const [varSearch, setVarSearch] = useState('');
+    const [varSuggestions, setVarSuggestions] = useState<any[]>([]);
+    const [varLoading, setVarLoading] = useState(false);
+    const [dropEdge, setDropEdge] = useState<'before' | 'after' | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const rowRef = useRef<HTMLDivElement | null>(null);
+    const popupRef = useRef<HTMLDivElement | null>(null);
+    const varInputRef = useRef<HTMLInputElement | null>(null);
+    const searchTimeout = useRef<any>(null);
+
+    const info = props.choice.productInfo;
+    const isVariable = Boolean(props.choice.isVariable || info?.isVariable);
+    const selectedVarIds = props.choice.selectedVariationIds ?? [];
+    const allVariations: any[] = info?.variations ?? [];
+
+    // variation label
+    let varBadge: string;
+    if (!isVariable) {
+      varBadge = __('N/A', 'wooptionsfic');
+    } else if (props.mergeVariations) {
+      varBadge = __('All Variations', 'wooptionsfic');
+    } else if (selectedVarIds.length === 0) {
+      varBadge = __('N/A', 'wooptionsfic');
+    } else {
+      varBadge = `${selectedVarIds.length} ${__('Variations', 'wooptionsfic')}`;
+    }
+
+    useEffect(() => {
+      if (!showVarPopup) return;
+      const handleDown = (e: MouseEvent) => {
+        if (popupRef.current && !popupRef.current.contains(e.target as Node)) setShowVarPopup(false);
+      };
+      document.addEventListener('mousedown', handleDown);
+      return () => document.removeEventListener('mousedown', handleDown);
+    }, [showVarPopup]);
+
+    useEffect(() => {
+      if (!showVarPopup) return;
+      clearTimeout(searchTimeout.current);
+      if (!varSearch.trim()) {
+        setVarSuggestions(allVariations.slice(0, 15));
+        return;
+      }
+      const q = varSearch.toLowerCase();
+      setVarSuggestions(allVariations.filter((v: any) => String(v.label || '').toLowerCase().includes(q)).slice(0, 15));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [varSearch, showVarPopup, allVariations.length]);
+
+    const dragStart = (e: any) => {
+      e.stopPropagation();
+      e.dataTransfer?.setData(CHOICE_INDEX_MIME, String(props.index));
+      e.dataTransfer?.setData('text/plain', String(props.index));
+      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
+      setIsDragging(true);
+    };
+    const dragEnd = () => { setIsDragging(false); setDropEdge(null); };
+    const dragOver = (e: any) => {
+      const types = Array.from(e.dataTransfer?.types ?? []);
+      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
+      e.preventDefault(); e.stopPropagation();
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
+      const bounds = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      setDropEdge(e.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+    };
+    const dragLeave = (e: any) => {
+      if (e.relatedTarget instanceof Node && (e.currentTarget as HTMLElement).contains(e.relatedTarget)) return;
+      setDropEdge(null);
+    };
+    const drop = (e: any) => {
+      const types = Array.from(e.dataTransfer?.types ?? []);
+      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
+      e.preventDefault(); e.stopPropagation();
+      const src = Number(e.dataTransfer?.getData(CHOICE_INDEX_MIME) || e.dataTransfer?.getData('text/plain') || '');
+      const insertIdx = props.index + (dropEdge === 'after' ? 1 : 0);
+      setDropEdge(null); setIsDragging(false);
+      if (!Number.isInteger(src)) return;
+      let fi = insertIdx; if (src < insertIdx) fi -= 1;
+      fi = Math.max(0, Math.min(props.count - 1, fi));
+      if (fi !== src) props.onMove(src, fi);
+    };
+
+    const toggleVarId = (id: number) => {
+      const next = selectedVarIds.includes(id) ? selectedVarIds.filter((x) => x !== id) : [...selectedVarIds, id];
+      props.onUpdate({ selectedVariationIds: next });
+    };
+
+    return (
+      <div
+        ref={rowRef}
+        className={WooOptionsFic.Utils.classNames(
+          'wof-product-choice-row',
+          isDragging && 'is-dragging',
+          dropEdge === 'before' && 'is-drop-before',
+          dropEdge === 'after' && 'is-drop-after'
+        )}
+        onDragOver={dragOver}
+        onDragLeave={dragLeave}
+        onDrop={drop}
+      >
+        <button
+          type="button"
+          draggable
+          className="wof-choice-drag-handle"
+          onDragStart={dragStart}
+          onDragEnd={dragEnd}
+          aria-label={__('Drag to reorder', 'wooptionsfic')}
+          title={__('Drag to reorder', 'wooptionsfic')}
+        >
+          <WooOptionsFic.Components.GripIcon />
+        </button>
+
+        {/* Thumbnail */}
+        <span className="wof-product-choice-row__thumb">
+          {(info?.image || props.choice.imageUrl) ? (
+            <img src={info?.image || props.choice.imageUrl} alt="" />
+          ) : (
+            <WooOptionsFic.Components.Dashicon name="format-image" />
+          )}
+        </span>
+
+        {/* Product name */}
+        <span className="wof-product-choice-row__name" title={props.choice.label}>
+          {props.choice.label || __('(no product)', 'wooptionsfic')}
+        </span>
+
+        {/* Variation badge – only if variable and not merged */}
+        {isVariable && !props.mergeVariations ? (
+          <span
+            className="wof-product-choice-row__var-badge"
+            title={__('Select variations', 'wooptionsfic')}
+          >
+            <button
+              type="button"
+              className="wof-product-var-badge-btn"
+              onClick={() => setShowVarPopup((v) => !v)}
+            >
+              {varBadge}
+              <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+            </button>
+            {showVarPopup ? (
+              <div className="wof-var-popup" ref={popupRef}>
+                <div className="wof-var-popup__header">
+                  <strong>{__('Select Variations', 'wooptionsfic')}</strong>
+                  <button type="button" className="wof-icon-btn" onClick={() => setShowVarPopup(false)} aria-label={__('Close', 'wooptionsfic')}>×</button>
+                </div>
+                <input
+                  ref={varInputRef}
+                  type="text"
+                  className="wof-var-popup__search"
+                  placeholder={__('Filter variations…', 'wooptionsfic')}
+                  value={varSearch}
+                  onChange={(e: any) => { setVarSearch(e.target.value); }}
+                  autoFocus
+                />
+                <div className="wof-var-popup__list">
+                  {varSuggestions.length === 0 ? (
+                    <p className="wof-muted-note" style={{ padding: '8px 12px', margin: 0 }}>
+                      {allVariations.length === 0 ? __('No variations loaded. Save and reopen to load.', 'wooptionsfic') : __('No matches.', 'wooptionsfic')}
+                    </p>
+                  ) : varSuggestions.map((v: any) => (
+                    <label key={v.id} className="wof-var-popup__item">
+                      <input
+                        type="checkbox"
+                        checked={selectedVarIds.includes(v.id)}
+                        onChange={() => toggleVarId(v.id)}
+                      />
+                      <span>{v.label}</span>
+                      {v.price ? <span className="wof-var-popup__price">{v.price}</span> : null}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </span>
+        ) : isVariable && props.mergeVariations ? (
+          <span className="wof-product-choice-row__var-badge">{__('All Variations', 'wooptionsfic')}</span>
+        ) : (
+          <span className="wof-product-choice-row__var-badge wof-product-choice-row__var-badge--na">{__('N/A', 'wooptionsfic')}</span>
+        )}
+
+        {/* Active toggle */}
+        <input
+          type="checkbox"
+          className="wof-product-choice-row__toggle"
+          checked={!props.choice.disabled}
+          onChange={(e: any) => props.onUpdate({ disabled: !e.target.checked })}
+          title={__('Enable / Disable', 'wooptionsfic')}
+        />
+
+        {/* Delete */}
+        <button
+          type="button"
+          className="wof-choice-delete-btn"
+          onClick={props.onRemove}
+          aria-label={__('Remove product', 'wooptionsfic')}
+          title={__('Remove', 'wooptionsfic')}
+        >
+          <WooOptionsFic.Components.Dashicon name="trash" />
+        </button>
+      </div>
+    );
+  }
+
+  function ProductChoiceEditor(props: {
+    field: WooOptionsFic.FieldDefinition;
+    onChange: (field: WooOptionsFic.FieldDefinition) => void;
+  }): any {
+    const choices = props.field.choices ?? [];
+    const [searchQuery, setSearchQuery] = useState('');
+    const [suggestions, setSuggestions] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchFocused, setSearchFocused] = useState(false);
+    const searchRef = useRef<HTMLInputElement | null>(null);
+    const searchWrap = useRef<HTMLDivElement | null>(null);
+    const debounceRef = useRef<any>(null);
+    const mergeVariations = Boolean(props.field.mergeVariationProducts);
+
+    useEffect(() => {
+      const handleDown = (e: MouseEvent) => {
+        if (searchWrap.current && !searchWrap.current.contains(e.target as Node)) {
+          setSearchFocused(false);
+        }
+      };
+      document.addEventListener('mousedown', handleDown);
+      return () => document.removeEventListener('mousedown', handleDown);
+    }, []);
+
+    useEffect(() => {
+      if (!searchFocused) return;
+      clearTimeout(debounceRef.current);
+      setIsSearching(true);
+      debounceRef.current = setTimeout(async () => {
+        try {
+          const result = await WooOptionsFic.Api.searchProductsForChoices(searchQuery);
+          setSuggestions(result.items ?? []);
+        } catch {}
+        setIsSearching(false);
+      }, 280);
+      return () => clearTimeout(debounceRef.current);
+    }, [searchQuery, searchFocused]);
+
+    const addProduct = (product: any) => {
+      const uuid = WooOptionsFic.Utils.uuid();
+      const newChoice: WooOptionsFic.ChoiceDefinition = {
+        uuid,
+        label: product.label || '',
+        description: '',
+        adminLabel: '',
+        color: '',
+        imageId: 0,
+        imageUrl: product.image || '',
+        disabled: false,
+        default: choices.length === 0,
+        pricing: { strategy: 'fixed', amount: product.price || '0', percent: '0', mode: 'adjustment' },
+        quantityEnabled: false,
+        linkedProductId: product.id,
+        linkedVariationId: 0,
+        linkedQuantity: 1,
+        preview: {},
+        productId: product.id,
+        isVariable: Boolean(product.isVariable),
+        selectedVariationIds: [],
+        productInfo: {
+          price: product.price || '',
+          regularPrice: product.regularPrice || '',
+          salePrice: product.salePrice || '',
+          image: product.image || '',
+          isVariable: Boolean(product.isVariable),
+          variations: product.variations || [],
+        },
+      };
+      props.onChange({ ...props.field, choices: [...choices, newChoice] });
+      setSearchQuery('');
+      setSearchFocused(false);
+    };
+
+    const removeChoice = (uuid: string) => props.onChange({ ...props.field, choices: choices.filter((c) => c.uuid !== uuid) });
+    const updateChoice = (uuid: string, patch: Partial<WooOptionsFic.ChoiceDefinition>) =>
+      props.onChange({ ...props.field, choices: choices.map((c) => c.uuid === uuid ? { ...c, ...patch } : c) });
+    const moveChoice = (from: number, to: number) => {
+      if (from === to || from < 0 || to < 0 || from >= choices.length || to >= choices.length) return;
+      const reordered = [...choices];
+      const [moved] = reordered.splice(from, 1);
+      reordered.splice(to, 0, moved);
+      props.onChange({ ...props.field, choices: reordered });
+    };
+
+    const showDropdown = searchFocused && suggestions.length > 0;
+
+    return (
+      <div className="wof-product-choice-editor">
+        {/* Image Style */}
+        <div style={{ marginBottom: '16px' }}>
+          <label className="components-base-control__label" style={{ display: 'block', marginBottom: '8px' }}>
+            {__('Image Style', 'wooptionsfic')}
+          </label>
+          <div className="wof-image-style-cards">
+            {([
+              { value: 'default', label: __('Default', 'wooptionsfic') },
+              { value: 'overlay', label: __('Image overlay', 'wooptionsfic') },
+              { value: 'only_image', label: __('Only Image', 'wooptionsfic') },
+            ] as const).map((st) => {
+              const currentStyle = props.field.imageStyle || 'default';
+              const isSelected = currentStyle === st.value;
+              return (
+                <button
+                  key={st.value}
+                  type="button"
+                  className={WooOptionsFic.Utils.classNames('wof-image-style-card', isSelected && 'is-active')}
+                  onClick={() => props.onChange({ ...props.field, imageStyle: st.value })}
+                  title={st.label}
+                >
+                  <span className="wof-image-style-card__preview">
+                    <svg viewBox="0 0 60 45" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <rect x="1" y="1" width="58" height="43" rx="5" fill="#e8ecf0" stroke="#c8d0da" strokeWidth="1"/>
+                      <rect x="8" y="7" width="44" height="24" rx="3" fill="#b4bfcb"/>
+                      <circle cx="18" cy="19" r="5" fill="#8e9db0"/>
+                      <polygon points="14,28 24,15 32,24 38,18 52,31 8,31" fill="#9eb0c2"/>
+                      {st.value === 'overlay' ? (
+                        <>
+                          <rect x="8" y="21" width="44" height="10" rx="0" fill="rgba(0,0,0,0.45)"/>
+                          <rect x="12" y="23" width="20" height="3" rx="1.5" fill="#fff" opacity="0.8"/>
+                          <rect x="12" y="27" width="14" height="2" rx="1" fill="#fff" opacity="0.5"/>
+                        </>
+                      ) : null}
+                      {st.value === 'default' ? (
+                        <rect x="12" y="36" width="20" height="3" rx="1.5" fill="#b4bfcb"/>
+                      ) : null}
+                    </svg>
+                  </span>
+                  <span className="wof-image-style-card__label">{st.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Product rows */}
+        {choices.map((choice, index) => (
+          <ProductChoiceRow
+            key={choice.uuid}
+            choice={choice}
+            index={index}
+            count={choices.length}
+            mergeVariations={mergeVariations}
+            onUpdate={(patch) => updateChoice(choice.uuid, patch)}
+            onRemove={() => removeChoice(choice.uuid)}
+            onMove={moveChoice}
+          />
+        ))}
+
+        {/* Search / Add Product */}
+        <div className="wof-product-search-wrap" ref={searchWrap}>
+          <div className="wof-product-search-input-row">
+            <WooOptionsFic.Components.Dashicon name="plus-alt2" />
+            <input
+              ref={searchRef}
+              type="text"
+              className="wof-product-search-input"
+              placeholder={__('Add Product…', 'wooptionsfic')}
+              value={searchQuery}
+              onChange={(e: any) => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              autoComplete="off"
+            />
+            {isSearching ? <span className="wof-product-search-spinner">…</span> : null}
+          </div>
+          {showDropdown ? (
+            <div className="wof-product-search-dropdown">
+              {suggestions.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className="wof-product-search-option"
+                  onMouseDown={(e: any) => { e.preventDefault(); addProduct(s); }}
+                >
+                  {s.image ? <img src={s.image} alt="" className="wof-product-search-option__thumb" /> : <WooOptionsFic.Components.Dashicon name="format-image" />}
+                  <span className="wof-product-search-option__label">{s.label}</span>
+                  <span className="wof-product-search-option__meta">{s.meta}</span>
+                  {s.isVariable ? <span className="wof-product-search-option__badge">{__('Variable', 'wooptionsfic')}</span> : null}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        {/* Merge Variation Products */}
+        <ToggleControl
+          label={__('Merge Variation Products into one product', 'wooptionsfic')}
+          checked={mergeVariations}
+          onChange={(val: boolean) => props.onChange({ ...props.field, mergeVariationProducts: val })}
+        />
+
+        {/* Allow Multiple Choices */}
+        <ToggleControl
+          label={__('Allow Multiple Choices', 'wooptionsfic')}
+          checked={Boolean(props.field.multiple)}
+          onChange={(val: boolean) => props.onChange({ ...props.field, multiple: val })}
+        />
+        {props.field.multiple ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '8px' }}>
+            <TextControl
+              label={__('Min choices', 'wooptionsfic')}
+              type="number"
+              value={String(props.field.minChoices ?? 0)}
+              onChange={(v: string) => props.onChange({ ...props.field, minChoices: Math.max(0, parseInt(v, 10) || 0) })}
+            />
+            <TextControl
+              label={__('Max choices', 'wooptionsfic')}
+              type="number"
+              value={String(props.field.maxChoices ?? 0)}
+              onChange={(v: string) => props.onChange({ ...props.field, maxChoices: Math.max(0, parseInt(v, 10) || 0) })}
+            />
+          </div>
+        ) : null}
+
+        {/* Enable Quantity */}
+        <ToggleControl
+          label={__('Enable Quantity', 'wooptionsfic')}
+          checked={Boolean(props.field.enableQuantity)}
+          onChange={(val: boolean) => props.onChange({ ...props.field, enableQuantity: val })}
+        />
+        {props.field.enableQuantity ? (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '8px' }}>
+            <TextControl
+              label={__('Min quantity', 'wooptionsfic')}
+              type="number"
+              min={1}
+              value={String(props.field.minQuantity ?? 1)}
+              onChange={(v: string) => props.onChange({ ...props.field, minQuantity: Math.max(1, parseInt(v, 10) || 1) })}
+            />
+            <TextControl
+              label={__('Max quantity', 'wooptionsfic')}
+              type="number"
+              min={1}
+              value={String(props.field.maxQuantity ?? 100)}
+              onChange={(v: string) => props.onChange({ ...props.field, maxQuantity: Math.max(0, parseInt(v, 10) || 0) })}
+            />
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
+
   function ChoiceEditor(props: { field: WooOptionsFic.FieldDefinition; onChange: (field: WooOptionsFic.FieldDefinition) => void }): any {
+    // Product fields use their own dedicated editor.
+    if (props.field.type === 'product') {
+      return <ProductChoiceEditor field={props.field} onChange={props.onChange} />;
+    }
+
     const choices = props.field.choices ?? [];
     const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>({});
 
@@ -1437,6 +1899,54 @@ namespace WooOptionsFic.Builder {
                     onClick={() => props.onChange({ ...props.field, displayDirection: dir })}
                   >
                     {dir === 'horizontal' ? __('Horizontal', 'wooptionsfic') : __('Vertical', 'wooptionsfic')}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {/* IMAGE STYLES for image_swatch, color_swatch */}
+        {['image_swatch', 'color_swatch'].includes(props.field.type) ? (
+          <div style={{ marginBottom: '16px' }}>
+            <label className="components-base-control__label" style={{ display: 'block', marginBottom: '8px' }}>
+              {__('Image Style', 'wooptionsfic')}
+            </label>
+            <div className="wof-image-style-cards">
+              {([
+                { value: 'default', label: __('Default', 'wooptionsfic'), svgTop: true, svgBottom: true },
+                { value: 'overlay', label: __('Image overlay', 'wooptionsfic'), svgTop: false, svgBottom: false },
+                { value: 'only_image', label: __('Only Image', 'wooptionsfic'), svgTop: false, svgBottom: false },
+              ] as const).map((st) => {
+                const currentStyle = props.field.imageStyle || 'default';
+                const isSelected = currentStyle === st.value;
+                return (
+                  <button
+                    key={st.value}
+                    type="button"
+                    className={WooOptionsFic.Utils.classNames('wof-image-style-card', isSelected && 'is-active')}
+                    onClick={() => props.onChange({ ...props.field, imageStyle: st.value })}
+                    title={st.label}
+                  >
+                    <span className="wof-image-style-card__preview">
+                      <svg viewBox="0 0 60 45" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="1" y="1" width="58" height="43" rx="5" fill="#e8ecf0" stroke="#c8d0da" strokeWidth="1"/>
+                        <rect x="8" y="7" width="44" height="24" rx="3" fill="#b4bfcb"/>
+                        <circle cx="18" cy="19" r="5" fill="#8e9db0"/>
+                        <polygon points="14,28 24,15 32,24 38,18 52,31 8,31" fill="#9eb0c2"/>
+                        {st.value === 'overlay' ? (
+                          <>
+                            <rect x="8" y="21" width="44" height="10" rx="0" fill="rgba(0,0,0,0.45)"/>
+                            <rect x="12" y="23" width="20" height="3" rx="1.5" fill="#fff" opacity="0.8"/>
+                            <rect x="12" y="27" width="14" height="2" rx="1" fill="#fff" opacity="0.5"/>
+                          </>
+                        ) : null}
+                        {st.svgBottom ? (
+                          <rect x="12" y="36" width="20" height="3" rx="1.5" fill="#b4bfcb"/>
+                        ) : null}
+                      </svg>
+                    </span>
+                    <span className="wof-image-style-card__label">{st.label}</span>
                   </button>
                 );
               })}
@@ -1968,8 +2478,8 @@ namespace WooOptionsFic.Builder {
                 </div>
               ) : null}
 
-              {/* Enable Quantity option for choice fields (excluding segmented, radio, checkbox_group, font, and select) */}
-              {Boolean(field.choices) && !['segmented', 'radio', 'checkbox_group', 'font', 'select'].includes(field.type) ? (
+              {/* Enable Quantity option for choice fields (excluding segmented, radio, checkbox_group, font, select, and product) */}
+              {Boolean(field.choices) && !['segmented', 'radio', 'checkbox_group', 'font', 'select', 'product'].includes(field.type) ? (
                 <div className="wof-quantity-setting" style={{ marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>
                   <ToggleControl
                     label={__('Enable Quantity', 'wooptionsfic')}

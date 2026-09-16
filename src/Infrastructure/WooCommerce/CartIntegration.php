@@ -490,13 +490,37 @@ final class CartIntegration {
 	 * @return array<string,mixed>
 	 */
 	private function context(int $product_id, int $variation_id, int $quantity): array {
-		return $this->products->make(
+		$context = $this->products->make(
 			$product_id,
 			$variation_id,
 			$quantity,
 			get_current_user_id(),
 			$this->sessions->session_hash()
 		);
+		$vars = [];
+		$qtys = [];
+		foreach ($_POST as $k => $v) { // phpcs:ignore WordPress.Security.NonceVerification.Missing
+			if (str_ends_with((string) $k, '_var') && is_array($v)) {
+				foreach ($v as $cuuid => $var_id) {
+					if (is_scalar($var_id) && '' !== (string) $var_id) {
+						$vars[sanitize_text_field((string) $cuuid)] = (int) $var_id;
+					}
+				}
+			} elseif (str_ends_with((string) $k, '_qty') && is_array($v)) {
+				foreach ($v as $cuuid => $qty_val) {
+					if (is_scalar($qty_val) && (int) $qty_val > 0) {
+						$qtys[sanitize_text_field((string) $cuuid)] = (int) $qty_val;
+					}
+				}
+			}
+		}
+		if (! empty($vars)) {
+			$context['productVariations'] = $vars;
+		}
+		if (! empty($qtys)) {
+			$context['choiceQuantities'] = $qtys;
+		}
+		return $context;
 	}
 
 	/**

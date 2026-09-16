@@ -47,7 +47,7 @@ namespace WooOptionsFic.FieldFactory {
     };
 
     if (choiceTypes.has(type)) {
-      field.choices = [choice('Choice 1', 0), choice('Choice 2', 1), choice('Choice 3', 2)];
+      field.choices = type === 'product' ? [] : [choice('Choice 1', 0), choice('Choice 2', 1), choice('Choice 3', 2)];
       field.multiple = Boolean(manifest?.multiple);
       field.minChoices = 0;
       field.maxChoices = 0;
@@ -61,6 +61,12 @@ namespace WooOptionsFic.FieldFactory {
       if (['radio', 'checkbox_group', 'select'].includes(type)) {
         field.columns = 'one';
         field.imageStyle = 'normal';
+      }
+      if (['product', 'image_swatch', 'color_swatch'].includes(type)) {
+        field.imageStyle = 'default';
+      }
+      if (type === 'product') {
+        field.mergeVariationProducts = false;
       }
       if (type === 'checkbox_group') {
         field.choices.forEach((c) => {

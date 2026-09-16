@@ -822,8 +822,44 @@
             });
         }
         scheduleQuote(e = 320) { window.clearTimeout(this.quoteTimer), this.quoteTimer = window.setTimeout(() => { this.requestQuote(); }, e); }
-        async requestQuote(e = !1, r = !1) { const a = this.readSelection(); this.writeSelection(a); const i = JSON.stringify(a); this.aborter?.abort(), this.aborter = new AbortController, this.setPending(!0); try {
-            const n = await fetch(`${o}products/${this.productId()}/quote`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: this.payload.token, variationId: this.variationId(), quantity: this.quantity(), selection: a }), credentials: "same-origin", cache: "no-store", signal: this.aborter.signal }), s = await n.json().catch(() => ({}));
+        async requestQuote(e = !1, r = !1) {
+            const a = this.readSelection();
+            this.writeSelection(a);
+            const productVariations = {};
+            this.root.querySelectorAll(".wof-product-variation-select").forEach(sel => {
+                const name = sel.name || "";
+                const match = name.match(/\[([a-zA-Z0-9_-]+)\]/);
+                if (match && match[1] && sel.value) {
+                    productVariations[match[1]] = sel.value;
+                }
+            });
+            const choiceQuantities = {};
+            this.root.querySelectorAll(".wof-choice-qty-input").forEach(inp => {
+                const name = inp.name || "";
+                const match = name.match(/\[([a-zA-Z0-9_-]+)\]/);
+                if (match && match[1] && inp.value) {
+                    choiceQuantities[match[1]] = inp.value;
+                }
+            });
+            const i = JSON.stringify({ selection: a, productVariations, choiceQuantities });
+            this.aborter?.abort(), this.aborter = new AbortController, this.setPending(!0);
+            try {
+                const n = await fetch(`${o}products/${this.productId()}/quote`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        token: this.payload.token,
+                        variationId: this.variationId(),
+                        quantity: this.quantity(),
+                        selection: a,
+                        productVariations,
+                        choiceQuantities
+                    }),
+                    credentials: "same-origin",
+                    cache: "no-store",
+                    signal: this.aborter.signal
+                }),
+                s = await n.json().catch(() => ({}));
             if (!n.ok) {
                 if (!r && this.isTokenError(s) && await this.refreshConfigurationToken())
                     return await this.requestQuote(e, !0);
@@ -856,13 +892,14 @@
         readField(e, t) { const o = t.querySelector(`[data-wof-field="${r(e.uuid)}"]`); if (!o)
             return null; if ("repeater" === e.type)
             return Array.from(o.querySelectorAll(":scope [data-wof-row]")).map(t => { const o = {}; return (e.children ?? []).forEach(e => { o[e.uuid] = this.readField(e, t); }), { rowUuid: t.dataset.wofRow, values: o }; }); if ("checkbox" === e.type || "toggle" === e.type)
-            return Boolean(o.querySelector('input[type="checkbox"]:checked')); if ("checkbox_group" === e.type || e.multiple) {
+            return Boolean(o.querySelector('input[type="checkbox"]:checked')); if ("checkbox_group" === e.type || (e.multiple && "product" !== e.type)) {
                 const checked = Array.from(o.querySelectorAll('input[type="checkbox"]:checked'));
                 return checked.map(input => input.value);
-            } if (["radio", "segmented", "color_swatch", "image_swatch"].includes(e.type)) {
-                return o.querySelector('input[type="radio"]:checked')?.value ?? "";
-            } if ("product" === e.type)
-            return Array.from(o.querySelectorAll("input:checked")).map(e => e.value); if ("date_range" === e.type) {
+            } if (["radio", "segmented", "color_swatch", "image_swatch"].includes(e.type) || ("product" === e.type && !e.multiple)) {
+                return o.querySelector('input:checked')?.value ?? "";
+            } if ("product" === e.type && e.multiple) {
+                return Array.from(o.querySelectorAll("input:checked")).map(e => e.value);
+            } if ("date_range" === e.type) {
             const start = o.querySelector('[data-wof-daterange-start]')?.value ?? o.querySelectorAll('input[type="date"]')[0]?.value ?? "";
             const end = o.querySelector('[data-wof-daterange-end]')?.value ?? o.querySelectorAll('input[type="date"]')[1]?.value ?? "";
             return { start, end };

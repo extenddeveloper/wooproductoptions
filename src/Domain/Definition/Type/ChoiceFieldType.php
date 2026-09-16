@@ -43,7 +43,8 @@ final class ChoiceFieldType extends AbstractFieldType {
 				}
 			}
 
-			$choices[] = [
+			$is_product_type = 'product' === $this->type_key;
+			$choice_entry = [
 				'uuid'              => strtolower($uuid),
 				'label'             => self::plain_text((string) ($choice['label'] ?? 'Choice'), 200),
 				'description'       => self::plain_text((string) ($choice['description'] ?? ''), 500),
@@ -60,6 +61,42 @@ final class ChoiceFieldType extends AbstractFieldType {
 				'linkedQuantity'    => max(1, min(100, (int) ($choice['linkedQuantity'] ?? 1))),
 				'preview'           => is_array($choice['preview'] ?? null) ? $choice['preview'] : [],
 			];
+			if ($is_product_type) {
+				$choice_entry['productId']           = max(0, (int) ($choice['productId'] ?? 0));
+				$choice_entry['isVariable']          = ! empty($choice['isVariable']);
+				$choice_entry['selectedVariationIds'] = array_values(
+					array_unique(
+						array_filter(
+							array_map('absint', (array) ($choice['selectedVariationIds'] ?? []))
+						)
+					)
+				);
+				$raw_info = is_array($choice['productInfo'] ?? null) ? $choice['productInfo'] : [];
+				$choice_entry['productInfo'] = [
+					'price'        => self::plain_text((string) ($raw_info['price'] ?? ''), 50),
+					'regularPrice' => self::plain_text((string) ($raw_info['regularPrice'] ?? ''), 50),
+					'salePrice'    => self::plain_text((string) ($raw_info['salePrice'] ?? ''), 50),
+					'image'        => esc_url_raw((string) ($raw_info['image'] ?? '')),
+					'isVariable'   => ! empty($raw_info['isVariable']),
+					'variations'   => [],
+				];
+				if ($choice_entry['productId'] > 0 && empty($choice_entry['linkedProductId'])) {
+					$choice_entry['linkedProductId'] = $choice_entry['productId'];
+				}
+				$prod_price = (string) ($choice_entry['productInfo']['salePrice'] ?: ($choice_entry['productInfo']['price'] ?: ''));
+				if ('' === $prod_price && $choice_entry['productId'] > 0 && function_exists('wc_get_product')) {
+					$wc_p = wc_get_product($choice_entry['productId']);
+					if ($wc_p) {
+						$prod_price = (string) $wc_p->get_price();
+						$choice_entry['productInfo']['price'] = $prod_price;
+					}
+				}
+				if ('' !== $prod_price && '0' !== $prod_price && ('none' === ($choice_entry['pricing']['strategy'] ?? 'none') || '0' === ($choice_entry['pricing']['amount'] ?? '0'))) {
+					$choice_entry['pricing']['strategy'] = 'fixed';
+					$choice_entry['pricing']['amount']   = $prod_price;
+				}
+			}
+			$choices[] = $choice_entry;
 		}
 
 		$is_multiple = ! empty($definition['multiple']) || $this->multiple;
@@ -78,7 +115,10 @@ final class ChoiceFieldType extends AbstractFieldType {
 		$normalized['maxQuantity']        = max(0, (int) ($definition['maxQuantity'] ?? 100));
 		$normalized['displayDirection']   = 'segmented' === $this->type_key && 'vertical' === (string) ($definition['displayDirection'] ?? '') ? 'vertical' : 'horizontal';
 		$normalized['columns']            = in_array($this->type_key, ['radio', 'checkbox_group'], true) && in_array((string) ($definition['columns'] ?? ''), ['2', 'two'], true) ? 'two' : 'one';
-		$normalized['imageStyle']         = in_array($this->type_key, ['radio', 'checkbox_group', 'select'], true) && 'circle' === (string) ($definition['imageStyle'] ?? '') ? 'circle' : 'normal';
+		$normalized['imageStyle']         = $this->normalize_image_style((string) ($definition['imageStyle'] ?? ''));
+		if ('product' === $this->type_key) {
+			$normalized['mergeVariationProducts'] = ! empty($definition['mergeVariationProducts']);
+		}
 		return $normalized;
 	}
 
@@ -105,8 +145,14 @@ final class ChoiceFieldType extends AbstractFieldType {
 			return array_values(array_unique($normalized));
 		}
 
-		if (is_array($value) && isset($value['choice'])) {
-			$value = (string) $value['choice'];
+		if (is_array($value)) {
+			if (isset($value['choice'])) {
+				$value = (string) $value['choice'];
+			} elseif (! empty($value)) {
+				$value = (string) reset($value);
+			} else {
+				$value = '';
+			}
 		}
 		$value = is_scalar($value) ? (string) $value : '';
 		return in_array($value, $allowed, true) ? $value : '';
@@ -167,5 +213,17 @@ final class ChoiceFieldType extends AbstractFieldType {
 		// Imported definitions may only retain same-site, root-relative assets.
 		// The admin media picker persists an attachment ID, which is resolved late.
 		return 1 === preg_match('#\A/(?!/)[^\s<>"\']+\z#', $value) ? $value : '';
+	}
+
+	private function normalize_image_style(string $value): string {
+		// Radio, checkbox, select support circle vs normal.
+		if (in_array($this->type_key, ['radio', 'checkbox_group', 'select'], true)) {
+			return 'circle' === $value ? 'circle' : 'normal';
+		}
+		// Product, image swatch and color swatch support overlay display styles.
+		if (in_array($this->type_key, ['product', 'image_swatch', 'color_swatch'], true)) {
+			return in_array($value, ['overlay', 'only_image'], true) ? $value : 'default';
+		}
+		return 'normal';
 	}
 }

@@ -203,8 +203,48 @@ final class PriceEngine {
 				$choice_pricing = is_array($choice['pricing'] ?? null) ? $choice['pricing'] : [];
 				$choice_strategy = (string) ($choice_pricing['strategy'] ?? 'none');
 
+				if ('product' === ($field['type'] ?? '')) {
+					$product_price = '';
+					$selected_var_id = (int) ($context['productVariations'][$choice_uuid] ?? 0);
+					if ($selected_var_id > 0 && function_exists('wc_get_product')) {
+						$var_prod = wc_get_product($selected_var_id);
+						if ($var_prod) {
+							$product_price = (string) $var_prod->get_price();
+						}
+					}
+					if ('' === $product_price || '0' === $product_price) {
+						$product_id = (int) ($choice['productId'] ?? ($choice['linkedProductId'] ?? 0));
+						if ($product_id > 0 && function_exists('wc_get_product')) {
+							$wc_prod = wc_get_product($product_id);
+							if ($wc_prod) {
+								$product_price = (string) $wc_prod->get_price();
+							}
+						}
+					}
+					if ('' === $product_price || '0' === $product_price) {
+						$pinfo = is_array($choice['productInfo'] ?? null) ? $choice['productInfo'] : [];
+						$product_price = (string) ($pinfo['salePrice'] ?: ($pinfo['price'] ?: ''));
+					}
+					if ('' === $product_price || '0' === $product_price) {
+						$product_price = (string) ($choice_pricing['amount'] ?? '0');
+					}
+
+					if ('' !== $product_price && '0' !== $product_price && 0.0 !== (float) $product_price) {
+						$choice_strategy = 'fixed';
+						$choice_pricing['amount'] = $product_price;
+					}
+				}
+
 				if ('fixed' === $choice_strategy) {
-					$money = Money::from_decimal((string) ($choice_pricing['amount'] ?? '0'), $currency, $scale);
+					$raw_amount = (string) ($choice_pricing['amount'] ?? '0');
+					$qty_multiplier = 1;
+					if (! empty($field['enableQuantity']) && ! empty($context['choiceQuantities'][$choice_uuid])) {
+						$qty_multiplier = max(1, (int) $context['choiceQuantities'][$choice_uuid]);
+					}
+					$money = Money::from_decimal($raw_amount, $currency, $scale);
+					if ($qty_multiplier > 1) {
+						$money = $money->multiply(Decimal::from_string((string) $qty_multiplier));
+					}
 					$line = $this->line($field, 'choice_fixed', $money, ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_label], $money->to_decimal());
 					$line['label'] = $display_label;
 					$lines[] = $line;

@@ -159,6 +159,12 @@ final class PublicController {
 			$quantity     = max(1, min(999, (int) ($body['quantity'] ?? 1)));
 			$this->assert_product($product_id);
 			$context = $this->context($product_id, $variation_id, $quantity);
+			if (! empty($body['productVariations']) && is_array($body['productVariations'])) {
+				$context['productVariations'] = $body['productVariations'];
+			}
+			if (! empty($body['choiceQuantities']) && is_array($body['choiceQuantities'])) {
+				$context['choiceQuantities'] = $body['choiceQuantities'];
+			}
 			$config  = $this->quotes->configuration($context);
 			if (! $config) {
 				throw new NotFoundException('wooptionsfic_configuration_not_found');

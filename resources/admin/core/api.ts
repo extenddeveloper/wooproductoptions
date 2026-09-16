@@ -102,6 +102,11 @@ namespace WooOptionsFic.Api {
     return request(`/assignment-targets?${query.toString()}`);
   }
 
+  export function searchProductsForChoices(search: string, include: number[] = []): Promise<{ items: any[] }> {
+    const query = new URLSearchParams({ type: 'product', search, include: include.join(','), perPage: '20', forChoices: '1' });
+    return request(`/assignment-targets?${query.toString()}`);
+  }
+
   export function listTemplates(): Promise<{ items: WooOptionsFic.TemplateRecord[] }> {
     return request('/templates');
   }

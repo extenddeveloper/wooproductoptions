@@ -177,10 +177,11 @@ final class AdminController {
 				'callback'            => [$this, 'search_assignment_targets'],
 				'permission_callback' => [$this, 'can_edit'],
 				'args'                => [
-					'type'    => ['type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_key'],
-					'search'  => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field'],
-					'include' => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field'],
-					'perPage' => ['type' => 'integer', 'default' => 20, 'minimum' => 1, 'maximum' => 50],
+					'type'       => ['type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_key'],
+					'search'     => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field'],
+					'include'    => ['type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field'],
+					'perPage'    => ['type' => 'integer', 'default' => 20, 'minimum' => 1, 'maximum' => 50],
+					'forChoices' => ['type' => 'integer', 'default' => 0],
 				],
 			]
 		);
@@ -467,6 +468,8 @@ final class AdminController {
 				$ids = array_slice($ids, 0, $per_page);
 			}
 
+			$for_choices = (int) $request->get_param('forChoices') === 1;
+
 			foreach ($ids as $id) {
 				$product = function_exists('wc_get_product') ? wc_get_product((int) $id) : null;
 				$label   = $product ? $product->get_name() : get_the_title((int) $id);
@@ -485,13 +488,53 @@ final class AdminController {
 				if (! $image && 'variation' === $type && $product && method_exists($product, 'get_parent_id')) {
 					$image = get_the_post_thumbnail_url((int) $product->get_parent_id(), 'thumbnail');
 				}
-				$items[] = [
+				$item = [
 					'id'    => (int) $id,
 					'type'  => $type,
 					'label' => wp_strip_all_tags((string) $label),
 					'meta'  => wp_strip_all_tags($meta),
 					'image' => $image ? esc_url_raw($image) : '',
 				];
+				if ($for_choices && 'product' === $type && $product) {
+					$price         = (string) $product->get_price();
+					$regular_price = (string) $product->get_regular_price();
+					$sale_price    = (string) $product->get_sale_price();
+					$is_variable   = $product->is_type('variable');
+					$variations    = [];
+					if ($is_variable && method_exists($product, 'get_children')) {
+						foreach (array_slice($product->get_children(), 0, 50) as $var_id) {
+							$var = wc_get_product((int) $var_id);
+							if (! $var) continue;
+							$var_attrs = [];
+							if (method_exists($var, 'get_variation_attributes')) {
+								foreach ($var->get_variation_attributes() as $attr_key => $attr_val) {
+									$var_attrs[wc_attribute_label(str_replace('attribute_', '', $attr_key))] = $attr_val;
+								}
+							}
+							$var_img = get_the_post_thumbnail_url((int) $var_id, 'thumbnail');
+							if (! $var_img) $var_img = $image ? $image : '';
+							$var_label = $var->get_name();
+							if ($var_label === $product->get_name() && ! empty($var_attrs)) {
+								$var_label = implode(', ', array_values($var_attrs));
+							}
+							$variations[] = [
+								'id'           => (int) $var_id,
+								'label'        => wp_strip_all_tags((string) $var_label),
+								'price'        => (string) $var->get_price(),
+								'regularPrice' => (string) $var->get_regular_price(),
+								'salePrice'    => (string) $var->get_sale_price(),
+								'image'        => $var_img ? esc_url_raw($var_img) : '',
+								'attributes'   => $var_attrs,
+							];
+						}
+					}
+					$item['price']        = $price;
+					$item['regularPrice'] = $regular_price;
+					$item['salePrice']    = $sale_price;
+					$item['isVariable']   = $is_variable;
+					$item['variations']   = $variations;
+				}
+				$items[] = $item;
 			}
 			return ['items' => $items];
 		});
