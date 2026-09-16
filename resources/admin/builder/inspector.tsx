@@ -603,13 +603,40 @@ namespace WooOptionsFic.Builder {
             </div>
 
             {/* Time Range Max */}
-            <div style={{ marginBottom: 0 }}>
+            <div style={{ marginBottom: '14px' }}>
               <span className="wof-datetime-label">{__('Time Range (Max)', 'wooptionsfic')}</span>
               {renderTimeInput(
                 field.maxTime || '12:00 PM',
                 field.timeFormat || '12',
                 (val: string) => update({ maxTime: val })
               )}
+            </div>
+
+            {/* Time Format */}
+            <div>
+              <span className="wof-datetime-label">{__('Time Format', 'wooptionsfic')}</span>
+              <div className="wof-field-width-setting" style={{ marginBottom: 0 }}>
+                <div className="wof-field-width-group" role="radiogroup" aria-label={__('Time Format', 'wooptionsfic')}>
+                  {([
+                    { label: __('12 Hours', 'wooptionsfic'), value: '12' },
+                    { label: __('24 Hours', 'wooptionsfic'), value: '24' },
+                  ] as const).map((fmt) => {
+                    const isSelected = (field.timeFormat || '12') === fmt.value;
+                    return (
+                      <button
+                        type="button"
+                        key={fmt.value}
+                        role="radio"
+                        aria-checked={isSelected}
+                        className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                        onClick={() => update({ timeFormat: fmt.value })}
+                      >
+                        {fmt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         ) : null}
