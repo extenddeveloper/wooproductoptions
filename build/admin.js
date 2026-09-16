@@ -3351,19 +3351,9 @@ var WooOptionsFic;
                     wp.element.createElement("div", { style: { marginBottom: '14px' } },
                         wp.element.createElement("span", { className: "wof-datetime-label" }, __('Time Range (Min)', 'wooptionsfic')),
                         renderTimeInput(field.minTime || '12:00 AM', field.timeFormat || '12', (val) => update({ minTime: val }))),
-                    wp.element.createElement("div", { style: { marginBottom: '14px' } },
+                    wp.element.createElement("div", { style: { marginBottom: 0 } },
                         wp.element.createElement("span", { className: "wof-datetime-label" }, __('Time Range (Max)', 'wooptionsfic')),
-                        renderTimeInput(field.maxTime || '12:00 PM', field.timeFormat || '12', (val) => update({ maxTime: val }))),
-                    wp.element.createElement("div", null,
-                        wp.element.createElement("span", { className: "wof-datetime-label" }, __('Time Format', 'wooptionsfic')),
-                        wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: 0 } },
-                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Time Format', 'wooptionsfic') }, [
-                                { label: __('12 Hours', 'wooptionsfic'), value: '12' },
-                                { label: __('24 Hours', 'wooptionsfic'), value: '24' },
-                            ].map((fmt) => {
-                                const isSelected = (field.timeFormat || '12') === fmt.value;
-                                return (wp.element.createElement("button", { type: "button", key: fmt.value, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ timeFormat: fmt.value }) }, fmt.label));
-                            })))))) : null));
+                        renderTimeInput(field.maxTime || '12:00 PM', field.timeFormat || '12', (val) => update({ maxTime: val }))))) : null));
         }
         function DateRangeFieldInspector(props) {
             const { field, update } = props;
