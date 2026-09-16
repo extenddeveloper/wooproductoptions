@@ -8956,9 +8956,8 @@
 	background: var(--wof-preview-surface, #fff);
 	border: 1px solid var(--wof-preview-border, #d8deea);
 	border-radius: 10px;
-	display: grid;
+	display: flex;
 	gap: 10px;
-	grid-template-columns: 42px minmax(0, 1fr) auto;
 	min-height: 58px;
 	padding: 8px 11px;
 }
@@ -8969,11 +8968,14 @@
 	box-shadow: 0 0 0 1px var(--wof-preview-border, #d8deea);
 	height: 38px;
 	width: 38px;
+	flex-shrink: 0;
 }
 
 .wof-preview-color-picker>span:nth-child(2) {
 	display: grid;
 	gap: 2px;
+	flex: 1;
+	min-width: 0;
 }
 
 .wof-preview-color-picker strong {
@@ -8985,8 +8987,19 @@
 	font-size: 9px;
 }
 
+.wof-preview-color-picker__price,
+.wof-preview-datetime__price {
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--wof-preview-muted, #657086);
+	white-space: nowrap;
+	flex-shrink: 0;
+	margin-left: auto;
+}
+
 .wof-preview-color-picker>.dashicons {
 	color: var(--wof-preview-primary, #5b4ff5);
+	flex-shrink: 0;
 }
 
 .wof-preview-upload {
@@ -10297,6 +10310,12 @@
 	box-sizing: border-box !important;
 }
 
+.wof-preview-checkbox__box svg {
+	width: 18px !important;
+	height: 18px !important;
+	flex-shrink: 0 !important;
+}
+
 .wof-preview-checkbox.is-checked .wof-preview-checkbox__box {
 	background: #5b4ff5 !important;
 	border-color: #5b4ff5 !important;
@@ -10640,6 +10659,44 @@
 	font-weight: 400 !important;
 	margin-left: 2px !important;
 	display: inline-block !important;
+}
+
+.wof-canvas-field__price {
+	background: #eef2ff !important;
+	color: var(--wof-preview-primary, #4f46e5) !important;
+	font-size: 11px !important;
+	font-weight: 700 !important;
+	padding: 2px 8px !important;
+	border-radius: 4px !important;
+	line-height: 1.2 !important;
+	display: inline-block !important;
+}
+
+.wof-preview-scalar-wrap {
+	position: relative;
+	width: 100%;
+	display: flex;
+	align-items: center;
+}
+
+.wof-preview-scalar-wrap input {
+	width: 100%;
+	padding-right: 75px !important;
+}
+
+.wof-preview-scalar__price {
+	position: absolute;
+	right: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--wof-preview-muted, #657086);
+	pointer-events: none;
+	white-space: nowrap;
+}
+
+.wof-preview-scalar__price--textarea {
+	top: 10px;
+	right: 12px;
 }
 
 /* Preview Content Area */

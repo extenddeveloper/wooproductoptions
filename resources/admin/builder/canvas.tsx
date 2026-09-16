@@ -74,6 +74,7 @@ namespace WooOptionsFic.Builder {
     };
 
     const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.field.type]?.label ?? props.field.type;
+    const priceText = formatChoicePrice(props.field.pricing);
 
     return <article
       className={WooOptionsFic.Utils.classNames(
@@ -118,6 +119,7 @@ namespace WooOptionsFic.Builder {
               </span>
             ) : null}
           </strong>
+          {priceText ? <span className="wof-canvas-field__price">{priceText}</span> : null}
           {props.field.required ? <span className="wof-canvas-field__required">{__('REQUIRED', 'wooptionsfic')}</span> : null}
           {props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) ? (
             <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-title">

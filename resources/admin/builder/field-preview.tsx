@@ -5,13 +5,14 @@ namespace WooOptionsFic.Builder {
     if (!pricing || pricing.strategy === 'none') return '';
     const adminConfig = (window as any).WooOptionsFicAdmin;
     const symbol = adminConfig?.currencySymbol || adminConfig?.currency || '$';
-    if (pricing.strategy === 'fixed') {
+    if (pricing.strategy === 'fixed' || pricing.strategy === 'setup') {
       const raw = String(pricing.amount ?? '0').trim();
       if (!raw || raw === '0') return '';
       const isNegative = raw.startsWith('-');
       const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
       const prefix = isNegative ? '-' : '+';
-      return `${prefix}${symbol}${clean}`;
+      const suffix = pricing.strategy === 'setup' ? ` ${__('setup', 'wooptionsfic')}` : '';
+      return `${prefix}${symbol}${clean}${suffix}`;
     }
     if (pricing.strategy === 'percentage') {
       const raw = String(pricing.percent ?? '0').trim();
@@ -20,6 +21,22 @@ namespace WooOptionsFic.Builder {
       const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
       const prefix = isNegative ? '-' : '+';
       return `${prefix}${clean}%`;
+    }
+    if (pricing.strategy === 'per_character') {
+      const raw = String(pricing.amount ?? '0').trim();
+      if (!raw || raw === '0') return '';
+      const isNegative = raw.startsWith('-');
+      const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
+      const prefix = isNegative ? '-' : '+';
+      return `${prefix}${symbol}${clean}/char`;
+    }
+    if (pricing.strategy === 'per_unit') {
+      const raw = String(pricing.amount ?? '0').trim();
+      if (!raw || raw === '0') return '';
+      const isNegative = raw.startsWith('-');
+      const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
+      const prefix = isNegative ? '-' : '+';
+      return `${prefix}${symbol}${clean}/unit`;
     }
     return '';
   }
@@ -35,10 +52,18 @@ namespace WooOptionsFic.Builder {
     return /^#[0-9A-F]{6}$/.test(value) ? value : '#5B4FF5';
   }
 
-  function renderCheckSvg(size = 11): any {
+  function renderCheckSvg(size = 11, bolder = false): any {
     return (
       <svg viewBox="0 0 20 20" width={size} height={size} fill="currentColor" aria-hidden="true" style={{ display: 'block' }}>
-        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+          clipRule="evenodd"
+          stroke={bolder ? 'currentColor' : undefined}
+          strokeWidth={bolder ? 0.75 : undefined}
+          strokeLinecap={bolder ? 'round' : undefined}
+          strokeLinejoin={bolder ? 'round' : undefined}
+        />
       </svg>
     );
   }
@@ -134,7 +159,7 @@ namespace WooOptionsFic.Builder {
       return (
         <div className={`wof-preview-checkbox${isChecked ? ' is-checked' : ''}`}>
           <span className="wof-preview-checkbox__box">
-            {isChecked ? renderCheckSvg(10) : null}
+            {isChecked ? renderCheckSvg(18, true) : null}
           </span>
           <strong className="wof-preview-checkbox__label">{field.label || __('Checkbox', 'wooptionsfic')}</strong>
           {priceText ? <span className="wof-preview-boolean__price">{priceText}</span> : null}
@@ -144,6 +169,7 @@ namespace WooOptionsFic.Builder {
 
     if (field.type === 'textarea') {
       const rows = field.rows ? Math.max(1, field.rows) : 4;
+      const priceText = formatChoicePrice(field.pricing);
       return (
         <div className="wof-preview-textarea-wrap">
           <textarea
@@ -156,6 +182,7 @@ namespace WooOptionsFic.Builder {
             }}
             placeholder={field.placeholder || __('Enter text…', 'wooptionsfic')}
           />
+          {priceText ? <span className="wof-preview-scalar__price wof-preview-scalar__price--textarea">{priceText}</span> : null}
         </div>
       );
     }
@@ -174,10 +201,12 @@ namespace WooOptionsFic.Builder {
 
     if (field.type === 'color_picker') {
       const color = previewColor(field);
+      const priceText = formatChoicePrice(field.pricing);
       return (
         <div className="wof-preview-color-picker">
           <span className="wof-preview-color-picker__swatch" style={{ background: color }} />
           <span><strong>{color}</strong><small>{__('Click to choose a color', 'wooptionsfic')}</small></span>
+          {priceText ? <span className="wof-preview-color-picker__price">{priceText}</span> : null}
           <WooOptionsFic.Components.Dashicon name="admin-customizer" />
         </div>
       );
@@ -205,8 +234,6 @@ namespace WooOptionsFic.Builder {
         </div>
       );
     }
-
-    if (field.type === 'date_range') return <div className="wof-preview-date-range"><input disabled type="date" /><span>to</span><input disabled type="date" /></div>;
 
     if (field.type === 'tel') {
       const flagStyle = field.flagStyle ?? 'number_only';
@@ -497,6 +524,7 @@ namespace WooOptionsFic.Builder {
       );
       const timeExample = field.timeFormat === '24' ? '12:00' : '12:00 PM';
       const dateExample = field.placeholder || (field.dateFormat === 'wp_default' ? 'Jul 30, 2025' : (field.dateFormat || 'DD/MM/YYYY'));
+      const priceText = formatChoicePrice(field.pricing);
 
       if (mode === 'date') {
         return (
@@ -504,6 +532,7 @@ namespace WooOptionsFic.Builder {
             <div className="wof-custom-picker-input">
               {calendarSvg}
               <span className="wof-picker-text">{dateExample}</span>
+              {priceText ? <span className="wof-preview-datetime__price">{priceText}</span> : null}
             </div>
           </div>
         );
@@ -514,6 +543,7 @@ namespace WooOptionsFic.Builder {
             <div className="wof-custom-picker-input">
               {clockSvg}
               <span className="wof-picker-text">{field.placeholder || timeExample}</span>
+              {priceText ? <span className="wof-preview-datetime__price">{priceText}</span> : null}
             </div>
           </div>
         );
@@ -527,6 +557,7 @@ namespace WooOptionsFic.Builder {
           <div className="wof-custom-picker-input">
             {clockSvg}
             <span className="wof-picker-text">{timeExample}</span>
+            {priceText ? <span className="wof-preview-datetime__price">{priceText}</span> : null}
           </div>
         </div>
       );
@@ -539,6 +570,7 @@ namespace WooOptionsFic.Builder {
       const sampleFormat = field.dateFormat === 'wp_default' ? 'Jul 30, 2025' : (field.dateFormat || 'DD/MM/YYYY');
       const startPlaceholder = field.placeholder || sampleFormat;
       const endPlaceholder = sampleFormat;
+      const priceText = formatChoicePrice(field.pricing);
 
       return (
         <div className="wof-custom-daterange-preview" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -550,6 +582,7 @@ namespace WooOptionsFic.Builder {
           <div className="wof-custom-picker-input" style={{ flex: 1 }}>
             {calendarSvg}
             <span className="wof-picker-text">{endPlaceholder}</span>
+            {priceText ? <span className="wof-preview-datetime__price">{priceText}</span> : null}
           </div>
         </div>
       );
@@ -560,7 +593,8 @@ namespace WooOptionsFic.Builder {
     };
     const isNum = field.type === 'number';
     const defaultValue = field.default != null && field.default !== '' ? String(field.default) : undefined;
-    return (
+    const priceText = formatChoicePrice(field.pricing);
+    const inputElement = (
       <input
         disabled
         type={inputType[field.type] ?? 'text'}
@@ -574,5 +608,14 @@ namespace WooOptionsFic.Builder {
         placeholder={defaultValue !== undefined ? undefined : (field.placeholder || __('Enter value…', 'wooptionsfic'))}
       />
     );
+    if (priceText) {
+      return (
+        <div className="wof-preview-scalar-wrap">
+          {inputElement}
+          <span className="wof-preview-scalar__price">{priceText}</span>
+        </div>
+      );
+    }
+    return inputElement;
   }
 }

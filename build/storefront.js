@@ -18,11 +18,11 @@
         productImageSnapshot = null;
         hasSubmitted = !1;
         constructor(e) { this.root = e; const t = e.querySelector("[data-wof-config]"); if (!t?.textContent)
-            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.initCustomDateRanges(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
-        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
+            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.initCustomDateRanges(), this.initCustomColorPickers(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
+        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
-            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); if (this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) return; e.preventDefault(); this.hasSubmitted = !0; if (this.lastQuote && !this.lastQuote.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) { this.renderQuote(this.lastQuote, !0); return; } this.requestQuote(!0); }), this.form && window.jQuery) {
+            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } if (!e.target.closest("[data-wof-color-picker]")) { this.closeAllCustomColorPickers(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const o = JSON.stringify(t); if (this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) return; e.preventDefault(); this.hasSubmitted = !0; if (this.lastQuote && !this.lastQuote.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) { this.renderQuote(this.lastQuote, !0); return; } this.requestQuote(!0); }), this.form && window.jQuery) {
             const e = () => this.scheduleQuote(50);
             window.jQuery(this.form).on("found_variation.wooptionsfic reset_data.wooptionsfic", e);
         } }
@@ -866,6 +866,8 @@
             const start = o.querySelector('[data-wof-daterange-start]')?.value ?? o.querySelectorAll('input[type="date"]')[0]?.value ?? "";
             const end = o.querySelector('[data-wof-daterange-end]')?.value ?? o.querySelectorAll('input[type="date"]')[1]?.value ?? "";
             return { start, end };
+        } if ("color_picker" === e.type) {
+            return o.querySelector("[data-wof-color-input]")?.value ?? "";
         } if ("tel" === e.type) {
             const wrap = o.querySelector("[data-wof-phone-wrap]");
             if (wrap) {
@@ -1183,7 +1185,283 @@
         } }
         setAddToCartEnabled(e) { const t = this.form?.querySelector("button.single_add_to_cart_button"); t && (t.disabled = !e, t.setAttribute("aria-disabled", e ? "false" : "true")); }
         updateRangeOutputs() { this.root.querySelectorAll('input[type="range"]').forEach(e => { const t = e.parentElement?.querySelector("[data-wof-range-output]"); t && (t.value = e.value); }); }
-        updateColorOutputs() { this.root.querySelectorAll("[data-wof-color-picker]").forEach(e => { const t = e.querySelector("[data-wof-color-input]"), o = e.querySelector("[data-wof-color-value]"); t && o && (o.textContent = String(t.value || "#5B4FF5").toUpperCase()); }); }
+        updateColorOutputs() {
+            this.root.querySelectorAll("[data-wof-color-picker]").forEach(e => {
+                this.syncCustomColorPicker(e);
+            });
+        }
+        hexToHsv(hex) {
+            let clean = String(hex || '').trim().replace(/^#/, '');
+            if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+            if (!/^[0-9a-f]{6}$/i.test(clean)) clean = '5B4FF5';
+            const num = parseInt(clean, 16);
+            const r = (num >> 16) / 255, g = ((num >> 8) & 255) / 255, b = (num & 255) / 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b), diff = max - min;
+            let h = 0, s = max === 0 ? 0 : diff / max, v = max;
+            if (diff !== 0) {
+                if (max === r) h = ((g - b) / diff + (g < b ? 6 : 0)) / 6;
+                else if (max === g) h = ((b - r) / diff + 2) / 6;
+                else h = ((r - g) / diff + 4) / 6;
+            }
+            return { h: Math.round(h * 360), s: Math.round(s * 100), v: Math.round(v * 100) };
+        }
+        hsvToHex(h, s, v) {
+            const sNorm = Math.max(0, Math.min(100, s)) / 100;
+            const vNorm = Math.max(0, Math.min(100, v)) / 100;
+            const hNorm = ((h % 360) + 360) % 360;
+            const f = (n, k = (n + hNorm / 60) % 6) => vNorm - vNorm * sNorm * Math.max(Math.min(k, 4 - k, 1), 0);
+            const r = Math.round(f(5) * 255), g = Math.round(f(3) * 255), b = Math.round(f(1) * 255);
+            return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+        }
+        initCustomColorPickers() {
+            this.root.querySelectorAll("[data-wof-color-picker]").forEach(elem => {
+                this.syncCustomColorPicker(elem);
+            });
+        }
+        syncCustomColorPicker(elem) {
+            const input = elem.querySelector("[data-wof-color-input]");
+            if (!input) return;
+            let val = String(input.value || "#5B4FF5").trim();
+            if (val && !val.startsWith("#")) val = "#" + val;
+            if (/^#([0-9a-f]{3})$/i.test(val)) {
+                const c = val.slice(1);
+                val = '#' + c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+            }
+            const hex = /^#[0-9A-F]{6}$/i.test(val) ? val.toUpperCase() : "#5B4FF5";
+            input.value = hex;
+            const valElem = elem.querySelector("[data-wof-color-value]");
+            if (valElem) valElem.textContent = hex;
+            const swatch = elem.querySelector("[data-wof-color-swatch]");
+            if (swatch) swatch.style.backgroundColor = hex;
+        }
+        closeAllCustomColorPickers(except = null) {
+            document.querySelectorAll("[data-wof-color-picker].is-open").forEach(elem => {
+                if (elem !== except) {
+                    elem.classList.remove("is-open");
+                    elem.closest(".wof-field")?.classList.remove("wof-field--color-picker-open");
+                    elem.querySelector("[data-wof-color-trigger]")?.setAttribute("aria-expanded", "false");
+                }
+            });
+        }
+        toggleCustomColorPicker(trigger) {
+            const container = trigger.closest("[data-wof-color-picker]");
+            if (!container) return;
+            const isCurrentlyOpen = container.classList.contains("is-open");
+            if (isCurrentlyOpen) {
+                this.closeAllCustomColorPickers();
+                return;
+            }
+            this.closeAllCustomColorPickers(container);
+            this.closeAllCustomSelects();
+            this.closeAllCustomDateTimes();
+            this.closeAllCustomDateRanges();
+            container.classList.add("is-open");
+            container.closest(".wof-field")?.classList.add("wof-field--color-picker-open");
+            trigger.setAttribute("aria-expanded", "true");
+            this.buildColorPickerDropdown(container);
+        }
+        buildColorPickerDropdown(container) {
+            const dropdown = container.querySelector("[data-wof-color-dropdown]");
+            if (!dropdown) return;
+            const input = container.querySelector("[data-wof-color-input]");
+            const initialHex = String(input?.value || "#5B4FF5").trim().toUpperCase();
+            let currentHsv = this.hexToHsv(initialHex);
+
+            const presets = [
+                '#000000', '#FFFFFF', '#64748B', '#EF4444', '#F97316', '#F59E0B',
+                '#10B981', '#06B6D4', '#3B82F6', '#5B4FF5', '#8B5CF6', '#EC4899'
+            ];
+
+            const presetHtml = presets.map(p =>
+                `<button type="button" class="wof-color-picker__preset" data-wof-preset-color="${p}" style="background:${p}" aria-label="${p}"></button>`
+            ).join('');
+
+            dropdown.innerHTML = `
+                <div class="wof-color-picker__plane" data-wof-color-plane style="background-color: hsl(${currentHsv.h}, 100%, 50%);">
+                    <div class="wof-color-picker__plane-bg"></div>
+                    <div class="wof-color-picker__plane-thumb" data-wof-color-plane-thumb style="left: ${currentHsv.s}%; top: ${100 - currentHsv.v}%;"></div>
+                </div>
+                <div class="wof-color-picker__hue-wrap">
+                    <input type="range" min="0" max="360" value="${currentHsv.h}" class="wof-color-picker__hue-slider" data-wof-color-hue-slider aria-label="Hue">
+                </div>
+                <div class="wof-color-picker__presets">${presetHtml}</div>
+                <div class="wof-color-picker__footer">
+                    <span class="wof-color-picker__current-swatch" data-wof-color-current-swatch style="background-color: ${initialHex}"></span>
+                    <input type="text" class="wof-color-picker__hex-input" data-wof-color-hex-input value="${initialHex}" maxlength="7" spellcheck="false" aria-label="Hex color">
+                    <button type="button" class="wof-color-picker__done-btn" data-wof-color-done>Done</button>
+                </div>
+            `;
+
+            const plane = dropdown.querySelector("[data-wof-color-plane]");
+            const thumb = dropdown.querySelector("[data-wof-color-plane-thumb]");
+            const hueSlider = dropdown.querySelector("[data-wof-color-hue-slider]");
+            const hexInput = dropdown.querySelector("[data-wof-color-hex-input]");
+            const currentSwatch = dropdown.querySelector("[data-wof-color-current-swatch]");
+            const doneBtn = dropdown.querySelector("[data-wof-color-done]");
+
+            const normalizeHex = (str) => {
+                let clean = String(str || '').trim();
+                if (clean.startsWith('#')) clean = clean.slice(1);
+                if (/^[0-9a-f]{3}$/i.test(clean)) {
+                    clean = clean.split('').map(c => c + c).join('');
+                }
+                if (/^[0-9a-f]{6}$/i.test(clean)) {
+                    return '#' + clean.toUpperCase();
+                }
+                return null;
+            };
+
+            const applyColor = (hex, updateHexInput = true, updateControls = true) => {
+                if (input) {
+                    input.value = hex;
+                    input.dispatchEvent(new Event("input", { bubbles: true }));
+                    input.dispatchEvent(new Event("change", { bubbles: true }));
+                }
+                this.syncCustomColorPicker(container);
+                if (currentSwatch) currentSwatch.style.backgroundColor = hex;
+                if (updateHexInput && hexInput && document.activeElement !== hexInput) {
+                    hexInput.value = hex;
+                }
+                if (updateControls) {
+                    currentHsv = this.hexToHsv(hex);
+                    if (plane) plane.style.backgroundColor = `hsl(${currentHsv.h}, 100%, 50%)`;
+                    if (thumb) {
+                        thumb.style.left = `${currentHsv.s}%`;
+                        thumb.style.top = `${100 - currentHsv.v}%`;
+                    }
+                    if (hueSlider) hueSlider.value = currentHsv.h;
+                }
+            };
+
+            let isDraggingPlane = false;
+            const updatePlaneFromCoords = (clientX, clientY) => {
+                const rect = plane.getBoundingClientRect();
+                const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+                const y = Math.max(0, Math.min(rect.height, clientY - rect.top));
+                const s = Math.round((x / rect.width) * 100);
+                const v = Math.round((1 - y / rect.height) * 100);
+                currentHsv.s = s;
+                currentHsv.v = v;
+                if (thumb) {
+                    thumb.style.left = `${s}%`;
+                    thumb.style.top = `${100 - v}%`;
+                }
+                const newHex = this.hsvToHex(currentHsv.h, currentHsv.s, currentHsv.v);
+                applyColor(newHex, true, false);
+            };
+
+            plane.addEventListener("mousedown", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                isDraggingPlane = true;
+                updatePlaneFromCoords(e.clientX, e.clientY);
+                const onMouseMove = (ev) => {
+                    if (isDraggingPlane) {
+                        ev.preventDefault();
+                        updatePlaneFromCoords(ev.clientX, ev.clientY);
+                    }
+                };
+                const onMouseUp = () => {
+                    isDraggingPlane = false;
+                    window.removeEventListener("mousemove", onMouseMove);
+                    window.removeEventListener("mouseup", onMouseUp);
+                };
+                window.addEventListener("mousemove", onMouseMove);
+                window.addEventListener("mouseup", onMouseUp);
+            });
+
+            plane.addEventListener("touchstart", (e) => {
+                if (!e.touches[0]) return;
+                isDraggingPlane = true;
+                updatePlaneFromCoords(e.touches[0].clientX, e.touches[0].clientY);
+                const onTouchMove = (ev) => {
+                    if (isDraggingPlane && ev.touches[0]) {
+                        ev.preventDefault();
+                        updatePlaneFromCoords(ev.touches[0].clientX, ev.touches[0].clientY);
+                    }
+                };
+                const onTouchEnd = () => {
+                    isDraggingPlane = false;
+                    window.removeEventListener("touchmove", onTouchMove);
+                    window.removeEventListener("touchend", onTouchEnd);
+                };
+                window.addEventListener("touchmove", onTouchMove, { passive: false });
+                window.addEventListener("touchend", onTouchEnd);
+            }, { passive: true });
+
+            hueSlider.addEventListener("input", (e) => {
+                e.stopPropagation();
+                const h = Number(e.target.value);
+                currentHsv.h = h;
+                if (plane) plane.style.backgroundColor = `hsl(${h}, 100%, 50%)`;
+                const newHex = this.hsvToHex(currentHsv.h, currentHsv.s, currentHsv.v);
+                applyColor(newHex, true, false);
+            });
+
+            hueSlider.addEventListener("change", (e) => {
+                e.stopPropagation();
+            });
+
+            dropdown.querySelectorAll("[data-wof-preset-color]").forEach(btn => {
+                btn.addEventListener("click", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const color = btn.dataset.wofPresetColor;
+                    if (color) applyColor(color, true, true);
+                });
+            });
+
+            hexInput.addEventListener("input", (e) => {
+                e.stopPropagation();
+                const raw = e.target.value.trim();
+                const norm = normalizeHex(raw);
+                if (norm && (raw.length === 6 || raw.length === 7)) {
+                    applyColor(norm, false, true);
+                }
+            });
+
+            hexInput.addEventListener("change", (e) => {
+                e.stopPropagation();
+            });
+
+            hexInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const norm = normalizeHex(hexInput.value);
+                    if (norm) {
+                        applyColor(norm, true, true);
+                    } else if (input) {
+                        hexInput.value = input.value;
+                    }
+                    this.closeAllCustomColorPickers();
+                } else if (e.key === "Escape") {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.closeAllCustomColorPickers();
+                }
+            });
+
+            hexInput.addEventListener("blur", (e) => {
+                e.stopPropagation();
+                const norm = normalizeHex(hexInput.value);
+                if (norm) {
+                    applyColor(norm, true, true);
+                } else if (input) {
+                    hexInput.value = input.value;
+                }
+            });
+
+            doneBtn.addEventListener("click", (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const norm = normalizeHex(hexInput.value);
+                if (norm) {
+                    applyColor(norm, true, true);
+                }
+                this.closeAllCustomColorPickers();
+            });
+        }
         updateSelectPreview(e) { const t = e?.closest?.("[data-wof-select-wrap]"); if (!t) return; const o = t.querySelector("[data-wof-select-image]"), r = e.selectedOptions?.[0]?.dataset?.image ?? ""; o && (r ? (o.src = r, o.style.display = "") : o.style.display = "none"); }
         updateSelectPreviews() { this.root.querySelectorAll("[data-wof-select-wrap] select").forEach(e => this.updateSelectPreview(e)); }
         captureProductImageSnapshot() { if (this.productImageSnapshot) return; const e = this.root.closest(".product") ?? document, t = Array.from(e.querySelectorAll(".woocommerce-product-gallery__image.flex-active-slide img, .woocommerce-product-gallery__image:first-child img, .woocommerce-product-gallery .wp-post-image")).filter(e => !this.root.contains(e)), o = Array.from(new Set(t)); this.productImageSnapshot = o.map(e => ({ element: e, src: e.getAttribute("src"), srcset: e.getAttribute("srcset"), sizes: e.getAttribute("sizes"), dataSrc: e.getAttribute("data-src"), large: e.getAttribute("data-large_image"), parentHref: e.closest("a")?.getAttribute("href") ?? null })); }

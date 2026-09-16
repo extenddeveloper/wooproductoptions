@@ -22,7 +22,6 @@
 	display: block;
 	font-family: var(--wof-font);
 	font-size: 16px;
-	isolation: isolate;
 	line-height: 1.5;
 	margin: 1.75rem 0;
 }
@@ -133,6 +132,13 @@
 
 .wof-required {
 	color: var(--wof-danger);
+}
+
+.wof-field__price {
+	color: var(--wof-muted, #64748b);
+	font-size: .84rem;
+	font-weight: 600;
+	margin-left: 6px;
 }
 
 .wof-field__description,
@@ -455,8 +461,8 @@
 
 .wof-boolean--checkbox .wof-boolean__control {
 	border-radius: 4px;
-	width: 20px;
-	height: 20px;
+	width: 18px;
+	height: 18px;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -469,6 +475,9 @@
 
 .wof-boolean--checkbox .wof-boolean__control svg {
 	display: none;
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
 }
 
 .wof-boolean--checkbox:has(input:checked) .wof-boolean__control svg {
@@ -1683,72 +1692,284 @@
 
 /* beta.29 color picker field */
 .wof-color-picker {
+	position: relative;
+	user-select: none;
+}
+
+.wof-color-picker__trigger {
 	align-items: center;
 	background: var(--wof-surface);
 	border: 1px solid var(--wof-border);
 	border-radius: 10px;
-	display: grid;
+	display: flex;
 	gap: .75rem;
-	grid-template-columns: 46px minmax(0, 1fr) auto;
-	min-height: 62px;
-	padding: .5rem .7rem;
-}
-
-.wof-color-picker input[type=color] {
-	appearance: none;
-	background: transparent;
-	border: 0;
-	border-radius: 8px;
-	box-shadow: 0 0 0 1px var(--wof-border);
+	min-height: 60px;
+	padding: .5rem .75rem;
 	cursor: pointer;
-	height: 42px;
-	margin: 0;
-	min-height: 42px;
-	padding: 0;
-	width: 42px;
+	box-sizing: border-box;
+	transition: border-color .15s ease, box-shadow .15s ease;
 }
 
-.wof-color-picker input[type=color]::-webkit-color-swatch-wrapper {
-	padding: 3px;
+.wof-color-picker__trigger:hover {
+	border-color: color-mix(in srgb, var(--wof-primary) 50%, var(--wof-border));
 }
 
-.wof-color-picker input[type=color]::-webkit-color-swatch {
-	border: 0;
-	border-radius: 6px;
+.wof-color-picker__trigger:focus-visible,
+.wof-color-picker.is-open .wof-color-picker__trigger {
+	border-color: var(--wof-primary);
+	box-shadow: 0 0 0 3px color-mix(in srgb, var(--wof-primary) 20%, transparent);
+	outline: none;
 }
 
-.wof-color-picker input[type=color]::-moz-color-swatch {
-	border: 0;
-	border-radius: 6px;
-}
-
-.wof-color-picker input[type=color]:focus-visible {
-	box-shadow: none;
-	outline: 0;
+.wof-color-picker__swatch {
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
+	border: 1px solid rgba(0, 0, 0, 0.12);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	display: block;
+	flex-shrink: 0;
+	box-sizing: border-box;
+	transition: background-color .15s ease;
 }
 
 .wof-color-picker__value {
 	display: grid;
-	gap: .08rem;
+	gap: .15rem;
 	min-width: 0;
+	flex: 1;
 }
 
 .wof-color-picker__value strong {
 	color: var(--wof-text);
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-	font-size: .82rem;
+	font-size: .88rem;
+	letter-spacing: .02em;
 }
 
 .wof-color-picker__value small {
 	color: var(--wof-muted);
-	font-size: .7rem;
+	font-size: .72rem;
+}
+
+.wof-color-picker__price {
+	color: var(--wof-muted, #64748b);
+	font-size: .86rem;
+	font-weight: 600;
+	margin-left: auto;
+	white-space: nowrap;
+	flex-shrink: 0;
 }
 
 .wof-color-picker__icon {
 	color: var(--wof-primary);
-	font-size: 19px;
-	height: 19px;
-	width: 19px;
+	font-size: 20px;
+	height: 20px;
+	width: 20px;
+	flex-shrink: 0;
+}
+
+/* Custom color picker popover dropdown */
+.wof-field:has(.wof-color-picker.is-open),
+.wof-field.wof-field--color-picker-open,
+.wof-field:has(.wof-custom-datetime.is-open),
+.wof-field:has(.wof-custom-daterange.is-open) {
+	position: relative;
+	z-index: 50;
+}
+
+.wof-color-picker.is-open {
+	position: relative;
+	z-index: 50;
+}
+
+.wof-color-picker__dropdown {
+	display: none;
+	position: absolute;
+	top: calc(100% + 6px);
+	left: 0;
+	z-index: 100;
+	width: 280px;
+	max-width: 100%;
+	background: var(--wof-surface, #ffffff);
+	border: 1px solid var(--wof-border, #e2e8f0);
+	border-radius: 12px;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+	padding: 12px;
+	box-sizing: border-box;
+}
+
+.wof-color-picker.is-open .wof-color-picker__dropdown {
+	display: block;
+	animation: wofFadeSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* 2D saturation/brightness plane */
+.wof-color-picker__plane {
+	position: relative;
+	width: 100%;
+	height: 140px;
+	border-radius: 8px;
+	overflow: hidden;
+	cursor: crosshair;
+	touch-action: none;
+	user-select: none;
+	box-sizing: border-box;
+}
+
+.wof-color-picker__plane-bg {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(to right, #fff, transparent), linear-gradient(to top, #000, transparent);
+	pointer-events: none;
+}
+
+.wof-color-picker__plane-thumb {
+	position: absolute;
+	width: 14px;
+	height: 14px;
+	border: 2px solid #ffffff;
+	border-radius: 50%;
+	box-shadow: 0 0 3px rgba(0, 0, 0, 0.6), inset 0 0 2px rgba(0, 0, 0, 0.4);
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	box-sizing: border-box;
+}
+
+/* Hue slider */
+.wof-color-picker__hue-wrap {
+	margin-top: 10px;
+	position: relative;
+	height: 14px;
+	border-radius: 7px;
+	background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+	box-sizing: border-box;
+}
+
+.wof-color-picker__hue-slider {
+	appearance: none;
+	-webkit-appearance: none;
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	background: transparent;
+	cursor: pointer;
+	border: none;
+	outline: none;
+}
+
+.wof-color-picker__hue-slider::-webkit-slider-thumb {
+	appearance: none;
+	-webkit-appearance: none;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #ffffff;
+	border: 2px solid #ffffff;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+	cursor: pointer;
+}
+
+.wof-color-picker__hue-slider::-moz-range-thumb {
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: #ffffff;
+	border: 2px solid #ffffff;
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+	cursor: pointer;
+}
+
+/* Presets grid */
+.wof-color-picker__presets {
+	display: grid;
+	grid-template-columns: repeat(6, 1fr);
+	gap: 6px;
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid var(--wof-border, #e2e8f0);
+}
+
+.wof-color-picker__preset {
+	width: 100%;
+	aspect-ratio: 1 / 1;
+	border-radius: 6px;
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	cursor: pointer;
+	padding: 0;
+	transition: transform 0.12s ease, box-shadow 0.12s ease;
+	outline: none;
+	box-sizing: border-box;
+}
+
+.wof-color-picker__preset:hover {
+	transform: scale(1.15);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+	z-index: 2;
+}
+
+.wof-color-picker__preset:focus-visible {
+	box-shadow: 0 0 0 2px var(--wof-primary);
+}
+
+/* Hex input & live preview row */
+.wof-color-picker__footer {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-top: 10px;
+}
+
+.wof-color-picker__current-swatch {
+	width: 34px;
+	height: 34px;
+	border-radius: 6px;
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+	flex-shrink: 0;
+	box-sizing: border-box;
+}
+
+.wof-color-picker__hex-input {
+	flex: 1;
+	min-width: 0;
+	height: 34px;
+	padding: 0 8px;
+	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+	font-size: 13px;
+	font-weight: 600;
+	text-transform: uppercase;
+	color: var(--wof-text, #1e293b);
+	background: var(--wof-surface, #ffffff);
+	border: 1px solid var(--wof-border, #cbd5e1);
+	border-radius: 6px;
+	box-sizing: border-box;
+}
+
+.wof-color-picker__hex-input:focus {
+	border-color: var(--wof-primary, #5b4ff5);
+	outline: none;
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-primary, #5b4ff5) 20%, transparent);
+}
+
+.wof-color-picker__done-btn {
+	height: 34px;
+	padding: 0 14px;
+	background: var(--wof-primary, #5b4ff5);
+	color: #ffffff;
+	border: none;
+	border-radius: 6px;
+	font-size: 12px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: opacity 0.15s ease;
+	flex-shrink: 0;
+}
+
+.wof-color-picker__done-btn:hover {
+	opacity: 0.9;
 }
 
 /* beta.30 type-specific field layouts */
@@ -2923,6 +3144,15 @@
 	white-space: nowrap;
 }
 
+.wof-custom-datetime__price {
+	color: var(--wof-muted, #64748b);
+	font-size: .86rem;
+	font-weight: 600;
+	margin-left: auto;
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
 .wof-custom-datetime.is-open {
 	z-index: 1050;
 }
@@ -2937,7 +3167,7 @@
 	display: none;
 	left: 0;
 	padding: 14px;
-	position: relative;
+	position: absolute;
 	top: calc(100% + 4px);
 	z-index: 999999 !important;
 	min-width: 280px;

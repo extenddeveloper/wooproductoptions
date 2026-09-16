@@ -1850,14 +1850,15 @@ var WooOptionsFic;
                 return '';
             const adminConfig = window.WooOptionsFicAdmin;
             const symbol = adminConfig?.currencySymbol || adminConfig?.currency || '$';
-            if (pricing.strategy === 'fixed') {
+            if (pricing.strategy === 'fixed' || pricing.strategy === 'setup') {
                 const raw = String(pricing.amount ?? '0').trim();
                 if (!raw || raw === '0')
                     return '';
                 const isNegative = raw.startsWith('-');
                 const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
                 const prefix = isNegative ? '-' : '+';
-                return `${prefix}${symbol}${clean}`;
+                const suffix = pricing.strategy === 'setup' ? ` ${__('setup', 'wooptionsfic')}` : '';
+                return `${prefix}${symbol}${clean}${suffix}`;
             }
             if (pricing.strategy === 'percentage') {
                 const raw = String(pricing.percent ?? '0').trim();
@@ -1867,6 +1868,24 @@ var WooOptionsFic;
                 const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
                 const prefix = isNegative ? '-' : '+';
                 return `${prefix}${clean}%`;
+            }
+            if (pricing.strategy === 'per_character') {
+                const raw = String(pricing.amount ?? '0').trim();
+                if (!raw || raw === '0')
+                    return '';
+                const isNegative = raw.startsWith('-');
+                const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
+                const prefix = isNegative ? '-' : '+';
+                return `${prefix}${symbol}${clean}/char`;
+            }
+            if (pricing.strategy === 'per_unit') {
+                const raw = String(pricing.amount ?? '0').trim();
+                if (!raw || raw === '0')
+                    return '';
+                const isNegative = raw.startsWith('-');
+                const clean = isNegative ? raw.slice(1) : raw.startsWith('+') ? raw.slice(1) : raw;
+                const prefix = isNegative ? '-' : '+';
+                return `${prefix}${symbol}${clean}/unit`;
             }
             return '';
         }
@@ -1880,9 +1899,9 @@ var WooOptionsFic;
             const value = String(field.default ?? '#5B4FF5').toUpperCase();
             return /^#[0-9A-F]{6}$/.test(value) ? value : '#5B4FF5';
         }
-        function renderCheckSvg(size = 11) {
+        function renderCheckSvg(size = 11, bolder = false) {
             return (wp.element.createElement("svg", { viewBox: "0 0 20 20", width: size, height: size, fill: "currentColor", "aria-hidden": "true", style: { display: 'block' } },
-                wp.element.createElement("path", { fillRule: "evenodd", d: "M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z", clipRule: "evenodd" })));
+                wp.element.createElement("path", { fillRule: "evenodd", d: "M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z", clipRule: "evenodd", stroke: bolder ? 'currentColor' : undefined, strokeWidth: bolder ? 0.75 : undefined, strokeLinecap: bolder ? 'round' : undefined, strokeLinejoin: bolder ? 'round' : undefined })));
         }
         function renderFlagSvg(country) {
             const c = (country || 'US').toUpperCase();
@@ -2173,16 +2192,18 @@ var WooOptionsFic;
                 const isChecked = Boolean(field.default);
                 const priceText = formatChoicePrice(field.pricing);
                 return (wp.element.createElement("div", { className: `wof-preview-checkbox${isChecked ? ' is-checked' : ''}` },
-                    wp.element.createElement("span", { className: "wof-preview-checkbox__box" }, isChecked ? renderCheckSvg(10) : null),
+                    wp.element.createElement("span", { className: "wof-preview-checkbox__box" }, isChecked ? renderCheckSvg(18, true) : null),
                     wp.element.createElement("strong", { className: "wof-preview-checkbox__label" }, field.label || __('Checkbox', 'wooptionsfic')),
                     priceText ? wp.element.createElement("span", { className: "wof-preview-boolean__price" }, priceText) : null));
             }
             if (field.type === 'textarea') {
                 const rows = field.rows ? Math.max(1, field.rows) : 4;
+                const priceText = formatChoicePrice(field.pricing);
                 return (wp.element.createElement("div", { className: "wof-preview-textarea-wrap" },
                     wp.element.createElement("textarea", { className: "wof-preview-textarea", readOnly: true, tabIndex: -1, rows: rows, style: {
                             textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
-                        }, placeholder: field.placeholder || __('Enter text…', 'wooptionsfic') })));
+                        }, placeholder: field.placeholder || __('Enter text…', 'wooptionsfic') }),
+                    priceText ? wp.element.createElement("span", { className: "wof-preview-scalar__price wof-preview-scalar__price--textarea" }, priceText) : null));
             }
             if (field.type === 'select' || field.type === 'font') {
                 const selectedChoice = choices.find(c => Boolean(c.default));
@@ -2193,11 +2214,13 @@ var WooOptionsFic;
             }
             if (field.type === 'color_picker') {
                 const color = previewColor(field);
+                const priceText = formatChoicePrice(field.pricing);
                 return (wp.element.createElement("div", { className: "wof-preview-color-picker" },
                     wp.element.createElement("span", { className: "wof-preview-color-picker__swatch", style: { background: color } }),
                     wp.element.createElement("span", null,
                         wp.element.createElement("strong", null, color),
                         wp.element.createElement("small", null, __('Click to choose a color', 'wooptionsfic'))),
+                    priceText ? wp.element.createElement("span", { className: "wof-preview-color-picker__price" }, priceText) : null,
                     wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-customizer" })));
             }
             if (field.type === 'range')
@@ -2216,11 +2239,6 @@ var WooOptionsFic;
                         wp.element.createElement("span", { className: "wof-preview-upload__hint" }, __('Click or drag and drop', 'wooptionsfic')),
                         wp.element.createElement("small", { className: "wof-preview-upload__limit" }, sprintf(__('Up to %1$d file(s), %2$d MB each', 'wooptionsfic'), maxFiles, maxMb)))));
             }
-            if (field.type === 'date_range')
-                return wp.element.createElement("div", { className: "wof-preview-date-range" },
-                    wp.element.createElement("input", { disabled: true, type: "date" }),
-                    wp.element.createElement("span", null, "to"),
-                    wp.element.createElement("input", { disabled: true, type: "date" }));
             if (field.type === 'tel') {
                 const flagStyle = field.flagStyle ?? 'number_only';
                 const country = (field.defaultCountry ?? 'US').toUpperCase();
@@ -2428,17 +2446,20 @@ var WooOptionsFic;
                     wp.element.createElement("polyline", { points: "12 6 12 12 16 14" })));
                 const timeExample = field.timeFormat === '24' ? '12:00' : '12:00 PM';
                 const dateExample = field.placeholder || (field.dateFormat === 'wp_default' ? 'Jul 30, 2025' : (field.dateFormat || 'DD/MM/YYYY'));
+                const priceText = formatChoicePrice(field.pricing);
                 if (mode === 'date') {
                     return (wp.element.createElement("div", { className: "wof-custom-picker-preview" },
                         wp.element.createElement("div", { className: "wof-custom-picker-input" },
                             calendarSvg,
-                            wp.element.createElement("span", { className: "wof-picker-text" }, dateExample))));
+                            wp.element.createElement("span", { className: "wof-picker-text" }, dateExample),
+                            priceText ? wp.element.createElement("span", { className: "wof-preview-datetime__price" }, priceText) : null)));
                 }
                 if (mode === 'time') {
                     return (wp.element.createElement("div", { className: "wof-custom-picker-preview" },
                         wp.element.createElement("div", { className: "wof-custom-picker-input" },
                             clockSvg,
-                            wp.element.createElement("span", { className: "wof-picker-text" }, field.placeholder || timeExample))));
+                            wp.element.createElement("span", { className: "wof-picker-text" }, field.placeholder || timeExample),
+                            priceText ? wp.element.createElement("span", { className: "wof-preview-datetime__price" }, priceText) : null)));
                 }
                 return (wp.element.createElement("div", { className: "wof-custom-picker-preview", style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' } },
                     wp.element.createElement("div", { className: "wof-custom-picker-input" },
@@ -2446,7 +2467,8 @@ var WooOptionsFic;
                         wp.element.createElement("span", { className: "wof-picker-text" }, dateExample)),
                     wp.element.createElement("div", { className: "wof-custom-picker-input" },
                         clockSvg,
-                        wp.element.createElement("span", { className: "wof-picker-text" }, timeExample))));
+                        wp.element.createElement("span", { className: "wof-picker-text" }, timeExample),
+                        priceText ? wp.element.createElement("span", { className: "wof-preview-datetime__price" }, priceText) : null)));
             }
             if (field.type === 'date_range') {
                 const calendarSvg = (wp.element.createElement("svg", { className: "wof-picker-icon", width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
@@ -2457,6 +2479,7 @@ var WooOptionsFic;
                 const sampleFormat = field.dateFormat === 'wp_default' ? 'Jul 30, 2025' : (field.dateFormat || 'DD/MM/YYYY');
                 const startPlaceholder = field.placeholder || sampleFormat;
                 const endPlaceholder = sampleFormat;
+                const priceText = formatChoicePrice(field.pricing);
                 return (wp.element.createElement("div", { className: "wof-custom-daterange-preview", style: { display: 'flex', alignItems: 'center', gap: '8px' } },
                     wp.element.createElement("div", { className: "wof-custom-picker-input", style: { flex: 1 } },
                         calendarSvg,
@@ -2464,16 +2487,24 @@ var WooOptionsFic;
                     wp.element.createElement("span", { className: "wof-custom-daterange-preview__sep", style: { color: '#94a3b8', fontSize: '13px', fontWeight: 600 } }, "\u2192"),
                     wp.element.createElement("div", { className: "wof-custom-picker-input", style: { flex: 1 } },
                         calendarSvg,
-                        wp.element.createElement("span", { className: "wof-picker-text" }, endPlaceholder))));
+                        wp.element.createElement("span", { className: "wof-picker-text" }, endPlaceholder),
+                        priceText ? wp.element.createElement("span", { className: "wof-preview-datetime__price" }, priceText) : null)));
             }
             const inputType = {
                 password: 'password', tel: 'tel', email: 'email', url: 'url', number: 'number', quantity: 'number', customer_defined_price: 'number',
             };
             const isNum = field.type === 'number';
             const defaultValue = field.default != null && field.default !== '' ? String(field.default) : undefined;
-            return (wp.element.createElement("input", { disabled: true, type: inputType[field.type] ?? 'text', value: defaultValue, min: isNum && field.enableMinMax !== false && field.min != null ? String(field.min) : undefined, max: isNum && field.enableMinMax !== false && field.max != null ? String(field.max) : undefined, step: isNum && field.step != null ? String(field.step) : undefined, style: {
+            const priceText = formatChoicePrice(field.pricing);
+            const inputElement = (wp.element.createElement("input", { disabled: true, type: inputType[field.type] ?? 'text', value: defaultValue, min: isNum && field.enableMinMax !== false && field.min != null ? String(field.min) : undefined, max: isNum && field.enableMinMax !== false && field.max != null ? String(field.max) : undefined, step: isNum && field.step != null ? String(field.step) : undefined, style: {
                     textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
                 }, placeholder: defaultValue !== undefined ? undefined : (field.placeholder || __('Enter value…', 'wooptionsfic')) }));
+            if (priceText) {
+                return (wp.element.createElement("div", { className: "wof-preview-scalar-wrap" },
+                    inputElement,
+                    wp.element.createElement("span", { className: "wof-preview-scalar__price" }, priceText)));
+            }
+            return inputElement;
         }
         Builder.FieldPreview = FieldPreview;
     })(Builder = WooOptionsFic.Builder || (WooOptionsFic.Builder = {}));
@@ -2608,6 +2639,7 @@ var WooOptionsFic;
                 boxSizing: 'border-box',
             };
             const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.field.type]?.label ?? props.field.type;
+            const priceText = Builder.formatChoicePrice(props.field.pricing);
             return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', props.field.type === 'spacer' && 'wof-canvas-field--spacer', `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
                 props.selected ? (wp.element.createElement("span", { className: "wof-canvas-field__type-badge" }, typeLabel)) : null,
                 wp.element.createElement("div", { className: "wof-canvas-field__toolbar", onClick: (event) => event.stopPropagation() },
@@ -2627,6 +2659,7 @@ var WooOptionsFic;
                                 wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
                                 wp.element.createElement("path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" }),
                                 wp.element.createElement("line", { x1: "12", y1: "17", x2: "12.01", y2: "17" })))) : null),
+                    priceText ? wp.element.createElement("span", { className: "wof-canvas-field__price" }, priceText) : null,
                     props.field.required ? wp.element.createElement("span", { className: "wof-canvas-field__required" }, __('REQUIRED', 'wooptionsfic')) : null,
                     props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-title" }, props.field.help)) : null,
                     props.field.choices?.length ? (wp.element.createElement("small", { className: "wof-canvas-field__meta" },

@@ -209,11 +209,16 @@ final class Renderer {
 		$help_text = trim((string) ($field['help'] ?? ''));
 		$help_pos  = (string) ($field['helpTextPosition'] ?? 'below_title');
 
+		$price_text = $this->choice_price_text($field, false);
+
 		if (! in_array($type, ['checkbox', 'toggle'], true)) {
 			echo '<label class="wof-field__label" for="wof-' . esc_attr($uuid) . '">';
 			echo esc_html((string) ($field['label'] ?? __('Option', 'wooptionsfic')));
 			if ($required) {
 				echo ' <span class="wof-required" aria-hidden="true">*</span><span class="screen-reader-text">' . esc_html__('required', 'wooptionsfic') . '</span>';
+			}
+			if ('' !== $price_text && in_array($type, ['text', 'textarea', 'number', 'password', 'tel', 'email', 'url', 'range', 'quantity', 'customer_defined_price', 'file'], true)) {
+				echo ' <span class="wof-field__price">' . esc_html($price_text) . '</span>';
 			}
 			if ('' !== $help_text && 'tooltip' === $help_pos) {
 				echo $this->render_tooltip_icon($help_text);
@@ -665,7 +670,7 @@ final class Renderer {
 		echo checked(! empty($field['default']), true, false) . $this->input_attributes($field, $description_id) . '>';
 		echo '<span class="wof-boolean__control" aria-hidden="true">';
 		if ($is_checkbox) {
-			echo '<svg viewBox="0 0 20 20" width="12" height="12" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
+			echo '<svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" stroke="currentColor" stroke-width="0.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 		}
 		echo '</span>';
 		$help_text  = trim((string) ($field['help'] ?? ''));
@@ -694,11 +699,19 @@ final class Renderer {
 		if (1 !== preg_match('/\A#[0-9A-F]{6}\z/', $value)) {
 			$value = '#5B4FF5';
 		}
+		$price_text = $this->choice_price_text($field, false);
 		echo '<div class="wof-color-picker" data-wof-color-picker>';
-		echo '<input id="wof-' . esc_attr($uuid) . '" type="color" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '" data-wof-color-input';
+		echo '<input id="wof-' . esc_attr($uuid) . '" type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '" data-wof-color-input';
 		echo $this->input_attributes($field, $description_id) . '>';
+		echo '<div class="wof-color-picker__trigger" data-wof-color-trigger tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
+		echo '<span class="wof-color-picker__swatch" style="background-color:' . esc_attr($value) . '" data-wof-color-swatch aria-hidden="true"></span>';
 		echo '<span class="wof-color-picker__value"><strong data-wof-color-value>' . esc_html($value) . '</strong><small>' . esc_html__('Click to choose a color', 'wooptionsfic') . '</small></span>';
+		if ('' !== $price_text) {
+			echo '<span class="wof-color-picker__price">' . esc_html($price_text) . '</span>';
+		}
 		echo '<svg class="wof-color-picker__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3.5a8.5 8.5 0 1 0 0 17c1.4 0 2.1-.82 2.1-1.72 0-.55-.28-1.02-.28-1.52 0-.82.67-1.49 1.49-1.49h1.22A3.97 3.97 0 0 0 20.5 11.8 8.3 8.3 0 0 0 12 3.5Zm-4.1 9.05a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm1.7-4.1a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm4.3-.7a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Zm3.1 3.25a1.2 1.2 0 1 1 0-2.4 1.2 1.2 0 0 1 0 2.4Z" fill="currentColor"/></svg>';
+		echo '</div>';
+		echo '<div class="wof-color-picker__dropdown" data-wof-color-dropdown role="dialog" aria-modal="false" tabindex="-1"></div>';
 		echo '</div>';
 	}
 
@@ -813,6 +826,7 @@ final class Renderer {
 
 		$date_ph = '' !== $placeholder ? $placeholder : ('wp_default' === $date_format ? date_i18n(get_option('date_format', 'F j, Y')) : $date_format);
 		$time_ph = '' !== $placeholder ? $placeholder : ('24' === $time_format ? '12:00' : '12:00 PM');
+		$price_text = $this->choice_price_text($field, false);
 
 		echo '<div class="wof-custom-datetime" data-wof-custom-datetime data-wof-datetime-config="' . esc_attr(wp_json_encode($config)) . '">';
 		echo '<input type="hidden" id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '" value="' . esc_attr($default_val) . '" ' . $this->input_attributes($field, $description_id) . ' data-wof-datetime-value>';
@@ -821,11 +835,17 @@ final class Renderer {
 			echo '<div class="wof-custom-datetime__trigger" data-wof-datetime-trigger="date" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
 			echo $cal_icon;
 			echo '<span class="wof-custom-datetime__display" data-wof-datetime-display="date" data-wof-placeholder="' . esc_attr($date_ph) . '">' . esc_html($default_val ?: $date_ph) . '</span>';
+			if ('' !== $price_text) {
+				echo '<span class="wof-custom-datetime__price">' . esc_html($price_text) . '</span>';
+			}
 			echo '</div>';
 		} elseif ('time' === $date_time_type) {
 			echo '<div class="wof-custom-datetime__trigger" data-wof-datetime-trigger="time" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
 			echo $clock_icon;
 			echo '<span class="wof-custom-datetime__display" data-wof-datetime-display="time" data-wof-placeholder="' . esc_attr($time_ph) . '">' . esc_html($default_val ?: $time_ph) . '</span>';
+			if ('' !== $price_text) {
+				echo '<span class="wof-custom-datetime__price">' . esc_html($price_text) . '</span>';
+			}
 			echo '</div>';
 		} else {
 			echo '<div class="wof-custom-datetime__dual">';
@@ -836,6 +856,9 @@ final class Renderer {
 			echo '<div class="wof-custom-datetime__trigger" data-wof-datetime-trigger="time" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
 			echo $clock_icon;
 			echo '<span class="wof-custom-datetime__display" data-wof-datetime-display="time" data-wof-placeholder="' . esc_attr($time_ph) . '">' . esc_html($time_ph) . '</span>';
+			if ('' !== $price_text) {
+				echo '<span class="wof-custom-datetime__price">' . esc_html($price_text) . '</span>';
+			}
 			echo '</div>';
 			echo '</div>';
 		}
@@ -875,6 +898,7 @@ final class Renderer {
 		$cal_icon = '<svg class="wof-custom-datetime__icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>';
 
 		$date_ph = '' !== $placeholder ? $placeholder : ('wp_default' === $date_format ? date_i18n(get_option('date_format', 'F j, Y')) : $date_format);
+		$price_text = $this->choice_price_text($field, false);
 
 		echo '<div class="wof-custom-daterange" data-wof-custom-daterange data-wof-daterange-config="' . esc_attr(wp_json_encode($config)) . '">';
 		echo '<input type="hidden" id="wof-' . esc_attr($uuid) . '-start" name="' . esc_attr($name . '[start]') . '" value="' . esc_attr($default_start) . '" ' . $this->input_attributes($field, $description_id) . ' data-wof-daterange-start>';
@@ -891,6 +915,9 @@ final class Renderer {
 		echo '<div class="wof-custom-datetime__trigger wof-custom-daterange__trigger--end" data-wof-daterange-trigger="end" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="' . esc_attr__('End date', 'wooptionsfic') . '">';
 		echo $cal_icon;
 		echo '<span class="wof-custom-datetime__display" data-wof-daterange-display="end" data-wof-placeholder="' . esc_attr($date_ph) . '">' . esc_html($default_end ?: $date_ph) . '</span>';
+		if ('' !== $price_text) {
+			echo '<span class="wof-custom-datetime__price">' . esc_html($price_text) . '</span>';
+		}
 		echo '</div>';
 		echo '</div>';
 
@@ -1136,12 +1163,13 @@ final class Renderer {
 		if ('' === $currency) {
 			$currency = '$';
 		}
-		if ('fixed' === $strategy && '0' !== (string) ($pricing['amount'] ?? '0')) {
+		if (('fixed' === $strategy || 'setup' === $strategy) && '0' !== (string) ($pricing['amount'] ?? '0')) {
 			$raw = trim((string) ($pricing['amount'] ?? '0'));
 			$is_negative = str_starts_with($raw, '-');
 			$clean = $is_negative ? substr($raw, 1) : (str_starts_with($raw, '+') ? substr($raw, 1) : $raw);
 			$prefix = $is_negative ? '-' : '+';
-			$text = $prefix . $currency . $clean;
+			$suffix = 'setup' === $strategy ? ' ' . __('setup', 'wooptionsfic') : '';
+			$text = $prefix . $currency . $clean . $suffix;
 			return $parentheses ? ' (' . $text . ')' : $text;
 		}
 		if ('percentage' === $strategy && '0' !== (string) ($pricing['percent'] ?? '0')) {
@@ -1150,6 +1178,22 @@ final class Renderer {
 			$clean = $is_negative ? substr($raw, 1) : (str_starts_with($raw, '+') ? substr($raw, 1) : $raw);
 			$prefix = $is_negative ? '-' : '+';
 			$text = $prefix . $clean . '%';
+			return $parentheses ? ' (' . $text . ')' : $text;
+		}
+		if ('per_character' === $strategy && '0' !== (string) ($pricing['amount'] ?? '0')) {
+			$raw = trim((string) ($pricing['amount'] ?? '0'));
+			$is_negative = str_starts_with($raw, '-');
+			$clean = $is_negative ? substr($raw, 1) : (str_starts_with($raw, '+') ? substr($raw, 1) : $raw);
+			$prefix = $is_negative ? '-' : '+';
+			$text = $prefix . $currency . $clean . '/char';
+			return $parentheses ? ' (' . $text . ')' : $text;
+		}
+		if ('per_unit' === $strategy && '0' !== (string) ($pricing['amount'] ?? '0')) {
+			$raw = trim((string) ($pricing['amount'] ?? '0'));
+			$is_negative = str_starts_with($raw, '-');
+			$clean = $is_negative ? substr($raw, 1) : (str_starts_with($raw, '+') ? substr($raw, 1) : $raw);
+			$prefix = $is_negative ? '-' : '+';
+			$text = $prefix . $currency . $clean . '/unit';
 			return $parentheses ? ' (' . $text . ')' : $text;
 		}
 		return '';

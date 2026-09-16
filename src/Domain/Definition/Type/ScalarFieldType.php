@@ -94,7 +94,7 @@ final class ScalarFieldType extends AbstractFieldType {
 			'time'       => trim((string) $value),
 			'datetime'   => trim((string) $value),
 			'date_range' => $this->normalize_date_range($value),
-			'color'      => strtoupper(trim((string) $value)),
+			'color'      => $this->normalize_color((string) $value),
 			default      => $this->normalize_string($value, $definition),
 		};
 	}
@@ -288,6 +288,20 @@ final class ScalarFieldType extends AbstractFieldType {
 			return [['code' => 'date_range_too_long', 'params' => ['max' => (string) $max_days]]];
 		}
 		return [];
+	}
+
+	private function normalize_color(string $value): string {
+		$v = strtoupper(trim($value));
+		if ('' === $v) {
+			return '';
+		}
+		if (! str_starts_with($v, '#')) {
+			$v = '#' . $v;
+		}
+		if (1 === preg_match('/\A#([0-9A-F])([0-9A-F])([0-9A-F])\z/', $v, $m)) {
+			return '#' . $m[1] . $m[1] . $m[2] . $m[2] . $m[3] . $m[3];
+		}
+		return $v;
 	}
 
 	private function validate_color(string $value): array {
