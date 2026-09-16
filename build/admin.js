@@ -3448,29 +3448,163 @@ var WooOptionsFic;
                         wp.element.createElement(TextControl, { label: __('Max Days', 'wooptionsfic'), type: "number", min: 0, value: String(field.maxDays ?? 0), help: __('Max duration (0 for none)', 'wooptionsfic'), onChange: (val) => update({ maxDays: Math.max(0, parseInt(val, 10) || 0) }) })),
                     wp.element.createElement(ToggleControl, { label: __('Allow Same Day Selection', 'wooptionsfic'), help: __('Allow start and end date to be on the same day', 'wooptionsfic'), checked: field.allowSameDay !== false, onChange: (allowSameDay) => update({ allowSameDay }) }))));
         }
-        function renderTimeInput(value, format, onChange) {
-            const is12 = format === '12';
-            const match = (value || '').match(/(\d{1,2}):(\d{2})(?:\s*([AP]M))?/i);
-            let hours = match ? match[1].padStart(2, '0') : '12';
-            let minutes = match ? match[2].padStart(2, '0') : '00';
-            let meridiem = (match && match[3] ? match[3].toUpperCase() : 'AM');
+        function TimePickerInput(props) {
+            const is12 = props.format === '12';
+            const minuteInputRef = useRef(null);
+            const parseValue = (val) => {
+                const match = (val || '').match(/(\d{1,2}):(\d{2})(?:\s*([AP]M))?/i);
+                const h = match ? match[1] : (is12 ? '12' : '00');
+                const m = match ? match[2] : '00';
+                const mer = (match && match[3] ? match[3].toUpperCase() : 'AM');
+                return { h, m, mer };
+            };
+            const initial = parseValue(props.value);
+            const [localHours, setLocalHours] = useState(initial.h.padStart(2, '0'));
+            const [localMinutes, setLocalMinutes] = useState(initial.m.padStart(2, '0'));
+            const [localMeridiem, setLocalMeridiem] = useState(initial.mer);
+            useEffect(() => {
+                const p = parseValue(props.value);
+                setLocalHours(p.h.padStart(2, '0'));
+                setLocalMinutes(p.m.padStart(2, '0'));
+                setLocalMeridiem(p.mer);
+            }, [props.value, props.format]);
             const commit = (h, m, mer) => {
-                onChange(is12 ? `${h}:${m} ${mer}` : `${h}:${m}`);
+                props.onChange(is12 ? `${h}:${m} ${mer}` : `${h}:${m}`);
+            };
+            const handleHoursChange = (e) => {
+                const raw = e.target.value.replace(/\D/g, '').slice(0, 2);
+                setLocalHours(raw);
+                if (raw.length === 2) {
+                    let num = parseInt(raw, 10);
+                    if (is12) {
+                        if (num < 1)
+                            num = 12;
+                        if (num > 12)
+                            num = 12;
+                    }
+                    else {
+                        if (num > 23)
+                            num = 23;
+                    }
+                    const formattedH = String(num).padStart(2, '0');
+                    setLocalHours(formattedH);
+                    commit(formattedH, (localMinutes || '00').padStart(2, '0'), localMeridiem);
+                    minuteInputRef.current?.focus();
+                    minuteInputRef.current?.select();
+                }
+            };
+            const handleHoursBlur = () => {
+                let num = parseInt(localHours, 10);
+                if (isNaN(num)) {
+                    num = is12 ? 12 : 0;
+                }
+                else if (is12) {
+                    if (num < 1)
+                        num = 12;
+                    if (num > 12)
+                        num = 12;
+                }
+                else {
+                    if (num < 0)
+                        num = 0;
+                    if (num > 23)
+                        num = 23;
+                }
+                const formattedH = String(num).padStart(2, '0');
+                setLocalHours(formattedH);
+                commit(formattedH, (localMinutes || '00').padStart(2, '0'), localMeridiem);
+            };
+            const handleHoursKeyDown = (e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    let num = parseInt(localHours, 10);
+                    if (isNaN(num))
+                        num = is12 ? 12 : 0;
+                    num += e.key === 'ArrowUp' ? 1 : -1;
+                    if (is12) {
+                        if (num < 1)
+                            num = 12;
+                        else if (num > 12)
+                            num = 1;
+                    }
+                    else {
+                        if (num < 0)
+                            num = 23;
+                        else if (num > 23)
+                            num = 0;
+                    }
+                    const formattedH = String(num).padStart(2, '0');
+                    setLocalHours(formattedH);
+                    commit(formattedH, (localMinutes || '00').padStart(2, '0'), localMeridiem);
+                }
+                else if (e.key === ':' || e.key === 'Enter') {
+                    e.preventDefault();
+                    minuteInputRef.current?.focus();
+                    minuteInputRef.current?.select();
+                }
+            };
+            const handleMinutesChange = (e) => {
+                const raw = e.target.value.replace(/\D/g, '').slice(0, 2);
+                setLocalMinutes(raw);
+                if (raw.length === 2) {
+                    let num = parseInt(raw, 10);
+                    if (num < 0)
+                        num = 0;
+                    if (num > 59)
+                        num = 59;
+                    const formattedM = String(num).padStart(2, '0');
+                    setLocalMinutes(formattedM);
+                    commit((localHours || (is12 ? '12' : '00')).padStart(2, '0'), formattedM, localMeridiem);
+                }
+            };
+            const handleMinutesBlur = () => {
+                let num = parseInt(localMinutes, 10);
+                if (isNaN(num)) {
+                    num = 0;
+                }
+                else {
+                    if (num < 0)
+                        num = 0;
+                    if (num > 59)
+                        num = 59;
+                }
+                const formattedM = String(num).padStart(2, '0');
+                setLocalMinutes(formattedM);
+                commit((localHours || (is12 ? '12' : '00')).padStart(2, '0'), formattedM, localMeridiem);
+            };
+            const handleMinutesKeyDown = (e) => {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    let num = parseInt(localMinutes, 10);
+                    if (isNaN(num))
+                        num = 0;
+                    num += e.key === 'ArrowUp' ? 1 : -1;
+                    if (num < 0)
+                        num = 59;
+                    else if (num > 59)
+                        num = 0;
+                    const formattedM = String(num).padStart(2, '0');
+                    setLocalMinutes(formattedM);
+                    commit((localHours || (is12 ? '12' : '00')).padStart(2, '0'), formattedM, localMeridiem);
+                }
             };
             return (wp.element.createElement("div", { className: "wof-time-input-group" },
                 wp.element.createElement("div", { className: "wof-time-spinner-box" },
-                    wp.element.createElement("input", { type: "text", maxLength: 2, value: hours, "aria-label": __('Hours', 'wooptionsfic'), onChange: (e) => {
-                            const v = e.target.value.replace(/\D/g, '').slice(0, 2);
-                            commit(v.padStart(2, '0'), minutes, meridiem);
-                        } }),
+                    wp.element.createElement("input", { type: "text", maxLength: 2, value: localHours, "aria-label": __('Hours', 'wooptionsfic'), onFocus: (e) => e.target.select(), onChange: handleHoursChange, onBlur: handleHoursBlur, onKeyDown: handleHoursKeyDown }),
                     wp.element.createElement("span", { className: "wof-time-colon" }, ":"),
-                    wp.element.createElement("input", { type: "text", maxLength: 2, value: minutes, "aria-label": __('Minutes', 'wooptionsfic'), onChange: (e) => {
-                            const v = e.target.value.replace(/\D/g, '').slice(0, 2);
-                            commit(hours, v.padStart(2, '0'), meridiem);
-                        } })),
+                    wp.element.createElement("input", { ref: minuteInputRef, type: "text", maxLength: 2, value: localMinutes, "aria-label": __('Minutes', 'wooptionsfic'), onFocus: (e) => e.target.select(), onChange: handleMinutesChange, onBlur: handleMinutesBlur, onKeyDown: handleMinutesKeyDown })),
                 is12 ? (wp.element.createElement("div", { className: "wof-meridiem-group" },
-                    wp.element.createElement("button", { type: "button", className: WooOptionsFic.Utils.classNames('wof-meridiem-btn', meridiem === 'AM' && 'is-active'), onClick: () => commit(hours, minutes, 'AM') }, "AM"),
-                    wp.element.createElement("button", { type: "button", className: WooOptionsFic.Utils.classNames('wof-meridiem-btn', meridiem === 'PM' && 'is-active'), onClick: () => commit(hours, minutes, 'PM') }, "PM"))) : null));
+                    wp.element.createElement("button", { type: "button", className: WooOptionsFic.Utils.classNames('wof-meridiem-btn', localMeridiem === 'AM' && 'is-active'), onClick: () => {
+                            setLocalMeridiem('AM');
+                            commit((localHours || '12').padStart(2, '0'), (localMinutes || '00').padStart(2, '0'), 'AM');
+                        } }, "AM"),
+                    wp.element.createElement("button", { type: "button", className: WooOptionsFic.Utils.classNames('wof-meridiem-btn', localMeridiem === 'PM' && 'is-active'), onClick: () => {
+                            setLocalMeridiem('PM');
+                            commit((localHours || '12').padStart(2, '0'), (localMinutes || '00').padStart(2, '0'), 'PM');
+                        } }, "PM"))) : null));
+        }
+        function renderTimeInput(value, format, onChange) {
+            return wp.element.createElement(TimePickerInput, { value: value, format: format, onChange: onChange });
         }
         function normalizeHexColor(value, fallback = '#5B4FF5') {
             const color = String(value || '').trim().toUpperCase();
