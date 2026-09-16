@@ -1168,6 +1168,14 @@ namespace WooOptionsFic.Builder {
 
   const CHOICE_INDEX_MIME = 'application/x-wooptionsfic-choice-index';
 
+  function truncateWords(str: string, maxWords = 5): string {
+    if (!str) return '';
+    const trimmed = str.trim();
+    const words = trimmed.split(/\s+/);
+    if (words.length <= maxWords) return trimmed;
+    return words.slice(0, maxWords).join(' ') + '...';
+  }
+
   function ChoiceItemCard(props: {
     choice: WooOptionsFic.ChoiceDefinition;
     index: number;
@@ -1262,12 +1270,9 @@ namespace WooOptionsFic.Builder {
             title={__('Drag to reorder', 'wooptionsfic')}
           >
             <WooOptionsFic.Components.GripIcon />
-            <strong>{__('Choice', 'wooptionsfic')} {props.index + 1}</strong>
-            {props.choice.label ? (
-              <span className="wof-choice-header-label-badge" title={props.choice.label}>
-                {props.choice.label}
-              </span>
-            ) : null}
+            <span className="wof-choice-header-label-badge" title={props.choice.label}>
+              {props.choice.label || `${__('Choice', 'wooptionsfic')} ${props.index + 1}`}
+            </span>
           </button>
           <div className="wof-choice-header-actions">
             <button
@@ -1375,32 +1380,39 @@ namespace WooOptionsFic.Builder {
 
   // ─── Product Choice Editor ────────────────────────────────────────────────
 
-  function ProductChoiceRow(props: {
+  function ProductChoiceCard(props: {
     choice: WooOptionsFic.ChoiceDefinition;
     index: number;
     count: number;
     mergeVariations: boolean;
+    isOpen: boolean;
+    onToggle: () => void;
     onUpdate: (patch: Partial<WooOptionsFic.ChoiceDefinition>) => void;
     onRemove: () => void;
     onMove: (from: number, to: number) => void;
   }): any {
-    const [showVarPopup, setShowVarPopup] = useState(false);
-    const [varSearch, setVarSearch] = useState('');
-    const [varSuggestions, setVarSuggestions] = useState<any[]>([]);
-    const [varLoading, setVarLoading] = useState(false);
     const [dropEdge, setDropEdge] = useState<'before' | 'after' | null>(null);
     const [isDragging, setIsDragging] = useState(false);
-    const rowRef = useRef<HTMLDivElement | null>(null);
-    const popupRef = useRef<HTMLDivElement | null>(null);
-    const varInputRef = useRef<HTMLInputElement | null>(null);
-    const searchTimeout = useRef<any>(null);
+    const cardRef = useRef<HTMLElement | null>(null);
+
+    // Product replacement search state
+    const [showChangeSearch, setShowChangeSearch] = useState(false);
+    const [changeQuery, setChangeQuery] = useState('');
+    const [changeSuggestions, setChangeSuggestions] = useState<any[]>([]);
+    const [isChangingSearch, setIsChangingSearch] = useState(false);
+    const changeSearchTimeout = useRef<any>(null);
+
+    // Variations filter state
+    const [varFilter, setVarFilter] = useState('');
 
     const info = props.choice.productInfo;
     const isVariable = Boolean(props.choice.isVariable || info?.isVariable);
     const selectedVarIds = props.choice.selectedVariationIds ?? [];
     const allVariations: any[] = info?.variations ?? [];
+    const productId = props.choice.productId || props.choice.linkedProductId;
+    const productPrice = info?.salePrice ? `${info.salePrice} (regular: ${info.regularPrice})` : (info?.price || info?.regularPrice || '');
 
-    // variation label
+    // variation badge in header
     let varBadge: string;
     if (!isVariable) {
       varBadge = __('N/A', 'wooptionsfic');
@@ -1412,58 +1424,71 @@ namespace WooOptionsFic.Builder {
       varBadge = `${selectedVarIds.length} ${__('Variations', 'wooptionsfic')}`;
     }
 
+    // Auto-load variations if variable product info was saved without variations array
     useEffect(() => {
-      if (!showVarPopup) return;
-      const handleDown = (e: MouseEvent) => {
-        if (popupRef.current && !popupRef.current.contains(e.target as Node)) setShowVarPopup(false);
-      };
-      document.addEventListener('mousedown', handleDown);
-      return () => document.removeEventListener('mousedown', handleDown);
-    }, [showVarPopup]);
-
-    useEffect(() => {
-      if (!showVarPopup) return;
-      clearTimeout(searchTimeout.current);
-      if (!varSearch.trim()) {
-        setVarSuggestions(allVariations.slice(0, 15));
-        return;
+      const pid = props.choice.productId || props.choice.linkedProductId;
+      if (isVariable && allVariations.length === 0 && pid) {
+        WooOptionsFic.Api.searchProductsForChoices('', [pid]).then((res: any) => {
+          const found = (res.items || []).find((it: any) => it.id === pid);
+          if (found && found.variations && found.variations.length > 0) {
+            props.onUpdate({
+              productInfo: {
+                ...(props.choice.productInfo || {}),
+                price: found.price || '',
+                regularPrice: found.regularPrice || '',
+                salePrice: found.salePrice || '',
+                image: found.image || '',
+                isVariable: true,
+                variations: found.variations,
+              },
+            });
+          }
+        }).catch(() => {});
       }
-      const q = varSearch.toLowerCase();
-      setVarSuggestions(allVariations.filter((v: any) => String(v.label || '').toLowerCase().includes(q)).slice(0, 15));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [varSearch, showVarPopup, allVariations.length]);
+    }, [props.choice.productId, props.choice.linkedProductId, isVariable, allVariations.length]);
 
-    const dragStart = (e: any) => {
-      e.stopPropagation();
-      e.dataTransfer?.setData(CHOICE_INDEX_MIME, String(props.index));
-      e.dataTransfer?.setData('text/plain', String(props.index));
-      if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
-      setIsDragging(true);
-    };
-    const dragEnd = () => { setIsDragging(false); setDropEdge(null); };
-    const dragOver = (e: any) => {
-      const types = Array.from(e.dataTransfer?.types ?? []);
-      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
-      e.preventDefault(); e.stopPropagation();
-      if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-      const bounds = (e.currentTarget as HTMLElement).getBoundingClientRect();
-      setDropEdge(e.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
-    };
-    const dragLeave = (e: any) => {
-      if (e.relatedTarget instanceof Node && (e.currentTarget as HTMLElement).contains(e.relatedTarget)) return;
-      setDropEdge(null);
-    };
-    const drop = (e: any) => {
-      const types = Array.from(e.dataTransfer?.types ?? []);
-      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
-      e.preventDefault(); e.stopPropagation();
-      const src = Number(e.dataTransfer?.getData(CHOICE_INDEX_MIME) || e.dataTransfer?.getData('text/plain') || '');
-      const insertIdx = props.index + (dropEdge === 'after' ? 1 : 0);
-      setDropEdge(null); setIsDragging(false);
-      if (!Number.isInteger(src)) return;
-      let fi = insertIdx; if (src < insertIdx) fi -= 1;
-      fi = Math.max(0, Math.min(props.count - 1, fi));
-      if (fi !== src) props.onMove(src, fi);
+    // Live search for product replacement
+    useEffect(() => {
+      if (!showChangeSearch) return;
+      clearTimeout(changeSearchTimeout.current);
+      setIsChangingSearch(true);
+      changeSearchTimeout.current = setTimeout(async () => {
+        try {
+          const result = await WooOptionsFic.Api.searchProductsForChoices(changeQuery);
+          setChangeSuggestions(result.items ?? []);
+        } catch {
+          setChangeSuggestions([]);
+        }
+        setIsChangingSearch(false);
+      }, 250);
+      return () => clearTimeout(changeSearchTimeout.current);
+    }, [changeQuery, showChangeSearch]);
+
+    const selectNewProduct = (product: any) => {
+      props.onUpdate({
+        label: product.label || props.choice.label,
+        imageUrl: product.image || '',
+        linkedProductId: product.id,
+        productId: product.id,
+        isVariable: Boolean(product.isVariable),
+        selectedVariationIds: [],
+        pricing: {
+          strategy: 'fixed',
+          amount: product.price || '0',
+          percent: '0',
+          mode: 'adjustment',
+        },
+        productInfo: {
+          price: product.price || '',
+          regularPrice: product.regularPrice || '',
+          salePrice: product.salePrice || '',
+          image: product.image || '',
+          isVariable: Boolean(product.isVariable),
+          variations: product.variations || [],
+        },
+      });
+      setShowChangeSearch(false);
+      setChangeQuery('');
     };
 
     const toggleVarId = (id: number) => {
@@ -1471,11 +1496,73 @@ namespace WooOptionsFic.Builder {
       props.onUpdate({ selectedVariationIds: next });
     };
 
+    const filteredVariations = useMemo(() => {
+      if (!varFilter.trim()) return allVariations;
+      const q = varFilter.toLowerCase();
+      return allVariations.filter((v: any) => String(v.label || '').toLowerCase().includes(q));
+    }, [allVariations, varFilter]);
+
+    // Drag & Drop
+    const dragStart = (event: any) => {
+      event.stopPropagation();
+      event.dataTransfer?.setData(CHOICE_INDEX_MIME, String(props.index));
+      event.dataTransfer?.setData('text/plain', String(props.index));
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        if (cardRef.current && event.dataTransfer.setDragImage) {
+          const bounds = cardRef.current.getBoundingClientRect();
+          event.dataTransfer.setDragImage(cardRef.current, event.clientX - bounds.left, event.clientY - bounds.top);
+        }
+      }
+      setIsDragging(true);
+    };
+
+    const dragEnd = () => {
+      setIsDragging(false);
+      setDropEdge(null);
+    };
+
+    const dragOver = (event: any) => {
+      const types = Array.from(event.dataTransfer?.types ?? []);
+      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+      const element = event.currentTarget as HTMLElement;
+      const bounds = element.getBoundingClientRect();
+      setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+    };
+
+    const dragLeave = (event: any) => {
+      const element = event.currentTarget as HTMLElement;
+      if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget)) return;
+      setDropEdge(null);
+    };
+
+    const drop = (event: any) => {
+      const types = Array.from(event.dataTransfer?.types ?? []);
+      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const sourceText = event.dataTransfer?.getData(CHOICE_INDEX_MIME) || event.dataTransfer?.getData('text/plain') || '';
+      const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+      setDropEdge(null);
+      setIsDragging(false);
+
+      const source = Number(sourceText);
+      if (!Number.isInteger(source)) return;
+      let finalIndex = insertIndex;
+      if (source < insertIndex) finalIndex -= 1;
+      finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+      if (finalIndex !== source) props.onMove(source, finalIndex);
+    };
+
     return (
-      <div
-        ref={rowRef}
+      <article
+        ref={cardRef}
         className={WooOptionsFic.Utils.classNames(
-          'wof-product-choice-row',
+          'wof-choice-card',
+          !props.isOpen && 'is-collapsed',
           isDragging && 'is-dragging',
           dropEdge === 'before' && 'is-drop-before',
           dropEdge === 'after' && 'is-drop-after'
@@ -1484,107 +1571,214 @@ namespace WooOptionsFic.Builder {
         onDragLeave={dragLeave}
         onDrop={drop}
       >
-        <button
-          type="button"
-          draggable
-          className="wof-choice-drag-handle"
-          onDragStart={dragStart}
-          onDragEnd={dragEnd}
-          aria-label={__('Drag to reorder', 'wooptionsfic')}
-          title={__('Drag to reorder', 'wooptionsfic')}
-        >
-          <WooOptionsFic.Components.GripIcon />
-        </button>
-
-        {/* Thumbnail */}
-        <span className="wof-product-choice-row__thumb">
-          {(info?.image || props.choice.imageUrl) ? (
-            <img src={info?.image || props.choice.imageUrl} alt="" />
-          ) : (
-            <WooOptionsFic.Components.Dashicon name="format-image" />
-          )}
-        </span>
-
-        {/* Product name */}
-        <span className="wof-product-choice-row__name" title={props.choice.label}>
-          {props.choice.label || __('(no product)', 'wooptionsfic')}
-        </span>
-
-        {/* Variation badge – only if variable and not merged */}
-        {isVariable && !props.mergeVariations ? (
-          <span
-            className="wof-product-choice-row__var-badge"
-            title={__('Select variations', 'wooptionsfic')}
+        <header className="wof-choice-card__header">
+          <button
+            type="button"
+            draggable
+            className="wof-choice-drag-handle"
+            onDragStart={dragStart}
+            onDragEnd={dragEnd}
+            aria-label={__('Drag choice to reorder', 'wooptionsfic')}
+            title={__('Drag to reorder', 'wooptionsfic')}
           >
+            <WooOptionsFic.Components.GripIcon />
+            <span className="wof-choice-header-thumb">
+              {(info?.image || props.choice.imageUrl) ? (
+                <img src={info?.image || props.choice.imageUrl} alt="" />
+              ) : (
+                <WooOptionsFic.Components.Dashicon name="format-image" />
+              )}
+            </span>
+            <span className="wof-choice-header-label-badge" title={props.choice.label}>
+              {truncateWords(props.choice.label || `${__('Choice', 'wooptionsfic')} ${props.index + 1}`, 5)}
+            </span>
+            <span className={WooOptionsFic.Utils.classNames('wof-choice-header-var-badge', !isVariable && 'is-na')}>
+              {varBadge}
+            </span>
+          </button>
+          <div className="wof-choice-header-actions">
             <button
               type="button"
-              className="wof-product-var-badge-btn"
-              onClick={() => setShowVarPopup((v) => !v)}
+              className="wof-choice-accordion-toggle"
+              onClick={props.onToggle}
+              aria-expanded={props.isOpen}
+              aria-label={props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic')}
+              title={props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic')}
             >
-              {varBadge}
-              <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd"/></svg>
+              <WooOptionsFic.Components.Dashicon name={props.isOpen ? 'arrow-up-alt2' : 'arrow-down-alt2'} />
             </button>
-            {showVarPopup ? (
-              <div className="wof-var-popup" ref={popupRef}>
-                <div className="wof-var-popup__header">
-                  <strong>{__('Select Variations', 'wooptionsfic')}</strong>
-                  <button type="button" className="wof-icon-btn" onClick={() => setShowVarPopup(false)} aria-label={__('Close', 'wooptionsfic')}>×</button>
+            <button
+              type="button"
+              className="wof-choice-delete-btn"
+              onClick={props.onRemove}
+              aria-label={__('Delete choice', 'wooptionsfic')}
+              title={__('Delete choice', 'wooptionsfic')}
+            >
+              <WooOptionsFic.Components.Dashicon name="trash" />
+            </button>
+          </div>
+        </header>
+
+        {props.isOpen ? (
+          <div className="wof-choice-card__body">
+            {/* Selected Product summary card */}
+            <div className="wof-product-choice-selected-card">
+              <div className="wof-product-choice-selected-card__thumb">
+                {(info?.image || props.choice.imageUrl) ? (
+                  <img src={info?.image || props.choice.imageUrl} alt="" />
+                ) : (
+                  <WooOptionsFic.Components.Dashicon name="format-image" />
+                )}
+              </div>
+              <div className="wof-product-choice-selected-card__meta">
+                <div className="wof-product-choice-selected-card__title" title={props.choice.label}>
+                  {truncateWords(props.choice.label || __('(No product selected)', 'wooptionsfic'), 5)}
                 </div>
-                <input
-                  ref={varInputRef}
-                  type="text"
-                  className="wof-var-popup__search"
-                  placeholder={__('Filter variations…', 'wooptionsfic')}
-                  value={varSearch}
-                  onChange={(e: any) => { setVarSearch(e.target.value); }}
-                  autoFocus
-                />
-                <div className="wof-var-popup__list">
-                  {varSuggestions.length === 0 ? (
-                    <p className="wof-muted-note" style={{ padding: '8px 12px', margin: 0 }}>
-                      {allVariations.length === 0 ? __('No variations loaded. Save and reopen to load.', 'wooptionsfic') : __('No matches.', 'wooptionsfic')}
-                    </p>
-                  ) : varSuggestions.map((v: any) => (
-                    <label key={v.id} className="wof-var-popup__item">
-                      <input
-                        type="checkbox"
-                        checked={selectedVarIds.includes(v.id)}
-                        onChange={() => toggleVarId(v.id)}
-                      />
-                      <span>{v.label}</span>
-                      {v.price ? <span className="wof-var-popup__price">{v.price}</span> : null}
-                    </label>
-                  ))}
+                <div className="wof-product-choice-selected-card__sub">
+                  {productPrice ? <span className="wof-product-choice-selected-card__price">{productPrice}</span> : null}
+                  {isVariable ? <span className="wof-choice-header-var-badge">{__('Variable', 'wooptionsfic')}</span> : null}
+                  {productId ? <span className="wof-product-choice-selected-card__id">#{productId}</span> : null}
                 </div>
               </div>
+              <button
+                type="button"
+                className="wof-product-choice-change-btn"
+                onClick={() => setShowChangeSearch((prev) => !prev)}
+              >
+                {showChangeSearch ? __('Cancel', 'wooptionsfic') : __('Change', 'wooptionsfic')}
+              </button>
+            </div>
+
+            {/* Change product search dropdown */}
+            {showChangeSearch ? (
+              <div className="wof-product-change-search-wrap">
+                <div className="wof-product-search-input-row">
+                  <WooOptionsFic.Components.Dashicon name="search" />
+                  <input
+                    type="text"
+                    className="wof-product-search-input"
+                    placeholder={__('Search product to replace…', 'wooptionsfic')}
+                    value={changeQuery}
+                    onChange={(e: any) => setChangeQuery(e.target.value)}
+                    autoFocus
+                  />
+                  {isChangingSearch ? <span className="wof-product-search-spinner">…</span> : null}
+                </div>
+                {changeSuggestions.length > 0 ? (
+                  <div className="wof-product-search-dropdown">
+                    {changeSuggestions.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        className="wof-product-search-option"
+                        onMouseDown={(e: any) => {
+                          e.preventDefault();
+                          selectNewProduct(s);
+                        }}
+                      >
+                        {s.image ? (
+                          <img src={s.image} alt="" className="wof-product-search-option__thumb" />
+                        ) : (
+                          <WooOptionsFic.Components.Dashicon name="format-image" />
+                        )}
+                        <span className="wof-product-search-option__label">{s.label}</span>
+                        <span className="wof-product-search-option__meta">{s.meta}</span>
+                        {s.isVariable ? <span className="wof-product-search-option__badge">{__('Variable', 'wooptionsfic')}</span> : null}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
             ) : null}
-          </span>
-        ) : isVariable && props.mergeVariations ? (
-          <span className="wof-product-choice-row__var-badge">{__('All Variations', 'wooptionsfic')}</span>
-        ) : (
-          <span className="wof-product-choice-row__var-badge wof-product-choice-row__var-badge--na">{__('N/A', 'wooptionsfic')}</span>
-        )}
 
-        {/* Active toggle */}
-        <input
-          type="checkbox"
-          className="wof-product-choice-row__toggle"
-          checked={!props.choice.disabled}
-          onChange={(e: any) => props.onUpdate({ disabled: !e.target.checked })}
-          title={__('Enable / Disable', 'wooptionsfic')}
-        />
+            {/* Variations */}
+            {isVariable ? (
+              props.mergeVariations ? (
+                <div className="wof-product-variations-merged-notice">
+                  <WooOptionsFic.Components.Dashicon name="info" />
+                  <span>{__('All variations are merged into this product choice because "Merge Variation Products" is enabled.', 'wooptionsfic')}</span>
+                </div>
+              ) : (
+                <div className="wof-product-variations-section">
+                  <div className="wof-product-variations-header">
+                    <strong>{__('Variations', 'wooptionsfic')}</strong>
+                    <span className="wof-product-variations-count">
+                      {selectedVarIds.length} / {allVariations.length} {__('selected', 'wooptionsfic')}
+                    </span>
+                    <div className="wof-product-variations-actions">
+                      <button
+                        type="button"
+                        className="wof-btn-link"
+                        onClick={() => props.onUpdate({ selectedVariationIds: allVariations.map((v: any) => v.id) })}
+                      >
+                        {__('Select all', 'wooptionsfic')}
+                      </button>
+                      <button
+                        type="button"
+                        className="wof-btn-link"
+                        onClick={() => props.onUpdate({ selectedVariationIds: [] })}
+                      >
+                        {__('Clear', 'wooptionsfic')}
+                      </button>
+                    </div>
+                  </div>
 
-        {/* Delete */}
-        <button
-          type="button"
-          className="wof-choice-delete-btn"
-          onClick={props.onRemove}
-          aria-label={__('Remove product', 'wooptionsfic')}
-          title={__('Remove', 'wooptionsfic')}
-        >
-          <WooOptionsFic.Components.Dashicon name="trash" />
-        </button>
-      </div>
+                  {allVariations.length > 5 ? (
+                    <input
+                      type="text"
+                      className="wof-var-filter-input"
+                      placeholder={__('Filter variations…', 'wooptionsfic')}
+                      value={varFilter}
+                      onChange={(e: any) => setVarFilter(e.target.value)}
+                    />
+                  ) : null}
+
+                  <div className="wof-product-variations-list">
+                    {filteredVariations.length === 0 ? (
+                      <p className="wof-muted-note" style={{ margin: 0, padding: '8px' }}>
+                        {allVariations.length === 0
+                          ? __('No variations loaded for this product.', 'wooptionsfic')
+                          : __('No matching variations.', 'wooptionsfic')}
+                      </p>
+                    ) : (
+                      filteredVariations.map((v: any) => {
+                        const isChecked = selectedVarIds.includes(v.id);
+                        return (
+                          <label key={v.id} className="wof-product-variation-item">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => toggleVarId(v.id)}
+                            />
+                            <span className="wof-product-variation-label" title={v.label}>
+                              {truncateWords(v.label, 5)}
+                            </span>
+                            {v.price ? <span className="wof-product-variation-price">{v.price}</span> : null}
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )
+            ) : null}
+
+            {/* Default & Disable choice */}
+            <div className="wof-choice-toggles-row">
+              <ToggleControl
+                label={__('Default choice', 'wooptionsfic')}
+                checked={props.choice.default}
+                onChange={(val: boolean) => props.onUpdate({ default: val })}
+              />
+              <ToggleControl
+                label={__('Disable choice', 'wooptionsfic')}
+                checked={props.choice.disabled}
+                onChange={(val: boolean) => props.onUpdate({ disabled: val })}
+              />
+            </div>
+          </div>
+        ) : null}
+      </article>
     );
   }
 
@@ -1593,6 +1787,7 @@ namespace WooOptionsFic.Builder {
     onChange: (field: WooOptionsFic.FieldDefinition) => void;
   }): any {
     const choices = props.field.choices ?? [];
+    const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>({});
     const [searchQuery, setSearchQuery] = useState('');
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -1601,6 +1796,21 @@ namespace WooOptionsFic.Builder {
     const searchWrap = useRef<HTMLDivElement | null>(null);
     const debounceRef = useRef<any>(null);
     const mergeVariations = Boolean(props.field.mergeVariationProducts);
+
+    const toggleChoice = (uuid: string) => {
+      setCollapsedMap((prev) => ({ ...prev, [uuid]: !prev[uuid] }));
+    };
+
+    const isAllCollapsed = choices.length > 0 && choices.every((c) => Boolean(collapsedMap[c.uuid]));
+
+    const toggleAll = () => {
+      const nextState = !isAllCollapsed;
+      const nextMap: Record<string, boolean> = {};
+      choices.forEach((c) => {
+        nextMap[c.uuid] = nextState;
+      });
+      setCollapsedMap(nextMap);
+    };
 
     useEffect(() => {
       const handleDown = (e: MouseEvent) => {
@@ -1657,6 +1867,7 @@ namespace WooOptionsFic.Builder {
         },
       };
       props.onChange({ ...props.field, choices: [...choices, newChoice] });
+      setCollapsedMap((prev) => ({ ...prev, [uuid]: false }));
       setSearchQuery('');
       setSearchFocused(false);
     };
@@ -1722,22 +1933,40 @@ namespace WooOptionsFic.Builder {
           </div>
         </div>
 
-        {/* Product rows */}
-        {choices.map((choice, index) => (
-          <ProductChoiceRow
-            key={choice.uuid}
-            choice={choice}
-            index={index}
-            count={choices.length}
-            mergeVariations={mergeVariations}
-            onUpdate={(patch) => updateChoice(choice.uuid, patch)}
-            onRemove={() => removeChoice(choice.uuid)}
-            onMove={moveChoice}
-          />
-        ))}
+        {/* Toolbar: Count & Collapse/Expand all */}
+        {choices.length > 1 ? (
+          <div className="wof-choice-list-toolbar">
+            <span className="wof-choice-list-count">{choices.length} {__('Products', 'wooptionsfic')}</span>
+            <button
+              type="button"
+              className="wof-choice-collapse-all-btn"
+              onClick={toggleAll}
+            >
+              {isAllCollapsed ? __('Expand all', 'wooptionsfic') : __('Collapse all', 'wooptionsfic')}
+            </button>
+          </div>
+        ) : null}
+
+        {/* Product choice cards list */}
+        <div className="wof-choice-editor-list">
+          {choices.map((choice, index) => (
+            <ProductChoiceCard
+              key={choice.uuid}
+              choice={choice}
+              index={index}
+              count={choices.length}
+              mergeVariations={mergeVariations}
+              isOpen={!collapsedMap[choice.uuid]}
+              onToggle={() => toggleChoice(choice.uuid)}
+              onUpdate={(patch) => updateChoice(choice.uuid, patch)}
+              onRemove={() => removeChoice(choice.uuid)}
+              onMove={moveChoice}
+            />
+          ))}
+        </div>
 
         {/* Search / Add Product */}
-        <div className="wof-product-search-wrap" ref={searchWrap}>
+        <div className="wof-product-search-wrap" ref={searchWrap} style={{ marginTop: '10px', marginBottom: '16px' }}>
           <div className="wof-product-search-input-row">
             <WooOptionsFic.Components.Dashicon name="plus-alt2" />
             <input

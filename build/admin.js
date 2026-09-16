@@ -3728,6 +3728,15 @@ var WooOptionsFic;
                             } }, __('Remove', 'wooptionsfic'))) : null))));
         }
         const CHOICE_INDEX_MIME = 'application/x-wooptionsfic-choice-index';
+        function truncateWords(str, maxWords = 5) {
+            if (!str)
+                return '';
+            const trimmed = str.trim();
+            const words = trimmed.split(/\s+/);
+            if (words.length <= maxWords)
+                return trimmed;
+            return words.slice(0, maxWords).join(' ') + '...';
+        }
         function ChoiceItemCard(props) {
             const [dropEdge, setDropEdge] = useState(null);
             const [isDragging, setIsDragging] = useState(false);
@@ -3791,11 +3800,7 @@ var WooOptionsFic;
                 wp.element.createElement("header", { className: "wof-choice-card__header" },
                     wp.element.createElement("button", { type: "button", draggable: true, className: "wof-choice-drag-handle", onDragStart: dragStart, onDragEnd: dragEnd, "aria-label": __('Drag choice to reorder', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
                         wp.element.createElement(WooOptionsFic.Components.GripIcon, null),
-                        wp.element.createElement("strong", null,
-                            __('Choice', 'wooptionsfic'),
-                            " ",
-                            props.index + 1),
-                        props.choice.label ? (wp.element.createElement("span", { className: "wof-choice-header-label-badge", title: props.choice.label }, props.choice.label)) : null),
+                        wp.element.createElement("span", { className: "wof-choice-header-label-badge", title: props.choice.label }, props.choice.label || `${__('Choice', 'wooptionsfic')} ${props.index + 1}`)),
                     wp.element.createElement("div", { className: "wof-choice-header-actions" },
                         wp.element.createElement("button", { type: "button", className: "wof-choice-accordion-toggle", onClick: props.onToggle, "aria-expanded": props.isOpen, "aria-label": props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic'), title: props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic') },
                             wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: props.isOpen ? 'arrow-up-alt2' : 'arrow-down-alt2' })),
@@ -3818,22 +3823,25 @@ var WooOptionsFic;
                         wp.element.createElement(ToggleControl, { label: __('Disable choice', 'wooptionsfic'), checked: props.choice.disabled, onChange: (val) => props.onUpdate({ disabled: val }) })))) : null));
         }
         // ─── Product Choice Editor ────────────────────────────────────────────────
-        function ProductChoiceRow(props) {
-            const [showVarPopup, setShowVarPopup] = useState(false);
-            const [varSearch, setVarSearch] = useState('');
-            const [varSuggestions, setVarSuggestions] = useState([]);
-            const [varLoading, setVarLoading] = useState(false);
+        function ProductChoiceCard(props) {
             const [dropEdge, setDropEdge] = useState(null);
             const [isDragging, setIsDragging] = useState(false);
-            const rowRef = useRef(null);
-            const popupRef = useRef(null);
-            const varInputRef = useRef(null);
-            const searchTimeout = useRef(null);
+            const cardRef = useRef(null);
+            // Product replacement search state
+            const [showChangeSearch, setShowChangeSearch] = useState(false);
+            const [changeQuery, setChangeQuery] = useState('');
+            const [changeSuggestions, setChangeSuggestions] = useState([]);
+            const [isChangingSearch, setIsChangingSearch] = useState(false);
+            const changeSearchTimeout = useRef(null);
+            // Variations filter state
+            const [varFilter, setVarFilter] = useState('');
             const info = props.choice.productInfo;
             const isVariable = Boolean(props.choice.isVariable || info?.isVariable);
             const selectedVarIds = props.choice.selectedVariationIds ?? [];
             const allVariations = info?.variations ?? [];
-            // variation label
+            const productId = props.choice.productId || props.choice.linkedProductId;
+            const productPrice = info?.salePrice ? `${info.salePrice} (regular: ${info.regularPrice})` : (info?.price || info?.regularPrice || '');
+            // variation badge in header
             let varBadge;
             if (!isVariable) {
                 varBadge = __('N/A', 'wooptionsfic');
@@ -3847,101 +3855,206 @@ var WooOptionsFic;
             else {
                 varBadge = `${selectedVarIds.length} ${__('Variations', 'wooptionsfic')}`;
             }
+            // Auto-load variations if variable product info was saved without variations array
             useEffect(() => {
-                if (!showVarPopup)
-                    return;
-                const handleDown = (e) => {
-                    if (popupRef.current && !popupRef.current.contains(e.target))
-                        setShowVarPopup(false);
-                };
-                document.addEventListener('mousedown', handleDown);
-                return () => document.removeEventListener('mousedown', handleDown);
-            }, [showVarPopup]);
-            useEffect(() => {
-                if (!showVarPopup)
-                    return;
-                clearTimeout(searchTimeout.current);
-                if (!varSearch.trim()) {
-                    setVarSuggestions(allVariations.slice(0, 15));
-                    return;
+                const pid = props.choice.productId || props.choice.linkedProductId;
+                if (isVariable && allVariations.length === 0 && pid) {
+                    WooOptionsFic.Api.searchProductsForChoices('', [pid]).then((res) => {
+                        const found = (res.items || []).find((it) => it.id === pid);
+                        if (found && found.variations && found.variations.length > 0) {
+                            props.onUpdate({
+                                productInfo: {
+                                    ...(props.choice.productInfo || {}),
+                                    price: found.price || '',
+                                    regularPrice: found.regularPrice || '',
+                                    salePrice: found.salePrice || '',
+                                    image: found.image || '',
+                                    isVariable: true,
+                                    variations: found.variations,
+                                },
+                            });
+                        }
+                    }).catch(() => { });
                 }
-                const q = varSearch.toLowerCase();
-                setVarSuggestions(allVariations.filter((v) => String(v.label || '').toLowerCase().includes(q)).slice(0, 15));
-                // eslint-disable-next-line react-hooks/exhaustive-deps
-            }, [varSearch, showVarPopup, allVariations.length]);
-            const dragStart = (e) => {
-                e.stopPropagation();
-                e.dataTransfer?.setData(CHOICE_INDEX_MIME, String(props.index));
-                e.dataTransfer?.setData('text/plain', String(props.index));
-                if (e.dataTransfer)
-                    e.dataTransfer.effectAllowed = 'move';
-                setIsDragging(true);
-            };
-            const dragEnd = () => { setIsDragging(false); setDropEdge(null); };
-            const dragOver = (e) => {
-                const types = Array.from(e.dataTransfer?.types ?? []);
-                if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain'))
+            }, [props.choice.productId, props.choice.linkedProductId, isVariable, allVariations.length]);
+            // Live search for product replacement
+            useEffect(() => {
+                if (!showChangeSearch)
                     return;
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.dataTransfer)
-                    e.dataTransfer.dropEffect = 'move';
-                const bounds = e.currentTarget.getBoundingClientRect();
-                setDropEdge(e.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
-            };
-            const dragLeave = (e) => {
-                if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget))
-                    return;
-                setDropEdge(null);
-            };
-            const drop = (e) => {
-                const types = Array.from(e.dataTransfer?.types ?? []);
-                if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain'))
-                    return;
-                e.preventDefault();
-                e.stopPropagation();
-                const src = Number(e.dataTransfer?.getData(CHOICE_INDEX_MIME) || e.dataTransfer?.getData('text/plain') || '');
-                const insertIdx = props.index + (dropEdge === 'after' ? 1 : 0);
-                setDropEdge(null);
-                setIsDragging(false);
-                if (!Number.isInteger(src))
-                    return;
-                let fi = insertIdx;
-                if (src < insertIdx)
-                    fi -= 1;
-                fi = Math.max(0, Math.min(props.count - 1, fi));
-                if (fi !== src)
-                    props.onMove(src, fi);
+                clearTimeout(changeSearchTimeout.current);
+                setIsChangingSearch(true);
+                changeSearchTimeout.current = setTimeout(async () => {
+                    try {
+                        const result = await WooOptionsFic.Api.searchProductsForChoices(changeQuery);
+                        setChangeSuggestions(result.items ?? []);
+                    }
+                    catch {
+                        setChangeSuggestions([]);
+                    }
+                    setIsChangingSearch(false);
+                }, 250);
+                return () => clearTimeout(changeSearchTimeout.current);
+            }, [changeQuery, showChangeSearch]);
+            const selectNewProduct = (product) => {
+                props.onUpdate({
+                    label: product.label || props.choice.label,
+                    imageUrl: product.image || '',
+                    linkedProductId: product.id,
+                    productId: product.id,
+                    isVariable: Boolean(product.isVariable),
+                    selectedVariationIds: [],
+                    pricing: {
+                        strategy: 'fixed',
+                        amount: product.price || '0',
+                        percent: '0',
+                        mode: 'adjustment',
+                    },
+                    productInfo: {
+                        price: product.price || '',
+                        regularPrice: product.regularPrice || '',
+                        salePrice: product.salePrice || '',
+                        image: product.image || '',
+                        isVariable: Boolean(product.isVariable),
+                        variations: product.variations || [],
+                    },
+                });
+                setShowChangeSearch(false);
+                setChangeQuery('');
             };
             const toggleVarId = (id) => {
                 const next = selectedVarIds.includes(id) ? selectedVarIds.filter((x) => x !== id) : [...selectedVarIds, id];
                 props.onUpdate({ selectedVariationIds: next });
             };
-            return (wp.element.createElement("div", { ref: rowRef, className: WooOptionsFic.Utils.classNames('wof-product-choice-row', isDragging && 'is-dragging', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after'), onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop },
-                wp.element.createElement("button", { type: "button", draggable: true, className: "wof-choice-drag-handle", onDragStart: dragStart, onDragEnd: dragEnd, "aria-label": __('Drag to reorder', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
-                    wp.element.createElement(WooOptionsFic.Components.GripIcon, null)),
-                wp.element.createElement("span", { className: "wof-product-choice-row__thumb" }, (info?.image || props.choice.imageUrl) ? (wp.element.createElement("img", { src: info?.image || props.choice.imageUrl, alt: "" })) : (wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" }))),
-                wp.element.createElement("span", { className: "wof-product-choice-row__name", title: props.choice.label }, props.choice.label || __('(no product)', 'wooptionsfic')),
-                isVariable && !props.mergeVariations ? (wp.element.createElement("span", { className: "wof-product-choice-row__var-badge", title: __('Select variations', 'wooptionsfic') },
-                    wp.element.createElement("button", { type: "button", className: "wof-product-var-badge-btn", onClick: () => setShowVarPopup((v) => !v) },
-                        varBadge,
-                        wp.element.createElement("svg", { width: "10", height: "10", viewBox: "0 0 20 20", fill: "currentColor", "aria-hidden": "true" },
-                            wp.element.createElement("path", { fillRule: "evenodd", d: "M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z", clipRule: "evenodd" }))),
-                    showVarPopup ? (wp.element.createElement("div", { className: "wof-var-popup", ref: popupRef },
-                        wp.element.createElement("div", { className: "wof-var-popup__header" },
-                            wp.element.createElement("strong", null, __('Select Variations', 'wooptionsfic')),
-                            wp.element.createElement("button", { type: "button", className: "wof-icon-btn", onClick: () => setShowVarPopup(false), "aria-label": __('Close', 'wooptionsfic') }, "\u00D7")),
-                        wp.element.createElement("input", { ref: varInputRef, type: "text", className: "wof-var-popup__search", placeholder: __('Filter variations…', 'wooptionsfic'), value: varSearch, onChange: (e) => { setVarSearch(e.target.value); }, autoFocus: true }),
-                        wp.element.createElement("div", { className: "wof-var-popup__list" }, varSuggestions.length === 0 ? (wp.element.createElement("p", { className: "wof-muted-note", style: { padding: '8px 12px', margin: 0 } }, allVariations.length === 0 ? __('No variations loaded. Save and reopen to load.', 'wooptionsfic') : __('No matches.', 'wooptionsfic'))) : varSuggestions.map((v) => (wp.element.createElement("label", { key: v.id, className: "wof-var-popup__item" },
-                            wp.element.createElement("input", { type: "checkbox", checked: selectedVarIds.includes(v.id), onChange: () => toggleVarId(v.id) }),
-                            wp.element.createElement("span", null, v.label),
-                            v.price ? wp.element.createElement("span", { className: "wof-var-popup__price" }, v.price) : null)))))) : null)) : isVariable && props.mergeVariations ? (wp.element.createElement("span", { className: "wof-product-choice-row__var-badge" }, __('All Variations', 'wooptionsfic'))) : (wp.element.createElement("span", { className: "wof-product-choice-row__var-badge wof-product-choice-row__var-badge--na" }, __('N/A', 'wooptionsfic'))),
-                wp.element.createElement("input", { type: "checkbox", className: "wof-product-choice-row__toggle", checked: !props.choice.disabled, onChange: (e) => props.onUpdate({ disabled: !e.target.checked }), title: __('Enable / Disable', 'wooptionsfic') }),
-                wp.element.createElement("button", { type: "button", className: "wof-choice-delete-btn", onClick: props.onRemove, "aria-label": __('Remove product', 'wooptionsfic'), title: __('Remove', 'wooptionsfic') },
-                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))));
+            const filteredVariations = useMemo(() => {
+                if (!varFilter.trim())
+                    return allVariations;
+                const q = varFilter.toLowerCase();
+                return allVariations.filter((v) => String(v.label || '').toLowerCase().includes(q));
+            }, [allVariations, varFilter]);
+            // Drag & Drop
+            const dragStart = (event) => {
+                event.stopPropagation();
+                event.dataTransfer?.setData(CHOICE_INDEX_MIME, String(props.index));
+                event.dataTransfer?.setData('text/plain', String(props.index));
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = 'move';
+                    if (cardRef.current && event.dataTransfer.setDragImage) {
+                        const bounds = cardRef.current.getBoundingClientRect();
+                        event.dataTransfer.setDragImage(cardRef.current, event.clientX - bounds.left, event.clientY - bounds.top);
+                    }
+                }
+                setIsDragging(true);
+            };
+            const dragEnd = () => {
+                setIsDragging(false);
+                setDropEdge(null);
+            };
+            const dragOver = (event) => {
+                const types = Array.from(event.dataTransfer?.types ?? []);
+                if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain'))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.dataTransfer)
+                    event.dataTransfer.dropEffect = 'move';
+                const element = event.currentTarget;
+                const bounds = element.getBoundingClientRect();
+                setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+            };
+            const dragLeave = (event) => {
+                const element = event.currentTarget;
+                if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget))
+                    return;
+                setDropEdge(null);
+            };
+            const drop = (event) => {
+                const types = Array.from(event.dataTransfer?.types ?? []);
+                if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain'))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                const sourceText = event.dataTransfer?.getData(CHOICE_INDEX_MIME) || event.dataTransfer?.getData('text/plain') || '';
+                const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+                setDropEdge(null);
+                setIsDragging(false);
+                const source = Number(sourceText);
+                if (!Number.isInteger(source))
+                    return;
+                let finalIndex = insertIndex;
+                if (source < insertIndex)
+                    finalIndex -= 1;
+                finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+                if (finalIndex !== source)
+                    props.onMove(source, finalIndex);
+            };
+            return (wp.element.createElement("article", { ref: cardRef, className: WooOptionsFic.Utils.classNames('wof-choice-card', !props.isOpen && 'is-collapsed', isDragging && 'is-dragging', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after'), onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop },
+                wp.element.createElement("header", { className: "wof-choice-card__header" },
+                    wp.element.createElement("button", { type: "button", draggable: true, className: "wof-choice-drag-handle", onDragStart: dragStart, onDragEnd: dragEnd, "aria-label": __('Drag choice to reorder', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.GripIcon, null),
+                        wp.element.createElement("span", { className: "wof-choice-header-thumb" }, (info?.image || props.choice.imageUrl) ? (wp.element.createElement("img", { src: info?.image || props.choice.imageUrl, alt: "" })) : (wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" }))),
+                        wp.element.createElement("span", { className: "wof-choice-header-label-badge", title: props.choice.label }, truncateWords(props.choice.label || `${__('Choice', 'wooptionsfic')} ${props.index + 1}`, 5)),
+                        wp.element.createElement("span", { className: WooOptionsFic.Utils.classNames('wof-choice-header-var-badge', !isVariable && 'is-na') }, varBadge)),
+                    wp.element.createElement("div", { className: "wof-choice-header-actions" },
+                        wp.element.createElement("button", { type: "button", className: "wof-choice-accordion-toggle", onClick: props.onToggle, "aria-expanded": props.isOpen, "aria-label": props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic'), title: props.isOpen ? __('Collapse choice', 'wooptionsfic') : __('Expand choice', 'wooptionsfic') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: props.isOpen ? 'arrow-up-alt2' : 'arrow-down-alt2' })),
+                        wp.element.createElement("button", { type: "button", className: "wof-choice-delete-btn", onClick: props.onRemove, "aria-label": __('Delete choice', 'wooptionsfic'), title: __('Delete choice', 'wooptionsfic') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" })))),
+                props.isOpen ? (wp.element.createElement("div", { className: "wof-choice-card__body" },
+                    wp.element.createElement("div", { className: "wof-product-choice-selected-card" },
+                        wp.element.createElement("div", { className: "wof-product-choice-selected-card__thumb" }, (info?.image || props.choice.imageUrl) ? (wp.element.createElement("img", { src: info?.image || props.choice.imageUrl, alt: "" })) : (wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" }))),
+                        wp.element.createElement("div", { className: "wof-product-choice-selected-card__meta" },
+                            wp.element.createElement("div", { className: "wof-product-choice-selected-card__title", title: props.choice.label }, truncateWords(props.choice.label || __('(No product selected)', 'wooptionsfic'), 5)),
+                            wp.element.createElement("div", { className: "wof-product-choice-selected-card__sub" },
+                                productPrice ? wp.element.createElement("span", { className: "wof-product-choice-selected-card__price" }, productPrice) : null,
+                                isVariable ? wp.element.createElement("span", { className: "wof-choice-header-var-badge" }, __('Variable', 'wooptionsfic')) : null,
+                                productId ? wp.element.createElement("span", { className: "wof-product-choice-selected-card__id" },
+                                    "#",
+                                    productId) : null)),
+                        wp.element.createElement("button", { type: "button", className: "wof-product-choice-change-btn", onClick: () => setShowChangeSearch((prev) => !prev) }, showChangeSearch ? __('Cancel', 'wooptionsfic') : __('Change', 'wooptionsfic'))),
+                    showChangeSearch ? (wp.element.createElement("div", { className: "wof-product-change-search-wrap" },
+                        wp.element.createElement("div", { className: "wof-product-search-input-row" },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "search" }),
+                            wp.element.createElement("input", { type: "text", className: "wof-product-search-input", placeholder: __('Search product to replace…', 'wooptionsfic'), value: changeQuery, onChange: (e) => setChangeQuery(e.target.value), autoFocus: true }),
+                            isChangingSearch ? wp.element.createElement("span", { className: "wof-product-search-spinner" }, "\u2026") : null),
+                        changeSuggestions.length > 0 ? (wp.element.createElement("div", { className: "wof-product-search-dropdown" }, changeSuggestions.map((s) => (wp.element.createElement("button", { key: s.id, type: "button", className: "wof-product-search-option", onMouseDown: (e) => {
+                                e.preventDefault();
+                                selectNewProduct(s);
+                            } },
+                            s.image ? (wp.element.createElement("img", { src: s.image, alt: "", className: "wof-product-search-option__thumb" })) : (wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "format-image" })),
+                            wp.element.createElement("span", { className: "wof-product-search-option__label" }, s.label),
+                            wp.element.createElement("span", { className: "wof-product-search-option__meta" }, s.meta),
+                            s.isVariable ? wp.element.createElement("span", { className: "wof-product-search-option__badge" }, __('Variable', 'wooptionsfic')) : null))))) : null)) : null,
+                    isVariable ? (props.mergeVariations ? (wp.element.createElement("div", { className: "wof-product-variations-merged-notice" },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "info" }),
+                        wp.element.createElement("span", null, __('All variations are merged into this product choice because "Merge Variation Products" is enabled.', 'wooptionsfic')))) : (wp.element.createElement("div", { className: "wof-product-variations-section" },
+                        wp.element.createElement("div", { className: "wof-product-variations-header" },
+                            wp.element.createElement("strong", null, __('Variations', 'wooptionsfic')),
+                            wp.element.createElement("span", { className: "wof-product-variations-count" },
+                                selectedVarIds.length,
+                                " / ",
+                                allVariations.length,
+                                " ",
+                                __('selected', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-product-variations-actions" },
+                                wp.element.createElement("button", { type: "button", className: "wof-btn-link", onClick: () => props.onUpdate({ selectedVariationIds: allVariations.map((v) => v.id) }) }, __('Select all', 'wooptionsfic')),
+                                wp.element.createElement("button", { type: "button", className: "wof-btn-link", onClick: () => props.onUpdate({ selectedVariationIds: [] }) }, __('Clear', 'wooptionsfic')))),
+                        allVariations.length > 5 ? (wp.element.createElement("input", { type: "text", className: "wof-var-filter-input", placeholder: __('Filter variations…', 'wooptionsfic'), value: varFilter, onChange: (e) => setVarFilter(e.target.value) })) : null,
+                        wp.element.createElement("div", { className: "wof-product-variations-list" }, filteredVariations.length === 0 ? (wp.element.createElement("p", { className: "wof-muted-note", style: { margin: 0, padding: '8px' } }, allVariations.length === 0
+                            ? __('No variations loaded for this product.', 'wooptionsfic')
+                            : __('No matching variations.', 'wooptionsfic'))) : (filteredVariations.map((v) => {
+                            const isChecked = selectedVarIds.includes(v.id);
+                            return (wp.element.createElement("label", { key: v.id, className: "wof-product-variation-item" },
+                                wp.element.createElement("input", { type: "checkbox", checked: isChecked, onChange: () => toggleVarId(v.id) }),
+                                wp.element.createElement("span", { className: "wof-product-variation-label", title: v.label }, truncateWords(v.label, 5)),
+                                v.price ? wp.element.createElement("span", { className: "wof-product-variation-price" }, v.price) : null));
+                        })))))) : null,
+                    wp.element.createElement("div", { className: "wof-choice-toggles-row" },
+                        wp.element.createElement(ToggleControl, { label: __('Default choice', 'wooptionsfic'), checked: props.choice.default, onChange: (val) => props.onUpdate({ default: val }) }),
+                        wp.element.createElement(ToggleControl, { label: __('Disable choice', 'wooptionsfic'), checked: props.choice.disabled, onChange: (val) => props.onUpdate({ disabled: val }) })))) : null));
         }
         function ProductChoiceEditor(props) {
             const choices = props.field.choices ?? [];
+            const [collapsedMap, setCollapsedMap] = useState({});
             const [searchQuery, setSearchQuery] = useState('');
             const [suggestions, setSuggestions] = useState([]);
             const [isSearching, setIsSearching] = useState(false);
@@ -3950,6 +4063,18 @@ var WooOptionsFic;
             const searchWrap = useRef(null);
             const debounceRef = useRef(null);
             const mergeVariations = Boolean(props.field.mergeVariationProducts);
+            const toggleChoice = (uuid) => {
+                setCollapsedMap((prev) => ({ ...prev, [uuid]: !prev[uuid] }));
+            };
+            const isAllCollapsed = choices.length > 0 && choices.every((c) => Boolean(collapsedMap[c.uuid]));
+            const toggleAll = () => {
+                const nextState = !isAllCollapsed;
+                const nextMap = {};
+                choices.forEach((c) => {
+                    nextMap[c.uuid] = nextState;
+                });
+                setCollapsedMap(nextMap);
+            };
             useEffect(() => {
                 const handleDown = (e) => {
                     if (searchWrap.current && !searchWrap.current.contains(e.target)) {
@@ -4005,6 +4130,7 @@ var WooOptionsFic;
                     },
                 };
                 props.onChange({ ...props.field, choices: [...choices, newChoice] });
+                setCollapsedMap((prev) => ({ ...prev, [uuid]: false }));
                 setSearchQuery('');
                 setSearchFocused(false);
             };
@@ -4043,8 +4169,14 @@ var WooOptionsFic;
                                     st.value === 'default' ? (wp.element.createElement("rect", { x: "12", y: "36", width: "20", height: "3", rx: "1.5", fill: "#b4bfcb" })) : null)),
                             wp.element.createElement("span", { className: "wof-image-style-card__label" }, st.label)));
                     }))),
-                choices.map((choice, index) => (wp.element.createElement(ProductChoiceRow, { key: choice.uuid, choice: choice, index: index, count: choices.length, mergeVariations: mergeVariations, onUpdate: (patch) => updateChoice(choice.uuid, patch), onRemove: () => removeChoice(choice.uuid), onMove: moveChoice }))),
-                wp.element.createElement("div", { className: "wof-product-search-wrap", ref: searchWrap },
+                choices.length > 1 ? (wp.element.createElement("div", { className: "wof-choice-list-toolbar" },
+                    wp.element.createElement("span", { className: "wof-choice-list-count" },
+                        choices.length,
+                        " ",
+                        __('Products', 'wooptionsfic')),
+                    wp.element.createElement("button", { type: "button", className: "wof-choice-collapse-all-btn", onClick: toggleAll }, isAllCollapsed ? __('Expand all', 'wooptionsfic') : __('Collapse all', 'wooptionsfic')))) : null,
+                wp.element.createElement("div", { className: "wof-choice-editor-list" }, choices.map((choice, index) => (wp.element.createElement(ProductChoiceCard, { key: choice.uuid, choice: choice, index: index, count: choices.length, mergeVariations: mergeVariations, isOpen: !collapsedMap[choice.uuid], onToggle: () => toggleChoice(choice.uuid), onUpdate: (patch) => updateChoice(choice.uuid, patch), onRemove: () => removeChoice(choice.uuid), onMove: moveChoice })))),
+                wp.element.createElement("div", { className: "wof-product-search-wrap", ref: searchWrap, style: { marginTop: '10px', marginBottom: '16px' } },
                     wp.element.createElement("div", { className: "wof-product-search-input-row" },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
                         wp.element.createElement("input", { ref: searchRef, type: "text", className: "wof-product-search-input", placeholder: __('Add Product…', 'wooptionsfic'), value: searchQuery, onChange: (e) => setSearchQuery(e.target.value), onFocus: () => setSearchFocused(true), autoComplete: "off" }),
