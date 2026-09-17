@@ -32,7 +32,6 @@ final class AdminPage {
 			['templates', __('Templates', 'wooptionsfic'), 'edit_wooptionsfic_sets'],
 			['analytics', __('Analytics', 'wooptionsfic'), 'view_wooptionsfic_analytics'],
 			['settings', __('Settings', 'wooptionsfic'), 'manage_wooptionsfic_settings'],
-			['help', __('Help & onboarding', 'wooptionsfic'), 'manage_wooptionsfic'],
 		];
 		foreach ($items as [$route, $label, $capability]) {
 			$slug = 'dashboard' === $route ? 'wooptionsfic' : 'wooptionsfic-' . $route;

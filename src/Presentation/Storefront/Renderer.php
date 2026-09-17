@@ -11,6 +11,7 @@ namespace WooOptionsFic\Presentation\Storefront;
 
 use WooOptionsFic\Application\AnalyticsService;
 use WooOptionsFic\Application\QuoteService;
+use WooOptionsFic\Bootstrap\Settings;
 use WooOptionsFic\Domain\Support\Uuid;
 use WooOptionsFic\Infrastructure\WooCommerce\ProductContext;
 use WooOptionsFic\Infrastructure\WordPress\SessionGuard;
@@ -70,12 +71,28 @@ final class Renderer {
 		$token  = $this->sessions->issue($product_id, (string) $config['revisionUuid']);
 		$tokens = (array) ($config['style']['tokens'] ?? []);
 		$style  = $this->css_variables($tokens, (array) ($config['style']['typography'] ?? []));
+
+		$total_text  = ! empty(Settings::get('enable_addons_total_text'))
+			? (string) Settings::get('addons_total_text', 'Total Price')
+			: __('Configured price', 'wooptionsfic');
+		$status_text = ! empty(Settings::get('enable_summary_status_text'))
+			? (string) Settings::get('summary_status_text', 'Ready for your choices')
+			: __('Ready for your choices', 'wooptionsfic');
+		$notice_text = ! empty(Settings::get('enable_summary_notice_text'))
+			? (string) Settings::get('summary_notice_text', 'Server-confirmed total, before shipping.')
+			: __('Server-confirmed total, before shipping.', 'wooptionsfic');
+
 		$payload= [
 			'configuration' => $config,
 			'token'         => $token,
 			'currency'      => (string) $context['currency'],
 			'currencyScale' => (int) $context['currencyScale'],
 			'basePrice'     => (string) $context['basePrice'],
+			'labels'        => [
+				'summaryTotal'  => $total_text,
+				'summaryStatus' => $status_text,
+				'summaryNotice' => $notice_text,
+			],
 		];
 
 		$layout = in_array(($config['layout']['type'] ?? ''), ['stack', 'inline', 'grid', 'accordion', 'tabs', 'wizard'], true)
@@ -139,15 +156,25 @@ final class Renderer {
 
 	private function render_summary(bool $show_price_breakdown, bool $sticky): void {
 		$summary_class = $sticky ? 'wof-summary is-sticky' : 'wof-summary';
+		$total_text    = ! empty(Settings::get('enable_addons_total_text'))
+			? (string) Settings::get('addons_total_text', 'Total Price')
+			: __('Configured price', 'wooptionsfic');
+		$status_text   = ! empty(Settings::get('enable_summary_status_text'))
+			? (string) Settings::get('summary_status_text', 'Ready for your choices')
+			: __('Ready for your choices', 'wooptionsfic');
+		$notice_text   = ! empty(Settings::get('enable_summary_notice_text'))
+			? (string) Settings::get('summary_notice_text', 'Server-confirmed total, before shipping.')
+			: __('Server-confirmed total, before shipping.', 'wooptionsfic');
+
 		echo '<aside class="' . esc_attr($summary_class) . '" data-wof-summary aria-live="polite">';
 		echo '<div class="wof-summary__status" data-wof-status>';
 		echo '<span class="wof-status-dot" aria-hidden="true"></span>';
-		echo '<span>' . esc_html__('Ready for your choices', 'wooptionsfic') . '</span>';
+		echo '<span>' . esc_html($status_text) . '</span>';
 		echo '</div>';
 		echo '<div class="wof-summary__rows" data-wof-summary-rows' . ($show_price_breakdown ? '' : ' hidden') . '></div>';
-		echo '<div class="wof-summary__total"><span>' . esc_html__('Configured price', 'wooptionsfic') . '</span>';
+		echo '<div class="wof-summary__total"><span>' . esc_html($total_text) . '</span>';
 		echo '<strong data-wof-total>—</strong></div>';
-		echo '<small>' . esc_html__('Server-confirmed total, before shipping.', 'wooptionsfic') . '</small>';
+		echo '<small>' . esc_html($notice_text) . '</small>';
 		echo '</aside>';
 	}
 

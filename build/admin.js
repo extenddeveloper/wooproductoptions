@@ -1025,8 +1025,7 @@ var WooOptionsFic;
                                     wp.element.createElement("strong", null, __('Publish', 'wooptionsfic')),
                                     wp.element.createElement("small", null, __('Run checks and go live', 'wooptionsfic'))))),
                         wp.element.createElement("div", { className: "wof-inline-actions" },
-                            wp.element.createElement(Button, { variant: "primary", onClick: () => props.navigate('templates') }, __('Explore templates', 'wooptionsfic')),
-                            wp.element.createElement(Button, { variant: "tertiary", onClick: () => props.navigate('help') }, __('Take the quick tour', 'wooptionsfic')))),
+                            wp.element.createElement(Button, { variant: "primary", onClick: () => props.navigate('templates') }, __('Explore templates', 'wooptionsfic')))),
                     wp.element.createElement("div", { className: "wof-hero-preview", "aria-hidden": "true" },
                         wp.element.createElement("div", { className: "wof-preview-window" },
                             wp.element.createElement("div", { className: "wof-preview-window__bar" },
@@ -1810,53 +1809,160 @@ var WooOptionsFic;
         const { useEffect, useState } = wp.element;
         function Settings() {
             const [settings, setSettings] = useState(null);
+            const [activeTab, setActiveTab] = useState('cleanup');
             const [saving, setSaving] = useState(false);
-            const [notice, setNotice] = useState('');
-            useEffect(() => { WooOptionsFic.Api.getSettings().then(setSettings); }, []);
-            if (!settings)
-                return wp.element.createElement("div", { className: "wof-page" },
-                    wp.element.createElement(WooOptionsFic.Components.Loading, null));
-            const set = (key, value) => setSettings({ ...settings, [key]: value });
-            const save = async () => { setSaving(true); try {
-                setSettings(await WooOptionsFic.Api.saveSettings(settings));
-                setNotice(__('Settings saved.', 'wooptionsfic'));
+            useEffect(() => {
+                WooOptionsFic.Api.getSettings().then(setSettings);
+            }, []);
+            if (!settings) {
+                return (wp.element.createElement("div", { className: "wof-page" },
+                    wp.element.createElement(WooOptionsFic.Components.Loading, null)));
             }
-            finally {
-                setSaving(false);
-            } };
-            return wp.element.createElement("div", { className: "wof-page" },
-                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Operational defaults', 'wooptionsfic'), title: __('Settings', 'wooptionsfic'), description: __('Control limits and product-option behavior without editing code.', 'wooptionsfic'), actions: wp.element.createElement(Button, { variant: "primary", isBusy: saving, onClick: save }, __('Save settings', 'wooptionsfic')) }),
-                notice ? wp.element.createElement(WooOptionsFic.Components.InlineNotice, { type: "success", onClose: () => setNotice('') }, notice) : null,
-                wp.element.createElement("div", { className: "wof-settings-grid" },
-                    wp.element.createElement("section", { className: "wof-settings-section" },
-                        wp.element.createElement("h2", null, __('Public API limits', 'wooptionsfic')),
-                        wp.element.createElement(TextControl, { label: __('Quote requests per minute', 'wooptionsfic'), type: "number", value: String(settings.quote_rate_limit_per_minute ?? 60), onChange: (value) => set('quote_rate_limit_per_minute', Number(value)) }),
-                        wp.element.createElement(TextControl, { label: __('Upload size limit (MB)', 'wooptionsfic'), type: "number", value: String(settings.upload_max_mb ?? 10), onChange: (value) => set('upload_max_mb', Number(value)) })),
-                    wp.element.createElement("section", { className: "wof-settings-section" },
-                        wp.element.createElement("h2", null, __('Features', 'wooptionsfic')),
-                        Object.entries(settings).filter(([, value]) => typeof value === 'boolean').map(([key, value]) => wp.element.createElement(ToggleControl, { key: key, label: key.replace(/_/g, ' '), checked: Boolean(value), onChange: (checked) => set(key, checked) })))));
+            const set = (key, value) => setSettings({ ...settings, [key]: value });
+            const save = async () => {
+                setSaving(true);
+                try {
+                    setSettings(await WooOptionsFic.Api.saveSettings(settings));
+                    WooOptionsFic.Toast.success(__('Settings saved successfully.', 'wooptionsfic'));
+                }
+                catch (err) {
+                    WooOptionsFic.Toast.error(WooOptionsFic.Utils.errorMessage(err));
+                }
+                finally {
+                    setSaving(false);
+                }
+            };
+            const tabs = [
+                {
+                    id: 'cleanup',
+                    label: __('Upload Cleanup', 'wooptionsfic'),
+                    subtitle: __('Storage & file purging', 'wooptionsfic'),
+                    icon: 'upload',
+                },
+                {
+                    id: 'other',
+                    label: __('Other Settings', 'wooptionsfic'),
+                    subtitle: __('Labels & cart visibility', 'wooptionsfic'),
+                    icon: 'admin-appearance',
+                },
+                {
+                    id: 'general',
+                    label: __('General & Limits', 'wooptionsfic'),
+                    subtitle: __('API limits & features', 'wooptionsfic'),
+                    icon: 'admin-settings',
+                },
+            ];
+            return (wp.element.createElement("div", { className: "wof-page" },
+                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Operational defaults', 'wooptionsfic'), title: __('Settings', 'wooptionsfic'), description: __('Control limits, file retention, summary labels, and storefront visibility without editing code.', 'wooptionsfic'), actions: wp.element.createElement(Button, { variant: "primary", isBusy: saving, disabled: saving, onClick: save }, saving ? __('Saving…', 'wooptionsfic') : __('Save settings', 'wooptionsfic')) }),
+                wp.element.createElement("div", { className: "wof-settings-layout" },
+                    wp.element.createElement("nav", { className: "wof-settings-nav", "aria-label": __('Settings navigation', 'wooptionsfic') }, tabs.map((tab) => (wp.element.createElement("button", { type: "button", key: tab.id, className: WooOptionsFic.Utils.classNames('wof-settings-nav-item', activeTab === tab.id && 'is-active'), onClick: () => setActiveTab(tab.id) },
+                        wp.element.createElement("span", { className: "wof-settings-nav-item__icon" },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: tab.icon })),
+                        wp.element.createElement("span", { className: "wof-settings-nav-item__text" },
+                            wp.element.createElement("span", { className: "wof-settings-nav-item__title" }, tab.label),
+                            wp.element.createElement("span", { className: "wof-settings-nav-item__subtitle" }, tab.subtitle)))))),
+                    wp.element.createElement("main", { className: "wof-settings-panel" },
+                        activeTab === 'cleanup' && (wp.element.createElement("section", { "aria-labelledby": "wof-cleanup-heading" },
+                            wp.element.createElement("div", { className: "wof-settings-panel__header" },
+                                wp.element.createElement("h2", { id: "wof-cleanup-heading", className: "wof-settings-panel__title" }, __('Cleanup Upload Field Files', 'wooptionsfic')),
+                                wp.element.createElement("p", { className: "wof-settings-panel__desc" }, __('Clean up all files uploaded through this field to free storage and remove unused data.', 'wooptionsfic'))),
+                            wp.element.createElement("div", { className: "wof-settings-rows" },
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Files uploaded but not in order', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Removes unplaced temporary uploads after a specified number of days (0 to disable).', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement("div", { className: "wof-setting-input-wrap" },
+                                            wp.element.createElement(TextControl, { hideLabelFromVision: true, label: __('Days to retain unplaced uploads', 'wooptionsfic'), type: "number", min: "0", value: String(settings.cleanup_unplaced_upload_days ?? 0), onChange: (val) => set('cleanup_unplaced_upload_days', Math.max(0, parseInt(val, 10) || 0)) }),
+                                            wp.element.createElement("span", { className: "wof-setting-input-unit" }, __('days', 'wooptionsfic'))))),
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Files uploaded and placed in order', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Removes uploads attached to placed orders after a specified number of days (0 to disable).', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement("div", { className: "wof-setting-input-wrap" },
+                                            wp.element.createElement(TextControl, { hideLabelFromVision: true, label: __('Days to retain placed uploads', 'wooptionsfic'), type: "number", min: "0", value: String(settings.cleanup_placed_upload_days ?? 0), onChange: (val) => set('cleanup_placed_upload_days', Math.max(0, parseInt(val, 10) || 0)) }),
+                                            wp.element.createElement("span", { className: "wof-setting-input-unit" }, __('days', 'wooptionsfic'))))),
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Files uploaded in completed orders', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Removes uploads once their corresponding order is marked Completed (0 to disable).', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement("div", { className: "wof-setting-input-wrap" },
+                                            wp.element.createElement(TextControl, { hideLabelFromVision: true, label: __('Days to retain completed uploads', 'wooptionsfic'), type: "number", min: "0", value: String(settings.cleanup_completed_upload_days ?? 0), onChange: (val) => set('cleanup_completed_upload_days', Math.max(0, parseInt(val, 10) || 0)) }),
+                                            wp.element.createElement("span", { className: "wof-setting-input-unit" }, __('days', 'wooptionsfic')))))))),
+                        activeTab === 'other' && (wp.element.createElement("section", { "aria-labelledby": "wof-other-heading" },
+                            wp.element.createElement("div", { className: "wof-settings-panel__header" },
+                                wp.element.createElement("h2", { id: "wof-other-heading", className: "wof-settings-panel__title" }, __('Other Settings', 'wooptionsfic')),
+                                wp.element.createElement("p", { className: "wof-settings-panel__desc" }, __('Configure summary labels, storefront display text, and cart/checkout visibility.', 'wooptionsfic'))),
+                            wp.element.createElement("div", { className: "wof-settings-rows" },
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Addons Total Price Label', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Customize the total price label shown in the storefront configurator summary.', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement(ToggleControl, { label: __('Enable Addons Price Total Text In Product Page', 'wooptionsfic'), checked: Boolean(settings.enable_addons_total_text), onChange: (checked) => set('enable_addons_total_text', checked) }),
+                                        settings.enable_addons_total_text ? (wp.element.createElement("div", { className: "wof-setting-row__subfield" },
+                                            wp.element.createElement(TextControl, { label: __('TOTAL PRICE TEXT', 'wooptionsfic'), value: settings.addons_total_text ?? 'Total Price', placeholder: "Total Price", help: __('Change your Total Price / Configured price text here.', 'wooptionsfic'), onChange: (val) => set('addons_total_text', val) }))) : null)),
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Summary Status Prompt', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Customize the ready state prompt shown in the summary before selection changes.', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement(ToggleControl, { label: __('Enable Summary Status Text In Product Page', 'wooptionsfic'), checked: Boolean(settings.enable_summary_status_text), onChange: (checked) => set('enable_summary_status_text', checked) }),
+                                        settings.enable_summary_status_text ? (wp.element.createElement("div", { className: "wof-setting-row__subfield" },
+                                            wp.element.createElement(TextControl, { label: __('SUMMARY STATUS TEXT', 'wooptionsfic'), value: settings.summary_status_text ?? 'Ready for your choices', placeholder: "Ready for your choices", help: __('Change your summary status prompt text here.', 'wooptionsfic'), onChange: (val) => set('summary_status_text', val) }))) : null)),
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Summary Notice Message', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Customize the server-confirmed disclaimer text beneath the summary price.', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement(ToggleControl, { label: __('Enable Summary Notice Text In Product Page', 'wooptionsfic'), checked: Boolean(settings.enable_summary_notice_text), onChange: (checked) => set('enable_summary_notice_text', checked) }),
+                                        settings.enable_summary_notice_text ? (wp.element.createElement("div", { className: "wof-setting-row__subfield" },
+                                            wp.element.createElement(TextControl, { label: __('SUMMARY NOTICE TEXT', 'wooptionsfic'), value: settings.summary_notice_text ?? 'Server-confirmed total, before shipping.', placeholder: "Server-confirmed total, before shipping.", help: __('Change your summary disclaimer text here.', 'wooptionsfic'), onChange: (val) => set('summary_notice_text', val) }))) : null)),
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Cart Page Display', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Control whether addon option details are shown under cart line items.', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement(ToggleControl, { label: __('Hide addon fields in Cart Page', 'wooptionsfic'), checked: Boolean(settings.hide_addon_in_cart), onChange: (checked) => set('hide_addon_in_cart', checked) }))),
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Checkout Page Display', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Control whether addon option details are shown on checkout and order review tables.', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement(ToggleControl, { label: __('Hide addon fields in Checkout Page', 'wooptionsfic'), checked: Boolean(settings.hide_addon_in_checkout), onChange: (checked) => set('hide_addon_in_checkout', checked) })))))),
+                        activeTab === 'general' && (wp.element.createElement("section", { "aria-labelledby": "wof-general-heading" },
+                            wp.element.createElement("div", { className: "wof-settings-panel__header" },
+                                wp.element.createElement("h2", { id: "wof-general-heading", className: "wof-settings-panel__title" }, __('Operational Defaults & Limits', 'wooptionsfic')),
+                                wp.element.createElement("p", { className: "wof-settings-panel__desc" }, __('Configure security limits and optional capabilities across your catalog.', 'wooptionsfic'))),
+                            wp.element.createElement("div", { className: "wof-settings-rows" },
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Quote requests per minute', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Maximum pricing quote calculations allowed per visitor per minute.', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement("div", { className: "wof-setting-input-wrap" },
+                                            wp.element.createElement(TextControl, { hideLabelFromVision: true, label: __('Quote requests per minute', 'wooptionsfic'), type: "number", value: String(settings.quote_rate_limit_per_minute ?? 60), onChange: (value) => set('quote_rate_limit_per_minute', Number(value)) }),
+                                            wp.element.createElement("span", { className: "wof-setting-input-unit" }, __('requests / min', 'wooptionsfic'))))),
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Upload size limit', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Maximum allowed file size in megabytes for customer upload fields.', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" },
+                                        wp.element.createElement("div", { className: "wof-setting-input-wrap" },
+                                            wp.element.createElement(TextControl, { hideLabelFromVision: true, label: __('Upload size limit (MB)', 'wooptionsfic'), type: "number", value: String(settings.upload_max_mb ?? 10), onChange: (value) => set('upload_max_mb', Number(value)) }),
+                                            wp.element.createElement("span", { className: "wof-setting-input-unit" }, __('MB', 'wooptionsfic'))))),
+                                wp.element.createElement("div", { className: "wof-setting-row" },
+                                    wp.element.createElement("div", { className: "wof-setting-row__info" },
+                                        wp.element.createElement("strong", { className: "wof-setting-row__title" }, __('Features & Telemetry', 'wooptionsfic')),
+                                        wp.element.createElement("p", { className: "wof-setting-row__desc" }, __('Enable or disable global behavior toggles and analytics.', 'wooptionsfic'))),
+                                    wp.element.createElement("div", { className: "wof-setting-row__control" }, Object.entries(settings)
+                                        .filter(([key, value]) => typeof value === 'boolean' && !['enable_addons_total_text', 'enable_summary_status_text', 'enable_summary_notice_text', 'hide_addon_in_cart', 'hide_addon_in_checkout'].includes(key))
+                                        .map(([key, value]) => (wp.element.createElement("div", { key: key, style: { marginBottom: '8px' } },
+                                        wp.element.createElement(ToggleControl, { label: key.replace(/_/g, ' '), checked: Boolean(value), onChange: (checked) => set(key, checked) })))))))))))));
         }
         Pages.Settings = Settings;
-        function Help(props) {
-            return wp.element.createElement("div", { className: "wof-page" },
-                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Learn the workshop', 'wooptionsfic'), title: __('Help & onboarding', 'wooptionsfic'), description: __('A practical route from your first element to a published product configurator.', 'wooptionsfic') }),
-                wp.element.createElement("div", { className: "wof-onboarding-grid" },
-                    wp.element.createElement("article", null,
-                        wp.element.createElement("span", null, "1"),
-                        wp.element.createElement("h2", null, __('Create or import', 'wooptionsfic')),
-                        wp.element.createElement("p", null, __('Start blank or choose one of the editable templates.', 'wooptionsfic')),
-                        wp.element.createElement(Button, { variant: "secondary", onClick: () => props.navigate('templates') }, __('Browse templates', 'wooptionsfic'))),
-                    wp.element.createElement("article", null,
-                        wp.element.createElement("span", null, "2"),
-                        wp.element.createElement("h2", null, __('Build and style', 'wooptionsfic')),
-                        wp.element.createElement("p", null, __('Add elements, configure prices and logic, and preview the product page live.', 'wooptionsfic'))),
-                    wp.element.createElement("article", null,
-                        wp.element.createElement("span", null, "3"),
-                        wp.element.createElement("h2", null, __('Assign and publish', 'wooptionsfic')),
-                        wp.element.createElement("p", null, __('Target products or catalog groups, run preflight checks, then publish.', 'wooptionsfic')),
-                        wp.element.createElement(Button, { variant: "primary", onClick: () => props.navigate('option-sets') }, __('Open option sets', 'wooptionsfic')))));
-        }
-        Pages.Help = Help;
     })(Pages = WooOptionsFic.Pages || (WooOptionsFic.Pages = {}));
 })(WooOptionsFic || (WooOptionsFic = {}));
 var WooOptionsFic;
@@ -5212,9 +5318,6 @@ var WooOptionsFic;
                     break;
                 case 'settings':
                     page = wp.element.createElement(WooOptionsFic.Pages.Settings, null);
-                    break;
-                case 'help':
-                    page = wp.element.createElement(WooOptionsFic.Pages.Help, { navigate: navigate });
                     break;
                 default: page = wp.element.createElement("div", { className: "wof-fatal" },
                     wp.element.createElement("h1", null, __('Page not found', 'wooptionsfic')),

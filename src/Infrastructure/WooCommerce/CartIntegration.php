@@ -13,6 +13,7 @@ use Throwable;
 use WooOptionsFic\Application\AnalyticsService;
 use WooOptionsFic\Application\QuoteService;
 use WooOptionsFic\Application\UploadService;
+use WooOptionsFic\Bootstrap\Settings;
 use WooOptionsFic\Domain\Support\CanonicalJson;
 use WooOptionsFic\Infrastructure\WordPress\SessionGuard;
 
@@ -266,6 +267,26 @@ final class CartIntegration {
 	 * @return list<array<string,mixed>>
 	 */
 	public function display_item_data(array $item_data, array $cart_item): array {
+		$hide_in_cart     = (bool) Settings::get('hide_addon_in_cart', false);
+		$hide_in_checkout = (bool) Settings::get('hide_addon_in_checkout', false);
+
+		$is_checkout = function_exists('is_checkout') && is_checkout();
+		if (! $is_checkout && wp_doing_ajax() && isset($_GET['wc-ajax']) && 'update_order_review' === $_GET['wc-ajax']) {
+			$is_checkout = true;
+		}
+
+		$is_cart = ! $is_checkout && function_exists('is_cart') && is_cart();
+		if (! $is_checkout && ! $is_cart && wp_doing_ajax() && isset($_GET['wc-ajax']) && in_array($_GET['wc-ajax'], ['get_refreshed_fragments', 'apply_coupon', 'remove_coupon'], true)) {
+			$is_cart = true;
+		}
+
+		if ($hide_in_cart && $is_cart) {
+			return $item_data;
+		}
+		if ($hide_in_checkout && $is_checkout) {
+			return $item_data;
+		}
+
 		if (is_array($cart_item['wooptionsfic']['snapshot']['summary'] ?? null)) {
 			$wooptionsfic = (array) ($cart_item['wooptionsfic'] ?? []);
 			foreach ($cart_item['wooptionsfic']['snapshot']['summary'] as $line) {

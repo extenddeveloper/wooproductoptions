@@ -105,6 +105,79 @@ final class UploadRepository {
 	}
 
 	/**
+	 * @return list<array<string,mixed>>
+	 */
+	public function unplaced_older_than(string $cutoff_gmt, int $limit = 100): array {
+		global $wpdb;
+		$table = Schema::table('uploads');
+		$rows  = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table}
+				 WHERE (order_id IS NULL OR order_id = 0)
+				   AND state IN ('intent', 'quarantine', 'ready', 'attached', 'rejected', 'expired')
+				   AND created_at_gmt < %s
+				 ORDER BY created_at_gmt ASC LIMIT %d",
+				$cutoff_gmt,
+				max(1, min(500, $limit))
+			),
+			ARRAY_A
+		);
+		return array_map([$this, 'map'], is_array($rows) ? $rows : []);
+	}
+
+	/**
+	 * @return list<array<string,mixed>>
+	 */
+	public function placed_older_than(string $cutoff_gmt, int $limit = 100): array {
+		global $wpdb;
+		$table = Schema::table('uploads');
+		$rows  = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table}
+				 WHERE order_id > 0
+				   AND state IN ('ready', 'attached')
+				   AND created_at_gmt < %s
+				 ORDER BY created_at_gmt ASC LIMIT %d",
+				$cutoff_gmt,
+				max(1, min(500, $limit))
+			),
+			ARRAY_A
+		);
+		return array_map([$this, 'map'], is_array($rows) ? $rows : []);
+	}
+
+	/**
+	 * @return list<array<string,mixed>>
+	 */
+	public function completed_orders_older_than(string $cutoff_gmt, int $limit = 100): array {
+		global $wpdb;
+		$table = Schema::table('uploads');
+		$rows  = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT * FROM {$table}
+				 WHERE order_id > 0
+				   AND state IN ('ready', 'attached')
+				   AND created_at_gmt < %s
+				 ORDER BY created_at_gmt ASC LIMIT %d",
+				$cutoff_gmt,
+				max(1, min(500, $limit * 2))
+			),
+			ARRAY_A
+		);
+		$completed = [];
+		foreach ((is_array($rows) ? $rows : []) as $row) {
+			$order = function_exists('wc_get_order') ? wc_get_order((int) $row['order_id']) : null;
+			if ($order && 'completed' === $order->get_status()) {
+				$completed[] = $this->map($row);
+				if (count($completed) >= $limit) {
+					break;
+				}
+			}
+		}
+		return $completed;
+	}
+
+	/**
 	 * @param array<string,mixed> $row Row.
 	 * @return array<string,mixed>
 	 */

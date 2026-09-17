@@ -31,7 +31,6 @@ namespace WooOptionsFic.Pages {
             </div>
             <div className="wof-inline-actions">
               <Button variant="primary" onClick={() => props.navigate('templates')}>{__('Explore templates', 'wooptionsfic')}</Button>
-              <Button variant="tertiary" onClick={() => props.navigate('help')}>{__('Take the quick tour', 'wooptionsfic')}</Button>
             </div>
           </div>
           <div className="wof-hero-preview" aria-hidden="true">

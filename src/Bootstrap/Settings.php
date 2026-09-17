@@ -35,6 +35,17 @@ final class Settings {
 			'max_choices'                => 1000,
 			'max_repeater_rows'          => 25,
 			'quote_rate_limit_per_minute'=> 60,
+			'cleanup_unplaced_upload_days' => 0,
+			'cleanup_placed_upload_days'   => 0,
+			'cleanup_completed_upload_days'=> 0,
+			'enable_addons_total_text'     => false,
+			'addons_total_text'            => 'Total Price',
+			'enable_summary_status_text'   => false,
+			'summary_status_text'          => 'Ready for your choices',
+			'enable_summary_notice_text'   => false,
+			'summary_notice_text'          => 'Server-confirmed total, before shipping.',
+			'hide_addon_in_cart'           => false,
+			'hide_addon_in_checkout'       => false,
 		];
 	}
 
@@ -61,7 +72,18 @@ final class Settings {
 	public static function sanitize(array $input): array {
 		$current = self::all();
 
-		foreach (['analytics_enabled', 'allow_negative_total', 'delete_data_on_uninstall'] as $boolean_key) {
+		$boolean_keys = [
+			'analytics_enabled',
+			'allow_negative_total',
+			'delete_data_on_uninstall',
+			'enable_addons_total_text',
+			'enable_summary_status_text',
+			'enable_summary_notice_text',
+			'hide_addon_in_cart',
+			'hide_addon_in_checkout',
+		];
+
+		foreach ($boolean_keys as $boolean_key) {
 			if (array_key_exists($boolean_key, $input)) {
 				$current[$boolean_key] = ! empty($input[$boolean_key]);
 			}
@@ -80,11 +102,20 @@ final class Settings {
 			'max_choices'                 => [10, 5000],
 			'max_repeater_rows'           => [1, 100],
 			'quote_rate_limit_per_minute' => [10, 300],
+			'cleanup_unplaced_upload_days'=> [0, 3650],
+			'cleanup_placed_upload_days'  => [0, 3650],
+			'cleanup_completed_upload_days'=> [0, 3650],
 		];
 
 		foreach ($integer_bounds as $key => [$minimum, $maximum]) {
 			$value         = absint($input[$key] ?? $current[$key]);
 			$current[$key] = max($minimum, min($maximum, $value));
+		}
+
+		foreach (['addons_total_text', 'summary_status_text', 'summary_notice_text'] as $text_key) {
+			if (array_key_exists($text_key, $input)) {
+				$current[$text_key] = sanitize_text_field((string) $input[$text_key]);
+			}
 		}
 
 		$allowed_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'pdf', 'txt', 'csv'];

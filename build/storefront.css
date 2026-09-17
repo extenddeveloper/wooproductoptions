@@ -3634,7 +3634,6 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	border: 1px solid var(--wof-border, #e2e8f0);
 	border-radius: 8px;
 	box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.16), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
-	border-left: 4px solid var(--wof-danger, #ef4444);
 	color: var(--wof-text, #1e293b);
 	font-size: 13.5px;
 	line-height: 1.45;
@@ -3647,32 +3646,16 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	animation: wof-toast-out 0.2s ease forwards;
 }
 
-.wof-toast--error {
-	border-left-color: var(--wof-danger, #ef4444);
-}
-
 .wof-toast--error .wof-toast__icon {
 	color: var(--wof-danger, #ef4444);
-}
-
-.wof-toast--success {
-	border-left-color: #10b981;
 }
 
 .wof-toast--success .wof-toast__icon {
 	color: #10b981;
 }
 
-.wof-toast--warning {
-	border-left-color: #f59e0b;
-}
-
 .wof-toast--warning .wof-toast__icon {
 	color: #f59e0b;
-}
-
-.wof-toast--info {
-	border-left-color: var(--wof-primary, #5b4ff5);
 }
 
 .wof-toast--info .wof-toast__icon {

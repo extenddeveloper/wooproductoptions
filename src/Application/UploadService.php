@@ -248,6 +248,43 @@ final class UploadService {
 			$this->repository->update((string) $record['uuid'], ['state' => 'deleted']);
 			++$count;
 		}
+
+		$unplaced_days = (int) Settings::get('cleanup_unplaced_upload_days', 0);
+		if ($unplaced_days > 0) {
+			$cutoff = (new DateTimeImmutable("-{$unplaced_days} days", new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+			foreach ($this->repository->unplaced_older_than($cutoff, $limit) as $record) {
+				if ('' !== $record['storageKey']) {
+					$this->storage->delete((string) $record['storageKey']);
+				}
+				$this->repository->update((string) $record['uuid'], ['state' => 'deleted']);
+				++$count;
+			}
+		}
+
+		$placed_days = (int) Settings::get('cleanup_placed_upload_days', 0);
+		if ($placed_days > 0) {
+			$cutoff = (new DateTimeImmutable("-{$placed_days} days", new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+			foreach ($this->repository->placed_older_than($cutoff, $limit) as $record) {
+				if ('' !== $record['storageKey']) {
+					$this->storage->delete((string) $record['storageKey']);
+				}
+				$this->repository->update((string) $record['uuid'], ['state' => 'deleted']);
+				++$count;
+			}
+		}
+
+		$completed_days = (int) Settings::get('cleanup_completed_upload_days', 0);
+		if ($completed_days > 0) {
+			$cutoff = (new DateTimeImmutable("-{$completed_days} days", new DateTimeZone('UTC')))->format('Y-m-d H:i:s');
+			foreach ($this->repository->completed_orders_older_than($cutoff, $limit) as $record) {
+				if ('' !== $record['storageKey']) {
+					$this->storage->delete((string) $record['storageKey']);
+				}
+				$this->repository->update((string) $record['uuid'], ['state' => 'deleted']);
+				++$count;
+			}
+		}
+
 		return $count;
 	}
 
