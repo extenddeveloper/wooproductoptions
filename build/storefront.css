@@ -114,6 +114,17 @@
 	box-shadow: none !important;
 }
 
+.wof-field.is-invalid :where(input:not([type="hidden"]), select, textarea),
+.wof-field :where(input:not([type="hidden"]), select, textarea)[aria-invalid="true"] {
+	border-color: var(--wof-danger, #ef4444) !important;
+}
+
+.wof-field.is-invalid :where(input:not([type="hidden"]), select, textarea):focus,
+.wof-field :where(input:not([type="hidden"]), select, textarea)[aria-invalid="true"]:focus {
+	border-color: var(--wof-danger, #ef4444) !important;
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--wof-danger, #ef4444) 20%, transparent) !important;
+}
+
 .wof-field.is-disabled {
 	opacity: .58;
 }

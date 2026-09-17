@@ -19,10 +19,60 @@
         hasSubmitted = !1;
         constructor(e) { this.root = e; const t = e.querySelector("[data-wof-config]"); if (!t?.textContent)
             throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.initCustomDateRanges(), this.initCustomColorPickers(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
-        bind() { if (this.root.addEventListener("input", e => { const t = e.target; t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t)); }), this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } if (t.matches(".wof-product-variation-select")) { this.updateChoiceVariationPrice(t); if (t.value) { const tile = t.closest(".wof-product-choice-tile"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } } if (t.matches(".wof-choice-qty-input") && t.value) { const tile = t.closest(".wof-product-choice-tile, .wof-choice"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } this.selectionChanged(t); } }), this.root.addEventListener("click", e => { const t = e.target; const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
+        bind() {
+            this.root.addEventListener("input", e => {
+                const t = e.target;
+                t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t));
+            });
+            this.root.addEventListener("focusout", e => {
+                const t = e.target;
+                if (!t || !t.matches) return;
+                const fieldEl = t.closest("[data-wof-field]");
+                if (!fieldEl) return;
+                const type = fieldEl.dataset.wofType || t.type || "";
+                if (type === "email" || type === "url" || t.type === "email" || t.type === "url") {
+                    const err = this.validateSingleField(fieldEl);
+                    if (err) {
+                        this.setFieldError(fieldEl, this.errorText(err.code, err.label));
+                    } else {
+                        this.clearFieldError(fieldEl);
+                    }
+                }
+            });
+            this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } if (t.matches(".wof-product-variation-select")) { this.updateChoiceVariationPrice(t); if (t.value) { const tile = t.closest(".wof-product-choice-tile"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } } if (t.matches(".wof-choice-qty-input") && t.value) { const tile = t.closest(".wof-product-choice-tile, .wof-choice"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } this.selectionChanged(t); } });
+            this.root.addEventListener("click", e => { const t = e.target; const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
-            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); }), document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } if (!e.target.closest("[data-wof-color-picker]")) { this.closeAllCustomColorPickers(); } }), this.form?.addEventListener("submit", e => { if (this.isSubmitting) return; const t = this.readSelection(); this.writeSelection(t); const vars = this.readProductVariations(); const qtys = this.readChoiceQuantities(); const o = JSON.stringify({ selection: t, productVariations: vars, choiceQuantities: qtys }); if (this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) return; e.preventDefault(); this.hasSubmitted = !0; if (this.lastQuote && !this.lastQuote.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) { this.renderQuote(this.lastQuote, !0); return; } this.requestQuote(!0); }), this.form && window.jQuery) {
+            return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); });
+            document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } if (!e.target.closest("[data-wof-color-picker]")) { this.closeAllCustomColorPickers(); } });
+            this.form?.addEventListener("submit", e => {
+                if (this.isSubmitting) return;
+                const clientErrors = this.validateAllFields();
+                if (clientErrors.length > 0) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation?.();
+                    this.hasSubmitted = !0;
+                    this.clearAllErrors();
+                    this.renderErrors(clientErrors, !0);
+                    this.setStatus(t.couldNotQuote, "error");
+                    this.showToast(this.getValidationToastMessage(clientErrors), "error");
+                    return;
+                }
+                const sel = this.readSelection();
+                this.writeSelection(sel);
+                const vars = this.readProductVariations();
+                const qtys = this.readChoiceQuantities();
+                const o = JSON.stringify({ selection: sel, productVariations: vars, choiceQuantities: qtys });
+                if (this.lastQuote?.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) return;
+                e.preventDefault();
+                this.hasSubmitted = !0;
+                if (this.lastQuote && !this.lastQuote.valid && this.lastSelection === o && "true" !== this.root.getAttribute("aria-busy")) {
+                    this.renderQuote(this.lastQuote, !0);
+                    return;
+                }
+                this.requestQuote(!0);
+            });
+            if (this.form && window.jQuery) {
             const e = () => this.scheduleQuote(50);
             window.jQuery(this.form).on("found_variation.wooptionsfic reset_data.wooptionsfic", e);
         } }
@@ -797,11 +847,27 @@
                 this.selectionChanged(startInput || endInput);
             }
         }
-        selectionChanged(e) { this.updateColorOutputs(), this.updateProductImage(e), this.enforceMaxChoices(); if (this.clearFieldError(e.closest("[data-wof-field]")), this.scheduleQuote(), !this.interactionRecorded) {
-            this.interactionRecorded = !0;
-            const t = e.closest("[data-wof-field]"), r = { setUuid: this.configuration.setUuid, revisionUuid: this.configuration.revisionUuid, variationId: this.variationId(), token: this.payload.token, fieldUuid: t?.dataset.wofField ?? "", choiceUuid: e.matches('input[type="radio"],input[type="checkbox"]') && /^[0-9a-f-]{36}$/i.test(e.value) ? e.value : "" };
-            fetch(`${o}products/${this.productId()}/interaction`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r), credentials: "same-origin" }).catch(() => { });
-        } }
+        selectionChanged(e) {
+            this.updateColorOutputs(), this.updateProductImage(e), this.enforceMaxChoices();
+            const fieldEl = e.closest("[data-wof-field]");
+            if (fieldEl) {
+                const type = fieldEl.dataset.wofType || e.type || "";
+                if (type === "email" || type === "url" || e.type === "email" || e.type === "url") {
+                    const err = this.validateSingleField(fieldEl);
+                    if (!err) {
+                        this.clearFieldError(fieldEl);
+                    }
+                } else {
+                    this.clearFieldError(fieldEl);
+                }
+            }
+            this.scheduleQuote();
+            if (!this.interactionRecorded) {
+                this.interactionRecorded = !0;
+                const t = e.closest("[data-wof-field]"), r = { setUuid: this.configuration.setUuid, revisionUuid: this.configuration.revisionUuid, variationId: this.variationId(), token: this.payload.token, fieldUuid: t?.dataset.wofField ?? "", choiceUuid: e.matches('input[type="radio"],input[type="checkbox"]') && /^[0-9a-f-]{36}$/i.test(e.value) ? e.value : "" };
+                fetch(`${o}products/${this.productId()}/interaction`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r), credentials: "same-origin" }).catch(() => { });
+            }
+        }
         enforceMaxChoices() {
             this.root.querySelectorAll("[data-wof-max-choices]").forEach(fieldElem => {
                 const max = Number(fieldElem.dataset.wofMaxChoices || 0);
@@ -1011,7 +1077,13 @@
                         this.showToast(this.getValidationToastMessage(e.errors), "error");
                     }
                 } else {
-                    this.clearAllErrors();
+                    const formatErrors = (e.errors || []).filter(err => {
+                        const code = String(err.code || "");
+                        return code.includes("invalid_email") || code.includes("invalid_url");
+                    });
+                    if (formatErrors.length > 0) {
+                        this.renderErrors(formatErrors, false);
+                    }
                     this.setStatus("Ready for your choices", "ready");
                 }
                 return;
@@ -1058,7 +1130,7 @@
             const o = this.root.querySelector("[data-wof-errors]"), a = [];
             let i = null;
             if (e.forEach(err => {
-                const fieldEl = err.fieldUuid ? this.root.querySelector(`[data-wof-field="${r(err.fieldUuid)}"]`) : null;
+                const fieldEl = err.fieldUuid ? this.root.querySelector(`[data-wof-field="${r(err.fieldUuid)}"]`) : (err.element || null);
                 const msg = this.errorText(err.code, err.label, err.params);
                 if (fieldEl) {
                     fieldEl.classList.add("is-invalid");
@@ -1080,7 +1152,17 @@
             }
         }
         getValidationToastMessage(errors) {
-            const requiredErrors = (errors || []).filter(e => {
+            const errs = errors || [];
+            const emailErr = errs.find(e => String(e.code || "").includes("invalid_email"));
+            if (emailErr) {
+                return `Please enter a valid email address for "${emailErr.label}".`;
+            }
+            const urlErr = errs.find(e => String(e.code || "").includes("invalid_url"));
+            if (urlErr) {
+                return `Please enter a valid website URL for "${urlErr.label}".`;
+            }
+
+            const requiredErrors = errs.filter(e => {
                 const code = String(e.code || "");
                 return code.includes("required") || code.includes("incomplete");
             });
@@ -1115,7 +1197,10 @@
 
             let resolvedTitle = title;
             if (!resolvedTitle) {
-                if (type === "error") resolvedTitle = "Required Options";
+                if (type === "error") {
+                    const isFormat = message.includes("valid email") || message.includes("valid website URL") || message.includes("valid URL");
+                    resolvedTitle = isFormat ? "Invalid Option" : "Required Options";
+                }
                 else if (type === "success") resolvedTitle = "Success";
                 else if (type === "warning") resolvedTitle = "Attention";
                 else resolvedTitle = "Notice";
@@ -1265,6 +1350,123 @@
         clearAllErrors() { this.root.querySelectorAll(".is-invalid").forEach(e => this.clearFieldError(e)); const e = this.root.querySelector("[data-wof-errors]"); e && (e.hidden = !0, e.textContent = ""); }
         clearFieldError(e) { if (!e)
             return; e.classList.remove("is-invalid"); const t = e.querySelector("[data-wof-field-error]"); t && (t.textContent = ""), e.querySelector('[aria-invalid="true"]')?.removeAttribute("aria-invalid"); }
+        setFieldError(fieldEl, msg) {
+            if (!fieldEl) return;
+            fieldEl.classList.add("is-invalid");
+            const t = fieldEl.querySelector("[data-wof-field-error]");
+            if (t) t.textContent = msg;
+            fieldEl.querySelector("input, select, textarea")?.setAttribute("aria-invalid", "true");
+        }
+        getFieldDef(uuid) {
+            if (!uuid || !this.configuration?.fields) return null;
+            const search = (fields) => {
+                for (const f of fields) {
+                    if (f.uuid === uuid) return f;
+                    if (f.children && Array.isArray(f.children)) {
+                        const found = search(f.children);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            };
+            return search(this.configuration.fields);
+        }
+        isValidEmail(value) {
+            if (!value || typeof value !== "string") return false;
+            const val = value.trim();
+            if (val.length < 5 || val.length > 254) return false;
+            const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+            if (!emailRegex.test(val)) return false;
+            const parts = val.split("@");
+            if (parts.length !== 2) return false;
+            const domain = parts[1];
+            if (!domain || !domain.includes(".")) return false;
+            const domainParts = domain.split(".");
+            const tld = domainParts[domainParts.length - 1];
+            if (!tld || tld.length < 2) return false;
+            return true;
+        }
+        isValidUrl(value) {
+            if (!value || typeof value !== "string") return false;
+            const val = value.trim();
+            if (val.length < 8) return false;
+            if (!/^https?:\/\//i.test(val)) return false;
+            try {
+                const url = new URL(val);
+                if (url.protocol !== "http:" && url.protocol !== "https:") return false;
+                const hostname = url.hostname;
+                if (!hostname) return false;
+                if (hostname === "localhost") return true;
+                if (!hostname.includes(".")) return false;
+                const parts = hostname.split(".");
+                const tld = parts[parts.length - 1];
+                if (!tld || tld.length < 2) return false;
+                return true;
+            } catch {
+                return false;
+            }
+        }
+        validateSingleField(fieldEl) {
+            if (!fieldEl) return null;
+            if (fieldEl.hidden || fieldEl.classList.contains("is-disabled") || fieldEl.closest("[hidden]")) {
+                this.clearFieldError(fieldEl);
+                return null;
+            }
+
+            const uuid = fieldEl.dataset.wofField;
+            const type = fieldEl.dataset.wofType || "";
+            const fieldDef = this.getFieldDef(uuid);
+            const label = fieldDef?.label || fieldEl.querySelector(".wof-field__label")?.textContent?.replace(/\*.*$/, "")?.trim() || "This option";
+            const isRequired = Boolean(fieldDef?.required || fieldEl.querySelector(".wof-required") || fieldEl.querySelector('[aria-required="true"]'));
+
+            const input = fieldEl.querySelector('input:not([type="hidden"]), select, textarea');
+            const value = input ? input.value : "";
+            const trimmed = (value ?? "").trim();
+
+            if (isRequired && !trimmed) {
+                return {
+                    code: "field_required",
+                    fieldUuid: uuid,
+                    label,
+                    element: fieldEl
+                };
+            }
+
+            if (type === "email" || input?.type === "email") {
+                if (trimmed && !this.isValidEmail(trimmed)) {
+                    return {
+                        code: "field_invalid_email",
+                        fieldUuid: uuid,
+                        label,
+                        element: fieldEl
+                    };
+                }
+            }
+
+            if (type === "url" || input?.type === "url") {
+                if (trimmed && !this.isValidUrl(trimmed)) {
+                    return {
+                        code: "field_invalid_url",
+                        fieldUuid: uuid,
+                        label,
+                        element: fieldEl
+                    };
+                }
+            }
+
+            return null;
+        }
+        validateAllFields() {
+            const errors = [];
+            const fieldEls = this.root.querySelectorAll("[data-wof-field]");
+            fieldEls.forEach(fieldEl => {
+                const err = this.validateSingleField(fieldEl);
+                if (err) {
+                    errors.push(err);
+                }
+            });
+            return errors;
+        }
         showGlobalError(e, o = !1) { const r = this.root.querySelector("[data-wof-errors]"); r && (r.hidden = !1, r.textContent = e, o && r.focus()), this.setStatus(t.couldNotQuote, "error"); }
         setPending(e) { this.root.setAttribute("aria-busy", e ? "true" : "false"), this.root.classList.toggle("is-quoting", e), e && this.setStatus(t.checking, "pending"); }
         setStatus(e, t) { const o = this.root.querySelector("[data-wof-status]"); if (o) {
