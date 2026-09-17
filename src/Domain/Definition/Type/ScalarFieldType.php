@@ -46,6 +46,22 @@ final class ScalarFieldType extends AbstractFieldType {
 			$normalized['flagStyle']      = in_array($flag_style, ['number_only', 'number_flag', 'number_flag_dialcode'], true) ? $flag_style : 'number_only';
 			$normalized['defaultCountry'] = self::plain_text((string) ($definition['defaultCountry'] ?? 'US'), 10);
 		}
+		if ('range' === $this->type_key) {
+			$normalized['enablePostfix'] = ! empty($definition['enablePostfix']);
+			$normalized['postfix']       = self::plain_text((string) ($definition['postfix'] ?? 'PostFix'), 50);
+			if (null === $normalized['min'] || '' === $normalized['min']) {
+				$normalized['min'] = '1';
+			}
+			if (null === $normalized['max'] || '' === $normalized['max']) {
+				$normalized['max'] = '100';
+			}
+			if (null === $normalized['step'] || '' === $normalized['step']) {
+				$normalized['step'] = '1';
+			}
+			if (! isset($normalized['default']) || '' === $normalized['default']) {
+				$normalized['default'] = '10';
+			}
+		}
 		if (in_array($this->type_key, ['datetime', 'date', 'time', 'date_range'], true)) {
 			$date_time_type = (string) ($definition['dateTimeType'] ?? ('time' === $this->type_key ? 'time' : 'date'));
 			$normalized['dateTimeType']        = in_array($date_time_type, ['date', 'datetime', 'time'], true) ? $date_time_type : 'date';

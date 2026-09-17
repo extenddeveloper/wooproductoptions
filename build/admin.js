@@ -614,6 +614,14 @@ var WooOptionsFic;
                 field.step = '1';
                 field.default = '';
             }
+            if (type === 'range') {
+                field.enablePostfix = false;
+                field.postfix = 'PostFix';
+                field.min = '1';
+                field.max = '100';
+                field.step = '1';
+                field.default = '10';
+            }
             if (type === 'file') {
                 field.allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
                 field.maxFiles = 1;
@@ -2234,8 +2242,21 @@ var WooOptionsFic;
                     priceText ? wp.element.createElement("span", { className: "wof-preview-color-picker__price" }, priceText) : null,
                     wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-customizer" })));
             }
-            if (field.type === 'range')
-                return wp.element.createElement("input", { disabled: true, type: "range", min: field.min ?? 0, max: field.max ?? 100 });
+            if (field.type === 'range') {
+                const min = field.min != null && field.min !== '' ? Number(field.min) : 1;
+                const max = field.max != null && field.max !== '' ? Number(field.max) : 100;
+                const step = field.step != null && field.step !== '' ? Number(field.step) : 1;
+                const def = field.default != null && field.default !== '' ? Number(field.default) : 10;
+                const enablePostfix = Boolean(field.enablePostfix);
+                const postfix = field.postfix != null ? String(field.postfix) : 'PostFix';
+                const pct = max > min ? Math.max(0, Math.min(100, ((def - min) / (max - min)) * 100)) : 10;
+                return (wp.element.createElement("div", { className: "wof-preview-range-wrap" },
+                    wp.element.createElement("div", { className: "wof-preview-range-slider-container" },
+                        wp.element.createElement("input", { disabled: true, type: "range", className: "wof-preview-range-slider", min: min, max: max, step: step, value: def, style: { '--range-progress': `${pct}%` } })),
+                    wp.element.createElement("div", { className: `wof-preview-range-box${enablePostfix && postfix ? '' : ' wof-preview-range-box--no-postfix'}` },
+                        wp.element.createElement("span", { className: "wof-preview-range-val" }, def),
+                        enablePostfix && postfix ? wp.element.createElement("span", { className: "wof-preview-range-postfix" }, postfix) : null)));
+            }
             if (field.type === 'file') {
                 const maxFiles = Math.max(1, Number(field.maxFiles ?? 1));
                 const maxMb = Math.max(1, Number(field.maxFileMb ?? 5));
@@ -4450,7 +4471,7 @@ var WooOptionsFic;
                                 wp.element.createElement(TextControl, { label: __('Width (px)', 'wooptionsfic'), type: "number", min: 0, value: String(field.choiceWidth ?? ''), placeholder: "Auto", onChange: (choiceWidth) => update({ choiceWidth }) }),
                                 wp.element.createElement(TextControl, { label: __('Height (px)', 'wooptionsfic'), type: "number", min: 0, value: String(field.choiceHeight ?? ''), placeholder: "Auto", onChange: (choiceHeight) => update({ choiceHeight }) }),
                                 wp.element.createElement(TextControl, { label: __('Radius (px)', 'wooptionsfic'), type: "number", min: 0, value: String(field.choiceBorderRadius ?? ''), placeholder: "Default", onChange: (choiceBorderRadius) => update({ choiceBorderRadius }) })))) : null,
-                        'placeholder' in field ? wp.element.createElement(TextControl, { label: __('Placeholder', 'wooptionsfic'), value: field.placeholder ?? '', onChange: (placeholder) => update({ placeholder }) }) : null,
+                        'placeholder' in field && field.type !== 'range' ? wp.element.createElement(TextControl, { label: __('Placeholder', 'wooptionsfic'), value: field.placeholder ?? '', onChange: (placeholder) => update({ placeholder }) }) : null,
                         ['text', 'textarea'].includes(field.type) ? (wp.element.createElement("div", { className: "wof-text-settings", style: { marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
                             wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' } },
                                 wp.element.createElement(TextControl, { label: __('Minimum Character', 'wooptionsfic'), type: "number", min: 0, value: field.minLength ? String(field.minLength) : '', placeholder: "0", onChange: (val) => update({ minLength: val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0) }) }),
@@ -4475,6 +4496,16 @@ var WooOptionsFic;
                             wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' } },
                                 wp.element.createElement(TextControl, { label: __('STEPS', 'wooptionsfic'), type: "number", value: field.step != null ? String(field.step) : '1', placeholder: "1", onChange: (step) => update({ step }) }),
                                 wp.element.createElement(TextControl, { label: __('DEFAULT VALUE', 'wooptionsfic'), type: "number", value: field.default != null && field.default !== '' ? String(field.default) : '', placeholder: "", onChange: (def) => update({ default: def }) })))) : null,
+                        field.type === 'range' ? (wp.element.createElement("div", { className: "wof-range-settings", style: { marginBottom: '16px' } },
+                            wp.element.createElement(ToggleControl, { label: __('Enable PostFix', 'wooptionsfic'), checked: Boolean(field.enablePostfix), onChange: (enablePostfix) => update({ enablePostfix }) }),
+                            field.enablePostfix ? (wp.element.createElement("div", { style: { marginTop: '10px' } },
+                                wp.element.createElement(TextControl, { label: __('POSTFIX TEXT', 'wooptionsfic'), value: field.postfix != null ? String(field.postfix) : 'PostFix', placeholder: "PostFix", onChange: (postfix) => update({ postfix }) }))) : null,
+                            wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px' } },
+                                wp.element.createElement(TextControl, { label: __('MINIMUM VALUE', 'wooptionsfic'), type: "number", value: field.min != null ? String(field.min) : '1', placeholder: "1", onChange: (min) => update({ min }) }),
+                                wp.element.createElement(TextControl, { label: __('MAXIMUM VALUE', 'wooptionsfic'), type: "number", value: field.max != null ? String(field.max) : '100', placeholder: "100", onChange: (max) => update({ max }) })),
+                            wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' } },
+                                wp.element.createElement(TextControl, { label: __('STEPS', 'wooptionsfic'), type: "number", value: field.step != null ? String(field.step) : '1', placeholder: "1", onChange: (step) => update({ step }) }),
+                                wp.element.createElement(TextControl, { label: __('DEFAULT VALUE', 'wooptionsfic'), type: "number", value: field.default != null && field.default !== '' ? String(field.default) : '10', placeholder: "10", onChange: (def) => update({ default: def }) })))) : null,
                         field.type === 'tel' ? (wp.element.createElement("div", { className: "wof-phone-settings", style: { marginBottom: '16px', padding: '12px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
                             wp.element.createElement(SelectControl, { label: __('Flag Style', 'wooptionsfic'), value: field.flagStyle ?? 'number_only', options: [
                                     { label: __('Number Only', 'wooptionsfic'), value: 'number_only' },
@@ -4518,7 +4549,7 @@ var WooOptionsFic;
                             wp.element.createElement(TextControl, { label: __('Allowed extensions', 'wooptionsfic'), value: (field.allowedExtensions ?? []).join(', '), onChange: (value) => update({ allowedExtensions: value.split(',').map((item) => item.trim().replace(/^\./, '')).filter(Boolean) }) }),
                             wp.element.createElement(TextControl, { label: __('Maximum files', 'wooptionsfic'), type: "number", value: String(field.maxFiles ?? 1), onChange: (value) => update({ maxFiles: Math.max(1, Number(value)) }) }),
                             wp.element.createElement(TextControl, { label: __('Maximum file size (MB)', 'wooptionsfic'), type: "number", value: String(field.maxFileMb ?? 5), onChange: (value) => update({ maxFileMb: Math.max(1, Number(value)) }) }))) : null,
-                        ['number', 'range', 'quantity', 'customer_defined_price'].includes(field.type) ? (wp.element.createElement(wp.element.Fragment, null,
+                        ['quantity', 'customer_defined_price'].includes(field.type) ? (wp.element.createElement(wp.element.Fragment, null,
                             wp.element.createElement(TextControl, { label: __('Minimum', 'wooptionsfic'), value: field.min ?? '', onChange: (value) => update({ min: value || null }) }),
                             wp.element.createElement(TextControl, { label: __('Maximum', 'wooptionsfic'), value: field.max ?? '', onChange: (value) => update({ max: value || null }) }),
                             wp.element.createElement(TextControl, { label: __('Step', 'wooptionsfic'), value: field.step ?? '', onChange: (value) => update({ step: value || null }) }))) : null,

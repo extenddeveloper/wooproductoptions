@@ -1475,7 +1475,23 @@
             r && (r.textContent = e);
         } }
         setAddToCartEnabled(e) { const t = this.form?.querySelector("button.single_add_to_cart_button"); t && (t.disabled = !e, t.setAttribute("aria-disabled", e ? "false" : "true")); }
-        updateRangeOutputs() { this.root.querySelectorAll('input[type="range"]').forEach(e => { const t = e.parentElement?.querySelector("[data-wof-range-output]"); t && (t.value = e.value); }); }
+        updateRangeOutputs() {
+            this.root.querySelectorAll('input[type="range"]').forEach(slider => {
+                const wrap = slider.closest("[data-wof-range-wrap]") || slider.parentElement;
+                const output = wrap?.querySelector("[data-wof-range-output]");
+                if (output) {
+                    output.textContent = slider.value;
+                    if ('value' in output) {
+                        output.value = slider.value;
+                    }
+                }
+                const min = parseFloat(slider.min) || 0;
+                const max = parseFloat(slider.max) || 100;
+                const val = parseFloat(slider.value) || 0;
+                const pct = max > min ? Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100)) : 0;
+                slider.style.setProperty('--range-progress', `${pct}%`);
+            });
+        }
         updateColorOutputs() {
             this.root.querySelectorAll("[data-wof-color-picker]").forEach(e => {
                 this.syncCustomColorPicker(e);

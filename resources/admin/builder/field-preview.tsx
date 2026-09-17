@@ -212,7 +212,36 @@ namespace WooOptionsFic.Builder {
       );
     }
 
-    if (field.type === 'range') return <input disabled type="range" min={field.min ?? 0} max={field.max ?? 100} />;
+    if (field.type === 'range') {
+      const min = field.min != null && field.min !== '' ? Number(field.min) : 1;
+      const max = field.max != null && field.max !== '' ? Number(field.max) : 100;
+      const step = field.step != null && field.step !== '' ? Number(field.step) : 1;
+      const def = field.default != null && field.default !== '' ? Number(field.default) : 10;
+      const enablePostfix = Boolean(field.enablePostfix);
+      const postfix = field.postfix != null ? String(field.postfix) : 'PostFix';
+      const pct = max > min ? Math.max(0, Math.min(100, ((def - min) / (max - min)) * 100)) : 10;
+
+      return (
+        <div className="wof-preview-range-wrap">
+          <div className="wof-preview-range-slider-container">
+            <input
+              disabled
+              type="range"
+              className="wof-preview-range-slider"
+              min={min}
+              max={max}
+              step={step}
+              value={def}
+              style={{ '--range-progress': `${pct}%` } as any}
+            />
+          </div>
+          <div className={`wof-preview-range-box${enablePostfix && postfix ? '' : ' wof-preview-range-box--no-postfix'}`}>
+            <span className="wof-preview-range-val">{def}</span>
+            {enablePostfix && postfix ? <span className="wof-preview-range-postfix">{postfix}</span> : null}
+          </div>
+        </div>
+      );
+    }
 
     if (field.type === 'file') {
       const maxFiles = Math.max(1, Number(field.maxFiles ?? 1));

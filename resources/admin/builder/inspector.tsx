@@ -2515,7 +2515,7 @@ namespace WooOptionsFic.Builder {
                 </div>
               ) : null}
 
-              {'placeholder' in field ? <TextControl label={__('Placeholder', 'wooptionsfic')} value={field.placeholder ?? ''} onChange={(placeholder: string) => update({ placeholder })} /> : null}
+              {'placeholder' in field && field.type !== 'range' ? <TextControl label={__('Placeholder', 'wooptionsfic')} value={field.placeholder ?? ''} onChange={(placeholder: string) => update({ placeholder })} /> : null}
 
               {/* Text and Textarea Settings */}
               {['text', 'textarea'].includes(field.type) ? (
@@ -2610,6 +2610,59 @@ namespace WooOptionsFic.Builder {
                       type="number"
                       value={field.default != null && field.default !== '' ? String(field.default) : ''}
                       placeholder=""
+                      onChange={(def: string) => update({ default: def })}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Range Settings */}
+              {field.type === 'range' ? (
+                <div className="wof-range-settings" style={{ marginBottom: '16px' }}>
+                  <ToggleControl
+                    label={__('Enable PostFix', 'wooptionsfic')}
+                    checked={Boolean(field.enablePostfix)}
+                    onChange={(enablePostfix: boolean) => update({ enablePostfix })}
+                  />
+                  {field.enablePostfix ? (
+                    <div style={{ marginTop: '10px' }}>
+                      <TextControl
+                        label={__('POSTFIX TEXT', 'wooptionsfic')}
+                        value={field.postfix != null ? String(field.postfix) : 'PostFix'}
+                        placeholder="PostFix"
+                        onChange={(postfix: string) => update({ postfix })}
+                      />
+                    </div>
+                  ) : null}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '12px' }}>
+                    <TextControl
+                      label={__('MINIMUM VALUE', 'wooptionsfic')}
+                      type="number"
+                      value={field.min != null ? String(field.min) : '1'}
+                      placeholder="1"
+                      onChange={(min: string) => update({ min })}
+                    />
+                    <TextControl
+                      label={__('MAXIMUM VALUE', 'wooptionsfic')}
+                      type="number"
+                      value={field.max != null ? String(field.max) : '100'}
+                      placeholder="100"
+                      onChange={(max: string) => update({ max })}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px' }}>
+                    <TextControl
+                      label={__('STEPS', 'wooptionsfic')}
+                      type="number"
+                      value={field.step != null ? String(field.step) : '1'}
+                      placeholder="1"
+                      onChange={(step: string) => update({ step })}
+                    />
+                    <TextControl
+                      label={__('DEFAULT VALUE', 'wooptionsfic')}
+                      type="number"
+                      value={field.default != null && field.default !== '' ? String(field.default) : '10'}
+                      placeholder="10"
                       onChange={(def: string) => update({ default: def })}
                     />
                   </div>
@@ -2799,7 +2852,7 @@ namespace WooOptionsFic.Builder {
                   <TextControl label={__('Maximum file size (MB)', 'wooptionsfic')} type="number" value={String(field.maxFileMb ?? 5)} onChange={(value: string) => update({ maxFileMb: Math.max(1, Number(value)) })} />
                 </>
               ) : null}
-              {['number', 'range', 'quantity', 'customer_defined_price'].includes(field.type) ? (
+              {['quantity', 'customer_defined_price'].includes(field.type) ? (
                 <>
                   <TextControl label={__('Minimum', 'wooptionsfic')} value={field.min ?? ''} onChange={(value: string) => update({ min: value || null })} />
                   <TextControl label={__('Maximum', 'wooptionsfic')} value={field.max ?? ''} onChange={(value: string) => update({ max: value || null })} />

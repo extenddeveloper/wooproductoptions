@@ -973,14 +973,41 @@ final class Renderer {
 				return;
 			}
 		}
+		if ('range' === $type) {
+			if (! isset($field['min']) || '' === (string) $field['min']) {
+				$field['min'] = '1';
+			}
+			if (! isset($field['max']) || '' === (string) $field['max']) {
+				$field['max'] = '100';
+			}
+			if (! isset($field['step']) || '' === (string) $field['step']) {
+				$field['step'] = '1';
+			}
+			if (! isset($field['default']) || '' === (string) $field['default']) {
+				$field['default'] = '10';
+			}
+			$default_val    = (string) $field['default'];
+			$enable_postfix = ! empty($field['enablePostfix']);
+			$postfix        = $enable_postfix ? (string) ($field['postfix'] ?? 'PostFix') : '';
+			$box_class      = ($enable_postfix && '' !== $postfix) ? 'wof-range-box' : 'wof-range-box wof-range-box--no-postfix';
+
+			echo '<div class="wof-range-wrap" data-wof-range-wrap>';
+			echo '<input id="wof-' . esc_attr($uuid) . '" type="range" class="wof-range-slider" name="' . esc_attr($name) . '" value="' . esc_attr($default_val) . '"';
+			echo $this->input_attributes($field, $description_id) . ' data-wof-range-slider>';
+			echo '<div class="' . esc_attr($box_class) . '">';
+			echo '<span class="wof-range-output" data-wof-range-output>' . esc_html($default_val) . '</span>';
+			if ($enable_postfix && '' !== $postfix) {
+				echo '<span class="wof-range-postfix">' . esc_html($postfix) . '</span>';
+			}
+			echo '</div>';
+			echo '</div>';
+			return;
+		}
 		$html_type  = $type_map[$type] ?? 'text';
 		$style_attr = ('text' === $type) ? $transform_style : '';
 		echo '<input id="wof-' . esc_attr($uuid) . '" type="' . esc_attr($html_type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '"' . $style_attr;
 		echo ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? '')) . '"';
 		echo $this->input_attributes($field, $description_id) . '>';
-		if ('range' === $type) {
-			echo '<output class="wof-range-output" data-wof-range-output>—</output>';
-		}
 	}
 
 	/**

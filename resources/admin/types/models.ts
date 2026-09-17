@@ -152,6 +152,8 @@ namespace WooOptionsFic {
     maxQuantity?: number;
     placeholder?: string;
     enableMinMax?: boolean;
+    enablePostfix?: boolean;
+    postfix?: string;
     min?: string | null;
     max?: string | null;
     step?: string | null;

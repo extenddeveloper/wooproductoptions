@@ -138,6 +138,15 @@ namespace WooOptionsFic.FieldFactory {
       field.default = '';
     }
 
+    if (type === 'range') {
+      field.enablePostfix = false;
+      field.postfix = 'PostFix';
+      field.min = '1';
+      field.max = '100';
+      field.step = '1';
+      field.default = '10';
+    }
+
     if (type === 'file') {
       field.allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf'];
       field.maxFiles = 1;
