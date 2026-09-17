@@ -1842,12 +1842,24 @@
 }
 
 .wof-canvas-field--spacer,
-.wof-canvas-field--separator {
+.wof-canvas-field--separator,
+.wof-canvas-field--content,
+.wof-canvas-field--modal,
+.wof-canvas-field--heading,
+.wof-canvas-field--paragraph,
+.wof-canvas-field--help {
 	min-height: auto;
+	display: block;
+	padding: 14px 16px;
 }
 
 .wof-canvas-field--spacer .wof-canvas-field__preview,
-.wof-canvas-field--separator .wof-canvas-field__preview {
+.wof-canvas-field--separator .wof-canvas-field__preview,
+.wof-canvas-field--content .wof-canvas-field__preview,
+.wof-canvas-field--modal .wof-canvas-field__preview,
+.wof-canvas-field--heading .wof-canvas-field__preview,
+.wof-canvas-field--paragraph .wof-canvas-field__preview,
+.wof-canvas-field--help .wof-canvas-field__preview {
 	width: 100%;
 }
 
@@ -13070,6 +13082,85 @@ body.rtl .wof-toast__progress-bar,
 	color: #94a3b8;
 }
 
+/* Heading Preview in Canvas */
+.wof-preview-heading-wrap {
+	width: 100%;
+}
+
+.wof-preview-heading {
+	color: #0f172a;
+	font-size: 16px;
+	font-weight: 700;
+	margin: 0;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	line-height: 1.35;
+}
+
+.wof-preview-heading-help {
+	color: #64748b;
+	font-size: 12.5px;
+	line-height: 1.45;
+	margin: 4px 0 0;
+}
+
+.wof-preview-heading-help--below-field {
+	margin-top: 6px;
+}
+
+/* Paragraph Preview in Canvas */
+.wof-paragraph-box,
+.wof-preview-paragraph-box {
+	width: 100%;
+}
+
+.wof-paragraph-text,
+.wof-preview-paragraph-text {
+	color: #475569;
+	font-size: 13.5px;
+	line-height: 1.55;
+	margin: 0;
+	word-break: break-word;
+}
+
+/* Help Content Preview in Canvas */
+.wof-help-box,
+.wof-preview-help-box {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	background: #f8fafc;
+	border-left: 3px solid #3b82f6;
+	border-radius: 0 8px 8px 0;
+	padding: 10px 14px;
+	color: #1e293b;
+	font-size: 13.5px;
+	line-height: 1.5;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+	box-sizing: border-box;
+	width: 100%;
+}
+
+.wof-help-icon,
+.wof-preview-help-icon {
+	color: #3b82f6;
+	flex-shrink: 0;
+	margin-top: 1px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.wof-help-content,
+.wof-preview-help-content {
+	flex: 1;
+	word-break: break-word;
+	font-size: 13.5px;
+	line-height: 1.5;
+	color: #1e293b;
+}
+
 /* Modal Preview in Canvas */
 .wof-preview-modal-shell {
 	width: 100%;
@@ -13221,4 +13312,4 @@ body.rtl .wof-toast__progress-bar,
 	border-radius: 6px;
 	margin: 8px 0;
 	display: block;
-}
+}

@@ -18,9 +18,14 @@ final class ContentFieldType extends AbstractFieldType {
 	}
 
 	public function normalize_definition(array $definition): array {
-		$normalized            = $this->base_definition($definition);
-		$raw_content           = (string) ($definition['content'] ?? '');
-		$normalized['content'] = function_exists('wp_kses_post') ? wp_kses_post($raw_content) : $raw_content;
+		$normalized = $this->base_definition($definition);
+		$type       = $this->key();
+		if (in_array($type, ['content', 'modal'], true)) {
+			$raw_content           = (string) ($definition['content'] ?? '');
+			$normalized['content'] = function_exists('wp_kses_post') ? wp_kses_post($raw_content) : $raw_content;
+		} elseif (isset($definition['content']) && '' !== trim((string) $definition['content'])) {
+			$normalized['content'] = function_exists('wp_kses_post') ? wp_kses_post((string) $definition['content']) : (string) $definition['content'];
+		}
 		if (isset($definition['height'])) {
 			$normalized['height'] = (int) $definition['height'];
 		}

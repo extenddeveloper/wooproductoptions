@@ -184,9 +184,49 @@ namespace WooOptionsFic.Builder {
     const field = props.field;
     const choices = field.choices ?? [];
 
-    if (field.type === 'heading') return <h3 className="wof-preview-heading">{field.label}</h3>;
-    if (field.type === 'paragraph') return <p className="wof-preview-paragraph">{field.description || field.label}</p>;
-    if (field.type === 'help') return <div className="wof-preview-help">{field.description || field.help || field.label}</div>;
+    if (field.type === 'heading') {
+      const headingText = field.label || field.content || __('Section heading', 'wooptionsfic');
+      const helpText = field.help ? String(field.help).trim() : '';
+      const helpPos = field.helpTextPosition || 'below_title';
+      return (
+        <div className="wof-preview-heading-wrap">
+          <h3 className="wof-preview-heading">
+            <span>{headingText}</span>
+            {helpText && helpPos === 'tooltip' ? (
+              <span className="wof-field__tooltip-preview" title={helpText}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+              </span>
+            ) : null}
+          </h3>
+          {helpText && (helpPos === 'below_title' || helpPos === 'below_field') ? (
+            <p className={`wof-preview-heading-help wof-preview-heading-help--${helpPos}`}>
+              {helpText}
+            </p>
+          ) : null}
+        </div>
+      );
+    }
+
+    if (field.type === 'paragraph') {
+      const content = field.description || field.content || field.help || field.label || __('Add supporting product-option content here.', 'wooptionsfic');
+      return (
+        <div className="wof-preview-paragraph-box">
+          <p className="wof-preview-paragraph-text">{content}</p>
+        </div>
+      );
+    }
+
+    if (field.type === 'help') {
+      const content = field.description || field.content || field.help || field.label || __('Helpful information for customers.', 'wooptionsfic');
+      return (
+        <div className="wof-preview-help-box">
+          <div className="wof-preview-help-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+          </div>
+          <div className="wof-preview-help-content">{content}</div>
+        </div>
+      );
+    }
     if (field.type === 'content') {
       const htmlContent = field.content || '';
       return (

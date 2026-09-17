@@ -2588,12 +2588,134 @@ namespace WooOptionsFic.Builder {
                   </div>
                 </div>
               </div>
+            ) : field.type === 'heading' ? (
+              <div className="wof-heading-field-settings">
+                <TextControl
+                  label={__('Heading Text', 'wooptionsfic')}
+                  value={field.label}
+                  onChange={(label: string) => update({ label })}
+                />
+                <TextareaControl
+                  label={__('Help text', 'wooptionsfic')}
+                  value={field.help ?? ''}
+                  onChange={(help: string) => update({ help })}
+                />
+                <div className="wof-help-position-control">
+                  <label className="wof-segmented-label">
+                    {__('HELP TEXT POSITION', 'wooptionsfic')}
+                  </label>
+                  <div className="wof-segmented-group">
+                    {[
+                      { label: __('Below Title', 'wooptionsfic'), value: 'below_title' },
+                      { label: __('Tooltip', 'wooptionsfic'), value: 'tooltip' },
+                      { label: __('Below Field', 'wooptionsfic'), value: 'below_field' },
+                    ].map(opt => {
+                      const isSelected = (field.helpTextPosition ?? 'below_title') === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          className={WooOptionsFic.Utils.classNames('wof-segmented-btn', isSelected && 'is-selected')}
+                          onClick={() => update({ helpTextPosition: opt.value as 'below_title' | 'tooltip' | 'below_field' })}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className="wof-field-width-setting">
+                  <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+                  <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+                    {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+                      const isSelected = (field.width || '100%') === w;
+                      return (
+                        <button
+                          type="button"
+                          key={w}
+                          role="radio"
+                          aria-checked={isSelected}
+                          className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                          onClick={() => update({ width: w })}
+                        >
+                          {w}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : field.type === 'paragraph' ? (
+              <div className="wof-paragraph-field-settings">
+                <TextControl
+                  label={__('Label (Internal reference)', 'wooptionsfic')}
+                  value={field.label}
+                  onChange={(label: string) => update({ label })}
+                />
+                <TextareaControl
+                  label={__('Content', 'wooptionsfic')}
+                  rows={4}
+                  value={field.description || field.content || ''}
+                  onChange={(content: string) => update({ description: content, content })}
+                />
+                <div className="wof-field-width-setting">
+                  <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+                  <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+                    {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+                      const isSelected = (field.width || '100%') === w;
+                      return (
+                        <button
+                          type="button"
+                          key={w}
+                          role="radio"
+                          aria-checked={isSelected}
+                          className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                          onClick={() => update({ width: w })}
+                        >
+                          {w}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : field.type === 'help' ? (
+              <div className="wof-help-field-settings">
+                <TextControl
+                  label={__('Label (Internal reference)', 'wooptionsfic')}
+                  value={field.label}
+                  onChange={(label: string) => update({ label })}
+                />
+                <TextareaControl
+                  label={__('Help Content', 'wooptionsfic')}
+                  rows={4}
+                  value={field.description || field.content || field.help || ''}
+                  onChange={(content: string) => update({ description: content, content })}
+                />
+                <div className="wof-field-width-setting">
+                  <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+                  <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+                    {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+                      const isSelected = (field.width || '100%') === w;
+                      return (
+                        <button
+                          type="button"
+                          key={w}
+                          role="radio"
+                          aria-checked={isSelected}
+                          className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                          onClick={() => update({ width: w })}
+                        >
+                          {w}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
             ) : (
               <>
                 <TextControl label={__('Label', 'wooptionsfic')} value={field.label} onChange={(label: string) => update({ label })} />
-              {['paragraph', 'help'].includes(field.type) ? (
-                <TextareaControl label={__('Content', 'wooptionsfic')} value={field.description || field.help} onChange={(content: string) => update({ description: content, help: content })} />
-              ) : null}
 
               {/* Block Width options for every block */}
               <div className="wof-field-width-setting">

@@ -166,12 +166,20 @@ namespace WooOptionsFic.FieldFactory {
 
     if (type === 'heading') {
       field.label = 'Section heading';
+      field.help = '';
+      field.helpTextPosition = 'below_title';
     }
     if (type === 'paragraph') {
+      field.label = 'Paragraph';
       field.description = 'Add supporting product-option content here.';
+      field.content = 'Add supporting product-option content here.';
+      field.help = '';
     }
     if (type === 'help') {
+      field.label = 'Help content';
       field.description = 'Helpful information for customers.';
+      field.content = 'Helpful information for customers.';
+      field.help = '';
     }
     if (type === 'spacer') {
       field.height = 24;

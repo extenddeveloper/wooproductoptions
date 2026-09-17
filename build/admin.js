@@ -638,12 +638,20 @@ var WooOptionsFic;
             }
             if (type === 'heading') {
                 field.label = 'Section heading';
+                field.help = '';
+                field.helpTextPosition = 'below_title';
             }
             if (type === 'paragraph') {
+                field.label = 'Paragraph';
                 field.description = 'Add supporting product-option content here.';
+                field.content = 'Add supporting product-option content here.';
+                field.help = '';
             }
             if (type === 'help') {
+                field.label = 'Help content';
                 field.description = 'Helpful information for customers.';
+                field.content = 'Helpful information for customers.';
+                field.help = '';
             }
             if (type === 'spacer') {
                 field.height = 24;
@@ -2549,12 +2557,35 @@ var WooOptionsFic;
         function FieldPreview(props) {
             const field = props.field;
             const choices = field.choices ?? [];
-            if (field.type === 'heading')
-                return wp.element.createElement("h3", { className: "wof-preview-heading" }, field.label);
-            if (field.type === 'paragraph')
-                return wp.element.createElement("p", { className: "wof-preview-paragraph" }, field.description || field.label);
-            if (field.type === 'help')
-                return wp.element.createElement("div", { className: "wof-preview-help" }, field.description || field.help || field.label);
+            if (field.type === 'heading') {
+                const headingText = field.label || field.content || __('Section heading', 'wooptionsfic');
+                const helpText = field.help ? String(field.help).trim() : '';
+                const helpPos = field.helpTextPosition || 'below_title';
+                return (wp.element.createElement("div", { className: "wof-preview-heading-wrap" },
+                    wp.element.createElement("h3", { className: "wof-preview-heading" },
+                        wp.element.createElement("span", null, headingText),
+                        helpText && helpPos === 'tooltip' ? (wp.element.createElement("span", { className: "wof-field__tooltip-preview", title: helpText },
+                            wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                                wp.element.createElement("path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" }),
+                                wp.element.createElement("line", { x1: "12", y1: "17", x2: "12.01", y2: "17" })))) : null),
+                    helpText && (helpPos === 'below_title' || helpPos === 'below_field') ? (wp.element.createElement("p", { className: `wof-preview-heading-help wof-preview-heading-help--${helpPos}` }, helpText)) : null));
+            }
+            if (field.type === 'paragraph') {
+                const content = field.description || field.content || field.help || field.label || __('Add supporting product-option content here.', 'wooptionsfic');
+                return (wp.element.createElement("div", { className: "wof-preview-paragraph-box" },
+                    wp.element.createElement("p", { className: "wof-preview-paragraph-text" }, content)));
+            }
+            if (field.type === 'help') {
+                const content = field.description || field.content || field.help || field.label || __('Helpful information for customers.', 'wooptionsfic');
+                return (wp.element.createElement("div", { className: "wof-preview-help-box" },
+                    wp.element.createElement("div", { className: "wof-preview-help-icon" },
+                        wp.element.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                            wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                            wp.element.createElement("line", { x1: "12", y1: "16", x2: "12", y2: "12" }),
+                            wp.element.createElement("line", { x1: "12", y1: "8", x2: "12.01", y2: "8" }))),
+                    wp.element.createElement("div", { className: "wof-preview-help-content" }, content)));
+            }
             if (field.type === 'content') {
                 const htmlContent = field.content || '';
                 return (wp.element.createElement("div", { className: "wof-preview-content-box" }, htmlContent ? (wp.element.createElement("div", { className: "wof-preview-content-html wof-content--rich", dangerouslySetInnerHTML: { __html: htmlContent } })) : (wp.element.createElement("div", { className: "wof-preview-content-empty" },
@@ -3123,7 +3154,8 @@ var WooOptionsFic;
             };
             const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.field.type]?.label ?? props.field.type;
             const priceText = Builder.formatChoicePrice(props.field.pricing);
-            return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', ['spacer', 'separator', 'content', 'modal'].includes(props.field.type) && `wof-canvas-field--${props.field.type}`, `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
+            const isContentBlock = ['spacer', 'separator', 'content', 'modal', 'heading', 'paragraph', 'help'].includes(props.field.type);
+            return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', isContentBlock && `wof-canvas-field--${props.field.type}`, `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
                 props.selected ? (wp.element.createElement("span", { className: "wof-canvas-field__type-badge" }, typeLabel)) : null,
                 wp.element.createElement("div", { className: "wof-canvas-field__toolbar", onClick: (event) => event.stopPropagation() },
                     wp.element.createElement("button", { type: "button", draggable: true, className: "wof-canvas-field__drag-handle", onDragStart: dragStart, onDragEnd: () => setDropEdge(null), "aria-label": __('Drag field', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
@@ -3134,7 +3166,7 @@ var WooOptionsFic;
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-page" })),
                     wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete field', 'wooptionsfic'), title: __('Delete', 'wooptionsfic') },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))),
-                !['spacer', 'separator', 'content', 'modal'].includes(props.field.type) ? (wp.element.createElement("div", { className: "wof-canvas-field__copy" },
+                !isContentBlock ? (wp.element.createElement("div", { className: "wof-canvas-field__copy" },
                     wp.element.createElement("strong", { className: "wof-canvas-field__title" },
                         props.field.label || __('Untitled field', 'wooptionsfic'),
                         props.field.help && props.field.helpTextPosition === 'tooltip' ? (wp.element.createElement("span", { className: "wof-field__tooltip-preview", title: props.field.help },
@@ -3151,7 +3183,7 @@ var WooOptionsFic;
                         __('Choices', 'wooptionsfic'))) : null)) : null,
                 wp.element.createElement("div", { className: "wof-canvas-field__preview" },
                     wp.element.createElement(Builder.FieldPreview, { field: props.field })),
-                props.field.help && props.field.helpTextPosition === 'below_field' && !['spacer', 'separator', 'content', 'modal'].includes(props.field.type) ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-field" }, props.field.help)) : null);
+                props.field.help && props.field.helpTextPosition === 'below_field' && !isContentBlock ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-field" }, props.field.help)) : null);
         }
         function Canvas(props) {
             const [zoom, setZoom] = useState(100);
@@ -4879,9 +4911,42 @@ var WooOptionsFic;
                             wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
                                 const isSelected = (field.width || '100%') === w;
                                 return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
+                            }))))) : field.type === 'heading' ? (wp.element.createElement("div", { className: "wof-heading-field-settings" },
+                        wp.element.createElement(TextControl, { label: __('Heading Text', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
+                        wp.element.createElement(TextareaControl, { label: __('Help text', 'wooptionsfic'), value: field.help ?? '', onChange: (help) => update({ help }) }),
+                        wp.element.createElement("div", { className: "wof-help-position-control" },
+                            wp.element.createElement("label", { className: "wof-segmented-label" }, __('HELP TEXT POSITION', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-segmented-group" }, [
+                                { label: __('Below Title', 'wooptionsfic'), value: 'below_title' },
+                                { label: __('Tooltip', 'wooptionsfic'), value: 'tooltip' },
+                                { label: __('Below Field', 'wooptionsfic'), value: 'below_field' },
+                            ].map(opt => {
+                                const isSelected = (field.helpTextPosition ?? 'below_title') === opt.value;
+                                return (wp.element.createElement("button", { key: opt.value, type: "button", className: WooOptionsFic.Utils.classNames('wof-segmented-btn', isSelected && 'is-selected'), onClick: () => update({ helpTextPosition: opt.value }) }, opt.label));
+                            }))),
+                        wp.element.createElement("div", { className: "wof-field-width-setting" },
+                            wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
+                                const isSelected = (field.width || '100%') === w;
+                                return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
+                            }))))) : field.type === 'paragraph' ? (wp.element.createElement("div", { className: "wof-paragraph-field-settings" },
+                        wp.element.createElement(TextControl, { label: __('Label (Internal reference)', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
+                        wp.element.createElement(TextareaControl, { label: __('Content', 'wooptionsfic'), rows: 4, value: field.description || field.content || '', onChange: (content) => update({ description: content, content }) }),
+                        wp.element.createElement("div", { className: "wof-field-width-setting" },
+                            wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
+                                const isSelected = (field.width || '100%') === w;
+                                return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
+                            }))))) : field.type === 'help' ? (wp.element.createElement("div", { className: "wof-help-field-settings" },
+                        wp.element.createElement(TextControl, { label: __('Label (Internal reference)', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
+                        wp.element.createElement(TextareaControl, { label: __('Help Content', 'wooptionsfic'), rows: 4, value: field.description || field.content || field.help || '', onChange: (content) => update({ description: content, content }) }),
+                        wp.element.createElement("div", { className: "wof-field-width-setting" },
+                            wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
+                                const isSelected = (field.width || '100%') === w;
+                                return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
                             }))))) : (wp.element.createElement(wp.element.Fragment, null,
                         wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
-                        ['paragraph', 'help'].includes(field.type) ? (wp.element.createElement(TextareaControl, { label: __('Content', 'wooptionsfic'), value: field.description || field.help, onChange: (content) => update({ description: content, help: content }) })) : null,
                         wp.element.createElement("div", { className: "wof-field-width-setting" },
                             wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
                             wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {

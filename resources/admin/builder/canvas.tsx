@@ -75,6 +75,7 @@ namespace WooOptionsFic.Builder {
 
     const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.field.type]?.label ?? props.field.type;
     const priceText = formatChoicePrice(props.field.pricing);
+    const isContentBlock = ['spacer', 'separator', 'content', 'modal', 'heading', 'paragraph', 'help'].includes(props.field.type);
 
     return <article
       className={WooOptionsFic.Utils.classNames(
@@ -83,7 +84,7 @@ namespace WooOptionsFic.Builder {
         props.field.disabled && 'is-disabled',
         dropEdge === 'before' && 'is-drop-before',
         dropEdge === 'after' && 'is-drop-after',
-        ['spacer', 'separator', 'content', 'modal'].includes(props.field.type) && `wof-canvas-field--${props.field.type}`,
+        isContentBlock && `wof-canvas-field--${props.field.type}`,
         `wof-canvas-field--width-${width.replace('%', '')}`
       )}
       style={widthStyle}
@@ -106,7 +107,7 @@ namespace WooOptionsFic.Builder {
         <button type="button" className="is-destructive" onClick={props.onDelete} aria-label={__('Delete field', 'wooptionsfic')} title={__('Delete', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="trash" /></button>
       </div>
 
-      {!['spacer', 'separator', 'content', 'modal'].includes(props.field.type) ? (
+      {!isContentBlock ? (
         <div className="wof-canvas-field__copy">
           <strong className="wof-canvas-field__title">
             {props.field.label || __('Untitled field', 'wooptionsfic')}
@@ -115,7 +116,7 @@ namespace WooOptionsFic.Builder {
                 className="wof-field__tooltip-preview"
                 title={props.field.help}
               >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
               </span>
             ) : null}
           </strong>
@@ -133,7 +134,7 @@ namespace WooOptionsFic.Builder {
       ) : null}
 
       <div className="wof-canvas-field__preview"><FieldPreview field={props.field} /></div>
-      {props.field.help && props.field.helpTextPosition === 'below_field' && !['spacer', 'separator', 'content', 'modal'].includes(props.field.type) ? (
+      {props.field.help && props.field.helpTextPosition === 'below_field' && !isContentBlock ? (
         <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-field">
           {props.field.help}
         </p>

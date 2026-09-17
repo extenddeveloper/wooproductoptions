@@ -1354,26 +1354,93 @@ final class Renderer {
 	 */
 	private function render_content(array $field): void {
 		$type        = (string) $field['type'];
-		$content     = (string) ($field['content'] ?? $field['label'] ?? '');
 		$uuid        = (string) ($field['uuid'] ?? '');
 		$is_disabled = ! empty($field['disabled']);
 		$hidden_attr = $is_disabled ? ' hidden style="display:none;"' : '';
 		$dis_cls     = $is_disabled ? ' is-disabled' : '';
 
+		$width = (string) ($field['width'] ?? '100%');
+		if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
+			$width = '100%';
+		}
+		$width_cls = ' wof-field--width-' . str_replace('%', '', $width);
+
 		if ('heading' === $type) {
-			echo '<h3 class="wof-content-heading' . esc_attr($dis_cls) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>' . esc_html($content) . '</h3>';
-		} elseif (in_array($type, ['paragraph', 'help'], true)) {
-			echo '<div class="wof-content wof-content--' . esc_attr($type) . esc_attr($dis_cls) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>' . wp_kses_post($content) . '</div>';
-		} elseif ('content' === $type) {
-			$width  = (string) ($field['width'] ?? '100%');
-			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
-				$width = '100%';
+			$content   = (string) ($field['label'] ?? '');
+			if ('' === trim($content)) {
+				$content = (string) ($field['content'] ?? ($field['description'] ?? ''));
 			}
-			$classes = 'wof-field wof-field--content wof-content wof-content--rich wof-field--width-' . str_replace('%', '', $width) . $dis_cls;
+			$help_text = trim((string) ($field['help'] ?? ''));
+			$help_pos  = (string) ($field['helpTextPosition'] ?? 'below_title');
+			$classes   = 'wof-field wof-field--heading wof-content-heading' . $width_cls . $dis_cls;
+
+			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>';
+			echo '<h3 class="wof-content-heading__title">';
+			echo esc_html($content);
+			if ('' !== $help_text && 'tooltip' === $help_pos) {
+				echo ' ' . $this->render_tooltip_icon($help_text);
+			}
+			echo '</h3>';
+			if ('' !== $help_text && ('below_title' === $help_pos || 'below_field' === $help_pos)) {
+				echo '<p class="wof-field__help wof-field__help--' . esc_attr($help_pos) . '">' . esc_html($help_text) . '</p>';
+			}
+			echo '</div>';
+			return;
+		}
+
+		if ('paragraph' === $type) {
+			$content = '';
+			if (isset($field['description']) && '' !== trim((string) $field['description'])) {
+				$content = (string) $field['description'];
+			} elseif (isset($field['content']) && '' !== trim((string) $field['content'])) {
+				$content = (string) $field['content'];
+			} elseif (isset($field['help']) && '' !== trim((string) $field['help'])) {
+				$content = (string) $field['help'];
+			} elseif (isset($field['label']) && '' !== trim((string) $field['label'])) {
+				$content = (string) $field['label'];
+			}
+			$classes = 'wof-field wof-field--paragraph wof-content wof-content--paragraph' . $width_cls . $dis_cls;
+			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>';
+			echo '<div class="wof-paragraph-box">';
+			echo '<p class="wof-paragraph-text">' . wp_kses_post($content) . '</p>';
+			echo '</div>';
+			echo '</div>';
+			return;
+		}
+
+		if ('help' === $type) {
+			$content = '';
+			if (isset($field['help']) && '' !== trim((string) $field['help'])) {
+				$content = (string) $field['help'];
+			} elseif (isset($field['description']) && '' !== trim((string) $field['description'])) {
+				$content = (string) $field['description'];
+			} elseif (isset($field['content']) && '' !== trim((string) $field['content'])) {
+				$content = (string) $field['content'];
+			} elseif (isset($field['label']) && '' !== trim((string) $field['label'])) {
+				$content = (string) $field['label'];
+			}
+			$classes = 'wof-field wof-field--help wof-content wof-content--help' . $width_cls . $dis_cls;
+			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>';
+			echo '<div class="wof-help-box">';
+			echo '<div class="wof-help-icon" aria-hidden="true">';
+			echo '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+			echo '</div>';
+			echo '<div class="wof-help-content">' . wp_kses_post($content) . '</div>';
+			echo '</div>';
+			echo '</div>';
+			return;
+		}
+
+		if ('content' === $type) {
+			$content = (string) ($field['content'] ?? ($field['description'] ?? ($field['label'] ?? '')));
+			$classes = 'wof-field wof-field--content wof-content wof-content--rich' . $width_cls . $dis_cls;
 			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>';
 			echo wp_kses_post($content);
 			echo '</div>';
-		} elseif ('modal' === $type) {
+			return;
+		}
+
+		if ('modal' === $type) {
 			$width  = (string) ($field['width'] ?? '100%');
 			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
 				$width = '100%';
@@ -1390,6 +1457,7 @@ final class Renderer {
 			if ('' === trim($modal_title)) {
 				$modal_title = __('Information', 'wooptionsfic');
 			}
+			$content     = (string) ($field['content'] ?? ($field['description'] ?? ''));
 			$classes     = 'wof-field wof-field--modal wof-field--width-' . str_replace('%', '', $width) . $dis_cls;
 			$modal_id    = 'wof-modal-' . sanitize_html_class($uuid);
 
@@ -1410,7 +1478,10 @@ final class Renderer {
 			echo '</div>';
 			echo '</div>';
 			echo '</div>';
-		} elseif ('separator' === $type) {
+			return;
+		}
+
+		if ('separator' === $type) {
 			$width  = (string) ($field['width'] ?? '100%');
 			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
 				$width = '100%';
@@ -1429,10 +1500,11 @@ final class Renderer {
 			}
 			$classes = 'wof-separator wof-field--width-' . str_replace('%', '', $width) . $dis_cls;
 			echo '<hr class="' . esc_attr($classes) . '" style="' . esc_attr($style) . '" data-wof-field="' . esc_attr($uuid) . '"' . ($is_disabled ? ' hidden' : '') . ' aria-hidden="true">';
-		} else {
-			$style = $is_disabled ? ' style="display:none;"' : '';
-			echo '<div class="wof-spacer' . esc_attr($dis_cls) . '" data-wof-field="' . esc_attr($uuid) . '"' . $style . ($is_disabled ? ' hidden' : '') . ' aria-hidden="true"></div>';
+			return;
 		}
+
+		$style = $is_disabled ? ' style="display:none;"' : '';
+		echo '<div class="wof-spacer' . esc_attr($dis_cls) . '" data-wof-field="' . esc_attr($uuid) . '"' . $style . ($is_disabled ? ' hidden' : '') . ' aria-hidden="true"></div>';
 	}
 
 	/**
