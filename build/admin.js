@@ -654,6 +654,17 @@ var WooOptionsFic;
                 field.color = '#E2E8F0';
                 field.style = { height: 1, color: '#E2E8F0' };
             }
+            if (type === 'content') {
+                field.label = 'Content';
+                field.content = '<p>Add rich product description or information here.</p>';
+            }
+            if (type === 'modal') {
+                field.label = 'Modal';
+                field.buttonText = 'View details';
+                field.modalTitle = 'Product Details';
+                field.buttonStyle = 'outline';
+                field.content = '<p>Add modal popup information and images here.</p>';
+            }
             return field;
         }
         FieldFactory.create = create;
@@ -710,6 +721,8 @@ var WooOptionsFic;
             help: 'editor-help',
             separator: 'minus',
             spacer: 'editor-contract',
+            content: 'editor-alignleft',
+            modal: 'external',
         };
         function Dashicon(props) {
             return wp.element.createElement("span", { className: WooOptionsFic.Utils.classNames('dashicons', `dashicons-${props.name}`, props.className), "aria-hidden": "true" });
@@ -829,6 +842,226 @@ var WooOptionsFic;
                 wp.element.createElement("span", null, props.label ?? __('Loading…', 'wooptionsfic')));
         }
         Components.ModalLoading = ModalLoading;
+        function WpWysiwygEditor(props) {
+            const rawId = props.id.replace(/[^a-zA-Z0-9_]/g, '');
+            const editorId = `wof_editor_${rawId}`;
+            const [activeTab, setActiveTab] = wp.element.useState('visual');
+            const [textValue, setTextValue] = wp.element.useState(props.value ?? '');
+            const textTextareaRef = wp.element.useRef(null);
+            const onChangeRef = wp.element.useRef(props.onChange);
+            onChangeRef.current = props.onChange;
+            const valueRef = wp.element.useRef(props.value);
+            valueRef.current = props.value;
+            wp.element.useEffect(() => {
+                setTextValue(props.value ?? '');
+            }, [props.id]);
+            wp.element.useEffect(() => {
+                let isMounted = true;
+                let timer = null;
+                const initEditor = () => {
+                    if (!isMounted)
+                        return true;
+                    const tinymce = window.tinymce;
+                    if (!tinymce || typeof tinymce.init !== 'function')
+                        return false;
+                    const target = document.getElementById(editorId);
+                    if (!target)
+                        return false;
+                    try {
+                        const prev = tinymce.get(editorId);
+                        if (prev) {
+                            prev.remove();
+                        }
+                    }
+                    catch {
+                        // ignore
+                    }
+                    const preInit = window.tinyMCEPreInit?.mceInit?.wof_admin_dummy_editor;
+                    try {
+                        tinymce.init({
+                            ...(preInit || {}),
+                            selector: '#' + editorId,
+                            theme: 'modern',
+                            skin: 'lightgray',
+                            menubar: false,
+                            branding: false,
+                            statusbar: false,
+                            elementpath: false,
+                            height: 220,
+                            plugins: preInit?.plugins || 'charmap colorpicker hr lists media paste tabfocus textcolor fullscreen wordpress wpautoresize wpeditimage wpemoji wpgallery wplink wpdialogs wptextpattern wpview',
+                            toolbar1: preInit?.toolbar1 || 'formatselect,bold,italic,bullist,numlist,blockquote,alignleft,aligncenter,alignright,link,unlink,wp_adv',
+                            toolbar2: preInit?.toolbar2 || 'strikethrough,hr,forecolor,pastetext,removeformat,charmap,outdent,indent,undo,redo',
+                            setup: (ed) => {
+                                ed.on('init', () => {
+                                    if (isMounted) {
+                                        ed.setContent(valueRef.current ?? '');
+                                    }
+                                });
+                                ed.on('change input keyup NodeChange SetContent', () => {
+                                    if (isMounted) {
+                                        const content = ed.getContent();
+                                        setTextValue(content);
+                                        onChangeRef.current(content);
+                                    }
+                                });
+                            },
+                        });
+                        return true;
+                    }
+                    catch {
+                        return false;
+                    }
+                };
+                if (!initEditor()) {
+                    let count = 0;
+                    timer = setInterval(() => {
+                        count++;
+                        if (initEditor() || count > 40) {
+                            clearInterval(timer);
+                        }
+                    }, 50);
+                }
+                return () => {
+                    isMounted = false;
+                    if (timer)
+                        clearInterval(timer);
+                    const tinymce = window.tinymce;
+                    if (tinymce) {
+                        try {
+                            const ed = tinymce.get(editorId);
+                            if (ed)
+                                ed.remove();
+                        }
+                        catch {
+                            // ignore
+                        }
+                    }
+                };
+            }, [editorId]);
+            const handleSwitchTab = (tab) => {
+                if (tab === activeTab)
+                    return;
+                const tinymce = window.tinymce;
+                const editor = tinymce ? tinymce.get(editorId) : null;
+                if (tab === 'text') {
+                    let currentHtml = textValue;
+                    if (editor) {
+                        try {
+                            currentHtml = editor.getContent();
+                        }
+                        catch {
+                            // ignore
+                        }
+                    }
+                    setTextValue(currentHtml);
+                    setActiveTab('text');
+                }
+                else {
+                    setActiveTab('visual');
+                    if (editor) {
+                        try {
+                            editor.setContent(textValue);
+                        }
+                        catch {
+                            // ignore
+                        }
+                    }
+                }
+            };
+            const handleOpenMedia = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const wpMedia = window.wp?.media;
+                if (!wpMedia)
+                    return;
+                const frame = wpMedia({
+                    title: __('Add Media', 'wooptionsfic'),
+                    button: { text: __('Insert into field', 'wooptionsfic') },
+                    multiple: false,
+                    library: { type: 'image' },
+                });
+                frame.on('select', () => {
+                    const attachment = frame.state().get('selection').first().toJSON();
+                    const imgUrl = attachment.url;
+                    const imgAlt = attachment.alt || attachment.title || '';
+                    const imgHtml = `<img src="${imgUrl}" alt="${imgAlt}" class="alignnone size-full" />`;
+                    const tinymce = window.tinymce;
+                    const editor = tinymce ? tinymce.get(editorId) : null;
+                    if (activeTab === 'visual' && editor) {
+                        try {
+                            editor.insertContent(imgHtml);
+                            const updated = editor.getContent();
+                            setTextValue(updated);
+                            onChangeRef.current(updated);
+                        }
+                        catch {
+                            const updated = (textValue || '') + imgHtml;
+                            setTextValue(updated);
+                            onChangeRef.current(updated);
+                        }
+                    }
+                    else {
+                        const ta = textTextareaRef.current;
+                        if (ta) {
+                            const start = ta.selectionStart ?? 0;
+                            const end = ta.selectionEnd ?? 0;
+                            const val = ta.value;
+                            const updated = val.substring(0, start) + imgHtml + val.substring(end);
+                            setTextValue(updated);
+                            onChangeRef.current(updated);
+                        }
+                        else {
+                            const updated = (textValue || '') + imgHtml;
+                            setTextValue(updated);
+                            onChangeRef.current(updated);
+                        }
+                    }
+                });
+                frame.open();
+            };
+            const handleTextChange = (newVal) => {
+                setTextValue(newVal);
+                onChangeRef.current(newVal);
+                const tinymce = window.tinymce;
+                const editor = tinymce ? tinymce.get(editorId) : null;
+                if (editor) {
+                    try {
+                        editor.setContent(newVal);
+                    }
+                    catch {
+                        // ignore
+                    }
+                }
+            };
+            return (wp.element.createElement("div", { className: "wof-wp-editor-field" },
+                props.label ? wp.element.createElement("label", { className: "wof-wp-editor-label" }, props.label) : null,
+                wp.element.createElement("div", { className: "wof-wp-editor-mount" },
+                    wp.element.createElement("div", { className: `wp-core-ui wp-editor-wrap ${activeTab === 'visual' ? 'tmce-active' : 'html-active'}` },
+                        wp.element.createElement("div", { className: "wp-editor-tools hide-if-no-js" },
+                            wp.element.createElement("div", { className: "wp-media-buttons" },
+                                wp.element.createElement("button", { type: "button", className: "button insert-media add_media", onClick: handleOpenMedia },
+                                    wp.element.createElement("span", { className: "wp-media-buttons-icon" }),
+                                    __('Add Media', 'wooptionsfic'))),
+                            wp.element.createElement("div", { className: "wp-editor-tabs" },
+                                wp.element.createElement("button", { type: "button", className: `wp-switch-editor switch-tmce ${activeTab === 'visual' ? 'is-active' : ''}`, onClick: () => handleSwitchTab('visual') }, __('Visual', 'wooptionsfic')),
+                                wp.element.createElement("button", { type: "button", className: `wp-switch-editor switch-html ${activeTab === 'text' ? 'is-active' : ''}`, onClick: () => handleSwitchTab('text') }, __('Text', 'wooptionsfic')))),
+                        wp.element.createElement("div", { className: "wp-editor-container" },
+                            wp.element.createElement("div", { style: { display: activeTab === 'visual' ? 'block' : 'none' } },
+                                wp.element.createElement("textarea", { id: editorId, name: editorId, className: "wp-editor-area", rows: 8, style: { width: '100%', height: '220px' }, defaultValue: props.value ?? '' })),
+                            wp.element.createElement("div", { style: { display: activeTab === 'text' ? 'block' : 'none' } },
+                                wp.element.createElement("textarea", { ref: textTextareaRef, id: `${editorId}_html`, className: "wp-editor-area wof-editor-text-mode", rows: 9, style: {
+                                        width: '100%',
+                                        height: '220px',
+                                        padding: '12px',
+                                        fontFamily: 'Consolas, Monaco, monospace',
+                                        fontSize: '13px',
+                                        lineHeight: 1.6,
+                                        border: 'none',
+                                        boxSizing: 'border-box',
+                                        outline: 'none',
+                                    }, value: textValue, onChange: (e) => handleTextChange(e.target.value) })))))));
+        }
+        Components.WpWysiwygEditor = WpWysiwygEditor;
     })(Components = WooOptionsFic.Components || (WooOptionsFic.Components = {}));
 })(WooOptionsFic || (WooOptionsFic = {}));
 var WooOptionsFic;
@@ -2292,6 +2525,27 @@ var WooOptionsFic;
                 wp.element.createElement("rect", { width: "20", height: "14", fill: "#334155" }),
                 wp.element.createElement("text", { x: "10", y: "10", fontFamily: "-apple-system,sans-serif", fontSize: "7", fontWeight: "bold", fill: "#ffffff", textAnchor: "middle" }, c.slice(0, 2))));
         }
+        function ModalPreviewControl(props) {
+            const [isOpen, setIsOpen] = wp.element.useState(false);
+            return (wp.element.createElement("div", { className: "wof-preview-modal-shell" },
+                wp.element.createElement("button", { type: "button", className: `wof-modal-trigger wof-modal-btn wof-modal-btn--${props.buttonStyle}`, onClick: (e) => {
+                        e.stopPropagation();
+                        setIsOpen(true);
+                    } },
+                    wp.element.createElement("span", { className: "wof-modal-btn__text" }, props.buttonText)),
+                isOpen ? (wp.element.createElement("div", { className: "wof-modal-backdrop is-canvas-preview", onClick: (e) => {
+                        e.stopPropagation();
+                        setIsOpen(false);
+                    } },
+                    wp.element.createElement("div", { className: "wof-modal-dialog", onClick: (e) => e.stopPropagation() },
+                        wp.element.createElement("div", { className: "wof-modal-header" },
+                            wp.element.createElement("h3", { className: "wof-modal-title" }, props.field.modalTitle || props.field.label || __('Information', 'wooptionsfic')),
+                            wp.element.createElement("button", { type: "button", className: "wof-modal-close", onClick: (e) => {
+                                    e.stopPropagation();
+                                    setIsOpen(false);
+                                }, "aria-label": __('Close', 'wooptionsfic') }, "\u00D7")),
+                        wp.element.createElement("div", { className: "wof-modal-body wof-modal-content" }, props.field.content ? (wp.element.createElement("div", { dangerouslySetInnerHTML: { __html: props.field.content } })) : (wp.element.createElement("p", { style: { color: '#94a3b8', fontStyle: 'italic' } }, __('No modal content added yet. Add text and images in the inspector.', 'wooptionsfic'))))))) : null));
+        }
         function FieldPreview(props) {
             const field = props.field;
             const choices = field.choices ?? [];
@@ -2301,6 +2555,17 @@ var WooOptionsFic;
                 return wp.element.createElement("p", { className: "wof-preview-paragraph" }, field.description || field.label);
             if (field.type === 'help')
                 return wp.element.createElement("div", { className: "wof-preview-help" }, field.description || field.help || field.label);
+            if (field.type === 'content') {
+                const htmlContent = field.content || '';
+                return (wp.element.createElement("div", { className: "wof-preview-content-box" }, htmlContent ? (wp.element.createElement("div", { className: "wof-preview-content-html wof-content--rich", dangerouslySetInnerHTML: { __html: htmlContent } })) : (wp.element.createElement("div", { className: "wof-preview-content-empty" },
+                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "editor-alignleft" }),
+                    wp.element.createElement("span", null, __('Content block — add text and images in the inspector', 'wooptionsfic'))))));
+            }
+            if (field.type === 'modal') {
+                const buttonText = field.buttonText || field.label || __('View details', 'wooptionsfic');
+                const buttonStyle = field.buttonStyle || 'outline';
+                return wp.element.createElement(ModalPreviewControl, { field: field, buttonText: buttonText, buttonStyle: buttonStyle });
+            }
             if (field.type === 'separator') {
                 const h = Number(field.height ?? field.style?.height ?? 1);
                 const color = String(field.color ?? field.style?.color ?? '#E2E8F0');
@@ -2858,7 +3123,7 @@ var WooOptionsFic;
             };
             const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.field.type]?.label ?? props.field.type;
             const priceText = Builder.formatChoicePrice(props.field.pricing);
-            return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', ['spacer', 'separator'].includes(props.field.type) && `wof-canvas-field--${props.field.type}`, `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
+            return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', ['spacer', 'separator', 'content', 'modal'].includes(props.field.type) && `wof-canvas-field--${props.field.type}`, `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
                 props.selected ? (wp.element.createElement("span", { className: "wof-canvas-field__type-badge" }, typeLabel)) : null,
                 wp.element.createElement("div", { className: "wof-canvas-field__toolbar", onClick: (event) => event.stopPropagation() },
                     wp.element.createElement("button", { type: "button", draggable: true, className: "wof-canvas-field__drag-handle", onDragStart: dragStart, onDragEnd: () => setDropEdge(null), "aria-label": __('Drag field', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
@@ -2869,7 +3134,7 @@ var WooOptionsFic;
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-page" })),
                     wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete field', 'wooptionsfic'), title: __('Delete', 'wooptionsfic') },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))),
-                !['spacer', 'separator'].includes(props.field.type) ? (wp.element.createElement("div", { className: "wof-canvas-field__copy" },
+                !['spacer', 'separator', 'content', 'modal'].includes(props.field.type) ? (wp.element.createElement("div", { className: "wof-canvas-field__copy" },
                     wp.element.createElement("strong", { className: "wof-canvas-field__title" },
                         props.field.label || __('Untitled field', 'wooptionsfic'),
                         props.field.help && props.field.helpTextPosition === 'tooltip' ? (wp.element.createElement("span", { className: "wof-field__tooltip-preview", title: props.field.help },
@@ -2886,7 +3151,7 @@ var WooOptionsFic;
                         __('Choices', 'wooptionsfic'))) : null)) : null,
                 wp.element.createElement("div", { className: "wof-canvas-field__preview" },
                     wp.element.createElement(Builder.FieldPreview, { field: props.field })),
-                props.field.help && props.field.helpTextPosition === 'below_field' && !['spacer', 'separator'].includes(props.field.type) ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-field" }, props.field.help)) : null);
+                props.field.help && props.field.helpTextPosition === 'below_field' && !['spacer', 'separator', 'content', 'modal'].includes(props.field.type) ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-field" }, props.field.help)) : null);
         }
         function Canvas(props) {
             const [zoom, setZoom] = useState(100);
@@ -4540,10 +4805,14 @@ var WooOptionsFic;
                             wp.element.createElement(Builder.StyleStudio, { document: props.document, onChange: props.onDocumentChange }))));
             const field = props.field;
             const update = (patch) => props.onFieldChange({ ...field, ...patch });
-            const isLayoutBlock = ['spacer', 'separator'].includes(field.type);
-            const visibleTabs = isLayoutBlock
-                ? tabs.filter(([tab]) => ['content', 'logic', 'style', 'advanced'].includes(tab))
-                : tabs.filter(([tab]) => tab !== 'choices' || Boolean(field.choices));
+            const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help'];
+            const visibleTabs = tabs.filter(([tab]) => {
+                if (tab === 'choices' && !Boolean(field.choices))
+                    return false;
+                if (tab === 'pricing' && contentFieldTypes.includes(field.type))
+                    return false;
+                return true;
+            });
             const activeTab = visibleTabs.some(([tab]) => tab === props.tab) ? props.tab : 'content';
             return wp.element.createElement("aside", { className: "wof-builder-inspector" },
                 wp.element.createElement("div", { className: "wof-builder-pane__heading" },
@@ -4581,6 +4850,30 @@ var WooOptionsFic;
                                 return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
                             }))))) : field.type === 'spacer' ? (wp.element.createElement("div", { className: "wof-spacer-settings" },
                         wp.element.createElement(SpacerHeightControl, { value: Number(field.height ?? field.style?.height ?? 24), defaultValue: 24, onChange: (height) => update({ height, style: { ...(field.style ?? {}), height } }) }),
+                        wp.element.createElement("div", { className: "wof-field-width-setting" },
+                            wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
+                                const isSelected = (field.width || '100%') === w;
+                                return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
+                            }))))) : field.type === 'content' ? (wp.element.createElement("div", { className: "wof-content-field-settings" },
+                        wp.element.createElement(TextControl, { label: __('Label (Internal reference)', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
+                        wp.element.createElement(WooOptionsFic.Components.WpWysiwygEditor, { id: field.uuid, label: __('Content', 'wooptionsfic'), value: field.content ?? '', onChange: (content) => update({ content }) }),
+                        wp.element.createElement("div", { className: "wof-field-width-setting" },
+                            wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
+                                const isSelected = (field.width || '100%') === w;
+                                return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
+                            }))))) : field.type === 'modal' ? (wp.element.createElement("div", { className: "wof-modal-field-settings" },
+                        wp.element.createElement(TextControl, { label: __('Label (Internal reference)', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
+                        wp.element.createElement(TextControl, { label: __('Button Text', 'wooptionsfic'), value: field.buttonText ?? 'View details', placeholder: __('e.g. Size Guide, View details', 'wooptionsfic'), onChange: (buttonText) => update({ buttonText }) }),
+                        wp.element.createElement(SelectControl, { label: __('Button Style', 'wooptionsfic'), value: field.buttonStyle ?? 'outline', options: [
+                                { label: __('Outline', 'wooptionsfic'), value: 'outline' },
+                                { label: __('Primary', 'wooptionsfic'), value: 'primary' },
+                                { label: __('Secondary', 'wooptionsfic'), value: 'secondary' },
+                                { label: __('Link / Text only', 'wooptionsfic'), value: 'link' },
+                            ], onChange: (buttonStyle) => update({ buttonStyle }) }),
+                        wp.element.createElement(TextControl, { label: __('Modal Header Title', 'wooptionsfic'), value: field.modalTitle ?? 'Information', placeholder: __('e.g. Size Guide & Dimensions', 'wooptionsfic'), onChange: (modalTitle) => update({ modalTitle }) }),
+                        wp.element.createElement(WooOptionsFic.Components.WpWysiwygEditor, { id: field.uuid, label: __('Modal Content', 'wooptionsfic'), value: field.content ?? '', onChange: (content) => update({ content }) }),
                         wp.element.createElement("div", { className: "wof-field-width-setting" },
                             wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
                             wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {

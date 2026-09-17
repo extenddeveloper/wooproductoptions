@@ -126,6 +126,60 @@ namespace WooOptionsFic.Builder {
     );
   }
 
+  function ModalPreviewControl(props: { field: WooOptionsFic.FieldDefinition; buttonText: string; buttonStyle: string }): any {
+    const [isOpen, setIsOpen] = wp.element.useState(false);
+    return (
+      <div className="wof-preview-modal-shell">
+        <button
+          type="button"
+          className={`wof-modal-trigger wof-modal-btn wof-modal-btn--${props.buttonStyle}`}
+          onClick={(e: any) => {
+            e.stopPropagation();
+            setIsOpen(true);
+          }}
+        >
+          <span className="wof-modal-btn__text">{props.buttonText}</span>
+        </button>
+        {isOpen ? (
+          <div
+            className="wof-modal-backdrop is-canvas-preview"
+            onClick={(e: any) => {
+              e.stopPropagation();
+              setIsOpen(false);
+            }}
+          >
+            <div
+              className="wof-modal-dialog"
+              onClick={(e: any) => e.stopPropagation()}
+            >
+              <div className="wof-modal-header">
+                <h3 className="wof-modal-title">{props.field.modalTitle || props.field.label || __('Information', 'wooptionsfic')}</h3>
+                <button
+                  type="button"
+                  className="wof-modal-close"
+                  onClick={(e: any) => {
+                    e.stopPropagation();
+                    setIsOpen(false);
+                  }}
+                  aria-label={__('Close', 'wooptionsfic')}
+                >
+                  &times;
+                </button>
+              </div>
+              <div className="wof-modal-body wof-modal-content">
+                {props.field.content ? (
+                  <div dangerouslySetInnerHTML={{ __html: props.field.content }} />
+                ) : (
+                  <p style={{ color: '#94a3b8', fontStyle: 'italic' }}>{__('No modal content added yet. Add text and images in the inspector.', 'wooptionsfic')}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+    );
+  }
+
   export function FieldPreview(props: { field: WooOptionsFic.FieldDefinition }): any {
     const field = props.field;
     const choices = field.choices ?? [];
@@ -133,6 +187,29 @@ namespace WooOptionsFic.Builder {
     if (field.type === 'heading') return <h3 className="wof-preview-heading">{field.label}</h3>;
     if (field.type === 'paragraph') return <p className="wof-preview-paragraph">{field.description || field.label}</p>;
     if (field.type === 'help') return <div className="wof-preview-help">{field.description || field.help || field.label}</div>;
+    if (field.type === 'content') {
+      const htmlContent = field.content || '';
+      return (
+        <div className="wof-preview-content-box">
+          {htmlContent ? (
+            <div
+              className="wof-preview-content-html wof-content--rich"
+              dangerouslySetInnerHTML={{ __html: htmlContent }}
+            />
+          ) : (
+            <div className="wof-preview-content-empty">
+              <WooOptionsFic.Components.Dashicon name="editor-alignleft" />
+              <span>{__('Content block — add text and images in the inspector', 'wooptionsfic')}</span>
+            </div>
+          )}
+        </div>
+      );
+    }
+    if (field.type === 'modal') {
+      const buttonText = field.buttonText || field.label || __('View details', 'wooptionsfic');
+      const buttonStyle = field.buttonStyle || 'outline';
+      return <ModalPreviewControl field={field} buttonText={buttonText} buttonStyle={buttonStyle} />;
+    }
     if (field.type === 'separator') {
       const h = Number(field.height ?? (field.style as any)?.height ?? 1);
       const color = String(field.color ?? (field.style as any)?.color ?? '#E2E8F0');

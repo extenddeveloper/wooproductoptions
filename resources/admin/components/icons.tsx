@@ -34,6 +34,8 @@ namespace WooOptionsFic.Components {
     help: 'editor-help',
     separator: 'minus',
     spacer: 'editor-contract',
+    content: 'editor-alignleft',
+    modal: 'external',
   };
 
   export function Dashicon(props: { name: string; className?: string }): any {

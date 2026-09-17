@@ -67,7 +67,7 @@ final class FieldTypeRegistry {
 			$this->register(new ScalarFieldType($key, $kind));
 		}
 
-		foreach (['heading', 'paragraph', 'help', 'separator', 'spacer'] as $key) {
+		foreach (['heading', 'paragraph', 'help', 'separator', 'spacer', 'content', 'modal'] as $key) {
 			$this->register(new ContentFieldType($key));
 		}
 

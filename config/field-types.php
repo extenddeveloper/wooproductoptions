@@ -42,4 +42,6 @@ return [
 	'help'                   => ['group' => 'content', 'label' => $t('Help content')],
 	'separator'              => ['group' => 'content', 'label' => $t('Separator')],
 	'spacer'                 => ['group' => 'content', 'label' => $t('Spacer')],
+	'content'                => ['group' => 'content', 'label' => $t('Content')],
+	'modal'                  => ['group' => 'content', 'label' => $t('Modal')],
 ];

@@ -208,7 +208,7 @@ final class Renderer {
 			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="spacer" style="' . esc_attr($style) . '"' . ($is_disabled ? ' hidden' : '') . ' aria-hidden="true"></div>';
 			return;
 		}
-		if (in_array($type, ['heading', 'paragraph', 'help', 'separator'], true)) {
+		if (in_array($type, ['heading', 'paragraph', 'help', 'separator', 'content', 'modal'], true)) {
 			$this->render_content($field);
 			return;
 		}
@@ -1364,6 +1364,52 @@ final class Renderer {
 			echo '<h3 class="wof-content-heading' . esc_attr($dis_cls) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>' . esc_html($content) . '</h3>';
 		} elseif (in_array($type, ['paragraph', 'help'], true)) {
 			echo '<div class="wof-content wof-content--' . esc_attr($type) . esc_attr($dis_cls) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>' . wp_kses_post($content) . '</div>';
+		} elseif ('content' === $type) {
+			$width  = (string) ($field['width'] ?? '100%');
+			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
+				$width = '100%';
+			}
+			$classes = 'wof-field wof-field--content wof-content wof-content--rich wof-field--width-' . str_replace('%', '', $width) . $dis_cls;
+			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>';
+			echo wp_kses_post($content);
+			echo '</div>';
+		} elseif ('modal' === $type) {
+			$width  = (string) ($field['width'] ?? '100%');
+			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
+				$width = '100%';
+			}
+			$btn_text    = (string) ($field['buttonText'] ?? $field['label'] ?? __('View details', 'wooptionsfic'));
+			if ('' === trim($btn_text)) {
+				$btn_text = __('View details', 'wooptionsfic');
+			}
+			$btn_style   = (string) ($field['buttonStyle'] ?? 'outline');
+			if (! in_array($btn_style, ['outline', 'primary', 'secondary', 'link'], true)) {
+				$btn_style = 'outline';
+			}
+			$modal_title = (string) ($field['modalTitle'] ?? $field['label'] ?? __('Information', 'wooptionsfic'));
+			if ('' === trim($modal_title)) {
+				$modal_title = __('Information', 'wooptionsfic');
+			}
+			$classes     = 'wof-field wof-field--modal wof-field--width-' . str_replace('%', '', $width) . $dis_cls;
+			$modal_id    = 'wof-modal-' . sanitize_html_class($uuid);
+
+			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>';
+			echo '<button type="button" class="wof-modal-trigger wof-modal-btn wof-modal-btn--' . esc_attr($btn_style) . '" data-wof-modal-target="' . esc_attr($modal_id) . '" aria-haspopup="dialog" aria-expanded="false">';
+			echo '<span class="wof-modal-btn__text">' . esc_html($btn_text) . '</span>';
+			echo '</button>';
+
+			echo '<div id="' . esc_attr($modal_id) . '" class="wof-modal-backdrop" aria-hidden="true" style="display:none;">';
+			echo '<div class="wof-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="' . esc_attr($modal_id) . '-title">';
+			echo '<div class="wof-modal-header">';
+			echo '<h3 id="' . esc_attr($modal_id) . '-title" class="wof-modal-title">' . esc_html($modal_title) . '</h3>';
+			echo '<button type="button" class="wof-modal-close" aria-label="' . esc_attr__('Close', 'wooptionsfic') . '">&times;</button>';
+			echo '</div>';
+			echo '<div class="wof-modal-body wof-modal-content">';
+			echo wp_kses_post($content);
+			echo '</div>';
+			echo '</div>';
+			echo '</div>';
+			echo '</div>';
 		} elseif ('separator' === $type) {
 			$width  = (string) ($field['width'] ?? '100%');
 			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {

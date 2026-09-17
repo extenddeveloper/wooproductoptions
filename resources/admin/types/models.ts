@@ -126,6 +126,10 @@ namespace WooOptionsFic {
     width?: string;
     height?: number | string;
     color?: string;
+    content?: string;
+    buttonText?: string;
+    buttonStyle?: 'primary' | 'secondary' | 'outline' | 'link';
+    modalTitle?: string;
     flagStyle?: 'number_only' | 'number_flag' | 'number_flag_dialcode';
     defaultCountry?: string;
     dateTimeType?: 'date' | 'datetime' | 'time';

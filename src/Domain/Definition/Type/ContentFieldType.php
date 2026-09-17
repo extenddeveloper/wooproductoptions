@@ -19,12 +19,22 @@ final class ContentFieldType extends AbstractFieldType {
 
 	public function normalize_definition(array $definition): array {
 		$normalized            = $this->base_definition($definition);
-		$normalized['content'] = (string) ($definition['content'] ?? '');
+		$raw_content           = (string) ($definition['content'] ?? '');
+		$normalized['content'] = function_exists('wp_kses_post') ? wp_kses_post($raw_content) : $raw_content;
 		if (isset($definition['height'])) {
 			$normalized['height'] = (int) $definition['height'];
 		}
 		if (isset($definition['color']) && '' !== (string) $definition['color']) {
 			$normalized['color'] = sanitize_hex_color((string) $definition['color']) ?: (string) $definition['color'];
+		}
+		if (isset($definition['buttonText'])) {
+			$normalized['buttonText'] = self::plain_text((string) $definition['buttonText'], 200);
+		}
+		if (isset($definition['buttonStyle'])) {
+			$normalized['buttonStyle'] = sanitize_key((string) $definition['buttonStyle']);
+		}
+		if (isset($definition['modalTitle'])) {
+			$normalized['modalTitle'] = self::plain_text((string) $definition['modalTitle'], 200);
 		}
 		return $normalized;
 	}

@@ -55,11 +55,59 @@
                 }
             });
             this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } if (t.matches(".wof-product-variation-select")) { this.updateChoiceVariationPrice(t); if (t.value) { const tile = t.closest(".wof-product-choice-tile"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } } if (t.matches(".wof-choice-qty-input") && t.value) { const tile = t.closest(".wof-product-choice-tile, .wof-choice"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } this.selectionChanged(t); } });
-            this.root.addEventListener("click", e => { const t = e.target; const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
+            this.root.addEventListener("click", e => { const t = e.target;
+                const modalTrigger = t.closest(".wof-modal-trigger");
+                if (modalTrigger) {
+                    const targetId = modalTrigger.dataset.wofModalTarget;
+                    const modal = targetId ? document.getElementById(targetId) : modalTrigger.closest(".wof-field--modal")?.querySelector(".wof-modal-backdrop");
+                    if (modal) {
+                        modal.style.display = "flex";
+                        modal.setAttribute("aria-hidden", "false");
+                        modal.classList.add("is-open");
+                        modalTrigger.setAttribute("aria-expanded", "true");
+                        document.body.classList.add("wof-modal-open");
+                    }
+                    return;
+                }
+                const modalClose = t.closest(".wof-modal-close");
+                if (modalClose) {
+                    const modal = modalClose.closest(".wof-modal-backdrop");
+                    if (modal) {
+                        modal.style.display = "none";
+                        modal.setAttribute("aria-hidden", "true");
+                        modal.classList.remove("is-open");
+                        const trigger = modal.closest(".wof-field--modal")?.querySelector(".wof-modal-trigger");
+                        trigger?.setAttribute("aria-expanded", "false");
+                        document.body.classList.remove("wof-modal-open");
+                    }
+                    return;
+                }
+                if (t.classList.contains("wof-modal-backdrop")) {
+                    t.style.display = "none";
+                    t.setAttribute("aria-hidden", "true");
+                    t.classList.remove("is-open");
+                    const trigger = t.closest(".wof-field--modal")?.querySelector(".wof-modal-trigger");
+                    trigger?.setAttribute("aria-expanded", "false");
+                    document.body.classList.remove("wof-modal-open");
+                    return;
+                }
+                const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
             return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); });
             document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } if (!e.target.closest("[data-wof-color-picker]")) { this.closeAllCustomColorPickers(); } });
+            document.addEventListener("keydown", e => {
+                if (e.key === "Escape") {
+                    document.querySelectorAll(".wof-modal-backdrop.is-open").forEach(modal => {
+                        modal.style.display = "none";
+                        modal.setAttribute("aria-hidden", "true");
+                        modal.classList.remove("is-open");
+                        const trigger = modal.closest(".wof-field--modal")?.querySelector(".wof-modal-trigger");
+                        trigger?.setAttribute("aria-expanded", "false");
+                    });
+                    document.body.classList.remove("wof-modal-open");
+                }
+            });
             this.form?.addEventListener("submit", e => {
                 if (this.isSubmitting) return;
                 const clientErrors = this.validateAllFields();

@@ -83,7 +83,7 @@ namespace WooOptionsFic.Builder {
         props.field.disabled && 'is-disabled',
         dropEdge === 'before' && 'is-drop-before',
         dropEdge === 'after' && 'is-drop-after',
-        ['spacer', 'separator'].includes(props.field.type) && `wof-canvas-field--${props.field.type}`,
+        ['spacer', 'separator', 'content', 'modal'].includes(props.field.type) && `wof-canvas-field--${props.field.type}`,
         `wof-canvas-field--width-${width.replace('%', '')}`
       )}
       style={widthStyle}
@@ -106,7 +106,7 @@ namespace WooOptionsFic.Builder {
         <button type="button" className="is-destructive" onClick={props.onDelete} aria-label={__('Delete field', 'wooptionsfic')} title={__('Delete', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="trash" /></button>
       </div>
 
-      {!['spacer', 'separator'].includes(props.field.type) ? (
+      {!['spacer', 'separator', 'content', 'modal'].includes(props.field.type) ? (
         <div className="wof-canvas-field__copy">
           <strong className="wof-canvas-field__title">
             {props.field.label || __('Untitled field', 'wooptionsfic')}
@@ -133,7 +133,7 @@ namespace WooOptionsFic.Builder {
       ) : null}
 
       <div className="wof-canvas-field__preview"><FieldPreview field={props.field} /></div>
-      {props.field.help && props.field.helpTextPosition === 'below_field' && !['spacer', 'separator'].includes(props.field.type) ? (
+      {props.field.help && props.field.helpTextPosition === 'below_field' && !['spacer', 'separator', 'content', 'modal'].includes(props.field.type) ? (
         <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-field">
           {props.field.help}
         </p>

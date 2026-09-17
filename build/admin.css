@@ -12838,3 +12838,387 @@ body.rtl .wof-toast__progress-bar,
 		gap: 12px;
 	}
 }
+
+/* ==========================================================================
+   WordPress WYSIWYG Editor & Content / Modal Field Builder Styles
+   ========================================================================== */
+
+.wof-wp-editor-field {
+	margin-bottom: 18px;
+}
+
+.wof-wp-editor-label {
+	display: block;
+	font-size: 11px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #475569;
+	margin-bottom: 8px;
+}
+
+.wof-wp-editor-mount {
+	width: 100%;
+}
+
+.wof-wp-editor-mount .wp-editor-wrap {
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	overflow: hidden;
+	background: #ffffff;
+}
+
+.wof-wp-editor-mount .wp-editor-tools {
+	background: #f6f7f7 !important;
+	padding: 8px 8px 0 !important;
+	border-bottom: 1px solid #dcdcde !important;
+	display: flex !important;
+	align-items: flex-end !important;
+	justify-content: space-between !important;
+	box-sizing: border-box !important;
+	width: 100% !important;
+}
+
+.wof-wp-editor-mount .wp-editor-tools::before,
+.wof-wp-editor-mount .wp-editor-tools::after,
+.wof-wp-editor-mount .wp-editor-tools:before,
+.wof-wp-editor-mount .wp-editor-tools:after {
+	display: none !important;
+	content: none !important;
+	width: 0 !important;
+	height: 0 !important;
+}
+
+.wof-wp-editor-mount .wp-media-buttons {
+	padding: 0 0 6px 0;
+	flex-shrink: 0;
+}
+
+.wof-wp-editor-mount .wp-media-buttons .button {
+	background: #f6f7f7;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	color: #2c3338;
+	font-size: 13px;
+	font-weight: 500;
+	padding: 0 10px 1px;
+	height: 28px;
+	line-height: 26px;
+	cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.wof-wp-editor-mount .wp-media-buttons .button:hover {
+	background: #f0f0f1;
+	border-color: #2271b1;
+	color: #2271b1;
+}
+
+.wof-wp-editor-mount .wp-media-buttons .wp-media-buttons-icon {
+	color: #50575e;
+	display: inline-block;
+	width: 16px;
+	height: 16px;
+	vertical-align: middle;
+}
+
+.wof-wp-editor-mount .wp-media-buttons .wp-media-buttons-icon:before {
+	font-family: dashicons;
+	content: "\f104";
+	font-size: 16px;
+	line-height: 1;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.wof-wp-editor-mount .wp-media-buttons .button:hover .wp-media-buttons-icon {
+	color: #2271b1;
+}
+
+.wof-wp-editor-mount .wp-editor-tabs {
+	display: flex !important;
+	align-items: flex-end !important;
+	gap: 4px !important;
+	margin: 0 0 -1px auto !important;
+	padding: 0 !important;
+	float: none !important;
+}
+
+.wof-wp-editor-mount button.wp-switch-editor,
+.wof-wp-editor-mount .tmce-active button.switch-tmce,
+.wof-wp-editor-mount .html-active button.switch-html,
+.wof-wp-editor-mount button.wp-switch-editor.is-active {
+	float: none !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	box-sizing: border-box !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	max-height: 28px !important;
+	padding: 0 12px !important;
+	margin: 0 !important;
+	font-size: 13px !important;
+	line-height: 26px !important;
+	border: 1px solid #dcdcde !important;
+	border-radius: 4px 4px 0 0 !important;
+	position: relative !important;
+	top: 0 !important;
+	bottom: 0 !important;
+	cursor: pointer !important;
+	box-shadow: none !important;
+	text-decoration: none !important;
+}
+
+/* Inactive Tab */
+.wof-wp-editor-mount button.wp-switch-editor {
+	background: #f0f0f1 !important;
+	color: #646970 !important;
+	border-color: #dcdcde !important;
+	font-weight: 400 !important;
+}
+
+.wof-wp-editor-mount button.wp-switch-editor:hover {
+	background: #f6f7f7 !important;
+	color: #2c3338 !important;
+}
+
+/* Active Tab */
+.wof-wp-editor-mount .tmce-active button.switch-tmce,
+.wof-wp-editor-mount .html-active button.switch-html,
+.wof-wp-editor-mount button.wp-switch-editor.is-active {
+	background: #ffffff !important;
+	color: #2c3338 !important;
+	border-color: #dcdcde !important;
+	border-bottom-color: #ffffff !important;
+	font-weight: 600 !important;
+	z-index: 2 !important;
+}
+
+.wof-wp-editor-mount .wp-editor-container {
+	border: none;
+	background: #ffffff;
+}
+
+.wof-wp-editor-mount .mce-tinymce {
+	border: none !important;
+	box-shadow: none !important;
+	border-radius: 0 !important;
+	width: 100% !important;
+}
+
+.wof-wp-editor-mount .mce-top-part::before {
+	box-shadow: none !important;
+}
+
+.wof-wp-editor-mount .mce-toolbar-grp {
+	background: #f6f7f7 !important;
+	border-bottom: 1px solid #dcdcde !important;
+	padding: 3px 4px !important;
+}
+
+.wof-wp-editor-mount .mce-statusbar {
+	border-top: 1px solid #dcdcde !important;
+	background: #f6f7f7 !important;
+}
+
+.wof-wp-editor-mount textarea.wp-editor-area {
+	border: none;
+	padding: 12px;
+	font-size: 13px;
+	line-height: 1.6;
+	width: 100%;
+	box-sizing: border-box;
+	font-family: Consolas, Monaco, monospace;
+}
+
+/* Preview rendered in Builder Canvas */
+.wof-preview-content-box {
+	width: 100%;
+}
+
+.wof-preview-content-html {
+	font-size: 14px;
+	line-height: 1.6;
+	color: #334155;
+}
+
+.wof-preview-content-html img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 6px;
+	margin: 6px 0;
+	display: block;
+}
+
+.wof-preview-content-empty {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 16px;
+	border: 1.5px dashed #cbd5e1;
+	border-radius: 8px;
+	background: #f8fafc;
+	color: #64748b;
+	font-size: 13px;
+}
+
+.wof-preview-content-empty .dashicons {
+	color: #94a3b8;
+}
+
+/* Modal Preview in Canvas */
+.wof-preview-modal-shell {
+	width: 100%;
+}
+
+.wof-modal-trigger {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 8px 16px;
+	border-radius: 8px;
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.4;
+	cursor: pointer;
+	transition: all 0.18s ease;
+	text-decoration: none;
+	background: transparent;
+	border: 1.5px solid transparent;
+}
+
+.wof-modal-btn--outline {
+	border-color: #cbd5e1;
+	background: #ffffff;
+	color: #1e293b;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.wof-modal-btn--outline:hover {
+	border-color: #5b4ff5;
+	color: #5b4ff5;
+	background: #f8fafc;
+}
+
+.wof-modal-btn--primary {
+	background: #5b4ff5;
+	color: #ffffff;
+	border-color: #5b4ff5;
+}
+
+.wof-modal-btn--primary:hover {
+	background: #473dd1;
+	border-color: #473dd1;
+}
+
+.wof-modal-btn--secondary {
+	background: #0f766e;
+	color: #ffffff;
+	border-color: #0f766e;
+}
+
+.wof-modal-btn--secondary:hover {
+	background: #0d635c;
+	border-color: #0d635c;
+}
+
+.wof-modal-btn--link {
+	padding: 4px 0;
+	border: none;
+	background: none;
+	color: #5b4ff5;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+.wof-modal-btn__icon {
+	flex-shrink: 0;
+}
+
+/* Canvas Modal Preview Dialog Overlay */
+.wof-modal-backdrop.is-canvas-preview {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	background: rgba(15, 23, 42, 0.65);
+	backdrop-filter: blur(4px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 24px;
+	box-sizing: border-box;
+	animation: wofModalFadeIn 0.2s ease-out;
+}
+
+.wof-modal-backdrop.is-canvas-preview .wof-modal-dialog {
+	background: #ffffff;
+	border-radius: 14px;
+	box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+	max-width: 580px;
+	width: 100%;
+	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	position: relative;
+	animation: wofModalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wof-modal-backdrop.is-canvas-preview .wof-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 16px 20px;
+	border-bottom: 1px solid #e2e8f0;
+	background: #ffffff;
+}
+
+.wof-modal-backdrop.is-canvas-preview .wof-modal-title {
+	margin: 0;
+	font-size: 17px;
+	font-weight: 700;
+	color: #0f172a;
+}
+
+.wof-modal-backdrop.is-canvas-preview .wof-modal-close {
+	background: #f1f5f9;
+	border: none;
+	width: 30px;
+	height: 30px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 18px;
+	line-height: 1;
+	color: #64748b;
+	cursor: pointer;
+	padding: 0;
+	transition: all 0.15s ease;
+}
+
+.wof-modal-backdrop.is-canvas-preview .wof-modal-close:hover {
+	background: #e2e8f0;
+	color: #0f172a;
+}
+
+.wof-modal-backdrop.is-canvas-preview .wof-modal-body {
+	padding: 20px;
+	overflow-y: auto;
+	font-size: 14px;
+	line-height: 1.6;
+	color: #334155;
+}
+
+.wof-modal-backdrop.is-canvas-preview .wof-modal-body img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 6px;
+	margin: 8px 0;
+	display: block;
+}

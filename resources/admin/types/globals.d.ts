@@ -19,6 +19,7 @@ declare const wp: {
   };
   apiFetch: any;
   media: any;
+  editor?: any;
   i18n: {
     __: (text: string, domain?: string) => string;
     sprintf: (format: string, ...args: any[]) => string;
@@ -28,6 +29,8 @@ declare const wp: {
 declare interface Window {
   WooOptionsFicAdmin: WooOptionsFic.AdminBootstrap;
   jQuery?: any;
+  wp?: any;
+  tinymce?: any;
 }
 
 declare namespace JSX {

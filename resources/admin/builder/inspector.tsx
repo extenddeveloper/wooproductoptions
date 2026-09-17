@@ -2388,10 +2388,12 @@ namespace WooOptionsFic.Builder {
     if (!props.field) return <aside className="wof-builder-inspector"><div className="wof-builder-pane__heading"><div><span className="wof-eyebrow">{__('Style', 'wooptionsfic')}</span><h2>{__('Option set styling', 'wooptionsfic')}</h2></div></div><div className="wof-inspector-body"><section className="wof-inspector-section"><StyleStudio document={props.document} onChange={props.onDocumentChange} /></section></div></aside>;
     const field = props.field;
     const update = (patch: Partial<WooOptionsFic.FieldDefinition>) => props.onFieldChange({ ...field, ...patch });
-    const isLayoutBlock = ['spacer', 'separator'].includes(field.type);
-    const visibleTabs = isLayoutBlock
-      ? tabs.filter(([tab]) => ['content', 'logic', 'style', 'advanced'].includes(tab))
-      : tabs.filter(([tab]) => tab !== 'choices' || Boolean(field.choices));
+    const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help'];
+    const visibleTabs = tabs.filter(([tab]) => {
+      if (tab === 'choices' && !Boolean(field.choices)) return false;
+      if (tab === 'pricing' && contentFieldTypes.includes(field.type)) return false;
+      return true;
+    });
     const activeTab = visibleTabs.some(([tab]) => tab === props.tab) ? props.tab : 'content';
 
     return <aside className="wof-builder-inspector">
@@ -2474,6 +2476,97 @@ namespace WooOptionsFic.Builder {
                   onChange={(height: number) => update({ height, style: { ...(field.style ?? {}), height } })}
                 />
 
+                <div className="wof-field-width-setting">
+                  <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+                  <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+                    {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+                      const isSelected = (field.width || '100%') === w;
+                      return (
+                        <button
+                          type="button"
+                          key={w}
+                          role="radio"
+                          aria-checked={isSelected}
+                          className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                          onClick={() => update({ width: w })}
+                        >
+                          {w}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : field.type === 'content' ? (
+              <div className="wof-content-field-settings">
+                <TextControl
+                  label={__('Label (Internal reference)', 'wooptionsfic')}
+                  value={field.label}
+                  onChange={(label: string) => update({ label })}
+                />
+                <WooOptionsFic.Components.WpWysiwygEditor
+                  id={field.uuid}
+                  label={__('Content', 'wooptionsfic')}
+                  value={field.content ?? ''}
+                  onChange={(content: string) => update({ content })}
+                />
+                <div className="wof-field-width-setting">
+                  <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+                  <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+                    {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+                      const isSelected = (field.width || '100%') === w;
+                      return (
+                        <button
+                          type="button"
+                          key={w}
+                          role="radio"
+                          aria-checked={isSelected}
+                          className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                          onClick={() => update({ width: w })}
+                        >
+                          {w}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : field.type === 'modal' ? (
+              <div className="wof-modal-field-settings">
+                <TextControl
+                  label={__('Label (Internal reference)', 'wooptionsfic')}
+                  value={field.label}
+                  onChange={(label: string) => update({ label })}
+                />
+                <TextControl
+                  label={__('Button Text', 'wooptionsfic')}
+                  value={field.buttonText ?? 'View details'}
+                  placeholder={__('e.g. Size Guide, View details', 'wooptionsfic')}
+                  onChange={(buttonText: string) => update({ buttonText })}
+                />
+                <SelectControl
+                  label={__('Button Style', 'wooptionsfic')}
+                  value={field.buttonStyle ?? 'outline'}
+                  options={[
+                    { label: __('Outline', 'wooptionsfic'), value: 'outline' },
+                    { label: __('Primary', 'wooptionsfic'), value: 'primary' },
+                    { label: __('Secondary', 'wooptionsfic'), value: 'secondary' },
+                    { label: __('Link / Text only', 'wooptionsfic'), value: 'link' },
+                  ]}
+                  onChange={(buttonStyle: 'outline' | 'primary' | 'secondary' | 'link') => update({ buttonStyle })}
+                />
+                <TextControl
+                  label={__('Modal Header Title', 'wooptionsfic')}
+                  value={field.modalTitle ?? 'Information'}
+                  placeholder={__('e.g. Size Guide & Dimensions', 'wooptionsfic')}
+                  onChange={(modalTitle: string) => update({ modalTitle })}
+                />
+                <WooOptionsFic.Components.WpWysiwygEditor
+                  id={field.uuid}
+                  label={__('Modal Content', 'wooptionsfic')}
+                  value={field.content ?? ''}
+                  onChange={(content: string) => update({ content })}
+                />
                 <div className="wof-field-width-setting">
                   <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
                   <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>

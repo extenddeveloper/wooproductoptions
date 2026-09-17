@@ -182,6 +182,17 @@ namespace WooOptionsFic.FieldFactory {
       field.color = '#E2E8F0';
       field.style = { height: 1, color: '#E2E8F0' };
     }
+    if (type === 'content') {
+      field.label = 'Content';
+      field.content = '<p>Add rich product description or information here.</p>';
+    }
+    if (type === 'modal') {
+      field.label = 'Modal';
+      field.buttonText = 'View details';
+      field.modalTitle = 'Product Details';
+      field.buttonStyle = 'outline';
+      field.content = '<p>Add modal popup information and images here.</p>';
+    }
 
     return field;
   }

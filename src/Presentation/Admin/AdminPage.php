@@ -53,6 +53,18 @@ final class AdminPage {
 		$asset = WOOPTIONSFIC_PATH . 'build/admin.asset.php';
 		$meta  = is_readable($asset) ? require $asset : ['dependencies' => [], 'version' => WOOPTIONSFIC_VERSION];
 		wp_enqueue_media();
+		if (function_exists('wp_enqueue_editor')) {
+			wp_enqueue_editor();
+		} elseif (file_exists(ABSPATH . WPINC . '/class-wp-editor.php')) {
+			require_once ABSPATH . WPINC . '/class-wp-editor.php';
+			if (class_exists('\_WP_Editors')) {
+				\_WP_Editors::enqueue_default_editor();
+			}
+		}
+		wp_enqueue_script('editor');
+		wp_enqueue_script('quicktags');
+		wp_enqueue_script('wp-tinymce');
+		wp_enqueue_style('editor-buttons');
 		wp_enqueue_script(
 			'wooptionsfic-admin',
 			WOOPTIONSFIC_URL . 'build/admin.js',
@@ -139,6 +151,16 @@ final class AdminPage {
 		echo '<div id="wooptionsfic-admin-root">';
 		echo '<div class="wof-admin-loading"><span class="spinner is-active"></span><p>' . esc_html__('Opening your option workshop…', 'wooptionsfic') . '</p></div>';
 		echo '</div>';
+		// Preload WP Editor / TinyMCE scripts, quicktags, media buttons, and templates for dynamic React editor instances.
+		if (function_exists('wp_editor')) {
+			echo '<div style="display:none;" aria-hidden="true">';
+			wp_editor('', 'wof_admin_dummy_editor', [
+				'tinymce'       => true,
+				'quicktags'     => true,
+				'media_buttons' => true,
+			]);
+			echo '</div>';
+		}
 		echo '<noscript><div class="notice notice-error"><p>' . esc_html__('WooOptionsFic’s administration builder requires JavaScript. Storefront basic fields still have a server-rendered fallback.', 'wooptionsfic') . '</p></div></noscript>';
 		echo '</div>';
 	}
