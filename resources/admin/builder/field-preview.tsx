@@ -133,7 +133,22 @@ namespace WooOptionsFic.Builder {
     if (field.type === 'heading') return <h3 className="wof-preview-heading">{field.label}</h3>;
     if (field.type === 'paragraph') return <p className="wof-preview-paragraph">{field.description || field.label}</p>;
     if (field.type === 'help') return <div className="wof-preview-help">{field.description || field.help || field.label}</div>;
-    if (field.type === 'separator') return <hr className="wof-preview-separator" />;
+    if (field.type === 'separator') {
+      const h = Number(field.height ?? (field.style as any)?.height ?? 1);
+      const color = String(field.color ?? (field.style as any)?.color ?? '#E2E8F0');
+      return (
+        <hr
+          className="wof-preview-separator"
+          style={{
+            height: `${Math.max(1, h)}px`,
+            backgroundColor: color,
+            border: 'none',
+            margin: '8px 0',
+            width: '100%',
+          }}
+        />
+      );
+    }
     if (field.type === 'spacer') {
       const h = Number(field.height ?? (field.style as any)?.height ?? 24);
       return <div className="wof-preview-spacer" style={{ height: `${Math.max(0, h)}px` }} />;

@@ -196,9 +196,16 @@ final class Renderer {
 			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
 				$width = '100%';
 			}
-			$classes = 'wof-field wof-field--spacer wof-spacer wof-field--width-' . str_replace('%', '', $width);
-			$style   = 'height:' . $height . 'px;min-height:' . $height . 'px;';
-			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="spacer" style="' . esc_attr($style) . '" aria-hidden="true"></div>';
+			$is_disabled = ! empty($field['disabled']);
+			$classes     = 'wof-field wof-field--spacer wof-spacer wof-field--width-' . str_replace('%', '', $width);
+			if ($is_disabled) {
+				$classes .= ' is-disabled';
+			}
+			$style = 'height:' . $height . 'px;min-height:' . $height . 'px;';
+			if ($is_disabled) {
+				$style .= 'display:none;';
+			}
+			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="spacer" style="' . esc_attr($style) . '"' . ($is_disabled ? ' hidden' : '') . ' aria-hidden="true"></div>';
 			return;
 		}
 		if (in_array($type, ['heading', 'paragraph', 'help', 'separator'], true)) {
@@ -206,7 +213,10 @@ final class Renderer {
 			return;
 		}
 		if (in_array($type, ['formula', 'calculated'], true)) {
-			echo '<div class="wof-field wof-field--calculated" data-wof-field="' . esc_attr($uuid) . '">';
+			$is_disabled = ! empty($field['disabled']);
+			$classes     = 'wof-field wof-field--calculated' . ($is_disabled ? ' is-disabled' : '');
+			$style       = $is_disabled ? ' style="display:none;"' : '';
+			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '"' . $style . ($is_disabled ? ' hidden' : '') . '>';
 			echo '<span class="wof-field__label">' . esc_html((string) $field['label']) . '</span>';
 			echo '<output data-wof-calculated="' . esc_attr($uuid) . '">—</output></div>';
 			return;
@@ -214,12 +224,16 @@ final class Renderer {
 
 		$description_id = 'wof-description-' . str_replace('-', '', $uuid);
 		$required       = ! empty($field['required']);
+		$is_disabled    = ! empty($field['disabled']);
 		$width          = (string) ($field['width'] ?? '100%');
 		if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
 			$width = '100%';
 		}
 		$classes        = 'wof-field wof-field--' . sanitize_html_class($type);
 		$classes       .= ' wof-field--width-' . str_replace('%', '', $width);
+		if ($is_disabled) {
+			$classes .= ' is-disabled';
+		}
 		// Apply imageStyle modifier class for visual style variants.
 		if (in_array($type, ['color_swatch', 'image_swatch', 'product'], true)) {
 			$img_style_val = (string) ($field['imageStyle'] ?? 'default');
@@ -229,6 +243,9 @@ final class Renderer {
 		}
 
 		echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="' . esc_attr($type) . '"';
+		if ($is_disabled) {
+			echo ' hidden style="display:none;"';
+		}
 		if ('image_swatch' === $type && ! empty($field['updateProductImage'])) {
 			echo ' data-wof-update-product-image="1"';
 		}
@@ -1336,16 +1353,39 @@ final class Renderer {
 	 * @param array<string,mixed> $field Content field.
 	 */
 	private function render_content(array $field): void {
-		$type    = (string) $field['type'];
-		$content = (string) ($field['content'] ?? $field['label'] ?? '');
+		$type        = (string) $field['type'];
+		$content     = (string) ($field['content'] ?? $field['label'] ?? '');
+		$uuid        = (string) ($field['uuid'] ?? '');
+		$is_disabled = ! empty($field['disabled']);
+		$hidden_attr = $is_disabled ? ' hidden style="display:none;"' : '';
+		$dis_cls     = $is_disabled ? ' is-disabled' : '';
+
 		if ('heading' === $type) {
-			echo '<h3 class="wof-content-heading">' . esc_html($content) . '</h3>';
+			echo '<h3 class="wof-content-heading' . esc_attr($dis_cls) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>' . esc_html($content) . '</h3>';
 		} elseif (in_array($type, ['paragraph', 'help'], true)) {
-			echo '<div class="wof-content wof-content--' . esc_attr($type) . '">' . wp_kses_post($content) . '</div>';
+			echo '<div class="wof-content wof-content--' . esc_attr($type) . esc_attr($dis_cls) . '" data-wof-field="' . esc_attr($uuid) . '"' . $hidden_attr . '>' . wp_kses_post($content) . '</div>';
 		} elseif ('separator' === $type) {
-			echo '<hr class="wof-separator">';
+			$width  = (string) ($field['width'] ?? '100%');
+			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
+				$width = '100%';
+			}
+			$height = isset($field['height']) ? (int) $field['height'] : (isset($field['style']['height']) ? (int) $field['style']['height'] : 1);
+			if ($height < 1) {
+				$height = 1;
+			}
+			$color = sanitize_hex_color((string) ($field['color'] ?? ($field['style']['color'] ?? '')));
+			$style = 'border:none;height:' . $height . 'px;';
+			if (! empty($color)) {
+				$style .= 'background-color:' . $color . ';';
+			}
+			if ($is_disabled) {
+				$style .= 'display:none;';
+			}
+			$classes = 'wof-separator wof-field--width-' . str_replace('%', '', $width) . $dis_cls;
+			echo '<hr class="' . esc_attr($classes) . '" style="' . esc_attr($style) . '" data-wof-field="' . esc_attr($uuid) . '"' . ($is_disabled ? ' hidden' : '') . ' aria-hidden="true">';
 		} else {
-			echo '<div class="wof-spacer" aria-hidden="true"></div>';
+			$style = $is_disabled ? ' style="display:none;"' : '';
+			echo '<div class="wof-spacer' . esc_attr($dis_cls) . '" data-wof-field="' . esc_attr($uuid) . '"' . $style . ($is_disabled ? ' hidden' : '') . ' aria-hidden="true"></div>';
 		}
 	}
 

@@ -49,15 +49,28 @@ final class RuleEngine {
 	 * @return array<string, array{visible:bool,enabled:bool,required:bool,help:?string}>
 	 */
 	public function resolve_field_states(array $compiled, array $values, array $context = []): array {
-		$states = [];
+		$states          = [];
+		$disabled_fields = [];
 		foreach ((array) ($compiled['fields'] ?? []) as $field) {
 			$uuid = (string) ($field['uuid'] ?? '');
 			if ('' === $uuid) {
 				continue;
 			}
+			$is_disabled = ! empty($field['disabled']);
+			if ($is_disabled) {
+				$disabled_fields[$uuid] = true;
+				$states[$uuid]          = [
+					'visible'  => false,
+					'enabled'  => false,
+					'required' => false,
+					'help'     => null,
+				];
+				continue;
+			}
+
 			$states[$uuid] = [
-				'visible'  => empty($field['disabled']),
-				'enabled'  => empty($field['disabled']),
+				'visible'  => true,
+				'enabled'  => true,
 				'required' => ! empty($field['required']),
 				'help'     => null,
 			];
@@ -80,7 +93,7 @@ final class RuleEngine {
 			foreach ((array) ($rule['actions'] ?? []) as $action) {
 				$target = (string) ($action['target'] ?? '');
 				$type   = (string) ($action['type'] ?? '');
-				if (! isset($states[$target])) {
+				if (! isset($states[$target]) || ! empty($disabled_fields[$target])) {
 					continue;
 				}
 				switch ($type) {

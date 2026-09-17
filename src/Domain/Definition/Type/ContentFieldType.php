@@ -20,6 +20,12 @@ final class ContentFieldType extends AbstractFieldType {
 	public function normalize_definition(array $definition): array {
 		$normalized            = $this->base_definition($definition);
 		$normalized['content'] = (string) ($definition['content'] ?? '');
+		if (isset($definition['height'])) {
+			$normalized['height'] = (int) $definition['height'];
+		}
+		if (isset($definition['color']) && '' !== (string) $definition['color']) {
+			$normalized['color'] = sanitize_hex_color((string) $definition['color']) ?: (string) $definition['color'];
+		}
 		return $normalized;
 	}
 

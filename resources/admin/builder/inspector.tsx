@@ -2311,17 +2311,22 @@ namespace WooOptionsFic.Builder {
 
   function SpacerHeightControl(props: {
     value: number;
+    defaultValue?: number;
+    min?: number;
+    max?: number;
+    label?: string;
     onChange: (value: number) => void;
   }): any {
-    const min = 0;
-    const max = 300;
-    const currentVal = Number.isFinite(props.value) ? Math.max(0, props.value) : 24;
+    const min = props.min ?? 0;
+    const max = props.max ?? 300;
+    const def = props.defaultValue ?? 24;
+    const currentVal = Number.isFinite(props.value) ? Math.max(min, props.value) : def;
     const pct = Math.min(100, Math.max(0, ((currentVal - min) / (max - min)) * 100));
 
     return (
       <div className="wof-spacer-height-control">
         <label className="wof-spacer-height-label" htmlFor="wof-spacer-height-slider">
-          {__('HEIGHT (PX)', 'wooptionsfic')}
+          {props.label ?? __('HEIGHT (PX)', 'wooptionsfic')}
         </label>
         <div className="wof-spacer-height-row">
           <input
@@ -2335,18 +2340,18 @@ namespace WooOptionsFic.Builder {
             }}
             className="wof-spacer-slider"
             onChange={(e: any) => props.onChange(Number(e.target.value))}
-            aria-label={__('Height in pixels', 'wooptionsfic')}
+            aria-label={props.label ?? __('Height in pixels', 'wooptionsfic')}
           />
           <input
             type="number"
-            min={0}
+            min={min}
             value={currentVal}
             className="wof-spacer-number-input"
             onChange={(e: any) => {
-              const val = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value, 10) || 0);
+              const val = e.target.value === '' ? min : Math.max(min, parseInt(e.target.value, 10) || min);
               props.onChange(val);
             }}
-            aria-label={__('Height in pixels input', 'wooptionsfic')}
+            aria-label={props.label ?? __('Height in pixels input', 'wooptionsfic')}
           />
         </div>
       </div>
@@ -2383,16 +2388,17 @@ namespace WooOptionsFic.Builder {
     if (!props.field) return <aside className="wof-builder-inspector"><div className="wof-builder-pane__heading"><div><span className="wof-eyebrow">{__('Style', 'wooptionsfic')}</span><h2>{__('Option set styling', 'wooptionsfic')}</h2></div></div><div className="wof-inspector-body"><section className="wof-inspector-section"><StyleStudio document={props.document} onChange={props.onDocumentChange} /></section></div></aside>;
     const field = props.field;
     const update = (patch: Partial<WooOptionsFic.FieldDefinition>) => props.onFieldChange({ ...field, ...patch });
-    const visibleTabs = field.type === 'spacer'
-      ? tabs.filter(([tab]) => tab === 'content' || tab === 'logic')
+    const isLayoutBlock = ['spacer', 'separator'].includes(field.type);
+    const visibleTabs = isLayoutBlock
+      ? tabs.filter(([tab]) => ['content', 'logic', 'style', 'advanced'].includes(tab))
       : tabs.filter(([tab]) => tab !== 'choices' || Boolean(field.choices));
-    const activeTab = (field.type === 'spacer' && props.tab !== 'logic') ? 'content' : props.tab;
+    const activeTab = visibleTabs.some(([tab]) => tab === props.tab) ? props.tab : 'content';
 
     return <aside className="wof-builder-inspector">
       <div className="wof-builder-pane__heading">
         <div>
           <span className="wof-eyebrow">{window.WooOptionsFicAdmin.fieldTypes[field.type]?.label ?? field.type}</span>
-          <h2>{field.type === 'spacer' ? __('Spacer', 'wooptionsfic') : field.label}</h2>
+          <h2>{field.type === 'spacer' ? __('Spacer', 'wooptionsfic') : field.type === 'separator' ? __('Separator', 'wooptionsfic') : field.label}</h2>
         </div>
         <div className="wof-inspector-heading-actions">
           <button type="button" onClick={props.onDuplicate} aria-label={__('Duplicate field', 'wooptionsfic')} title={__('Duplicate', 'wooptionsfic')}>
@@ -2425,10 +2431,46 @@ namespace WooOptionsFic.Builder {
       <div className="wof-inspector-body">
         <section className="wof-inspector-section">
           {activeTab === 'content' ? (
-            field.type === 'spacer' ? (
+            field.type === 'separator' ? (
+              <div className="wof-spacer-settings">
+                <SpacerHeightControl
+                  value={Number(field.height ?? (field.style as any)?.height ?? 1)}
+                  defaultValue={1}
+                  onChange={(height: number) => update({ height, style: { ...(field.style ?? {}), height } })}
+                />
+
+                <ChoiceColorControl
+                  label={__('Spacer color', 'wooptionsfic')}
+                  color={String(field.color ?? (field.style as any)?.color ?? '#E2E8F0')}
+                  onChange={(color: string) => update({ color, style: { ...(field.style ?? {}), color } })}
+                />
+
+                <div className="wof-field-width-setting">
+                  <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+                  <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+                    {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+                      const isSelected = (field.width || '100%') === w;
+                      return (
+                        <button
+                          type="button"
+                          key={w}
+                          role="radio"
+                          aria-checked={isSelected}
+                          className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                          onClick={() => update({ width: w })}
+                        >
+                          {w}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            ) : field.type === 'spacer' ? (
               <div className="wof-spacer-settings">
                 <SpacerHeightControl
                   value={Number(field.height ?? (field.style as any)?.height ?? 24)}
+                  defaultValue={24}
                   onChange={(height: number) => update({ height, style: { ...(field.style ?? {}), height } })}
                 />
 

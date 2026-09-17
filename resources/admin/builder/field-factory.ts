@@ -177,6 +177,11 @@ namespace WooOptionsFic.FieldFactory {
       field.height = 24;
       field.style = { height: 24 };
     }
+    if (type === 'separator') {
+      field.height = 1;
+      field.color = '#E2E8F0';
+      field.style = { height: 1, color: '#E2E8F0' };
+    }
 
     return field;
   }

@@ -1841,11 +1841,13 @@
 	width: 100%;
 }
 
-.wof-canvas-field--spacer {
+.wof-canvas-field--spacer,
+.wof-canvas-field--separator {
 	min-height: auto;
 }
 
-.wof-canvas-field--spacer .wof-canvas-field__preview {
+.wof-canvas-field--spacer .wof-canvas-field__preview,
+.wof-canvas-field--separator .wof-canvas-field__preview {
 	width: 100%;
 }
 

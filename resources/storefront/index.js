@@ -18,7 +18,22 @@
         productImageSnapshot = null;
         hasSubmitted = !1;
         constructor(e) { this.root = e; const t = e.querySelector("[data-wof-config]"); if (!t?.textContent)
-            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; }), this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.initCustomDateRanges(), this.initCustomColorPickers(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
+            throw new Error("WooOptionsFic configuration payload is missing."); this.payload = JSON.parse(t.textContent), this.configuration = this.payload.configuration, this.form = e.closest("form.cart"), this.root.querySelectorAll("input, select, textarea").forEach(e => { e.disabled && (e.dataset.wofFixedDisabled = "true"), e.required = !1; });
+            (this.configuration?.fields ?? []).forEach(f => {
+                if (f && f.disabled && f.uuid) {
+                    const el = this.root.querySelector(`[data-wof-field="${r(f.uuid)}"]`);
+                    if (el) {
+                        el.hidden = true;
+                        el.style.display = "none";
+                        el.classList.add("is-disabled");
+                        el.querySelectorAll("input, select, textarea").forEach(inp => {
+                            inp.disabled = true;
+                            inp.dataset.wofFixedDisabled = "true";
+                        });
+                    }
+                }
+            });
+            this.bind(), this.updateRangeOutputs(), this.updateColorOutputs(), this.initCustomSelects(), this.initCustomDateTimes(), this.initCustomDateRanges(), this.initCustomColorPickers(), this.applyConfigurationSettings(), this.applyConfigurationStyle(), this.loadSharedConfiguration(), this.updateProductImage(), this.enforceMaxChoices(), this.scheduleQuote(50); }
         bind() {
             this.root.addEventListener("input", e => {
                 const t = e.target;
@@ -890,6 +905,7 @@
         readProductVariations() {
             const productVariations = {};
             this.root.querySelectorAll(".wof-product-variation-select").forEach(sel => {
+                if (sel.closest("[hidden]") || sel.closest(".is-disabled")) return;
                 const choiceUuid = sel.dataset.wofChoiceUuid || (sel.name.match(/_var\[([a-zA-Z0-9_-]+)\]/) || [])[1] || "";
                 if (choiceUuid && sel.value) {
                     productVariations[choiceUuid] = sel.value;
@@ -900,6 +916,7 @@
         readChoiceQuantities() {
             const choiceQuantities = {};
             this.root.querySelectorAll(".wof-choice-qty-input").forEach(inp => {
+                if (inp.closest("[hidden]") || inp.closest(".is-disabled")) return;
                 const choiceUuid = inp.dataset.wofChoiceUuid || (inp.name.match(/_qty\[([a-zA-Z0-9_-]+)\]/) || [])[1] || "";
                 if (choiceUuid && inp.value) {
                     choiceQuantities[choiceUuid] = inp.value;
@@ -986,7 +1003,7 @@
         ensureTypographyFont(e) { const t = { Inter: "Inter:wght@300;400;500;600;700;800", Manrope: "Manrope:wght@300;400;500;600;700;800", Poppins: "Poppins:wght@300;400;500;600;700;800", Outfit: "Outfit:wght@300;400;500;600;700;800", "Plus Jakarta Sans": "Plus+Jakarta+Sans:wght@300;400;500;600;700;800", Roboto: "Roboto:wght@300;400;500;600;700;800" }[e]; if (!t)
             return; const o = `wooptionsfic-font-${e.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`; if (document.getElementById(o))
             return; const r = document.createElement("link"); r.id = o, r.rel = "stylesheet", r.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(t).replace(/%3A/g, ":").replace(/%40/g, "@").replace(/%3B/g, ";").replace(/%2B/g, "+")}&display=swap`, r.crossOrigin = "anonymous", document.head.append(r); }
-        readSelection() { const e = {}; return this.configuration.fields.forEach(t => { this.acceptsValue(t) && (e[t.uuid] = this.readField(t, this.root)); }), e; }
+        readSelection() { const e = {}; return (this.configuration?.fields ?? []).forEach(t => { (!t.disabled && this.acceptsValue(t)) && (e[t.uuid] = this.readField(t, this.root)); }), e; }
         readField(e, t) { const o = t.querySelector(`[data-wof-field="${r(e.uuid)}"]`); if (!o)
             return null; if ("repeater" === e.type)
             return Array.from(o.querySelectorAll(":scope [data-wof-row]")).map(t => { const o = {}; return (e.children ?? []).forEach(e => { o[e.uuid] = this.readField(e, t); }), { rowUuid: t.dataset.wofRow, values: o }; }); if ("checkbox" === e.type || "toggle" === e.type)
@@ -1112,16 +1129,22 @@
             }
         }
         applyStates(e) {
-            Object.entries(e ?? {}).forEach(([e, t]) => {
-                const o = this.root.querySelector(`[data-wof-field="${r(e)}"]`);
+            Object.entries(e ?? {}).forEach(([uuid, t]) => {
+                const o = this.root.querySelector(`[data-wof-field="${r(uuid)}"]`);
                 if (!o) return;
-                o.hidden = !t.visible;
-                o.classList.toggle("is-disabled", !t.enabled);
-                const isFieldActive = !!t.visible && !!t.enabled;
-                o.querySelectorAll("input, select, textarea").forEach(e => {
-                    e.disabled = !isFieldActive || "true" === e.dataset.wofFixedDisabled;
-                    e.required = !1;
-                    t.required && isFieldActive ? e.setAttribute("aria-required", "true") : e.removeAttribute("aria-required");
+                const fieldDef = (this.configuration?.fields ?? []).find(f => f && f.uuid === uuid);
+                const isExplicitlyDisabled = Boolean(fieldDef && fieldDef.disabled);
+                const isVisible = isExplicitlyDisabled ? false : Boolean(t.visible);
+                const isEnabled = isExplicitlyDisabled ? false : Boolean(t.enabled);
+
+                o.hidden = !isVisible;
+                o.style.display = isVisible ? "" : "none";
+                o.classList.toggle("is-disabled", !isEnabled);
+                const isFieldActive = isVisible && isEnabled;
+                o.querySelectorAll("input, select, textarea").forEach(inp => {
+                    inp.disabled = !isFieldActive || "true" === inp.dataset.wofFixedDisabled || isExplicitlyDisabled;
+                    inp.required = false;
+                    t.required && isFieldActive ? inp.setAttribute("aria-required", "true") : inp.removeAttribute("aria-required");
                 });
             });
             this.enforceMaxChoices();
