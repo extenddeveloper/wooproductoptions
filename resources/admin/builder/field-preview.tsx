@@ -331,7 +331,7 @@ namespace WooOptionsFic.Builder {
             return (
               <label className={`wof-preview-checkbox-item${isSelected ? ' is-selected' : ''}`} key={choice.uuid}>
                 <span className="wof-preview-checkbox-item__indicator">
-                  {isSelected ? renderCheckSvg(10) : null}
+                  {isSelected ? renderCheckSvg(18, true) : null}
                 </span>
                 {Boolean(choice.imageId || choice.imageUrl) ? (
                   <span

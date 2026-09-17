@@ -2160,12 +2160,11 @@
 
 .wof-preview-color-block__swatch {
 	border: 2px solid var(--wof-preview-border, #dfe3ed);
-	border-radius: 5px;
 	display: block;
-	height: 50px;
+	height: 82px;
 	position: relative;
 	transition: border-color .12s ease, box-shadow .12s ease;
-	width: 50px;
+	width: 82px;
 }
 
 .wof-preview-color-block.is-selected .wof-preview-color-block__swatch {
@@ -2224,15 +2223,14 @@
 	align-items: center;
 	background: color-mix(in srgb, var(--wof-preview-border, #dfe3ed) 40%, var(--wof-preview-surface, #fff));
 	border: 2px solid var(--wof-preview-border, #dfe3ed);
-	border-radius: 5px;
 	color: var(--wof-preview-muted, #a0a8b8);
 	display: flex;
 	font-size: 18px;
-	height: 50px;
+	height: 82px;
 	justify-content: center;
 	overflow: hidden;
 	transition: border-color .12s ease, box-shadow .12s ease;
-	width: 50px;
+	width: 82px;
 }
 
 .wof-preview-image-tile.is-selected .wof-preview-image-tile__thumb {
@@ -11309,8 +11307,6 @@
 	align-items: center !important;
 	gap: 10px !important;
 	padding: 8px 12px !important;
-	border: 1.5px solid #e2e8f0 !important;
-	border-radius: 8px !important;
 	background: #ffffff !important;
 	cursor: default !important;
 }

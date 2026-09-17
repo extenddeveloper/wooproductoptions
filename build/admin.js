@@ -2314,7 +2314,7 @@ var WooOptionsFic;
                         (Array.isArray(field.default) && field.default.includes(choice.uuid)) ||
                         (typeof field.default === 'string' && field.default === choice.uuid));
                     return (wp.element.createElement("label", { className: `wof-preview-checkbox-item${isSelected ? ' is-selected' : ''}`, key: choice.uuid },
-                        wp.element.createElement("span", { className: "wof-preview-checkbox-item__indicator" }, isSelected ? renderCheckSvg(10) : null),
+                        wp.element.createElement("span", { className: "wof-preview-checkbox-item__indicator" }, isSelected ? renderCheckSvg(18, true) : null),
                         Boolean(choice.imageId || choice.imageUrl) ? (wp.element.createElement("span", { style: {
                                 width: '32px',
                                 height: '32px',
