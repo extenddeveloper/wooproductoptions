@@ -61,6 +61,14 @@ final class ChoiceFieldType extends AbstractFieldType {
 				'linkedQuantity'    => max(1, min(100, (int) ($choice['linkedQuantity'] ?? 1))),
 				'preview'           => is_array($choice['preview'] ?? null) ? $choice['preview'] : [],
 			];
+			if ('font' === $this->type_key) {
+				$choice_entry['fontFamily']   = self::plain_text((string) ($choice['fontFamily'] ?? ''), 120);
+				$choice_entry['fontCategory'] = self::plain_text((string) ($choice['fontCategory'] ?? ''), 60);
+				$choice_entry['fontSource']   = in_array($choice['fontSource'] ?? '', ['google', 'system', 'custom'], true) ? $choice['fontSource'] : 'google';
+				if ('' === $choice_entry['fontFamily']) {
+					$choice_entry['fontFamily'] = $choice_entry['label'];
+				}
+			}
 			if ($is_product_type) {
 				$choice_entry['productId']           = max(0, (int) ($choice['productId'] ?? ($choice['linkedProductId'] ?? 0)));
 				if ($choice_entry['productId'] > 0 && (empty($choice_entry['label']) || 'Choice' === $choice_entry['label']) && function_exists('wc_get_product')) {
@@ -186,6 +194,16 @@ final class ChoiceFieldType extends AbstractFieldType {
 		$normalized['imageStyle']         = $this->normalize_image_style((string) ($definition['imageStyle'] ?? ''));
 		if ('product' === $this->type_key) {
 			$normalized['mergeVariationProducts'] = ! empty($definition['mergeVariationProducts']);
+		}
+		if ('font' === $this->type_key) {
+			$applied = [];
+			foreach ((array) ($definition['appliedFields'] ?? []) as $field_id) {
+				$fid = strtolower(trim((string) $field_id));
+				if ('' !== $fid && preg_match('/^[a-z0-9_-]+$/i', $fid)) {
+					$applied[] = $fid;
+				}
+			}
+			$normalized['appliedFields'] = array_values(array_unique($applied));
 		}
 		return $normalized;
 	}

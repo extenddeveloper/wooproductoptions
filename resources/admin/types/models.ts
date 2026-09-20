@@ -14,10 +14,20 @@ namespace WooOptionsFic {
     initialRoute: string;
     fieldTypes: Record<string, FieldTypeManifest>;
     palettes: Record<string, PalettePreset>;
+    fontCatalog?: FontCatalogItem[];
     settings: Record<string, unknown>;
     wooAvailable: boolean;
     currentUser: { id: number; name: string };
     urls: { products: string; siteHealth: string };
+  }
+
+  export interface FontCatalogItem {
+    id: string;
+    name: string;
+    family: string;
+    googleParam?: string | null;
+    category: string;
+    source: 'google' | 'system' | 'custom';
   }
 
   export interface FieldTypeManifest {
@@ -79,6 +89,10 @@ namespace WooOptionsFic {
       isVariable: boolean;
       variations: ProductVariationInfo[];
     };
+    // Font field specific
+    fontFamily?: string;
+    fontCategory?: string;
+    fontSource?: 'google' | 'system' | 'custom';
   }
 
   export interface ConditionLeaf {
@@ -184,6 +198,7 @@ namespace WooOptionsFic {
     children?: FieldDefinition[];
     minRows?: number;
     maxRows?: number;
+    appliedFields?: UUID[];
   }
 
   export interface TypographyDefinition {

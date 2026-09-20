@@ -1,11 +1,362 @@
 namespace WooOptionsFic.Pages {
-  const { Button, TextControl, ToggleControl } = wp.components;
+  const { Button, SelectControl, TextControl, ToggleControl } = wp.components;
   const { __ } = wp.i18n;
   const { useEffect, useState } = wp.element;
 
+  function CustomFontsManager(props: {
+    fonts: any[];
+    onChange: (fonts: any[]) => void;
+  }): any {
+    const [name, setName] = useState('');
+    const [weight, setWeight] = useState('400');
+    const [style, setStyle] = useState<'normal' | 'italic'>('normal');
+    const [files, setFiles] = useState<Record<string, string>>({});
+
+    // Inject @font-face rules into DOM for instant live preview
+    useEffect(() => {
+      let styleTag = document.getElementById('wof-custom-fonts-live') as HTMLStyleElement;
+      if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'wof-custom-fonts-live';
+        document.head.appendChild(styleTag);
+      }
+      let css = '';
+      props.fonts.forEach((f) => {
+        if (!f.files) return;
+        const srcs: string[] = [];
+        if (f.files.woff2) srcs.push(`url('${f.files.woff2}') format('woff2')`);
+        if (f.files.woff) srcs.push(`url('${f.files.woff}') format('woff')`);
+        if (f.files.ttf) srcs.push(`url('${f.files.ttf}') format('truetype')`);
+        if (f.files.otf) srcs.push(`url('${f.files.otf}') format('opentype')`);
+        if (srcs.length > 0) {
+          const clean = (f.name || '').replace(/['"]/g, '');
+          css += `@font-face { font-family: '${clean}'; src: ${srcs.join(', ')}; font-weight: ${f.weight || '400'}; font-style: ${f.style || 'normal'}; font-display: swap; }\n`;
+        }
+      });
+      if (name && Object.keys(files).length > 0) {
+        const srcs: string[] = [];
+        if (files.woff2) srcs.push(`url('${files.woff2}') format('woff2')`);
+        if (files.woff) srcs.push(`url('${files.woff}') format('woff')`);
+        if (files.ttf) srcs.push(`url('${files.ttf}') format('truetype')`);
+        if (files.otf) srcs.push(`url('${files.otf}') format('opentype')`);
+        if (srcs.length > 0) {
+          const clean = name.replace(/['"]/g, '');
+          css += `@font-face { font-family: '${clean}'; src: ${srcs.join(', ')}; font-weight: ${weight}; font-style: ${style}; font-display: swap; }\n`;
+        }
+      }
+      styleTag.textContent = css;
+    }, [props.fonts, name, files, weight, style]);
+
+    const openMediaUploader = () => {
+      if (!wp.media) {
+        WooOptionsFic.Toast.error(__('WordPress Media Library is unavailable.', 'wooptionsfic'));
+        return;
+      }
+      const frame = wp.media({
+        title: __('Select or Upload Font File (.woff2, .woff, .ttf, .otf)', 'wooptionsfic'),
+        button: { text: __('Use this font file', 'wooptionsfic') },
+        multiple: true,
+      });
+
+      frame.on('select', () => {
+        const selection = frame.state().get('selection');
+        const nextFiles = { ...files };
+        let detectedName = name;
+
+        selection.each((attachmentModel: any) => {
+          const att = attachmentModel.toJSON();
+          const url = String(att.url || '');
+          const filename = String(att.filename || att.title || '');
+          const ext = filename.split('.').pop()?.toLowerCase() || '';
+
+          if (['woff2', 'woff', 'ttf', 'otf'].includes(ext)) {
+            nextFiles[ext] = url;
+            if (!detectedName) {
+              const base = filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+              detectedName = base.charAt(0).toUpperCase() + base.slice(1);
+            }
+          } else {
+            WooOptionsFic.Toast.error(__('Please select a valid font file: .woff2, .woff, .ttf, or .otf.', 'wooptionsfic'));
+          }
+        });
+
+        setFiles(nextFiles);
+        if (detectedName && !name) {
+          setName(detectedName);
+        }
+      });
+
+      frame.open();
+    };
+
+    const addFont = () => {
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        WooOptionsFic.Toast.error(__('Please enter a font name.', 'wooptionsfic'));
+        return;
+      }
+      if (Object.keys(files).length === 0) {
+        WooOptionsFic.Toast.error(__('Please upload at least one font file (.woff2, .woff, .ttf, .otf).', 'wooptionsfic'));
+        return;
+      }
+
+      const id = trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      const newFont = {
+        id,
+        name: trimmedName,
+        family: `'${trimmedName}', sans-serif`,
+        category: 'Custom',
+        source: 'custom',
+        weight,
+        style,
+        files,
+      };
+
+      const nextFonts = [...props.fonts, newFont];
+      props.onChange(nextFonts);
+      WooOptionsFic.injectCustomFontsCss(nextFonts);
+      setName('');
+      setWeight('400');
+      setStyle('normal');
+      setFiles({});
+      WooOptionsFic.Toast.success(__('Custom font added! Remember to click "Save settings" at top right to finalize.', 'wooptionsfic'));
+    };
+
+    const removeFont = (index: number) => {
+      if (window.confirm(__('Are you sure you want to remove this custom font?', 'wooptionsfic'))) {
+        const next = props.fonts.filter((_, i) => i !== index);
+        props.onChange(next);
+        WooOptionsFic.injectCustomFontsCss(next);
+        WooOptionsFic.Toast.success(__('Custom font removed. Click "Save settings" to finalize.', 'wooptionsfic'));
+      }
+    };
+
+    return (
+      <section aria-labelledby="wof-custom-fonts-heading">
+        <div className="wof-settings-panel__header">
+          <h2 id="wof-custom-fonts-heading" className="wof-settings-panel__title">
+            {__('Custom Web Fonts', 'wooptionsfic')}
+          </h2>
+          <p className="wof-settings-panel__desc">
+            {__('Upload brand and custom font files (.woff2, .woff, .ttf, .otf). Uploaded fonts are automatically available in all Font Choice fields across your products.', 'wooptionsfic')}
+          </p>
+        </div>
+
+        {/* Existing Custom Fonts */}
+        <div style={{ marginBottom: '32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 600, color: '#1e293b' }}>
+              {__('Installed Custom Fonts', 'wooptionsfic')} ({props.fonts.length})
+            </h3>
+          </div>
+
+          {props.fonts.length === 0 ? (
+            <div style={{ padding: '36px', textAlign: 'center', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' }}>
+              <div style={{ fontSize: '32px', marginBottom: '10px', color: '#94a3b8' }}>
+                <WooOptionsFic.Components.Dashicon name="editor-textcolor" />
+              </div>
+              <strong style={{ display: 'block', fontSize: '14px', color: '#334155', marginBottom: '4px' }}>
+                {__('No custom fonts uploaded yet', 'wooptionsfic')}
+              </strong>
+              <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>
+                {__('Use the form below to upload your .woff2, .woff, .ttf, or .otf font files.', 'wooptionsfic')}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {props.fonts.map((font, index) => (
+                <div
+                  key={font.id || index}
+                  style={{
+                    background: '#ffffff',
+                    borderRadius: '10px',
+                    border: '1px solid #e2e8f0',
+                    padding: '18px 20px',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <strong style={{ fontSize: '16px', color: '#0f172a' }}>{font.name}</strong>
+                      <span style={{ fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '6px', background: '#f1f5f9', color: '#475569' }}>
+                        {font.category || 'Custom'}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#64748b' }}>
+                        Weight: {font.weight || '400'} · Style: {font.style || 'normal'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      {Object.keys(font.files || {}).map((ext) => (
+                        <span
+                          key={ext}
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            padding: '3px 7px',
+                            borderRadius: '4px',
+                            background: '#eff6ff',
+                            color: '#2563eb',
+                            border: '1px solid #dbeafe',
+                          }}
+                        >
+                          {ext}
+                        </span>
+                      ))}
+                      <Button
+                        variant="tertiary"
+                        isDestructive
+                        onClick={() => removeFont(index)}
+                        style={{ marginLeft: '12px' }}
+                      >
+                        {__('Delete', 'wooptionsfic')}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Live Specimen Preview */}
+                  <div
+                    style={{
+                      fontFamily: font.family,
+                      fontSize: '22px',
+                      color: '#1e293b',
+                      padding: '16px',
+                      background: '#f8fafc',
+                      borderRadius: '8px',
+                      border: '1px solid #f1f5f9',
+                      lineHeight: 1.4,
+                      wordBreak: 'break-word',
+                    }}
+                  >
+                    The quick brown fox jumps over the lazy dog. 1234567890
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Add New Custom Font Form */}
+        <div style={{ background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+          <h3 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: 600, color: '#0f172a' }}>
+            {__('Upload New Custom Font', 'wooptionsfic')}
+          </h3>
+          <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: '#64748b' }}>
+            {__('Upload font files in .woff2 (recommended), .woff, .ttf, or .otf formats.', 'wooptionsfic')}
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '18px' }}>
+            <TextControl
+              label={__('Font Name', 'wooptionsfic')}
+              placeholder={__('e.g. Brandon Grotesque', 'wooptionsfic')}
+              value={name}
+              onChange={setName}
+            />
+
+            <SelectControl
+              label={__('Font Weight', 'wooptionsfic')}
+              value={weight}
+              options={[
+                { label: '100 - Thin', value: '100' },
+                { label: '200 - Extra Light', value: '200' },
+                { label: '300 - Light', value: '300' },
+                { label: '400 - Regular (Normal)', value: '400' },
+                { label: '500 - Medium', value: '500' },
+                { label: '600 - Semi Bold', value: '600' },
+                { label: '700 - Bold', value: '700' },
+                { label: '800 - Extra Bold', value: '800' },
+                { label: '900 - Black', value: '900' },
+              ]}
+              onChange={setWeight}
+            />
+
+            <SelectControl
+              label={__('Font Style', 'wooptionsfic')}
+              value={style}
+              options={[
+                { label: 'Normal', value: 'normal' },
+                { label: 'Italic', value: 'italic' },
+              ]}
+              onChange={(val: any) => setStyle(val)}
+            />
+          </div>
+
+          {/* Font Files Section */}
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', color: '#1e293b', marginBottom: '8px' }}>
+              {__('Font Files (.woff2, .woff, .ttf, .otf)', 'wooptionsfic')}
+            </label>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              <Button
+                variant="secondary"
+                onClick={openMediaUploader}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+              >
+                <WooOptionsFic.Components.Dashicon name="upload" />
+                {__('Select / Upload Font Files…', 'wooptionsfic')}
+              </Button>
+              <span style={{ fontSize: '12px', color: '#64748b' }}>
+                {__('You can select multiple formats or upload .woff2 for highest web efficiency.', 'wooptionsfic')}
+              </span>
+            </div>
+
+            {Object.keys(files).length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+                {Object.entries(files).map(([ext, url]) => (
+                  <div
+                    key={ext}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      background: '#f8fafc',
+                      borderRadius: '6px',
+                      border: '1px solid #e2e8f0',
+                      fontSize: '12px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontWeight: 700, textTransform: 'uppercase', color: '#2563eb', padding: '2px 6px', background: '#eff6ff', borderRadius: '4px' }}>
+                        {ext}
+                      </span>
+                      <span style={{ color: '#475569', wordBreak: 'break-all' }}>{url}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const copy = { ...files };
+                        delete copy[ext];
+                        setFiles(copy);
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px', padding: '2px 6px' }}
+                      title={__('Remove this file', 'wooptionsfic')}
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={addFont}
+            disabled={!name.trim() || Object.keys(files).length === 0}
+          >
+            {__('+ Add Custom Font to List', 'wooptionsfic')}
+          </Button>
+        </div>
+      </section>
+    );
+  }
+
   export function Settings(): any {
     const [settings, setSettings] = useState<Record<string, any> | null>(null);
-    const [activeTab, setActiveTab] = useState<'cleanup' | 'other' | 'general'>('cleanup');
+    const [activeTab, setActiveTab] = useState<'cleanup' | 'custom_fonts' | 'other' | 'general'>('cleanup');
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -25,7 +376,13 @@ namespace WooOptionsFic.Pages {
     const save = async () => {
       setSaving(true);
       try {
-        setSettings(await WooOptionsFic.Api.saveSettings(settings));
+        const saved = await WooOptionsFic.Api.saveSettings(settings);
+        setSettings(saved);
+        if (Array.isArray(saved.custom_fonts)) {
+          WooOptionsFic.injectCustomFontsCss(saved.custom_fonts);
+          const otherFonts = (window.WooOptionsFicAdmin.fontCatalog || []).filter((f: any) => f.source !== 'custom');
+          window.WooOptionsFicAdmin.fontCatalog = [...saved.custom_fonts, ...otherFonts];
+        }
         WooOptionsFic.Toast.success(__('Settings saved successfully.', 'wooptionsfic'));
       } catch (err: any) {
         WooOptionsFic.Toast.error(WooOptionsFic.Utils.errorMessage(err));
@@ -40,6 +397,12 @@ namespace WooOptionsFic.Pages {
         label: __('Upload Cleanup', 'wooptionsfic'),
         subtitle: __('Storage & file purging', 'wooptionsfic'),
         icon: 'upload',
+      },
+      {
+        id: 'custom_fonts' as const,
+        label: __('Custom Fonts', 'wooptionsfic'),
+        subtitle: __('Upload & manage webfonts', 'wooptionsfic'),
+        icon: 'editor-textcolor',
       },
       {
         id: 'other' as const,
@@ -181,6 +544,13 @@ namespace WooOptionsFic.Pages {
                   </div>
                 </div>
               </section>
+            )}
+
+            {activeTab === 'custom_fonts' && (
+              <CustomFontsManager
+                fonts={settings.custom_fonts || []}
+                onChange={(custom_fonts: any[]) => set('custom_fonts', custom_fonts)}
+              />
             )}
 
             {activeTab === 'other' && (

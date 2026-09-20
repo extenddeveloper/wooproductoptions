@@ -7,11 +7,38 @@ namespace WooOptionsFic {
     return hash || window.WooOptionsFicAdmin.initialRoute || 'dashboard';
   }
 
+  export function injectCustomFontsCss(customFonts: any[]): void {
+    if (!Array.isArray(customFonts) || customFonts.length === 0) return;
+    let css = '';
+    for (const font of customFonts) {
+      const files = font.files || {};
+      const sources: string[] = [];
+      if (files.woff2) sources.push(`url('${files.woff2}') format('woff2')`, `url('${files.woff2}')`);
+      if (files.woff) sources.push(`url('${files.woff}') format('woff')`, `url('${files.woff}')`);
+      if (files.ttf) sources.push(`url('${files.ttf}') format('truetype')`, `url('${files.ttf}') format('opentype')`, `url('${files.ttf}')`);
+      if (files.otf) sources.push(`url('${files.otf}') format('opentype')`, `url('${files.otf}') format('truetype')`, `url('${files.otf}')`);
+      if (sources.length === 0) continue;
+      const cleanName = (font.family || font.name || '').split(',')[0].replace(/['"]/g, '').trim();
+      css += `@font-face {\n  font-family: '${cleanName}';\n  src: ${sources.join(', ')};\n  font-weight: 100 900;\n  font-style: ${font.style || 'normal'};\n  font-display: swap;\n}\n`;
+      if (cleanName.includes(' ')) {
+        css += `@font-face {\n  font-family: ${cleanName};\n  src: ${sources.join(', ')};\n  font-weight: 100 900;\n  font-style: ${font.style || 'normal'};\n  font-display: swap;\n}\n`;
+      }
+    }
+    let el = document.getElementById('wof-dynamic-custom-fonts');
+    if (!el) {
+      el = document.createElement('style');
+      el.id = 'wof-dynamic-custom-fonts';
+      document.head.appendChild(el);
+    }
+    el.textContent = css;
+  }
+
   export function App(): any {
     const [route, setRoute] = useState(routeFromLocation());
     useEffect(() => {
       const update = () => setRoute(routeFromLocation());
       window.addEventListener('hashchange', update);
+      injectCustomFontsCss(((window.WooOptionsFicAdmin?.settings as any)?.custom_fonts) || []);
       return () => window.removeEventListener('hashchange', update);
     }, []);
 

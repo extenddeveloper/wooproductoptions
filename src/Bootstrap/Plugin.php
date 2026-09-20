@@ -22,6 +22,7 @@ use WooOptionsFic\Domain\Definition\FieldTypeRegistry;
 use WooOptionsFic\Domain\Pricing\Formula\Evaluator;
 use WooOptionsFic\Domain\Pricing\Formula\Parser;
 use WooOptionsFic\Domain\Pricing\PriceEngine;
+use WooOptionsFic\Domain\Font\CustomFontService;
 use WooOptionsFic\Domain\Rule\RuleEngine;
 use WooOptionsFic\Domain\Selection\SelectionService;
 use WooOptionsFic\Domain\Snapshot\SnapshotFactory;
@@ -55,6 +56,7 @@ use WooOptionsFic\Presentation\Storefront\Renderer;
 final class Plugin {
 	public function boot(): void {
 		Schema::migrate();
+		CustomFontService::register();
 
 		$registry = new FieldTypeRegistry((int) Settings::get('max_repeater_rows', 25));
 		/**

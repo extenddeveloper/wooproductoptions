@@ -11,6 +11,7 @@ namespace WooOptionsFic\Presentation\Admin;
 
 use WooOptionsFic\Bootstrap\Requirements;
 use WooOptionsFic\Bootstrap\Settings;
+use WooOptionsFic\Domain\Font\CustomFontService;
 
 final class AdminPage {
 	private string $hook_suffix = '';
@@ -110,8 +111,21 @@ final class AdminPage {
 		);
 		wp_set_script_translations('wooptionsfic-admin', 'wooptionsfic', WOOPTIONSFIC_PATH . 'languages');
 
-		$field_types = require WOOPTIONSFIC_PATH . 'config/field-types.php';
-		$palettes    = require WOOPTIONSFIC_PATH . 'config/style-presets.php';
+		$field_types  = require WOOPTIONSFIC_PATH . 'config/field-types.php';
+		$palettes     = require WOOPTIONSFIC_PATH . 'config/style-presets.php';
+		$font_catalog = file_exists(WOOPTIONSFIC_PATH . 'config/fonts.php') ? require WOOPTIONSFIC_PATH . 'config/fonts.php' : [];
+		$custom_fonts = CustomFontService::get_custom_fonts();
+		if (! empty($custom_fonts) && is_array($font_catalog)) {
+			$font_catalog = array_merge($custom_fonts, $font_catalog);
+		}
+		$custom_fonts_css = CustomFontService::generate_font_face_css();
+		if ('' !== $custom_fonts_css) {
+			wp_add_inline_style('wooptionsfic-admin', $custom_fonts_css);
+			add_action('admin_head', static function () use ($custom_fonts_css): void {
+				echo '<style id="wooptionsfic-custom-fonts-admin">' . $custom_fonts_css . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			});
+		}
+
 		$page         = isset($_GET['page']) ? sanitize_key(wp_unslash($_GET['page'])) : 'wooptionsfic'; // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$initial_route= 'wooptionsfic' === $page ? 'dashboard' : str_replace('wooptionsfic-', '', $page);
 		wp_add_inline_script(
@@ -124,6 +138,7 @@ final class AdminPage {
 					'initialRoute'  => $initial_route,
 					'fieldTypes'    => is_array($field_types) ? $field_types : [],
 					'palettes'      => is_array($palettes) ? $palettes : [],
+					'fontCatalog'   => is_array($font_catalog) ? $font_catalog : [],
 					'settings'      => Settings::all(),
 					'wooAvailable'  => Requirements::woocommerce_is_available(),
 					'currency'      => Requirements::woocommerce_is_available() && function_exists('get_woocommerce_currency') ? (string) get_woocommerce_currency() : 'USD',

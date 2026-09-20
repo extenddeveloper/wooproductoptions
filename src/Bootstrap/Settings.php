@@ -46,6 +46,7 @@ final class Settings {
 			'summary_notice_text'          => 'Server-confirmed total, before shipping.',
 			'hide_addon_in_cart'           => false,
 			'hide_addon_in_checkout'       => false,
+			'custom_fonts'                 => [],
 		];
 	}
 
@@ -137,6 +138,41 @@ final class Settings {
 
 		$theme = sanitize_key((string) ($input['admin_theme'] ?? $current['admin_theme']));
 		$current['admin_theme'] = in_array($theme, ['system', 'light', 'dark'], true) ? $theme : 'system';
+
+		if (isset($input['custom_fonts']) && is_array($input['custom_fonts'])) {
+			$sanitized_fonts = [];
+			foreach ($input['custom_fonts'] as $font) {
+				if (! is_array($font) || empty($font['name'])) {
+					continue;
+				}
+				$name = sanitize_text_field((string) $font['name']);
+				if ('' === $name) {
+					continue;
+				}
+				$id        = ! empty($font['id']) ? sanitize_key((string) $font['id']) : sanitize_title($name);
+				$raw_files = is_array($font['files'] ?? null) ? $font['files'] : [];
+				$files     = [];
+				foreach (['woff2', 'woff', 'ttf', 'otf'] as $fmt) {
+					if (! empty($raw_files[$fmt])) {
+						$files[$fmt] = esc_url_raw((string) $raw_files[$fmt]);
+					}
+				}
+				if (empty($files)) {
+					continue;
+				}
+				$sanitized_fonts[] = [
+					'id'       => $id,
+					'name'     => $name,
+					'family'   => "'" . $name . "', sans-serif",
+					'category' => 'Custom',
+					'source'   => 'custom',
+					'weight'   => sanitize_text_field((string) ($font['weight'] ?? '400')),
+					'style'    => in_array($font['style'] ?? '', ['normal', 'italic'], true) ? (string) $font['style'] : 'normal',
+					'files'    => $files,
+				];
+			}
+			$current['custom_fonts'] = $sanitized_fonts;
+		}
 
 		return $current;
 	}

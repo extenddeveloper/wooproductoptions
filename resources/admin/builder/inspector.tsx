@@ -1,5 +1,5 @@
 namespace WooOptionsFic.Builder {
-  const { Button, ColorPicker, SelectControl, TextControl, TextareaControl, ToggleControl } = wp.components;
+  const { Button, ColorPicker, Modal, SelectControl, TextControl, TextareaControl, ToggleControl } = wp.components;
   const { __ } = wp.i18n;
   const { useEffect, useMemo, useRef, useState } = wp.element;
 
@@ -2059,10 +2059,619 @@ namespace WooOptionsFic.Builder {
   }
 
 
+  // ─── Font Choice Editor ───────────────────────────────────────────────────
+
+  function FontChoiceCard(props: {
+    choice: WooOptionsFic.ChoiceDefinition;
+    index: number;
+    count: number;
+    isOpen: boolean;
+    onToggle: () => void;
+    onUpdate: (patch: Partial<WooOptionsFic.ChoiceDefinition>) => void;
+    onRemove: () => void;
+    onMove: (from: number, to: number) => void;
+    onOpenCatalog: () => void;
+  }): any {
+    const [dropEdge, setDropEdge] = useState<'before' | 'after' | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
+    const cardRef = useRef<HTMLElement | null>(null);
+
+    const dragStart = (event: any) => {
+      event.stopPropagation();
+      event.dataTransfer?.setData(CHOICE_INDEX_MIME, String(props.index));
+      event.dataTransfer?.setData('text/plain', String(props.index));
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        if (cardRef.current && event.dataTransfer.setDragImage) {
+          const bounds = cardRef.current.getBoundingClientRect();
+          event.dataTransfer.setDragImage(cardRef.current, event.clientX - bounds.left, event.clientY - bounds.top);
+        }
+      }
+      setIsDragging(true);
+    };
+
+    const dragEnd = () => {
+      setIsDragging(false);
+      setDropEdge(null);
+    };
+
+    const dragOver = (event: any) => {
+      const types = Array.from(event.dataTransfer?.types ?? []);
+      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = 'move';
+      const element = event.currentTarget as HTMLElement;
+      const bounds = element.getBoundingClientRect();
+      setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+    };
+
+    const dragLeave = (event: any) => {
+      const element = event.currentTarget as HTMLElement;
+      if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget)) return;
+      setDropEdge(null);
+    };
+
+    const drop = (event: any) => {
+      const types = Array.from(event.dataTransfer?.types ?? []);
+      if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain')) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const sourceText = event.dataTransfer?.getData(CHOICE_INDEX_MIME) || event.dataTransfer?.getData('text/plain') || '';
+      const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+      setDropEdge(null);
+      setIsDragging(false);
+
+      const source = Number(sourceText);
+      if (!Number.isInteger(source)) return;
+      let finalIndex = insertIndex;
+      if (source < insertIndex) finalIndex -= 1;
+      finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+      if (finalIndex !== source) props.onMove(source, finalIndex);
+    };
+
+    const fontFamily = props.choice.fontFamily || props.choice.label;
+    const primaryFontName = (props.choice.fontFamily || props.choice.label || '').split(',')[0].replace(/['"]/g, '').trim();
+
+    return (
+      <article
+        ref={cardRef}
+        className={WooOptionsFic.Utils.classNames(
+          'wof-choice-card wof-font-choice-card',
+          !props.isOpen && 'is-collapsed',
+          isDragging && 'is-dragging',
+          dropEdge === 'before' && 'is-drop-before',
+          dropEdge === 'after' && 'is-drop-after'
+        )}
+        onDragOver={dragOver}
+        onDragLeave={dragLeave}
+        onDrop={drop}
+      >
+        <header className="wof-choice-card__header">
+          <button
+            type="button"
+            draggable
+            className="wof-choice-drag-handle"
+            onDragStart={dragStart}
+            onDragEnd={dragEnd}
+            aria-label={__('Drag to reorder', 'wooptionsfic')}
+            title={__('Drag to reorder', 'wooptionsfic')}
+          >
+            <WooOptionsFic.Components.GripIcon />
+            <div className="wof-font-card-header-info">
+              <span className="wof-font-card-name" style={{ fontFamily: fontFamily || 'inherit' }}>
+                {primaryFontName || props.choice.label || __('Untitled Font', 'wooptionsfic')}
+              </span>
+              {props.choice.fontCategory ? (
+                <span className="wof-font-category-tag">{props.choice.fontCategory}</span>
+              ) : null}
+              {props.choice.default ? (
+                <span className="wof-badge-default-font">{__('Default', 'wooptionsfic')}</span>
+              ) : null}
+            </div>
+          </button>
+          <div className="wof-choice-header-actions">
+            <button
+              type="button"
+              className="wof-choice-accordion-toggle"
+              onClick={props.onToggle}
+              aria-expanded={props.isOpen}
+              title={props.isOpen ? __('Collapse', 'wooptionsfic') : __('Expand', 'wooptionsfic')}
+            >
+              <WooOptionsFic.Components.Dashicon name={props.isOpen ? 'arrow-up-alt2' : 'arrow-down-alt2'} />
+            </button>
+            <button
+              type="button"
+              className="wof-choice-delete-btn"
+              onClick={props.onRemove}
+              aria-label={__('Remove font', 'wooptionsfic')}
+              title={__('Remove font', 'wooptionsfic')}
+            >
+              <WooOptionsFic.Components.Dashicon name="trash" />
+            </button>
+          </div>
+        </header>
+
+        {!props.isOpen ? (
+          <div className="wof-font-card-preview-strip" style={{ fontFamily: fontFamily || 'inherit' }}>
+            Aa Bb Gg 123
+          </div>
+        ) : null}
+
+        {props.isOpen ? (
+          <div className="wof-choice-card__body">
+            <div className="wof-font-preview-box" style={{ fontFamily: fontFamily || 'inherit' }}>
+              <div className="wof-font-preview-headline">Aa Bb Gg 123</div>
+              <div className="wof-font-preview-alphabet">Quick brown fox · 0123456789</div>
+            </div>
+
+            {/* Interactive Font Picker Selector (Replaces manual CSS font-family typing) */}
+            <div className="wof-font-selector-field" style={{ marginBottom: '14px' }}>
+              <label className="components-base-control__label" style={{ display: 'block', marginBottom: '6px', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#475569' }}>
+                {__('Font Family', 'wooptionsfic')}
+              </label>
+              <div
+                className="wof-font-selector-trigger"
+                onClick={props.onOpenCatalog}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e: any) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); props.onOpenCatalog(); } }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 12px',
+                  background: '#ffffff',
+                  border: '1.5px solid #cbd5e1',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                title={__('Click to select or change font from catalog', 'wooptionsfic')}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontFamily: fontFamily || 'inherit', fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>
+                    {primaryFontName || props.choice.label}
+                  </span>
+                  <span style={{ fontSize: '10px', textTransform: 'uppercase', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: '#f1f5f9', color: '#64748b' }}>
+                    {props.choice.fontCategory || 'Font'}
+                  </span>
+                </div>
+                <span style={{ fontSize: '12px', color: 'var(--wof-admin-primary, #5b4ff5)', fontWeight: 600 }}>
+                  {__('Change…', 'wooptionsfic')}
+                </span>
+              </div>
+            </div>
+
+            <TextControl
+              label={__('Customer Display Label', 'wooptionsfic')}
+              value={props.choice.label}
+              help={__('Label displayed to customers in the dropdown (e.g. "Dancing Script" or "Modern Sans").', 'wooptionsfic')}
+              onChange={(label: string) => props.onUpdate({ label })}
+            />
+
+            <div className="wof-choice-pricing-row">
+              <SelectControl
+                label={__('Price adjustment', 'wooptionsfic')}
+                value={props.choice.pricing.strategy}
+                options={[
+                  { label: __('No extra charge', 'wooptionsfic'), value: 'none' },
+                  { label: __('Fixed fee', 'wooptionsfic'), value: 'fixed' },
+                  { label: __('Percentage', 'wooptionsfic'), value: 'percentage' },
+                ]}
+                onChange={(strategy: WooOptionsFic.PricingDefinition['strategy']) =>
+                  props.onUpdate({ pricing: { ...props.choice.pricing, strategy } })
+                }
+              />
+              {props.choice.pricing.strategy === 'percentage' ? (
+                <TextControl
+                  label={__('Percent', 'wooptionsfic')}
+                  type="number"
+                  value={props.choice.pricing.percent}
+                  onChange={(percent: string) =>
+                    props.onUpdate({ pricing: { ...props.choice.pricing, percent } })
+                  }
+                />
+              ) : props.choice.pricing.strategy !== 'none' ? (
+                <TextControl
+                  label={__('Amount', 'wooptionsfic')}
+                  type="number"
+                  value={props.choice.pricing.amount}
+                  onChange={(amount: string) =>
+                    props.onUpdate({ pricing: { ...props.choice.pricing, amount } })
+                  }
+                />
+              ) : null}
+            </div>
+
+            <div className="wof-choice-toggles-row">
+              <ToggleControl
+                label={__('Default font', 'wooptionsfic')}
+                checked={props.choice.default}
+                onChange={(val: boolean) => props.onUpdate({ default: val })}
+              />
+              <ToggleControl
+                label={__('Disable font', 'wooptionsfic')}
+                checked={props.choice.disabled}
+                onChange={(val: boolean) => props.onUpdate({ disabled: val })}
+              />
+            </div>
+          </div>
+        ) : null}
+      </article>
+    );
+  }
+
+  function FontChoiceEditor(props: {
+    field: WooOptionsFic.FieldDefinition;
+    onChange: (field: WooOptionsFic.FieldDefinition) => void;
+  }): any {
+    const choices = props.field.choices ?? [];
+    const [collapsedMap, setCollapsedMap] = useState<Record<string, boolean>>({});
+    const [showCatalogModal, setShowCatalogModal] = useState(false);
+    const [replacingChoiceUuid, setReplacingChoiceUuid] = useState<string | null>(null);
+    const [categoryFilter, setCategoryFilter] = useState('all');
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const catalog: WooOptionsFic.FontCatalogItem[] = (window as any).WooOptionsFicAdmin?.fontCatalog ?? [];
+
+    const toggleChoice = (uuid: string) => {
+      setCollapsedMap((prev) => ({ ...prev, [uuid]: !prev[uuid] }));
+    };
+
+    const isAllCollapsed = choices.length > 0 && choices.every((c) => Boolean(collapsedMap[c.uuid]));
+
+    const toggleAll = () => {
+      const nextState = !isAllCollapsed;
+      const nextMap: Record<string, boolean> = {};
+      choices.forEach((c) => {
+        nextMap[c.uuid] = nextState;
+      });
+      setCollapsedMap(nextMap);
+    };
+
+    const updateChoice = (uuid: string, patch: Partial<WooOptionsFic.ChoiceDefinition>) => {
+      let nextChoices = choices.map((c) => {
+        if (c.uuid === uuid) {
+          return { ...c, ...patch };
+        }
+        if (patch.default) {
+          return { ...c, default: false };
+        }
+        return c;
+      });
+      props.onChange({ ...props.field, choices: nextChoices });
+    };
+
+    const removeChoice = (uuid: string) => {
+      props.onChange({
+        ...props.field,
+        choices: choices.filter((c) => c.uuid !== uuid),
+      });
+    };
+
+    const moveChoice = (from: number, to: number) => {
+      if (from === to || from < 0 || to < 0 || from >= choices.length || to >= choices.length) return;
+      const reordered = [...choices];
+      const [moved] = reordered.splice(from, 1);
+      reordered.splice(to, 0, moved);
+      props.onChange({ ...props.field, choices: reordered });
+    };
+
+    const addCatalogFont = (item: WooOptionsFic.FontCatalogItem) => {
+      if (choices.some((c) => c.label.toLowerCase() === item.name.toLowerCase())) {
+        return;
+      }
+      const newChoice: WooOptionsFic.ChoiceDefinition = {
+        uuid: WooOptionsFic.Utils.uuid(),
+        label: item.name,
+        description: '',
+        adminLabel: '',
+        color: '',
+        imageId: 0,
+        imageUrl: '',
+        disabled: false,
+        default: choices.length === 0,
+        pricing: WooOptionsFic.FieldFactory.emptyPricing(),
+        quantityEnabled: false,
+        linkedProductId: 0,
+        linkedVariationId: 0,
+        linkedQuantity: 1,
+        preview: {},
+        fontFamily: item.family,
+        fontCategory: item.category,
+        fontSource: item.source,
+      };
+      props.onChange({
+        ...props.field,
+        choices: [...choices, newChoice],
+      });
+      setCollapsedMap((prev) => ({ ...prev, [newChoice.uuid]: true }));
+    };
+
+    const selectFontFromModal = (item: WooOptionsFic.FontCatalogItem) => {
+      if (replacingChoiceUuid) {
+        const choice = choices.find((c) => c.uuid === replacingChoiceUuid);
+        if (choice) {
+          const oldPrimary = (choice.fontFamily || choice.label).split(',')[0].replace(/['"]/g, '').trim();
+          const patch: Partial<WooOptionsFic.ChoiceDefinition> = {
+            fontFamily: item.family,
+            fontCategory: item.category,
+            fontSource: item.source,
+          };
+          if (!choice.label || choice.label === oldPrimary || choice.label === 'Choice' || choice.label === 'Modern sans' || choice.label === 'Classic serif' || choice.label === 'Soft script') {
+            patch.label = item.name;
+          }
+          updateChoice(replacingChoiceUuid, patch);
+          setReplacingChoiceUuid(null);
+          setShowCatalogModal(false);
+          WooOptionsFic.Toast.success(__('Font updated to ', 'wooptionsfic') + item.name);
+          return;
+        }
+      }
+      addCatalogFont(item);
+    };
+
+    const categories = useMemo(() => {
+      const set = new Set<string>();
+      catalog.forEach((f) => {
+        if (f.category) set.add(f.category);
+      });
+      const list = Array.from(set);
+      const hasCustom = list.includes('Custom');
+      const rest = list.filter((c) => c !== 'Custom');
+      return ['all', ...(hasCustom ? ['Custom'] : []), ...rest];
+    }, [catalog]);
+
+    const filteredCatalog = useMemo(() => {
+      return catalog.filter((item) => {
+        const matchesCat = categoryFilter === 'all' || item.category === categoryFilter;
+        const matchesQuery = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCat && matchesQuery;
+      });
+    }, [catalog, categoryFilter, searchQuery]);
+
+    // Dynamically load Google WebFonts for configured choices in admin document head
+    useEffect(() => {
+      const gFonts = choices
+        .filter((c) => c.fontSource !== 'system')
+        .map((c) => {
+          const primary = (c.fontFamily || c.label || '').split(',')[0].replace(/['"]/g, '').trim();
+          const found = catalog.find((item) => item.name.toLowerCase() === primary.toLowerCase() || item.name.toLowerCase() === c.label.toLowerCase());
+          if (found && found.source === 'system') return '';
+          if (found && found.googleParam) return found.googleParam;
+          const clean = (primary || c.label).replace(/[^a-zA-Z0-9 ]/g, '').replace(/ /g, '+');
+          return clean ? `${clean}:wght@400;700` : '';
+        })
+        .filter(Boolean);
+      if (gFonts.length > 0) {
+        const id = 'wof-builder-google-fonts';
+        let link = document.getElementById(id) as HTMLLinkElement;
+        const href = 'https://fonts.googleapis.com/css2?' + Array.from(new Set(gFonts)).map(f => 'family=' + f).join('&') + '&display=swap';
+        if (!link) {
+          link = document.createElement('link');
+          link.id = id;
+          link.rel = 'stylesheet';
+          document.head.appendChild(link);
+        } else if (link.href !== href) {
+          link.href = href;
+        }
+      }
+    }, [choices, catalog]);
+
+    // Also load catalog fonts into admin document head when modal opens
+    useEffect(() => {
+      if (showCatalogModal) {
+        const catFonts = catalog
+          .filter((f) => f.source !== 'system' && f.googleParam)
+          .map((f) => f.googleParam);
+        if (catFonts.length > 0) {
+          const id = 'wof-builder-catalog-fonts';
+          let link = document.getElementById(id) as HTMLLinkElement;
+          const href = 'https://fonts.googleapis.com/css2?' + catFonts.map(f => 'family=' + f).join('&') + '&display=swap';
+          if (!link) {
+            link = document.createElement('link');
+            link.id = id;
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+          }
+        }
+      }
+    }, [showCatalogModal, catalog]);
+
+    return (
+      <div className="wof-choice-editor-list wof-font-choice-editor">
+        <div style={{ marginBottom: '14px' }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '13px', color: '#64748b', lineHeight: 1.4 }}>
+            {__('Select which specific fonts are available for customers in this Font Choice field. Only the fonts you add below will be loaded.', 'wooptionsfic')}
+          </p>
+        </div>
+
+        {/* Toolbar */}
+        <div className="wof-choice-list-toolbar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+          <span className="wof-choice-list-count" style={{ fontWeight: 600, fontSize: '13px', color: '#334155' }}>
+            {choices.length} {__('Available Fonts', 'wooptionsfic')}
+          </span>
+          {choices.length > 1 ? (
+            <button
+              type="button"
+              className="wof-choice-collapse-all-btn"
+              onClick={toggleAll}
+            >
+              {isAllCollapsed ? __('Expand all', 'wooptionsfic') : __('Collapse all', 'wooptionsfic')}
+            </button>
+          ) : null}
+        </div>
+
+        {/* Font choice cards */}
+        {choices.length === 0 ? (
+          <div style={{ padding: '24px', textAlign: 'center', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1', marginBottom: '14px' }}>
+            <p style={{ margin: '0 0 10px 0', color: '#64748b', fontSize: '13px' }}>
+              {__('No fonts added yet. Click "+ Add Fonts" to choose fonts from the Google Fonts catalog.', 'wooptionsfic')}
+            </p>
+            <Button variant="primary" onClick={() => setShowCatalogModal(true)}>
+              {__('+ Add Fonts from Catalog', 'wooptionsfic')}
+            </Button>
+          </div>
+        ) : (
+          <div className="wof-font-choices-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+            {choices.map((choice, index) => (
+              <FontChoiceCard
+                key={choice.uuid}
+                choice={choice}
+                index={index}
+                count={choices.length}
+                isOpen={!collapsedMap[choice.uuid]}
+                onToggle={() => toggleChoice(choice.uuid)}
+                onUpdate={(patch) => updateChoice(choice.uuid, patch)}
+                onRemove={() => removeChoice(choice.uuid)}
+                onMove={moveChoice}
+                onOpenCatalog={() => {
+                  setReplacingChoiceUuid(choice.uuid);
+                  setShowCatalogModal(true);
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Action Buttons: Add Fonts from Catalog */}
+        <div style={{ marginBottom: '16px' }}>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setReplacingChoiceUuid(null);
+              setShowCatalogModal(true);
+            }}
+            style={{ width: '100%', minHeight: '38px', justifyContent: 'center' }}
+          >
+            <WooOptionsFic.Components.Dashicon name="plus-alt2" />
+            {__('Select Fonts from Catalog…', 'wooptionsfic')}
+          </Button>
+          <p style={{ margin: '8px 0 0 0', fontSize: '12px', color: '#64748b', textAlign: 'center', lineHeight: 1.4 }}>
+            {__('Need custom brand fonts? Upload .woff2, .woff, .ttf, or .otf files in WooOptionsFic → Settings → Custom Fonts.', 'wooptionsfic')}
+          </p>
+        </div>
+
+        {/* Modal: Font Catalog Picker (uses wp.components.Modal to fix stacking context / bleed-through) */}
+        {showCatalogModal ? (
+          <Modal
+            title={replacingChoiceUuid ? __('Select Replacement Font', 'wooptionsfic') : __('Select Fonts to Make Available', 'wooptionsfic')}
+            onRequestClose={() => {
+              setShowCatalogModal(false);
+              setReplacingChoiceUuid(null);
+            }}
+            className="wof-font-catalog-modal"
+          >
+            <div className="wof-font-catalog-modal-content">
+              <div className="wof-font-catalog-modal-header-section">
+                <p className="wof-font-catalog-modal-subtitle" style={{ margin: '0 0 12px 0', fontSize: '13px', color: '#64748b' }}>
+                  {replacingChoiceUuid
+                    ? __('Select a font from the catalog to replace this choice. Google, System, and Custom fonts are supported.', 'wooptionsfic')
+                    : __('Click any font to make it available for customers. Only enabled fonts will be downloaded by customers.', 'wooptionsfic')}
+                </p>
+
+                <div className="wof-font-catalog-toolbar">
+                  <input
+                    type="text"
+                    className="wof-font-search-input"
+                    placeholder={__('Search fonts (e.g. Dancing Script, Roboto)…', 'wooptionsfic')}
+                    value={searchQuery}
+                    onChange={(e: any) => setSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="wof-font-category-chips">
+                    {categories.map((cat) => (
+                      <button
+                        key={cat}
+                        type="button"
+                        className={WooOptionsFic.Utils.classNames('wof-font-category-chip', categoryFilter === cat && 'is-active')}
+                        onClick={() => setCategoryFilter(cat)}
+                      >
+                        {cat === 'all' ? __('All Categories', 'wooptionsfic') : cat}
+                        {cat === 'Custom' ? ` (${catalog.filter((f) => f.category === 'Custom').length})` : ''}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="wof-font-catalog-grid">
+                {filteredCatalog.length === 0 ? (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px 20px', color: '#64748b' }}>
+                    <p style={{ margin: '0 0 8px 0', fontSize: '14px', fontWeight: 600 }}>{__('No fonts found matching your search.', 'wooptionsfic')}</p>
+                    {categoryFilter === 'Custom' ? (
+                      <p style={{ margin: 0, fontSize: '12px', color: '#94a3b8' }}>
+                        {__('You can upload custom .woff2, .woff, .ttf, or .otf font files in WooOptionsFic → Settings → Custom Fonts.', 'wooptionsfic')}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  filteredCatalog.map((item) => {
+                    const isAdded = choices.some((c) => (c.fontFamily || c.label).toLowerCase().includes(item.name.toLowerCase()));
+                    return (
+                      <div
+                        key={item.id}
+                        className={WooOptionsFic.Utils.classNames('wof-font-catalog-card', isAdded && !replacingChoiceUuid && 'is-added')}
+                        onClick={() => selectFontFromModal(item)}
+                      >
+                        <div className="wof-font-catalog-card-header">
+                          <span className="wof-font-catalog-card-name">{item.name}</span>
+                          <span className="wof-font-category-tag">{item.category}</span>
+                        </div>
+                        <div className="wof-font-catalog-card-sample" style={{ fontFamily: item.family }}>
+                          Aa Bb Gg 123
+                        </div>
+                        <div className="wof-font-catalog-card-footer">
+                          <span style={{ fontSize: '11px', color: '#94a3b8' }}>
+                            {item.source === 'system'
+                              ? __('System Font', 'wooptionsfic')
+                              : item.source === 'custom'
+                              ? __('Custom Uploaded Font', 'wooptionsfic')
+                              : __('Google WebFont', 'wooptionsfic')}
+                          </span>
+                          <button
+                            type="button"
+                            className="wof-font-catalog-card-btn"
+                            disabled={isAdded && !replacingChoiceUuid}
+                          >
+                            {replacingChoiceUuid
+                              ? __('Select Font →', 'wooptionsfic')
+                              : isAdded
+                              ? __('Added ✓', 'wooptionsfic')
+                              : __('+ Select', 'wooptionsfic')}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <footer className="wof-font-catalog-modal-footer">
+                <span style={{ fontSize: '13px', color: '#64748b' }}>
+                  {choices.length} {__('font(s) selected for this field', 'wooptionsfic')}
+                </span>
+                <Button variant="primary" onClick={() => { setShowCatalogModal(false); setReplacingChoiceUuid(null); }}>
+                  {__('Done Selecting', 'wooptionsfic')}
+                </Button>
+              </footer>
+            </div>
+          </Modal>
+        ) : null}
+      </div>
+    );
+  }
+
+
   function ChoiceEditor(props: { field: WooOptionsFic.FieldDefinition; onChange: (field: WooOptionsFic.FieldDefinition) => void }): any {
     // Product fields use their own dedicated editor.
     if (props.field.type === 'product') {
       return <ProductChoiceEditor field={props.field} onChange={props.onChange} />;
+    }
+    // Font fields use their own dedicated font manager editor.
+    if (props.field.type === 'font') {
+      return <FontChoiceEditor field={props.field} onChange={props.onChange} />;
     }
 
     const choices = props.field.choices ?? [];
@@ -2716,6 +3325,83 @@ namespace WooOptionsFic.Builder {
             ) : (
               <>
                 <TextControl label={__('Label', 'wooptionsfic')} value={field.label} onChange={(label: string) => update({ label })} />
+
+                {/* Applied Fields (Target Text Fields for Font Picker) */}
+                {field.type === 'font' ? (
+                  <div className="wof-applied-fields-box" style={{ marginBottom: '16px', padding: '14px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <strong style={{ fontSize: '13px', color: '#1e293b' }}>
+                        {__('Applied Text Fields', 'wooptionsfic')}
+                      </strong>
+                      <span style={{ fontSize: '11px', background: 'color-mix(in srgb, var(--wof-admin-primary, #5b4ff5) 12%, transparent)', color: 'var(--wof-admin-primary, #5b4ff5)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 }}>
+                        {Array.isArray(field.appliedFields) ? field.appliedFields.length : 0} {__('linked', 'wooptionsfic')}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '12px', color: '#64748b', margin: '0 0 10px 0', lineHeight: 1.4 }}>
+                      {__('Select which Text or Textarea field(s) will change their font in real-time as the customer chooses a font.', 'wooptionsfic')}
+                    </p>
+
+                    {(() => {
+                      const textFields = (props.document.fields || []).filter(
+                        (f) => (f.type === 'text' || f.type === 'textarea') && f.uuid !== field.uuid
+                      );
+                      if (textFields.length === 0) {
+                        return (
+                          <div style={{ padding: '10px', background: '#fff', borderRadius: '6px', border: '1px dashed #cbd5e1', fontSize: '12px', color: '#64748b', textAlign: 'center' }}>
+                            <p style={{ margin: 0 }}>{__('No Text or Textarea fields found in this option set.', 'wooptionsfic')}</p>
+                            <small style={{ display: 'block', marginTop: '4px', color: '#94a3b8' }}>
+                              {__('Add a Text or Textarea field to enable real-time font styling.', 'wooptionsfic')}
+                            </small>
+                          </div>
+                        );
+                      }
+                      const applied = Array.isArray(field.appliedFields) ? field.appliedFields : [];
+                      return (
+                        <div className="wof-applied-fields-list" style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {textFields.map((tf) => {
+                            const isChecked = applied.includes(tf.uuid);
+                            return (
+                              <label
+                                key={tf.uuid}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '8px 10px',
+                                  background: isChecked ? 'color-mix(in srgb, var(--wof-admin-primary, #5b4ff5) 8%, #fff)' : '#fff',
+                                  border: isChecked ? '1.5px solid var(--wof-admin-primary, #5b4ff5)' : '1px solid #e2e8f0',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.12s ease',
+                                }}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isChecked}
+                                  onChange={(e: any) => {
+                                    let next: string[];
+                                    if (e.target.checked) {
+                                      next = [...applied, tf.uuid];
+                                    } else {
+                                      next = applied.filter((id) => id !== tf.uuid);
+                                    }
+                                    update({ appliedFields: next });
+                                  }}
+                                />
+                                <span style={{ fontWeight: 500, fontSize: '13px', flex: 1, color: '#1e293b' }}>
+                                  {tf.label || __('Untitled text field', 'wooptionsfic')}
+                                </span>
+                                <span style={{ fontSize: '10px', textTransform: 'uppercase', padding: '1px 6px', background: '#f1f5f9', borderRadius: '4px', color: '#64748b', fontWeight: 600 }}>
+                                  {tf.type === 'textarea' ? __('Textarea', 'wooptionsfic') : __('Text', 'wooptionsfic')}
+                                </span>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : null}
 
               {/* Block Width options for every block */}
               <div className="wof-field-width-setting">

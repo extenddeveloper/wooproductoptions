@@ -11,10 +11,10 @@
       "layout": {"type": "stack", "settings": {}},
       "fields": [
         {"uuid": "50000000-0000-4000-8000-000000000010", "type": "text", "label": "Engraving text", "required": true, "maxLength": 32, "placeholder": "Up to 32 characters", "pricing": {"strategy": "per_character", "amount": "0.50"}},
-        {"uuid": "50000000-0000-4000-8000-000000000020", "type": "font", "label": "Lettering style", "required": true, "choices": [
-          {"uuid": "50000000-0000-4000-8000-000000000021", "label": "Modern sans", "default": true},
-          {"uuid": "50000000-0000-4000-8000-000000000022", "label": "Classic serif"},
-          {"uuid": "50000000-0000-4000-8000-000000000023", "label": "Soft script", "pricing": {"strategy": "fixed", "amount": "3"}}
+        {"uuid": "50000000-0000-4000-8000-000000000020", "type": "font", "label": "Lettering style", "required": true, "appliedFields": ["50000000-0000-4000-8000-000000000010"], "choices": [
+          {"uuid": "50000000-0000-4000-8000-000000000021", "label": "Modern sans (Roboto)", "fontFamily": "Roboto, sans-serif", "fontCategory": "Sans-Serif", "fontSource": "google", "default": true},
+          {"uuid": "50000000-0000-4000-8000-000000000022", "label": "Classic serif (Playfair Display)", "fontFamily": "'Playfair Display', serif", "fontCategory": "Serif", "fontSource": "google"},
+          {"uuid": "50000000-0000-4000-8000-000000000023", "label": "Soft script (Dancing Script)", "fontFamily": "'Dancing Script', cursive", "fontCategory": "Handwriting", "fontSource": "google", "pricing": {"strategy": "fixed", "amount": "3"}}
         ]},
         {"uuid": "50000000-0000-4000-8000-000000000030", "type": "help", "label": "Engraving note", "content": "<strong>Proof carefully:</strong> engraving text is produced exactly as entered."}
       ],

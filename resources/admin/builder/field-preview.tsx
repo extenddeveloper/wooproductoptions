@@ -180,9 +180,15 @@ namespace WooOptionsFic.Builder {
     );
   }
 
-  export function FieldPreview(props: { field: WooOptionsFic.FieldDefinition }): any {
+  export function FieldPreview(props: { field: WooOptionsFic.FieldDefinition; allFields?: WooOptionsFic.FieldDefinition[] }): any {
     const field = props.field;
     const choices = field.choices ?? [];
+
+    const appliedFontField = (props.allFields || []).find(
+      (f) => f.type === 'font' && Array.isArray(f.appliedFields) && f.appliedFields.includes(field.uuid)
+    );
+    const appliedFontChoice = appliedFontField?.choices?.find((c) => Boolean(c.default)) || appliedFontField?.choices?.[0];
+    const appliedFontFamily = appliedFontChoice?.fontFamily || appliedFontChoice?.label || undefined;
 
     if (field.type === 'heading') {
       const headingText = field.label || field.content || __('Section heading', 'wooptionsfic');
@@ -311,6 +317,7 @@ namespace WooOptionsFic.Builder {
             rows={rows}
             style={{
               textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
+              fontFamily: appliedFontFamily,
             }}
             placeholder={field.placeholder || __('Enter text…', 'wooptionsfic')}
           />
@@ -319,7 +326,34 @@ namespace WooOptionsFic.Builder {
       );
     }
 
-    if (field.type === 'select' || field.type === 'font') {
+    if (field.type === 'font') {
+      const selectedChoice = choices.find(c => Boolean(c.default)) || choices[0];
+      const fontFamily = selectedChoice?.fontFamily || selectedChoice?.label || 'inherit';
+      const priceText = selectedChoice ? formatChoicePrice(selectedChoice.pricing) : '';
+      return (
+        <div className="wof-preview-font-control">
+          <div className="wof-preview-font-selected">
+            <span className="wof-preview-font-name" style={{ fontFamily }}>
+              {selectedChoice ? selectedChoice.label : __('Choose a font…', 'wooptionsfic')}
+            </span>
+            {selectedChoice?.fontCategory ? (
+              <span className="wof-font-category-tag">{selectedChoice.fontCategory}</span>
+            ) : null}
+            {priceText ? (
+              <span style={{ fontSize: '11px', color: '#64748b' }}>{priceText}</span>
+            ) : null}
+            {selectedChoice ? (
+              <span className="wof-preview-font-sample" style={{ fontFamily }}>
+                Aa Bb Gg 123
+              </span>
+            ) : null}
+          </div>
+          <WooOptionsFic.Components.Dashicon name="arrow-down-alt2" />
+        </div>
+      );
+    }
+
+    if (field.type === 'select') {
       const selectedChoice = choices.find(c => Boolean(c.default));
       return (
         <div className="wof-preview-select-control">
@@ -887,6 +921,7 @@ namespace WooOptionsFic.Builder {
         step={isNum && field.step != null ? String(field.step) : undefined}
         style={{
           textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
+          fontFamily: appliedFontFamily,
         }}
         placeholder={defaultValue !== undefined ? undefined : (field.placeholder || __('Enter value…', 'wooptionsfic'))}
       />

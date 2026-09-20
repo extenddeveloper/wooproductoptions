@@ -237,6 +237,7 @@
                 const img = targetOption.dataset.wofOptionImage || "";
                 const label = targetOption.dataset.wofOptionLabel || targetOption.querySelector(".wof-custom-select__option-label")?.textContent?.trim() || "";
                 const price = targetOption.dataset.wofOptionPrice || "";
+                const fontFamily = targetOption.dataset.fontFamily || "";
 
                 if (imgSlot) {
                     if (img) {
@@ -249,6 +250,11 @@
                 }
                 if (titleSlot) {
                     titleSlot.textContent = label;
+                    if (fontFamily) {
+                        titleSlot.style.fontFamily = fontFamily;
+                    } else if (customSelect.classList.contains("wof-custom-select--font")) {
+                        titleSlot.style.fontFamily = "";
+                    }
                 }
                 if (priceSlot) {
                     if (price) {
@@ -259,6 +265,67 @@
                         priceSlot.style.display = "none";
                     }
                 }
+
+                const fieldContainer = customSelect.closest("[data-wof-font-picker], [data-wof-type='font']");
+                if (fieldContainer) {
+                    let appliedFields = [];
+                    try {
+                        appliedFields = JSON.parse(fieldContainer.dataset.wofAppliedFields || "[]");
+                    } catch {
+                        appliedFields = [];
+                    }
+                    if (Array.isArray(appliedFields) && appliedFields.length > 0) {
+                        if (fontFamily) {
+                            this.ensureFontLoaded(fontFamily);
+                        }
+                        appliedFields.forEach(targetUuid => {
+                            if (!targetUuid) return;
+                            const safeId = String(targetUuid).trim();
+                            const targetField = this.root.querySelector(`[data-wof-field="${safeId}"]`)
+                                || this.root.querySelector(`[data-wof-field="${r(safeId)}"]`)
+                                || document.querySelector(`[data-wof-field="${safeId}"]`);
+                            if (targetField) {
+                                if (fontFamily) {
+                                    targetField.style.setProperty("font-family", fontFamily, "important");
+                                    targetField.querySelectorAll('input, textarea').forEach(inp => {
+                                        inp.style.setProperty("font-family", fontFamily, "important");
+                                    });
+                                } else {
+                                    targetField.style.removeProperty("font-family");
+                                    targetField.querySelectorAll('input, textarea').forEach(inp => {
+                                        inp.style.removeProperty("font-family");
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        ensureFontLoaded(family) {
+            if (!family || typeof family !== "string") return;
+            const cleanName = family.split(",")[0].replace(/['"]/g, "").trim();
+            if (!cleanName) return;
+            const systemFonts = ["inherit", "initial", "sans-serif", "serif", "monospace", "cursive", "fantasy", "arial", "helvetica", "georgia", "times new roman", "courier new", "verdana", "tahoma", "trebuchet ms", "impact"];
+            if (systemFonts.includes(cleanName.toLowerCase())) return;
+
+            // Check if this font family is already defined by @font-face (e.g. custom uploaded font)
+            const isCustomFontFace = Array.from(document.styleSheets).some(sheet => {
+                try {
+                    return Array.from(sheet.cssRules || []).some(rule => {
+                        return rule.type === CSSRule.FONT_FACE_RULE && (rule.style?.fontFamily || "").replace(/['"]/g, "").trim().toLowerCase() === cleanName.toLowerCase();
+                    });
+                } catch { return false; }
+            });
+            if (isCustomFontFace) return;
+
+            const linkId = "wof-gf-" + cleanName.toLowerCase().replace(/[^a-z0-9]/g, "-");
+            if (!document.getElementById(linkId)) {
+                const link = document.createElement("link");
+                link.id = linkId;
+                link.rel = "stylesheet";
+                link.href = "https://fonts.googleapis.com/css2?family=" + encodeURIComponent(cleanName).replace(/%20/g, "+") + ":wght@400;700&display=swap";
+                document.head.appendChild(link);
             }
         }
         closeAllCustomSelects(except = null) {

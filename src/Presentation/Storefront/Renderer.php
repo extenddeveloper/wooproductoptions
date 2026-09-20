@@ -12,6 +12,7 @@ namespace WooOptionsFic\Presentation\Storefront;
 use WooOptionsFic\Application\AnalyticsService;
 use WooOptionsFic\Application\QuoteService;
 use WooOptionsFic\Bootstrap\Settings;
+use WooOptionsFic\Domain\Font\CustomFontService;
 use WooOptionsFic\Domain\Support\Uuid;
 use WooOptionsFic\Infrastructure\WooCommerce\ProductContext;
 use WooOptionsFic\Infrastructure\WordPress\SessionGuard;
@@ -67,6 +68,7 @@ final class Renderer {
 		wp_enqueue_script('wooptionsfic-storefront');
 		wp_enqueue_style('wooptionsfic-storefront');
 		$this->enqueue_typography_font((array) ($config['style']['typography'] ?? []));
+		$this->enqueue_font_field_fonts((array) ($config['fields'] ?? []));
 
 		$token  = $this->sessions->issue($product_id, (string) $config['revisionUuid']);
 		$tokens = (array) ($config['style']['tokens'] ?? []);
@@ -255,6 +257,10 @@ final class Renderer {
 		if (! empty($field['maxChoices'])) {
 			echo ' data-wof-max-choices="' . esc_attr((string) $field['maxChoices']) . '"';
 		}
+		if ('font' === $type) {
+			$applied = (array) ($field['appliedFields'] ?? []);
+			echo ' data-wof-font-picker="1" data-wof-applied-fields="' . esc_attr((string) wp_json_encode(array_values($applied))) . '"';
+		}
 		echo '>';
 
 
@@ -320,23 +326,27 @@ final class Renderer {
 	 */
 	private function render_select(array $field, string $name, string $description_id): void {
 		$uuid         = (string) $field['uuid'];
+		$type         = (string) ($field['type'] ?? 'select');
+		$is_font_type = 'font' === $type;
 		$image_style  = (string) ($field['imageStyle'] ?? 'normal');
 		$img_base_cls = 'circle' === $image_style ? 'wof-choice-img wof-choice-img--circle' : 'wof-choice-img';
 		$choices      = (array) ($field['choices'] ?? []);
 
 		// Find default selected choice
-		$default_uuid  = '';
-		$default_label = __('Choose an option', 'wooptionsfic');
-		$default_img   = '';
-		$default_price = '';
+		$default_uuid        = '';
+		$default_label       = $is_font_type ? __('Choose a font', 'wooptionsfic') : __('Choose an option', 'wooptionsfic');
+		$default_font_family = '';
+		$default_img         = '';
+		$default_price       = '';
 
 		foreach ($choices as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$selected    = ! empty($choice['default']) || (string) ($field['default'] ?? '') === $choice_uuid;
 			if ($selected) {
-				$default_uuid  = $choice_uuid;
-				$default_label = (string) ($choice['label'] ?? '');
-				$default_img   = ! empty($choice['imageUrl']) ? (string) $choice['imageUrl'] : '';
+				$default_uuid        = $choice_uuid;
+				$default_label       = (string) ($choice['label'] ?? '');
+				$default_font_family = (string) ($choice['fontFamily'] ?? $default_label);
+				$default_img         = ! empty($choice['imageUrl']) ? (string) $choice['imageUrl'] : '';
 				if (empty($default_img) && ! empty($choice['imageId'])) {
 					$default_img = (string) wp_get_attachment_image_url((int) $choice['imageId'], 'thumbnail');
 				}
@@ -345,12 +355,14 @@ final class Renderer {
 			}
 		}
 
-		echo '<div class="wof-custom-select" data-wof-custom-select>';
+		$container_cls = 'wof-custom-select' . ($is_font_type ? ' wof-custom-select--font' : '');
+		echo '<div class="' . esc_attr($container_cls) . '" data-wof-custom-select>';
 		echo '<div class="wof-custom-select__trigger" data-wof-custom-select-trigger role="combobox" tabindex="0" aria-haspopup="listbox" aria-expanded="false" aria-describedby="' . esc_attr($description_id) . '">';
 		echo '<span class="wof-custom-select__selected" data-wof-custom-select-selected>';
 		$style_img = '' === $default_img ? ' style="display:none;"' : '';
 		echo '<img class="' . esc_attr($img_base_cls . ' wof-custom-select__img') . '" src="' . esc_url($default_img) . '" alt=""' . $style_img . ' data-wof-selected-img>';
-		echo '<span class="wof-custom-select__title" data-wof-selected-title>' . esc_html($default_label) . '</span>';
+		$title_style = ($is_font_type && '' !== $default_font_family && '' !== $default_uuid) ? ' style="font-family:' . esc_attr($default_font_family) . ';"' : '';
+		echo '<span class="wof-custom-select__title" data-wof-selected-title' . $title_style . '>' . esc_html($default_label) . '</span>';
 		$style_price = '' === $default_price ? ' style="display:none;"' : '';
 		echo '<span class="wof-custom-select__price"' . $style_price . ' data-wof-selected-price>' . esc_html($default_price) . '</span>';
 		echo '</span>';
@@ -359,13 +371,15 @@ final class Renderer {
 
 		echo '<div class="wof-custom-select__dropdown" data-wof-custom-select-dropdown role="listbox" tabindex="-1">';
 		$is_empty_selected = '' === $default_uuid;
-		echo '<div class="wof-custom-select__option' . ($is_empty_selected ? ' is-selected' : '') . '" data-wof-option-value="" data-wof-option-label="' . esc_attr__('Choose an option', 'wooptionsfic') . '" data-wof-option-image="" data-wof-option-price="" role="option" aria-selected="' . ($is_empty_selected ? 'true' : 'false') . '">';
-		echo '<span class="wof-custom-select__option-label">' . esc_html__('Choose an option', 'wooptionsfic') . '</span>';
+		$empty_label       = $is_font_type ? __('Choose a font', 'wooptionsfic') : __('Choose an option', 'wooptionsfic');
+		echo '<div class="wof-custom-select__option' . ($is_empty_selected ? ' is-selected' : '') . '" data-wof-option-value="" data-wof-option-label="' . esc_attr($empty_label) . '" data-wof-option-image="" data-wof-option-price="" role="option" aria-selected="' . ($is_empty_selected ? 'true' : 'false') . '">';
+		echo '<span class="wof-custom-select__option-label">' . esc_html($empty_label) . '</span>';
 		echo '</div>';
 
 		foreach ($choices as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$is_selected = $choice_uuid === $default_uuid;
+			$choice_font = (string) ($choice['fontFamily'] ?? ($choice['label'] ?? ''));
 			$choice_img  = ! empty($choice['imageUrl']) ? (string) $choice['imageUrl'] : '';
 			if (empty($choice_img) && ! empty($choice['imageId'])) {
 				$choice_img = (string) wp_get_attachment_image_url((int) $choice['imageId'], 'thumbnail');
@@ -373,10 +387,13 @@ final class Renderer {
 			$price_text  = $this->choice_price_text((array) $choice, false);
 			$is_disabled = ! empty($choice['disabled']);
 
-			$opt_cls = 'wof-custom-select__option' . ($is_selected ? ' is-selected' : '') . ($is_disabled ? ' is-disabled' : '');
+			$opt_cls = 'wof-custom-select__option' . ($is_selected ? ' is-selected' : '') . ($is_disabled ? ' is-disabled' : '') . ($is_font_type ? ' wof-custom-select__option--font' : '');
 			echo '<div class="' . esc_attr($opt_cls) . '"';
 			echo ' data-wof-option-value="' . esc_attr($choice_uuid) . '"';
 			echo ' data-wof-option-label="' . esc_attr((string) $choice['label']) . '"';
+			if ($is_font_type && '' !== $choice_font) {
+				echo ' data-font-family="' . esc_attr($choice_font) . '"';
+			}
 			if ('' !== $choice_img) {
 				echo ' data-wof-option-image="' . esc_url($choice_img) . '"';
 			}
@@ -392,7 +409,19 @@ final class Renderer {
 			if ('' !== $choice_img) {
 				echo '<img class="' . esc_attr($img_base_cls . ' wof-custom-select__img') . '" src="' . esc_url($choice_img) . '" alt="">';
 			}
-			echo '<span class="wof-custom-select__option-label">' . esc_html((string) $choice['label']) . '</span>';
+
+			if ($is_font_type) {
+				echo '<div class="wof-font-option-row">';
+				echo '<span class="wof-custom-select__option-label" style="font-family:' . esc_attr($choice_font) . '; font-size:15px;">' . esc_html((string) $choice['label']) . '</span>';
+				if (! empty($choice['fontCategory'])) {
+					echo '<span class="wof-font-option-badge">' . esc_html((string) $choice['fontCategory']) . '</span>';
+				}
+				echo '<span class="wof-font-option-sample" style="font-family:' . esc_attr($choice_font) . ';" aria-hidden="true">Aa Bb Gg 123</span>';
+				echo '</div>';
+			} else {
+				echo '<span class="wof-custom-select__option-label">' . esc_html((string) $choice['label']) . '</span>';
+			}
+
 			if ('' !== (string) ($choice['description'] ?? '')) {
 				echo '<small class="wof-custom-select__option-desc">' . esc_html((string) $choice['description']) . '</small>';
 			}
@@ -406,10 +435,11 @@ final class Renderer {
 		// Native select
 		echo '<select id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '" class="wof-custom-select__native" tabindex="-1" aria-hidden="true"';
 		echo $this->input_attributes($field, $description_id) . '>';
-		echo '<option value="">' . esc_html__('Choose an option', 'wooptionsfic') . '</option>';
+		echo '<option value="">' . esc_html($empty_label) . '</option>';
 		foreach ($choices as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
 			$selected    = $choice_uuid === $default_uuid;
+			$choice_font = (string) ($choice['fontFamily'] ?? ($choice['label'] ?? ''));
 			$choice_img  = ! empty($choice['imageUrl']) ? (string) $choice['imageUrl'] : '';
 			if (empty($choice_img) && ! empty($choice['imageId'])) {
 				$choice_img = (string) wp_get_attachment_image_url((int) $choice['imageId'], 'thumbnail');
@@ -417,6 +447,9 @@ final class Renderer {
 			echo '<option value="' . esc_attr($choice_uuid) . '"' . selected($selected, true, false);
 			if ('' !== $choice_img) {
 				echo ' data-image="' . esc_url($choice_img) . '"';
+			}
+			if ($is_font_type && '' !== $choice_font) {
+				echo ' data-font-family="' . esc_attr($choice_font) . '"';
 			}
 			echo disabled(! empty($choice['disabled']), true, false) . '>';
 			echo esc_html((string) $choice['label'] . $this->choice_price_text((array) $choice));
@@ -1660,5 +1693,118 @@ final class Renderer {
 		$handle = 'wooptionsfic-font-' . sanitize_key($family);
 		$url = 'https://fonts.googleapis.com/css2?family=' . $queries[$family] . '&display=swap';
 		wp_enqueue_style($handle, $url, [], null);
+	}
+
+	/**
+	 * Enqueue Google Fonts for specific fonts configured in font fields.
+	 *
+	 * Only the specific fonts chosen by the admin will be requested.
+	 *
+	 * @param array<int,mixed> $fields Field definitions.
+	 */
+	private function enqueue_font_field_fonts(array $fields): void {
+		$catalog_file = WOOPTIONSFIC_PATH . 'config/fonts.php';
+		$catalog      = file_exists($catalog_file) ? require $catalog_file : [];
+		$catalog_map  = [];
+		if (is_array($catalog)) {
+			foreach ($catalog as $item) {
+				if (is_array($item) && ! empty($item['name'])) {
+					$catalog_map[strtolower(trim((string) $item['name']))] = $item;
+					if (! empty($item['id'])) {
+						$catalog_map[strtolower(trim((string) $item['id']))] = $item;
+					}
+				}
+			}
+		}
+
+		$google_params    = [];
+		$has_custom_fonts = false;
+
+		$collect = function (array $list) use (&$collect, &$google_params, &$has_custom_fonts, $catalog_map): void {
+			foreach ($list as $f) {
+				if (! is_array($f)) {
+					continue;
+				}
+				if ('font' === ($f['type'] ?? '')) {
+					foreach ((array) ($f['choices'] ?? []) as $c) {
+						if (! is_array($c)) {
+							continue;
+						}
+						$source = (string) ($c['fontSource'] ?? 'google');
+						if ('system' === $source) {
+							continue;
+						}
+						if ('custom' === $source) {
+							$has_custom_fonts = true;
+							continue;
+						}
+						$name           = trim((string) ($c['label'] ?? ''));
+						$family         = trim((string) ($c['fontFamily'] ?? ''));
+						$primary_family = '';
+						if ('' !== $family) {
+							$parts = explode(',', $family);
+							$primary_family = trim(trim($parts[0]), " \t\n\r\0\x0B'\"");
+						}
+
+						$matched_cat = null;
+						if ('' !== $primary_family && isset($catalog_map[strtolower($primary_family)])) {
+							$matched_cat = $catalog_map[strtolower($primary_family)];
+						} elseif ('' !== $name && isset($catalog_map[strtolower($name)])) {
+							$matched_cat = $catalog_map[strtolower($name)];
+						}
+
+						if (is_array($matched_cat)) {
+							if ('system' === ($matched_cat['source'] ?? '')) {
+								continue;
+							}
+							if ('custom' === ($matched_cat['source'] ?? '')) {
+								$has_custom_fonts = true;
+								continue;
+							}
+							if (! empty($matched_cat['googleParam'])) {
+								$google_params[$matched_cat['googleParam']] = true;
+								continue;
+							}
+						}
+
+						$font_candidate = '' !== $primary_family ? $primary_family : $name;
+						if ('' !== $font_candidate) {
+							$clean_name = str_replace(' ', '+', preg_replace('/[^a-zA-Z0-9 ]/', '', $font_candidate));
+							if ('' !== $clean_name) {
+								$google_params[$clean_name . ':wght@400;700'] = true;
+							}
+						}
+					}
+				}
+				if (! empty($f['children']) && is_array($f['children'])) {
+					$collect($f['children']);
+				}
+			}
+		};
+
+		$collect($fields);
+
+		$custom_css = CustomFontService::generate_font_face_css();
+		if ('' !== $custom_css) {
+			wp_add_inline_style('wooptionsfic-storefront', $custom_css);
+			if (did_action('wp_head')) {
+				echo '<style id="wooptionsfic-custom-fonts-inline">' . $custom_css . '</style>';
+			}
+		}
+
+		if (empty($google_params)) {
+			return;
+		}
+
+		$query_parts = [];
+		foreach (array_keys($google_params) as $param) {
+			$query_parts[] = 'family=' . $param;
+		}
+		$url    = 'https://fonts.googleapis.com/css2?' . implode('&', $query_parts) . '&display=swap';
+		$handle = 'wooptionsfic-font-picker-' . substr(md5($url), 0, 10);
+		wp_enqueue_style($handle, $url, [], null);
+		if (did_action('wp_head')) {
+			echo '<link rel="stylesheet" id="' . esc_attr($handle) . '-inline" href="' . esc_url($url) . '" media="all">';
+		}
 	}
 }

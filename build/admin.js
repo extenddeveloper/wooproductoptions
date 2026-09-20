@@ -551,6 +551,92 @@ var WooOptionsFic;
                 if (type === 'product') {
                     field.mergeVariationProducts = false;
                 }
+                if (type === 'font') {
+                    field.appliedFields = [];
+                    field.placeholder = 'Choose a font...';
+                    field.choices = [
+                        {
+                            uuid: WooOptionsFic.Utils.uuid(),
+                            label: 'Roboto',
+                            description: '',
+                            adminLabel: '',
+                            color: '',
+                            imageId: 0,
+                            imageUrl: '',
+                            disabled: false,
+                            default: true,
+                            pricing: emptyPricing(),
+                            quantityEnabled: false,
+                            linkedProductId: 0,
+                            linkedVariationId: 0,
+                            linkedQuantity: 1,
+                            preview: {},
+                            fontFamily: 'Roboto, sans-serif',
+                            fontCategory: 'Sans-Serif',
+                            fontSource: 'google',
+                        },
+                        {
+                            uuid: WooOptionsFic.Utils.uuid(),
+                            label: 'Playfair Display',
+                            description: '',
+                            adminLabel: '',
+                            color: '',
+                            imageId: 0,
+                            imageUrl: '',
+                            disabled: false,
+                            default: false,
+                            pricing: emptyPricing(),
+                            quantityEnabled: false,
+                            linkedProductId: 0,
+                            linkedVariationId: 0,
+                            linkedQuantity: 1,
+                            preview: {},
+                            fontFamily: "'Playfair Display', serif",
+                            fontCategory: 'Serif',
+                            fontSource: 'google',
+                        },
+                        {
+                            uuid: WooOptionsFic.Utils.uuid(),
+                            label: 'Dancing Script',
+                            description: '',
+                            adminLabel: '',
+                            color: '',
+                            imageId: 0,
+                            imageUrl: '',
+                            disabled: false,
+                            default: false,
+                            pricing: emptyPricing(),
+                            quantityEnabled: false,
+                            linkedProductId: 0,
+                            linkedVariationId: 0,
+                            linkedQuantity: 1,
+                            preview: {},
+                            fontFamily: "'Dancing Script', cursive",
+                            fontCategory: 'Handwriting / Script',
+                            fontSource: 'google',
+                        },
+                        {
+                            uuid: WooOptionsFic.Utils.uuid(),
+                            label: 'Pacifico',
+                            description: '',
+                            adminLabel: '',
+                            color: '',
+                            imageId: 0,
+                            imageUrl: '',
+                            disabled: false,
+                            default: false,
+                            pricing: emptyPricing(),
+                            quantityEnabled: false,
+                            linkedProductId: 0,
+                            linkedVariationId: 0,
+                            linkedQuantity: 1,
+                            preview: {},
+                            fontFamily: "'Pacifico', cursive",
+                            fontCategory: 'Handwriting / Script',
+                            fontSource: 'google',
+                        },
+                    ];
+                }
                 if (type === 'checkbox_group') {
                     field.choices.forEach((c) => {
                         c.default = false;
@@ -2048,9 +2134,233 @@ var WooOptionsFic;
 (function (WooOptionsFic) {
     var Pages;
     (function (Pages) {
-        const { Button, TextControl, ToggleControl } = wp.components;
+        const { Button, SelectControl, TextControl, ToggleControl } = wp.components;
         const { __ } = wp.i18n;
         const { useEffect, useState } = wp.element;
+        function CustomFontsManager(props) {
+            const [name, setName] = useState('');
+            const [weight, setWeight] = useState('400');
+            const [style, setStyle] = useState('normal');
+            const [files, setFiles] = useState({});
+            // Inject @font-face rules into DOM for instant live preview
+            useEffect(() => {
+                let styleTag = document.getElementById('wof-custom-fonts-live');
+                if (!styleTag) {
+                    styleTag = document.createElement('style');
+                    styleTag.id = 'wof-custom-fonts-live';
+                    document.head.appendChild(styleTag);
+                }
+                let css = '';
+                props.fonts.forEach((f) => {
+                    if (!f.files)
+                        return;
+                    const srcs = [];
+                    if (f.files.woff2)
+                        srcs.push(`url('${f.files.woff2}') format('woff2')`);
+                    if (f.files.woff)
+                        srcs.push(`url('${f.files.woff}') format('woff')`);
+                    if (f.files.ttf)
+                        srcs.push(`url('${f.files.ttf}') format('truetype')`);
+                    if (f.files.otf)
+                        srcs.push(`url('${f.files.otf}') format('opentype')`);
+                    if (srcs.length > 0) {
+                        const clean = (f.name || '').replace(/['"]/g, '');
+                        css += `@font-face { font-family: '${clean}'; src: ${srcs.join(', ')}; font-weight: ${f.weight || '400'}; font-style: ${f.style || 'normal'}; font-display: swap; }\n`;
+                    }
+                });
+                if (name && Object.keys(files).length > 0) {
+                    const srcs = [];
+                    if (files.woff2)
+                        srcs.push(`url('${files.woff2}') format('woff2')`);
+                    if (files.woff)
+                        srcs.push(`url('${files.woff}') format('woff')`);
+                    if (files.ttf)
+                        srcs.push(`url('${files.ttf}') format('truetype')`);
+                    if (files.otf)
+                        srcs.push(`url('${files.otf}') format('opentype')`);
+                    if (srcs.length > 0) {
+                        const clean = name.replace(/['"]/g, '');
+                        css += `@font-face { font-family: '${clean}'; src: ${srcs.join(', ')}; font-weight: ${weight}; font-style: ${style}; font-display: swap; }\n`;
+                    }
+                }
+                styleTag.textContent = css;
+            }, [props.fonts, name, files, weight, style]);
+            const openMediaUploader = () => {
+                if (!wp.media) {
+                    WooOptionsFic.Toast.error(__('WordPress Media Library is unavailable.', 'wooptionsfic'));
+                    return;
+                }
+                const frame = wp.media({
+                    title: __('Select or Upload Font File (.woff2, .woff, .ttf, .otf)', 'wooptionsfic'),
+                    button: { text: __('Use this font file', 'wooptionsfic') },
+                    multiple: true,
+                });
+                frame.on('select', () => {
+                    const selection = frame.state().get('selection');
+                    const nextFiles = { ...files };
+                    let detectedName = name;
+                    selection.each((attachmentModel) => {
+                        const att = attachmentModel.toJSON();
+                        const url = String(att.url || '');
+                        const filename = String(att.filename || att.title || '');
+                        const ext = filename.split('.').pop()?.toLowerCase() || '';
+                        if (['woff2', 'woff', 'ttf', 'otf'].includes(ext)) {
+                            nextFiles[ext] = url;
+                            if (!detectedName) {
+                                const base = filename.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+                                detectedName = base.charAt(0).toUpperCase() + base.slice(1);
+                            }
+                        }
+                        else {
+                            WooOptionsFic.Toast.error(__('Please select a valid font file: .woff2, .woff, .ttf, or .otf.', 'wooptionsfic'));
+                        }
+                    });
+                    setFiles(nextFiles);
+                    if (detectedName && !name) {
+                        setName(detectedName);
+                    }
+                });
+                frame.open();
+            };
+            const addFont = () => {
+                const trimmedName = name.trim();
+                if (!trimmedName) {
+                    WooOptionsFic.Toast.error(__('Please enter a font name.', 'wooptionsfic'));
+                    return;
+                }
+                if (Object.keys(files).length === 0) {
+                    WooOptionsFic.Toast.error(__('Please upload at least one font file (.woff2, .woff, .ttf, .otf).', 'wooptionsfic'));
+                    return;
+                }
+                const id = trimmedName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                const newFont = {
+                    id,
+                    name: trimmedName,
+                    family: `'${trimmedName}', sans-serif`,
+                    category: 'Custom',
+                    source: 'custom',
+                    weight,
+                    style,
+                    files,
+                };
+                const nextFonts = [...props.fonts, newFont];
+                props.onChange(nextFonts);
+                WooOptionsFic.injectCustomFontsCss(nextFonts);
+                setName('');
+                setWeight('400');
+                setStyle('normal');
+                setFiles({});
+                WooOptionsFic.Toast.success(__('Custom font added! Remember to click "Save settings" at top right to finalize.', 'wooptionsfic'));
+            };
+            const removeFont = (index) => {
+                if (window.confirm(__('Are you sure you want to remove this custom font?', 'wooptionsfic'))) {
+                    const next = props.fonts.filter((_, i) => i !== index);
+                    props.onChange(next);
+                    WooOptionsFic.injectCustomFontsCss(next);
+                    WooOptionsFic.Toast.success(__('Custom font removed. Click "Save settings" to finalize.', 'wooptionsfic'));
+                }
+            };
+            return (wp.element.createElement("section", { "aria-labelledby": "wof-custom-fonts-heading" },
+                wp.element.createElement("div", { className: "wof-settings-panel__header" },
+                    wp.element.createElement("h2", { id: "wof-custom-fonts-heading", className: "wof-settings-panel__title" }, __('Custom Web Fonts', 'wooptionsfic')),
+                    wp.element.createElement("p", { className: "wof-settings-panel__desc" }, __('Upload brand and custom font files (.woff2, .woff, .ttf, .otf). Uploaded fonts are automatically available in all Font Choice fields across your products.', 'wooptionsfic'))),
+                wp.element.createElement("div", { style: { marginBottom: '32px' } },
+                    wp.element.createElement("div", { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' } },
+                        wp.element.createElement("h3", { style: { margin: 0, fontSize: '15px', fontWeight: 600, color: '#1e293b' } },
+                            __('Installed Custom Fonts', 'wooptionsfic'),
+                            " (",
+                            props.fonts.length,
+                            ")")),
+                    props.fonts.length === 0 ? (wp.element.createElement("div", { style: { padding: '36px', textAlign: 'center', background: '#f8fafc', borderRadius: '12px', border: '1px dashed #cbd5e1' } },
+                        wp.element.createElement("div", { style: { fontSize: '32px', marginBottom: '10px', color: '#94a3b8' } },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "editor-textcolor" })),
+                        wp.element.createElement("strong", { style: { display: 'block', fontSize: '14px', color: '#334155', marginBottom: '4px' } }, __('No custom fonts uploaded yet', 'wooptionsfic')),
+                        wp.element.createElement("p", { style: { margin: 0, fontSize: '13px', color: '#64748b' } }, __('Use the form below to upload your .woff2, .woff, .ttf, or .otf font files.', 'wooptionsfic')))) : (wp.element.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: '14px' } }, props.fonts.map((font, index) => (wp.element.createElement("div", { key: font.id || index, style: {
+                            background: '#ffffff',
+                            borderRadius: '10px',
+                            border: '1px solid #e2e8f0',
+                            padding: '18px 20px',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                        } },
+                        wp.element.createElement("div", { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' } },
+                            wp.element.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+                                wp.element.createElement("strong", { style: { fontSize: '16px', color: '#0f172a' } }, font.name),
+                                wp.element.createElement("span", { style: { fontSize: '11px', fontWeight: 600, padding: '2px 8px', borderRadius: '6px', background: '#f1f5f9', color: '#475569' } }, font.category || 'Custom'),
+                                wp.element.createElement("span", { style: { fontSize: '11px', color: '#64748b' } },
+                                    "Weight: ",
+                                    font.weight || '400',
+                                    " \u00B7 Style: ",
+                                    font.style || 'normal')),
+                            wp.element.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+                                Object.keys(font.files || {}).map((ext) => (wp.element.createElement("span", { key: ext, style: {
+                                        fontSize: '10px',
+                                        fontWeight: 700,
+                                        textTransform: 'uppercase',
+                                        padding: '3px 7px',
+                                        borderRadius: '4px',
+                                        background: '#eff6ff',
+                                        color: '#2563eb',
+                                        border: '1px solid #dbeafe',
+                                    } }, ext))),
+                                wp.element.createElement(Button, { variant: "tertiary", isDestructive: true, onClick: () => removeFont(index), style: { marginLeft: '12px' } }, __('Delete', 'wooptionsfic')))),
+                        wp.element.createElement("div", { style: {
+                                fontFamily: font.family,
+                                fontSize: '22px',
+                                color: '#1e293b',
+                                padding: '16px',
+                                background: '#f8fafc',
+                                borderRadius: '8px',
+                                border: '1px solid #f1f5f9',
+                                lineHeight: 1.4,
+                                wordBreak: 'break-word',
+                            } }, "The quick brown fox jumps over the lazy dog. 1234567890"))))))),
+                wp.element.createElement("div", { style: { background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' } },
+                    wp.element.createElement("h3", { style: { margin: '0 0 6px 0', fontSize: '16px', fontWeight: 600, color: '#0f172a' } }, __('Upload New Custom Font', 'wooptionsfic')),
+                    wp.element.createElement("p", { style: { margin: '0 0 20px 0', fontSize: '13px', color: '#64748b' } }, __('Upload font files in .woff2 (recommended), .woff, .ttf, or .otf formats.', 'wooptionsfic')),
+                    wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '18px' } },
+                        wp.element.createElement(TextControl, { label: __('Font Name', 'wooptionsfic'), placeholder: __('e.g. Brandon Grotesque', 'wooptionsfic'), value: name, onChange: setName }),
+                        wp.element.createElement(SelectControl, { label: __('Font Weight', 'wooptionsfic'), value: weight, options: [
+                                { label: '100 - Thin', value: '100' },
+                                { label: '200 - Extra Light', value: '200' },
+                                { label: '300 - Light', value: '300' },
+                                { label: '400 - Regular (Normal)', value: '400' },
+                                { label: '500 - Medium', value: '500' },
+                                { label: '600 - Semi Bold', value: '600' },
+                                { label: '700 - Bold', value: '700' },
+                                { label: '800 - Extra Bold', value: '800' },
+                                { label: '900 - Black', value: '900' },
+                            ], onChange: setWeight }),
+                        wp.element.createElement(SelectControl, { label: __('Font Style', 'wooptionsfic'), value: style, options: [
+                                { label: 'Normal', value: 'normal' },
+                                { label: 'Italic', value: 'italic' },
+                            ], onChange: (val) => setStyle(val) })),
+                    wp.element.createElement("div", { style: { marginBottom: '20px' } },
+                        wp.element.createElement("label", { style: { display: 'block', fontWeight: 600, fontSize: '13px', color: '#1e293b', marginBottom: '8px' } }, __('Font Files (.woff2, .woff, .ttf, .otf)', 'wooptionsfic')),
+                        wp.element.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', marginBottom: '12px' } },
+                            wp.element.createElement(Button, { variant: "secondary", onClick: openMediaUploader, style: { display: 'inline-flex', alignItems: 'center', gap: '6px' } },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "upload" }),
+                                __('Select / Upload Font Files…', 'wooptionsfic')),
+                            wp.element.createElement("span", { style: { fontSize: '12px', color: '#64748b' } }, __('You can select multiple formats or upload .woff2 for highest web efficiency.', 'wooptionsfic'))),
+                        Object.keys(files).length > 0 ? (wp.element.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' } }, Object.entries(files).map(([ext, url]) => (wp.element.createElement("div", { key: ext, style: {
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '8px 12px',
+                                background: '#f8fafc',
+                                borderRadius: '6px',
+                                border: '1px solid #e2e8f0',
+                                fontSize: '12px',
+                            } },
+                            wp.element.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+                                wp.element.createElement("span", { style: { fontWeight: 700, textTransform: 'uppercase', color: '#2563eb', padding: '2px 6px', background: '#eff6ff', borderRadius: '4px' } }, ext),
+                                wp.element.createElement("span", { style: { color: '#475569', wordBreak: 'break-all' } }, url)),
+                            wp.element.createElement("button", { type: "button", onClick: () => {
+                                    const copy = { ...files };
+                                    delete copy[ext];
+                                    setFiles(copy);
+                                }, style: { background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px', padding: '2px 6px' }, title: __('Remove this file', 'wooptionsfic') }, "\u00D7")))))) : null),
+                    wp.element.createElement(Button, { variant: "primary", onClick: addFont, disabled: !name.trim() || Object.keys(files).length === 0 }, __('+ Add Custom Font to List', 'wooptionsfic')))));
+        }
         function Settings() {
             const [settings, setSettings] = useState(null);
             const [activeTab, setActiveTab] = useState('cleanup');
@@ -2066,7 +2376,13 @@ var WooOptionsFic;
             const save = async () => {
                 setSaving(true);
                 try {
-                    setSettings(await WooOptionsFic.Api.saveSettings(settings));
+                    const saved = await WooOptionsFic.Api.saveSettings(settings);
+                    setSettings(saved);
+                    if (Array.isArray(saved.custom_fonts)) {
+                        WooOptionsFic.injectCustomFontsCss(saved.custom_fonts);
+                        const otherFonts = (window.WooOptionsFicAdmin.fontCatalog || []).filter((f) => f.source !== 'custom');
+                        window.WooOptionsFicAdmin.fontCatalog = [...saved.custom_fonts, ...otherFonts];
+                    }
                     WooOptionsFic.Toast.success(__('Settings saved successfully.', 'wooptionsfic'));
                 }
                 catch (err) {
@@ -2082,6 +2398,12 @@ var WooOptionsFic;
                     label: __('Upload Cleanup', 'wooptionsfic'),
                     subtitle: __('Storage & file purging', 'wooptionsfic'),
                     icon: 'upload',
+                },
+                {
+                    id: 'custom_fonts',
+                    label: __('Custom Fonts', 'wooptionsfic'),
+                    subtitle: __('Upload & manage webfonts', 'wooptionsfic'),
+                    icon: 'editor-textcolor',
                 },
                 {
                     id: 'other',
@@ -2135,6 +2457,7 @@ var WooOptionsFic;
                                         wp.element.createElement("div", { className: "wof-setting-input-wrap" },
                                             wp.element.createElement(TextControl, { hideLabelFromVision: true, label: __('Days to retain completed uploads', 'wooptionsfic'), type: "number", min: "0", value: String(settings.cleanup_completed_upload_days ?? 0), onChange: (val) => set('cleanup_completed_upload_days', Math.max(0, parseInt(val, 10) || 0)) }),
                                             wp.element.createElement("span", { className: "wof-setting-input-unit" }, __('days', 'wooptionsfic')))))))),
+                        activeTab === 'custom_fonts' && (wp.element.createElement(CustomFontsManager, { fonts: settings.custom_fonts || [], onChange: (custom_fonts) => set('custom_fonts', custom_fonts) })),
                         activeTab === 'other' && (wp.element.createElement("section", { "aria-labelledby": "wof-other-heading" },
                             wp.element.createElement("div", { className: "wof-settings-panel__header" },
                                 wp.element.createElement("h2", { id: "wof-other-heading", className: "wof-settings-panel__title" }, __('Other Settings', 'wooptionsfic')),
@@ -2555,6 +2878,9 @@ var WooOptionsFic;
         function FieldPreview(props) {
             const field = props.field;
             const choices = field.choices ?? [];
+            const appliedFontField = (props.allFields || []).find((f) => f.type === 'font' && Array.isArray(f.appliedFields) && f.appliedFields.includes(field.uuid));
+            const appliedFontChoice = appliedFontField?.choices?.find((c) => Boolean(c.default)) || appliedFontField?.choices?.[0];
+            const appliedFontFamily = appliedFontChoice?.fontFamily || appliedFontChoice?.label || undefined;
             if (field.type === 'heading') {
                 const headingText = field.label || field.content || __('Section heading', 'wooptionsfic');
                 const helpText = field.help ? String(field.help).trim() : '';
@@ -2635,10 +2961,23 @@ var WooOptionsFic;
                 return (wp.element.createElement("div", { className: "wof-preview-textarea-wrap" },
                     wp.element.createElement("textarea", { className: "wof-preview-textarea", readOnly: true, tabIndex: -1, rows: rows, style: {
                             textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
+                            fontFamily: appliedFontFamily,
                         }, placeholder: field.placeholder || __('Enter text…', 'wooptionsfic') }),
                     priceText ? wp.element.createElement("span", { className: "wof-preview-scalar__price wof-preview-scalar__price--textarea" }, priceText) : null));
             }
-            if (field.type === 'select' || field.type === 'font') {
+            if (field.type === 'font') {
+                const selectedChoice = choices.find(c => Boolean(c.default)) || choices[0];
+                const fontFamily = selectedChoice?.fontFamily || selectedChoice?.label || 'inherit';
+                const priceText = selectedChoice ? formatChoicePrice(selectedChoice.pricing) : '';
+                return (wp.element.createElement("div", { className: "wof-preview-font-control" },
+                    wp.element.createElement("div", { className: "wof-preview-font-selected" },
+                        wp.element.createElement("span", { className: "wof-preview-font-name", style: { fontFamily } }, selectedChoice ? selectedChoice.label : __('Choose a font…', 'wooptionsfic')),
+                        selectedChoice?.fontCategory ? (wp.element.createElement("span", { className: "wof-font-category-tag" }, selectedChoice.fontCategory)) : null,
+                        priceText ? (wp.element.createElement("span", { style: { fontSize: '11px', color: '#64748b' } }, priceText)) : null,
+                        selectedChoice ? (wp.element.createElement("span", { className: "wof-preview-font-sample", style: { fontFamily } }, "Aa Bb Gg 123")) : null),
+                    wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-down-alt2" })));
+            }
+            if (field.type === 'select') {
                 const selectedChoice = choices.find(c => Boolean(c.default));
                 return (wp.element.createElement("div", { className: "wof-preview-select-control" },
                     wp.element.createElement("select", { "aria-disabled": "true", tabIndex: -1, value: "", onChange: () => undefined },
@@ -3010,6 +3349,7 @@ var WooOptionsFic;
             const priceText = formatChoicePrice(field.pricing);
             const inputElement = (wp.element.createElement("input", { disabled: true, type: inputType[field.type] ?? 'text', value: defaultValue, min: isNum && field.enableMinMax !== false && field.min != null ? String(field.min) : undefined, max: isNum && field.enableMinMax !== false && field.max != null ? String(field.max) : undefined, step: isNum && field.step != null ? String(field.step) : undefined, style: {
                     textTransform: field.textTransform && field.textTransform !== 'none' ? field.textTransform : undefined,
+                    fontFamily: appliedFontFamily,
                 }, placeholder: defaultValue !== undefined ? undefined : (field.placeholder || __('Enter value…', 'wooptionsfic')) }));
             if (priceText) {
                 return (wp.element.createElement("div", { className: "wof-preview-scalar-wrap" },
@@ -3180,7 +3520,7 @@ var WooOptionsFic;
                         " ",
                         __('Choices', 'wooptionsfic'))) : null)) : null,
                 wp.element.createElement("div", { className: "wof-canvas-field__preview" },
-                    wp.element.createElement(Builder.FieldPreview, { field: props.field })),
+                    wp.element.createElement(Builder.FieldPreview, { field: props.field, allFields: props.allFields })),
                 props.field.help && props.field.helpTextPosition === 'below_field' && !isContentBlock ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-field" }, props.field.help)) : null);
         }
         function Canvas(props) {
@@ -3289,7 +3629,7 @@ var WooOptionsFic;
                                         wp.element.createElement("h1", null, __('WooOptionsFic Product (Preview)', 'wooptionsfic')),
                                         wp.element.createElement("strong", { className: "wof-product-preview-meta__price" }, `20.00 ${window.WooOptionsFicAdmin?.currency || 'USD'}`)),
                                     props.document.fields.length ? wp.element.createElement("div", { className: `wof-canvas-fields is-${props.document.layout.type}`, style: { display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-start' } },
-                                        props.document.fields.map((field, index) => wp.element.createElement(CanvasField, { key: field.uuid, field: field, index: index, count: props.document.fields.length, selected: field.uuid === props.selectedUuid, onSelect: () => props.onSelect(field.uuid), onAdd: props.onAdd, onMove: props.onMove, onDuplicate: () => props.onDuplicate(field), onDelete: () => props.onDelete(field.uuid) })),
+                                        props.document.fields.map((field, index) => wp.element.createElement(CanvasField, { key: field.uuid, field: field, allFields: props.document.fields, index: index, count: props.document.fields.length, selected: field.uuid === props.selectedUuid, onSelect: () => props.onSelect(field.uuid), onAdd: props.onAdd, onMove: props.onMove, onDuplicate: () => props.onDuplicate(field), onDelete: () => props.onDelete(field.uuid) })),
                                         wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-drop-end', dragActive && 'is-active'), onDragOver: canvasDragOver, onDrop: dropAtEnd },
                                             wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
                                             __('Drop a field here', 'wooptionsfic'))) : wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-empty', dragActive && 'is-active'), onDragOver: canvasDragOver, onDrop: dropAtEnd },
@@ -3534,7 +3874,7 @@ var WooOptionsFic;
 (function (WooOptionsFic) {
     var Builder;
     (function (Builder) {
-        const { Button, ColorPicker, SelectControl, TextControl, TextareaControl, ToggleControl } = wp.components;
+        const { Button, ColorPicker, Modal, SelectControl, TextControl, TextareaControl, ToggleControl } = wp.components;
         const { __ } = wp.i18n;
         const { useEffect, useMemo, useRef, useState } = wp.element;
         const tabs = [
@@ -4665,10 +5005,356 @@ var WooOptionsFic;
                     wp.element.createElement(TextControl, { label: __('Min quantity', 'wooptionsfic'), type: "number", min: 1, value: String(props.field.minQuantity ?? 1), onChange: (v) => props.onChange({ ...props.field, minQuantity: Math.max(1, parseInt(v, 10) || 1) }) }),
                     wp.element.createElement(TextControl, { label: __('Max quantity', 'wooptionsfic'), type: "number", min: 1, value: String(props.field.maxQuantity ?? 100), onChange: (v) => props.onChange({ ...props.field, maxQuantity: Math.max(0, parseInt(v, 10) || 0) }) }))) : null));
         }
+        // ─── Font Choice Editor ───────────────────────────────────────────────────
+        function FontChoiceCard(props) {
+            const [dropEdge, setDropEdge] = useState(null);
+            const [isDragging, setIsDragging] = useState(false);
+            const cardRef = useRef(null);
+            const dragStart = (event) => {
+                event.stopPropagation();
+                event.dataTransfer?.setData(CHOICE_INDEX_MIME, String(props.index));
+                event.dataTransfer?.setData('text/plain', String(props.index));
+                if (event.dataTransfer) {
+                    event.dataTransfer.effectAllowed = 'move';
+                    if (cardRef.current && event.dataTransfer.setDragImage) {
+                        const bounds = cardRef.current.getBoundingClientRect();
+                        event.dataTransfer.setDragImage(cardRef.current, event.clientX - bounds.left, event.clientY - bounds.top);
+                    }
+                }
+                setIsDragging(true);
+            };
+            const dragEnd = () => {
+                setIsDragging(false);
+                setDropEdge(null);
+            };
+            const dragOver = (event) => {
+                const types = Array.from(event.dataTransfer?.types ?? []);
+                if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain'))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.dataTransfer)
+                    event.dataTransfer.dropEffect = 'move';
+                const element = event.currentTarget;
+                const bounds = element.getBoundingClientRect();
+                setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+            };
+            const dragLeave = (event) => {
+                const element = event.currentTarget;
+                if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget))
+                    return;
+                setDropEdge(null);
+            };
+            const drop = (event) => {
+                const types = Array.from(event.dataTransfer?.types ?? []);
+                if (!types.includes(CHOICE_INDEX_MIME) && !types.includes('text/plain'))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                const sourceText = event.dataTransfer?.getData(CHOICE_INDEX_MIME) || event.dataTransfer?.getData('text/plain') || '';
+                const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+                setDropEdge(null);
+                setIsDragging(false);
+                const source = Number(sourceText);
+                if (!Number.isInteger(source))
+                    return;
+                let finalIndex = insertIndex;
+                if (source < insertIndex)
+                    finalIndex -= 1;
+                finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+                if (finalIndex !== source)
+                    props.onMove(source, finalIndex);
+            };
+            const fontFamily = props.choice.fontFamily || props.choice.label;
+            const primaryFontName = (props.choice.fontFamily || props.choice.label || '').split(',')[0].replace(/['"]/g, '').trim();
+            return (wp.element.createElement("article", { ref: cardRef, className: WooOptionsFic.Utils.classNames('wof-choice-card wof-font-choice-card', !props.isOpen && 'is-collapsed', isDragging && 'is-dragging', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after'), onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop },
+                wp.element.createElement("header", { className: "wof-choice-card__header" },
+                    wp.element.createElement("button", { type: "button", draggable: true, className: "wof-choice-drag-handle", onDragStart: dragStart, onDragEnd: dragEnd, "aria-label": __('Drag to reorder', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.GripIcon, null),
+                        wp.element.createElement("div", { className: "wof-font-card-header-info" },
+                            wp.element.createElement("span", { className: "wof-font-card-name", style: { fontFamily: fontFamily || 'inherit' } }, primaryFontName || props.choice.label || __('Untitled Font', 'wooptionsfic')),
+                            props.choice.fontCategory ? (wp.element.createElement("span", { className: "wof-font-category-tag" }, props.choice.fontCategory)) : null,
+                            props.choice.default ? (wp.element.createElement("span", { className: "wof-badge-default-font" }, __('Default', 'wooptionsfic'))) : null)),
+                    wp.element.createElement("div", { className: "wof-choice-header-actions" },
+                        wp.element.createElement("button", { type: "button", className: "wof-choice-accordion-toggle", onClick: props.onToggle, "aria-expanded": props.isOpen, title: props.isOpen ? __('Collapse', 'wooptionsfic') : __('Expand', 'wooptionsfic') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: props.isOpen ? 'arrow-up-alt2' : 'arrow-down-alt2' })),
+                        wp.element.createElement("button", { type: "button", className: "wof-choice-delete-btn", onClick: props.onRemove, "aria-label": __('Remove font', 'wooptionsfic'), title: __('Remove font', 'wooptionsfic') },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" })))),
+                !props.isOpen ? (wp.element.createElement("div", { className: "wof-font-card-preview-strip", style: { fontFamily: fontFamily || 'inherit' } }, "Aa Bb Gg 123")) : null,
+                props.isOpen ? (wp.element.createElement("div", { className: "wof-choice-card__body" },
+                    wp.element.createElement("div", { className: "wof-font-preview-box", style: { fontFamily: fontFamily || 'inherit' } },
+                        wp.element.createElement("div", { className: "wof-font-preview-headline" }, "Aa Bb Gg 123"),
+                        wp.element.createElement("div", { className: "wof-font-preview-alphabet" }, "Quick brown fox \u00B7 0123456789")),
+                    wp.element.createElement("div", { className: "wof-font-selector-field", style: { marginBottom: '14px' } },
+                        wp.element.createElement("label", { className: "components-base-control__label", style: { display: 'block', marginBottom: '6px', fontWeight: 600, fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#475569' } }, __('Font Family', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-font-selector-trigger", onClick: props.onOpenCatalog, role: "button", tabIndex: 0, onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                props.onOpenCatalog();
+                            } }, style: {
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '10px 12px',
+                                background: '#ffffff',
+                                border: '1.5px solid #cbd5e1',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
+                            }, title: __('Click to select or change font from catalog', 'wooptionsfic') },
+                            wp.element.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: '8px' } },
+                                wp.element.createElement("span", { style: { fontFamily: fontFamily || 'inherit', fontSize: '15px', fontWeight: 600, color: '#0f172a' } }, primaryFontName || props.choice.label),
+                                wp.element.createElement("span", { style: { fontSize: '10px', textTransform: 'uppercase', fontWeight: 700, padding: '1px 6px', borderRadius: '4px', background: '#f1f5f9', color: '#64748b' } }, props.choice.fontCategory || 'Font')),
+                            wp.element.createElement("span", { style: { fontSize: '12px', color: 'var(--wof-admin-primary, #5b4ff5)', fontWeight: 600 } }, __('Change…', 'wooptionsfic')))),
+                    wp.element.createElement(TextControl, { label: __('Customer Display Label', 'wooptionsfic'), value: props.choice.label, help: __('Label displayed to customers in the dropdown (e.g. "Dancing Script" or "Modern Sans").', 'wooptionsfic'), onChange: (label) => props.onUpdate({ label }) }),
+                    wp.element.createElement("div", { className: "wof-choice-pricing-row" },
+                        wp.element.createElement(SelectControl, { label: __('Price adjustment', 'wooptionsfic'), value: props.choice.pricing.strategy, options: [
+                                { label: __('No extra charge', 'wooptionsfic'), value: 'none' },
+                                { label: __('Fixed fee', 'wooptionsfic'), value: 'fixed' },
+                                { label: __('Percentage', 'wooptionsfic'), value: 'percentage' },
+                            ], onChange: (strategy) => props.onUpdate({ pricing: { ...props.choice.pricing, strategy } }) }),
+                        props.choice.pricing.strategy === 'percentage' ? (wp.element.createElement(TextControl, { label: __('Percent', 'wooptionsfic'), type: "number", value: props.choice.pricing.percent, onChange: (percent) => props.onUpdate({ pricing: { ...props.choice.pricing, percent } }) })) : props.choice.pricing.strategy !== 'none' ? (wp.element.createElement(TextControl, { label: __('Amount', 'wooptionsfic'), type: "number", value: props.choice.pricing.amount, onChange: (amount) => props.onUpdate({ pricing: { ...props.choice.pricing, amount } }) })) : null),
+                    wp.element.createElement("div", { className: "wof-choice-toggles-row" },
+                        wp.element.createElement(ToggleControl, { label: __('Default font', 'wooptionsfic'), checked: props.choice.default, onChange: (val) => props.onUpdate({ default: val }) }),
+                        wp.element.createElement(ToggleControl, { label: __('Disable font', 'wooptionsfic'), checked: props.choice.disabled, onChange: (val) => props.onUpdate({ disabled: val }) })))) : null));
+        }
+        function FontChoiceEditor(props) {
+            const choices = props.field.choices ?? [];
+            const [collapsedMap, setCollapsedMap] = useState({});
+            const [showCatalogModal, setShowCatalogModal] = useState(false);
+            const [replacingChoiceUuid, setReplacingChoiceUuid] = useState(null);
+            const [categoryFilter, setCategoryFilter] = useState('all');
+            const [searchQuery, setSearchQuery] = useState('');
+            const catalog = window.WooOptionsFicAdmin?.fontCatalog ?? [];
+            const toggleChoice = (uuid) => {
+                setCollapsedMap((prev) => ({ ...prev, [uuid]: !prev[uuid] }));
+            };
+            const isAllCollapsed = choices.length > 0 && choices.every((c) => Boolean(collapsedMap[c.uuid]));
+            const toggleAll = () => {
+                const nextState = !isAllCollapsed;
+                const nextMap = {};
+                choices.forEach((c) => {
+                    nextMap[c.uuid] = nextState;
+                });
+                setCollapsedMap(nextMap);
+            };
+            const updateChoice = (uuid, patch) => {
+                let nextChoices = choices.map((c) => {
+                    if (c.uuid === uuid) {
+                        return { ...c, ...patch };
+                    }
+                    if (patch.default) {
+                        return { ...c, default: false };
+                    }
+                    return c;
+                });
+                props.onChange({ ...props.field, choices: nextChoices });
+            };
+            const removeChoice = (uuid) => {
+                props.onChange({
+                    ...props.field,
+                    choices: choices.filter((c) => c.uuid !== uuid),
+                });
+            };
+            const moveChoice = (from, to) => {
+                if (from === to || from < 0 || to < 0 || from >= choices.length || to >= choices.length)
+                    return;
+                const reordered = [...choices];
+                const [moved] = reordered.splice(from, 1);
+                reordered.splice(to, 0, moved);
+                props.onChange({ ...props.field, choices: reordered });
+            };
+            const addCatalogFont = (item) => {
+                if (choices.some((c) => c.label.toLowerCase() === item.name.toLowerCase())) {
+                    return;
+                }
+                const newChoice = {
+                    uuid: WooOptionsFic.Utils.uuid(),
+                    label: item.name,
+                    description: '',
+                    adminLabel: '',
+                    color: '',
+                    imageId: 0,
+                    imageUrl: '',
+                    disabled: false,
+                    default: choices.length === 0,
+                    pricing: WooOptionsFic.FieldFactory.emptyPricing(),
+                    quantityEnabled: false,
+                    linkedProductId: 0,
+                    linkedVariationId: 0,
+                    linkedQuantity: 1,
+                    preview: {},
+                    fontFamily: item.family,
+                    fontCategory: item.category,
+                    fontSource: item.source,
+                };
+                props.onChange({
+                    ...props.field,
+                    choices: [...choices, newChoice],
+                });
+                setCollapsedMap((prev) => ({ ...prev, [newChoice.uuid]: true }));
+            };
+            const selectFontFromModal = (item) => {
+                if (replacingChoiceUuid) {
+                    const choice = choices.find((c) => c.uuid === replacingChoiceUuid);
+                    if (choice) {
+                        const oldPrimary = (choice.fontFamily || choice.label).split(',')[0].replace(/['"]/g, '').trim();
+                        const patch = {
+                            fontFamily: item.family,
+                            fontCategory: item.category,
+                            fontSource: item.source,
+                        };
+                        if (!choice.label || choice.label === oldPrimary || choice.label === 'Choice' || choice.label === 'Modern sans' || choice.label === 'Classic serif' || choice.label === 'Soft script') {
+                            patch.label = item.name;
+                        }
+                        updateChoice(replacingChoiceUuid, patch);
+                        setReplacingChoiceUuid(null);
+                        setShowCatalogModal(false);
+                        WooOptionsFic.Toast.success(__('Font updated to ', 'wooptionsfic') + item.name);
+                        return;
+                    }
+                }
+                addCatalogFont(item);
+            };
+            const categories = useMemo(() => {
+                const set = new Set();
+                catalog.forEach((f) => {
+                    if (f.category)
+                        set.add(f.category);
+                });
+                const list = Array.from(set);
+                const hasCustom = list.includes('Custom');
+                const rest = list.filter((c) => c !== 'Custom');
+                return ['all', ...(hasCustom ? ['Custom'] : []), ...rest];
+            }, [catalog]);
+            const filteredCatalog = useMemo(() => {
+                return catalog.filter((item) => {
+                    const matchesCat = categoryFilter === 'all' || item.category === categoryFilter;
+                    const matchesQuery = !searchQuery || item.name.toLowerCase().includes(searchQuery.toLowerCase());
+                    return matchesCat && matchesQuery;
+                });
+            }, [catalog, categoryFilter, searchQuery]);
+            // Dynamically load Google WebFonts for configured choices in admin document head
+            useEffect(() => {
+                const gFonts = choices
+                    .filter((c) => c.fontSource !== 'system')
+                    .map((c) => {
+                    const primary = (c.fontFamily || c.label || '').split(',')[0].replace(/['"]/g, '').trim();
+                    const found = catalog.find((item) => item.name.toLowerCase() === primary.toLowerCase() || item.name.toLowerCase() === c.label.toLowerCase());
+                    if (found && found.source === 'system')
+                        return '';
+                    if (found && found.googleParam)
+                        return found.googleParam;
+                    const clean = (primary || c.label).replace(/[^a-zA-Z0-9 ]/g, '').replace(/ /g, '+');
+                    return clean ? `${clean}:wght@400;700` : '';
+                })
+                    .filter(Boolean);
+                if (gFonts.length > 0) {
+                    const id = 'wof-builder-google-fonts';
+                    let link = document.getElementById(id);
+                    const href = 'https://fonts.googleapis.com/css2?' + Array.from(new Set(gFonts)).map(f => 'family=' + f).join('&') + '&display=swap';
+                    if (!link) {
+                        link = document.createElement('link');
+                        link.id = id;
+                        link.rel = 'stylesheet';
+                        document.head.appendChild(link);
+                    }
+                    else if (link.href !== href) {
+                        link.href = href;
+                    }
+                }
+            }, [choices, catalog]);
+            // Also load catalog fonts into admin document head when modal opens
+            useEffect(() => {
+                if (showCatalogModal) {
+                    const catFonts = catalog
+                        .filter((f) => f.source !== 'system' && f.googleParam)
+                        .map((f) => f.googleParam);
+                    if (catFonts.length > 0) {
+                        const id = 'wof-builder-catalog-fonts';
+                        let link = document.getElementById(id);
+                        const href = 'https://fonts.googleapis.com/css2?' + catFonts.map(f => 'family=' + f).join('&') + '&display=swap';
+                        if (!link) {
+                            link = document.createElement('link');
+                            link.id = id;
+                            link.rel = 'stylesheet';
+                            document.head.appendChild(link);
+                        }
+                    }
+                }
+            }, [showCatalogModal, catalog]);
+            return (wp.element.createElement("div", { className: "wof-choice-editor-list wof-font-choice-editor" },
+                wp.element.createElement("div", { style: { marginBottom: '14px' } },
+                    wp.element.createElement("p", { style: { margin: '0 0 8px 0', fontSize: '13px', color: '#64748b', lineHeight: 1.4 } }, __('Select which specific fonts are available for customers in this Font Choice field. Only the fonts you add below will be loaded.', 'wooptionsfic'))),
+                wp.element.createElement("div", { className: "wof-choice-list-toolbar", style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' } },
+                    wp.element.createElement("span", { className: "wof-choice-list-count", style: { fontWeight: 600, fontSize: '13px', color: '#334155' } },
+                        choices.length,
+                        " ",
+                        __('Available Fonts', 'wooptionsfic')),
+                    choices.length > 1 ? (wp.element.createElement("button", { type: "button", className: "wof-choice-collapse-all-btn", onClick: toggleAll }, isAllCollapsed ? __('Expand all', 'wooptionsfic') : __('Collapse all', 'wooptionsfic'))) : null),
+                choices.length === 0 ? (wp.element.createElement("div", { style: { padding: '24px', textAlign: 'center', background: '#f8fafc', borderRadius: '8px', border: '1px dashed #cbd5e1', marginBottom: '14px' } },
+                    wp.element.createElement("p", { style: { margin: '0 0 10px 0', color: '#64748b', fontSize: '13px' } }, __('No fonts added yet. Click "+ Add Fonts" to choose fonts from the Google Fonts catalog.', 'wooptionsfic')),
+                    wp.element.createElement(Button, { variant: "primary", onClick: () => setShowCatalogModal(true) }, __('+ Add Fonts from Catalog', 'wooptionsfic')))) : (wp.element.createElement("div", { className: "wof-font-choices-list", style: { display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' } }, choices.map((choice, index) => (wp.element.createElement(FontChoiceCard, { key: choice.uuid, choice: choice, index: index, count: choices.length, isOpen: !collapsedMap[choice.uuid], onToggle: () => toggleChoice(choice.uuid), onUpdate: (patch) => updateChoice(choice.uuid, patch), onRemove: () => removeChoice(choice.uuid), onMove: moveChoice, onOpenCatalog: () => {
+                        setReplacingChoiceUuid(choice.uuid);
+                        setShowCatalogModal(true);
+                    } }))))),
+                wp.element.createElement("div", { style: { marginBottom: '16px' } },
+                    wp.element.createElement(Button, { variant: "primary", onClick: () => {
+                            setReplacingChoiceUuid(null);
+                            setShowCatalogModal(true);
+                        }, style: { width: '100%', minHeight: '38px', justifyContent: 'center' } },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
+                        __('Select Fonts from Catalog…', 'wooptionsfic')),
+                    wp.element.createElement("p", { style: { margin: '8px 0 0 0', fontSize: '12px', color: '#64748b', textAlign: 'center', lineHeight: 1.4 } }, __('Need custom brand fonts? Upload .woff2, .woff, .ttf, or .otf files in WooOptionsFic → Settings → Custom Fonts.', 'wooptionsfic'))),
+                showCatalogModal ? (wp.element.createElement(Modal, { title: replacingChoiceUuid ? __('Select Replacement Font', 'wooptionsfic') : __('Select Fonts to Make Available', 'wooptionsfic'), onRequestClose: () => {
+                        setShowCatalogModal(false);
+                        setReplacingChoiceUuid(null);
+                    }, className: "wof-font-catalog-modal" },
+                    wp.element.createElement("div", { className: "wof-font-catalog-modal-content" },
+                        wp.element.createElement("div", { className: "wof-font-catalog-modal-header-section" },
+                            wp.element.createElement("p", { className: "wof-font-catalog-modal-subtitle", style: { margin: '0 0 12px 0', fontSize: '13px', color: '#64748b' } }, replacingChoiceUuid
+                                ? __('Select a font from the catalog to replace this choice. Google, System, and Custom fonts are supported.', 'wooptionsfic')
+                                : __('Click any font to make it available for customers. Only enabled fonts will be downloaded by customers.', 'wooptionsfic')),
+                            wp.element.createElement("div", { className: "wof-font-catalog-toolbar" },
+                                wp.element.createElement("input", { type: "text", className: "wof-font-search-input", placeholder: __('Search fonts (e.g. Dancing Script, Roboto)…', 'wooptionsfic'), value: searchQuery, onChange: (e) => setSearchQuery(e.target.value), autoFocus: true }),
+                                wp.element.createElement("div", { className: "wof-font-category-chips" }, categories.map((cat) => (wp.element.createElement("button", { key: cat, type: "button", className: WooOptionsFic.Utils.classNames('wof-font-category-chip', categoryFilter === cat && 'is-active'), onClick: () => setCategoryFilter(cat) },
+                                    cat === 'all' ? __('All Categories', 'wooptionsfic') : cat,
+                                    cat === 'Custom' ? ` (${catalog.filter((f) => f.category === 'Custom').length})` : '')))))),
+                        wp.element.createElement("div", { className: "wof-font-catalog-grid" }, filteredCatalog.length === 0 ? (wp.element.createElement("div", { style: { gridColumn: '1 / -1', textAlign: 'center', padding: '40px 20px', color: '#64748b' } },
+                            wp.element.createElement("p", { style: { margin: '0 0 8px 0', fontSize: '14px', fontWeight: 600 } }, __('No fonts found matching your search.', 'wooptionsfic')),
+                            categoryFilter === 'Custom' ? (wp.element.createElement("p", { style: { margin: 0, fontSize: '12px', color: '#94a3b8' } }, __('You can upload custom .woff2, .woff, .ttf, or .otf font files in WooOptionsFic → Settings → Custom Fonts.', 'wooptionsfic'))) : null)) : (filteredCatalog.map((item) => {
+                            const isAdded = choices.some((c) => (c.fontFamily || c.label).toLowerCase().includes(item.name.toLowerCase()));
+                            return (wp.element.createElement("div", { key: item.id, className: WooOptionsFic.Utils.classNames('wof-font-catalog-card', isAdded && !replacingChoiceUuid && 'is-added'), onClick: () => selectFontFromModal(item) },
+                                wp.element.createElement("div", { className: "wof-font-catalog-card-header" },
+                                    wp.element.createElement("span", { className: "wof-font-catalog-card-name" }, item.name),
+                                    wp.element.createElement("span", { className: "wof-font-category-tag" }, item.category)),
+                                wp.element.createElement("div", { className: "wof-font-catalog-card-sample", style: { fontFamily: item.family } }, "Aa Bb Gg 123"),
+                                wp.element.createElement("div", { className: "wof-font-catalog-card-footer" },
+                                    wp.element.createElement("span", { style: { fontSize: '11px', color: '#94a3b8' } }, item.source === 'system'
+                                        ? __('System Font', 'wooptionsfic')
+                                        : item.source === 'custom'
+                                            ? __('Custom Uploaded Font', 'wooptionsfic')
+                                            : __('Google WebFont', 'wooptionsfic')),
+                                    wp.element.createElement("button", { type: "button", className: "wof-font-catalog-card-btn", disabled: isAdded && !replacingChoiceUuid }, replacingChoiceUuid
+                                        ? __('Select Font →', 'wooptionsfic')
+                                        : isAdded
+                                            ? __('Added ✓', 'wooptionsfic')
+                                            : __('+ Select', 'wooptionsfic')))));
+                        }))),
+                        wp.element.createElement("footer", { className: "wof-font-catalog-modal-footer" },
+                            wp.element.createElement("span", { style: { fontSize: '13px', color: '#64748b' } },
+                                choices.length,
+                                " ",
+                                __('font(s) selected for this field', 'wooptionsfic')),
+                            wp.element.createElement(Button, { variant: "primary", onClick: () => { setShowCatalogModal(false); setReplacingChoiceUuid(null); } }, __('Done Selecting', 'wooptionsfic')))))) : null));
+        }
         function ChoiceEditor(props) {
             // Product fields use their own dedicated editor.
             if (props.field.type === 'product') {
                 return wp.element.createElement(ProductChoiceEditor, { field: props.field, onChange: props.onChange });
+            }
+            // Font fields use their own dedicated font manager editor.
+            if (props.field.type === 'font') {
+                return wp.element.createElement(FontChoiceEditor, { field: props.field, onChange: props.onChange });
             }
             const choices = props.field.choices ?? [];
             const [collapsedMap, setCollapsedMap] = useState({});
@@ -4945,6 +5631,49 @@ var WooOptionsFic;
                                 return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
                             }))))) : (wp.element.createElement(wp.element.Fragment, null,
                         wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
+                        field.type === 'font' ? (wp.element.createElement("div", { className: "wof-applied-fields-box", style: { marginBottom: '16px', padding: '14px', background: 'var(--wof-admin-surface-subtle, #f8fafc)', borderRadius: '8px', border: '1px solid var(--wof-admin-border, #e2e8f0)' } },
+                            wp.element.createElement("div", { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' } },
+                                wp.element.createElement("strong", { style: { fontSize: '13px', color: '#1e293b' } }, __('Applied Text Fields', 'wooptionsfic')),
+                                wp.element.createElement("span", { style: { fontSize: '11px', background: 'color-mix(in srgb, var(--wof-admin-primary, #5b4ff5) 12%, transparent)', color: 'var(--wof-admin-primary, #5b4ff5)', padding: '2px 8px', borderRadius: '12px', fontWeight: 600 } },
+                                    Array.isArray(field.appliedFields) ? field.appliedFields.length : 0,
+                                    " ",
+                                    __('linked', 'wooptionsfic'))),
+                            wp.element.createElement("p", { style: { fontSize: '12px', color: '#64748b', margin: '0 0 10px 0', lineHeight: 1.4 } }, __('Select which Text or Textarea field(s) will change their font in real-time as the customer chooses a font.', 'wooptionsfic')),
+                            (() => {
+                                const textFields = (props.document.fields || []).filter((f) => (f.type === 'text' || f.type === 'textarea') && f.uuid !== field.uuid);
+                                if (textFields.length === 0) {
+                                    return (wp.element.createElement("div", { style: { padding: '10px', background: '#fff', borderRadius: '6px', border: '1px dashed #cbd5e1', fontSize: '12px', color: '#64748b', textAlign: 'center' } },
+                                        wp.element.createElement("p", { style: { margin: 0 } }, __('No Text or Textarea fields found in this option set.', 'wooptionsfic')),
+                                        wp.element.createElement("small", { style: { display: 'block', marginTop: '4px', color: '#94a3b8' } }, __('Add a Text or Textarea field to enable real-time font styling.', 'wooptionsfic'))));
+                                }
+                                const applied = Array.isArray(field.appliedFields) ? field.appliedFields : [];
+                                return (wp.element.createElement("div", { className: "wof-applied-fields-list", style: { display: 'flex', flexDirection: 'column', gap: '6px' } }, textFields.map((tf) => {
+                                    const isChecked = applied.includes(tf.uuid);
+                                    return (wp.element.createElement("label", { key: tf.uuid, style: {
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px',
+                                            padding: '8px 10px',
+                                            background: isChecked ? 'color-mix(in srgb, var(--wof-admin-primary, #5b4ff5) 8%, #fff)' : '#fff',
+                                            border: isChecked ? '1.5px solid var(--wof-admin-primary, #5b4ff5)' : '1px solid #e2e8f0',
+                                            borderRadius: '6px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.12s ease',
+                                        } },
+                                        wp.element.createElement("input", { type: "checkbox", checked: isChecked, onChange: (e) => {
+                                                let next;
+                                                if (e.target.checked) {
+                                                    next = [...applied, tf.uuid];
+                                                }
+                                                else {
+                                                    next = applied.filter((id) => id !== tf.uuid);
+                                                }
+                                                update({ appliedFields: next });
+                                            } }),
+                                        wp.element.createElement("span", { style: { fontWeight: 500, fontSize: '13px', flex: 1, color: '#1e293b' } }, tf.label || __('Untitled text field', 'wooptionsfic')),
+                                        wp.element.createElement("span", { style: { fontSize: '10px', textTransform: 'uppercase', padding: '1px 6px', background: '#f1f5f9', borderRadius: '4px', color: '#64748b', fontWeight: 600 } }, tf.type === 'textarea' ? __('Textarea', 'wooptionsfic') : __('Text', 'wooptionsfic'))));
+                                })));
+                            })())) : null,
                         wp.element.createElement("div", { className: "wof-field-width-setting" },
                             wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
                             wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
@@ -5664,11 +6393,44 @@ var WooOptionsFic;
         const hash = window.location.hash.replace(/^#\/?/, '').trim();
         return hash || window.WooOptionsFicAdmin.initialRoute || 'dashboard';
     }
+    function injectCustomFontsCss(customFonts) {
+        if (!Array.isArray(customFonts) || customFonts.length === 0)
+            return;
+        let css = '';
+        for (const font of customFonts) {
+            const files = font.files || {};
+            const sources = [];
+            if (files.woff2)
+                sources.push(`url('${files.woff2}') format('woff2')`, `url('${files.woff2}')`);
+            if (files.woff)
+                sources.push(`url('${files.woff}') format('woff')`, `url('${files.woff}')`);
+            if (files.ttf)
+                sources.push(`url('${files.ttf}') format('truetype')`, `url('${files.ttf}') format('opentype')`, `url('${files.ttf}')`);
+            if (files.otf)
+                sources.push(`url('${files.otf}') format('opentype')`, `url('${files.otf}') format('truetype')`, `url('${files.otf}')`);
+            if (sources.length === 0)
+                continue;
+            const cleanName = (font.family || font.name || '').split(',')[0].replace(/['"]/g, '').trim();
+            css += `@font-face {\n  font-family: '${cleanName}';\n  src: ${sources.join(', ')};\n  font-weight: 100 900;\n  font-style: ${font.style || 'normal'};\n  font-display: swap;\n}\n`;
+            if (cleanName.includes(' ')) {
+                css += `@font-face {\n  font-family: ${cleanName};\n  src: ${sources.join(', ')};\n  font-weight: 100 900;\n  font-style: ${font.style || 'normal'};\n  font-display: swap;\n}\n`;
+            }
+        }
+        let el = document.getElementById('wof-dynamic-custom-fonts');
+        if (!el) {
+            el = document.createElement('style');
+            el.id = 'wof-dynamic-custom-fonts';
+            document.head.appendChild(el);
+        }
+        el.textContent = css;
+    }
+    WooOptionsFic.injectCustomFontsCss = injectCustomFontsCss;
     function App() {
         const [route, setRoute] = useState(routeFromLocation());
         useEffect(() => {
             const update = () => setRoute(routeFromLocation());
             window.addEventListener('hashchange', update);
+            injectCustomFontsCss((window.WooOptionsFicAdmin?.settings?.custom_fonts) || []);
             return () => window.removeEventListener('hashchange', update);
         }, []);
         const navigate = (nextRoute) => {
