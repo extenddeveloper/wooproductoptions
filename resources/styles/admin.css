@@ -2076,7 +2076,6 @@
 	align-items: center;
 	cursor: default;
 	display: flex;
-	font-size: 12px;
 	gap: 7px;
 	padding: 2px 0;
 }
@@ -2120,7 +2119,6 @@
 	align-items: center;
 	cursor: default;
 	display: flex;
-	font-size: 12px;
 	gap: 7px;
 	padding: 2px 0;
 }
@@ -2333,49 +2331,6 @@
 	color: var(--wof-admin-muted);
 	margin: 0;
 	max-width: 330px;
-}
-
-.wof-inspector-tabs {
-	background: #fff;
-	border-bottom: 1px solid var(--wof-admin-line);
-	display: flex;
-	overflow-x: auto;
-	position: sticky;
-	scrollbar-width: none;
-	top: 67px;
-	z-index: 3;
-}
-
-.wof-inspector-tabs::-webkit-scrollbar {
-	display: none;
-}
-
-.wof-inspector-tabs button {
-	background: transparent;
-	border: 0;
-	color: var(--wof-admin-muted);
-	cursor: pointer;
-	font-size: 10px;
-	font-weight: 650;
-	min-height: 39px;
-	padding: 0 10px;
-	position: relative;
-	white-space: nowrap;
-}
-
-.wof-inspector-tabs button.is-active {
-	color: var(--wof-admin-primary-dark);
-}
-
-.wof-inspector-tabs button.is-active:after {
-	background: var(--wof-admin-primary);
-	border-radius: 2px 2px 0 0;
-	bottom: 0;
-	content: "";
-	height: 2px;
-	left: 8px;
-	position: absolute;
-	right: 8px;
 }
 
 .wof-inspector-body {
@@ -6012,29 +5967,41 @@
 	}
 }
 
-/*WooOptionsFic beta.14 smart inspector tabs*/
+/* WooOptionsFic Builder - Standard Inspector Tabs Navigation */
 
 .wof-inspector-tabs-shell {
-	background: rgba(255, 255, 255, .98);
-	padding: 10px 12px;
+	align-items: stretch;
+	background: #ffffff;
+	border-bottom: 1px solid var(--wof-admin-line, #dfe4ee);
+	box-sizing: border-box;
+	display: flex;
+	height: 44px;
+	margin: 0;
+	min-height: 44px;
+	padding: 0;
 	position: sticky;
-	top: 72px;
-	z-index: 3;
+	top: 64px;
+	width: 100%;
+	z-index: 6;
 }
 
 .wof-inspector-tabs {
-	align-items: center;
-	background: #f5f7fb;
-	border: 1px solid #e1e6ef;
-	border-radius: 12px;
+	align-items: stretch;
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	box-sizing: border-box;
 	display: flex;
-	gap: 4px;
+	flex: 1 1 auto;
+	gap: 0;
+	height: 100%;
+	margin: 0;
 	min-width: 0;
 	overflow-x: auto;
-	padding: 4px;
+	padding: 0;
 	scroll-behavior: smooth;
-	scroll-padding-inline: 42px;
 	scrollbar-width: none;
+	-ms-overflow-style: none;
 }
 
 .wof-inspector-tabs::-webkit-scrollbar {
@@ -6044,137 +6011,120 @@
 }
 
 .wof-inspector-tabs button {
+	align-items: center;
 	background: transparent;
-	border: 0;
-	border-radius: 8px;
-	color: #69758a;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	box-sizing: border-box;
+	color: #64748b;
 	cursor: pointer;
-	flex: 0 0 auto;
+	display: inline-flex;
+	flex: 1 1 0;
+	font-family: inherit;
 	font-size: 13px;
-	font-weight: 700;
+	font-weight: 500;
+	height: 100%;
+	justify-content: center;
+	letter-spacing: -0.01em;
 	line-height: 1;
-	min-height: 36px;
+	margin: 0;
+	min-height: 44px;
+	min-width: max-content;
 	padding: 0 12px;
 	position: relative;
-	transition: background .14s ease, color .14s ease, box-shadow .14s ease;
+	text-decoration: none;
+	transition: color .15s ease, background-color .15s ease;
+	user-select: none;
 	white-space: nowrap;
 }
 
 .wof-inspector-tabs button:hover {
-	background: rgba(255, 255, 255, .72);
-	color: #303b50;
+	background: #f8fafc;
+	color: #0f172a;
 }
 
 .wof-inspector-tabs button.is-active {
-	background: #fff;
-	box-shadow: 0 1px 3px rgba(23, 32, 51, .11), 0 0 0 1px rgba(91, 79, 245, .06);
-	color: var(--wof-admin-primary-dark);
+	background: transparent;
+	box-shadow: none;
+	color: var(--wof-admin-primary, #5b4ff5);
+	font-weight: 600;
 }
 
-.wof-inspector-tabs button.is-active:after {
-	display: none;
+.wof-inspector-tabs button.is-active::after {
+	background: var(--wof-admin-primary, #5b4ff5);
+	border-radius: 3px 3px 0 0;
+	bottom: -1px;
+	content: "";
+	display: block;
+	height: 2.5px;
+	left: 6px;
+	position: absolute;
+	right: 6px;
+	z-index: 2;
 }
 
 .wof-inspector-tabs button:focus-visible {
-	outline: 2px solid var(--wof-admin-primary);
+	outline: 2px solid var(--wof-admin-primary, #5b4ff5);
 	outline-offset: -2px;
-}
-
-.wof-inspector-tabs-shell:before,
-.wof-inspector-tabs-shell:after {
-	bottom: 10px;
-	content: "";
-	opacity: 0;
-	pointer-events: none;
-	position: absolute;
-	top: 10px;
-	transition: opacity .16s ease;
-	width: 54px;
-	z-index: 4;
-}
-
-.wof-inspector-tabs-shell:before {
-	background: linear-gradient(90deg, #fff 30%, rgba(255, 255, 255, .94) 52%, rgba(255, 255, 255, 0));
-	left: 12px;
-}
-
-.wof-inspector-tabs-shell:after {
-	background: linear-gradient(270deg, #fff 30%, rgba(255, 255, 255, .94) 52%, rgba(255, 255, 255, 0));
-	right: 12px;
-}
-
-.wof-inspector-tabs-shell.has-left:before,
-.wof-inspector-tabs-shell.has-right:after {
-	opacity: 1;
+	z-index: 3;
 }
 
 .wof-inspector-tabs-arrow {
 	align-items: center;
-	backdrop-filter: blur(8px);
-	background: rgba(255, 255, 255, .92);
-	border: 1px solid rgba(202, 210, 224, .92);
-	border-radius: 50%;
-	box-shadow: 0 4px 12px rgba(23, 32, 51, .14);
-	color: #59667c;
+	background: #ffffff;
+	border: none;
+	box-shadow: none;
+	color: #64748b;
 	cursor: pointer;
 	display: inline-flex;
-	height: 30px;
+	flex: 0 0 28px;
+	height: 100%;
 	justify-content: center;
 	padding: 0;
-	position: absolute;
-	top: 50%;
-	transform: translateY(-50%);
-	transition: background .14s ease, border-color .14s ease, color .14s ease, transform .14s ease;
-	visibility: visible;
-	width: 30px;
-	z-index: 6;
-}
-
-.wof-inspector-tabs-arrow.is-left {
-	left: 18px;
-}
-
-.wof-inspector-tabs-arrow.is-right {
-	right: 18px;
+	position: static;
+	transform: none;
+	transition: color .14s ease, background-color .14s ease;
+	width: 28px;
+	z-index: 3;
 }
 
 .wof-inspector-tabs-arrow:hover {
-	background: #fff;
-	border-color: #c9c2ff;
-	color: var(--wof-admin-primary-dark);
-	transform: translateY(-50%) scale(1.05);
+	background: #f8fafc;
+	color: var(--wof-admin-primary, #5b4ff5);
+	transform: none;
 }
 
 .wof-inspector-tabs-arrow:active {
-	transform: translateY(-50%) scale(.96);
+	background: #f1f5f9;
+	transform: none;
 }
 
 .wof-inspector-tabs-arrow:focus-visible {
-	outline: 2px solid var(--wof-admin-primary);
-	outline-offset: 2px;
+	outline: 2px solid var(--wof-admin-primary, #5b4ff5);
+	outline-offset: -2px;
+}
+
+.wof-inspector-tabs-arrow.is-left {
+	border-right: 1px solid var(--wof-admin-line, #dfe4ee);
+	box-shadow: 2px 0 6px rgba(0, 0, 0, .03);
+}
+
+.wof-inspector-tabs-arrow.is-right {
+	border-left: 1px solid var(--wof-admin-line, #dfe4ee);
+	box-shadow: -2px 0 6px rgba(0, 0, 0, .03);
 }
 
 .wof-inspector-tabs-arrow .dashicons {
 	font-size: 15px;
 	height: 15px;
+	line-height: 15px;
 	width: 15px;
 }
 
 @media (max-width:782px) {
 	.wof-inspector-tabs-shell {
-		top: 72px;
-	}
-
-	.wof-inspector-tabs {
-		scroll-padding-inline: 38px;
-	}
-
-	.wof-inspector-tabs-arrow.is-left {
-		left: 16px;
-	}
-
-	.wof-inspector-tabs-arrow.is-right {
-		right: 16px;
+		top: 0;
 	}
 }
 

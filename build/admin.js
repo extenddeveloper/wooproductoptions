@@ -5500,15 +5500,27 @@ var WooOptionsFic;
                 const element = scrollerRef.current;
                 if (!element)
                     return;
-                setCanLeft(element.scrollLeft > 4);
-                setCanRight(element.scrollLeft + element.clientWidth < element.scrollWidth - 4);
+                setCanLeft(element.scrollLeft > 2);
+                setCanRight(element.scrollLeft + element.clientWidth < element.scrollWidth - 2);
             };
             useEffect(() => {
                 updateScroll();
                 window.addEventListener('resize', updateScroll);
                 const element = scrollerRef.current;
                 element?.addEventListener('scroll', updateScroll, { passive: true });
-                return () => { window.removeEventListener('resize', updateScroll); element?.removeEventListener('scroll', updateScroll); };
+                const onWheel = (e) => {
+                    if (element && element.scrollWidth > element.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+                        e.preventDefault();
+                        element.scrollLeft += e.deltaY;
+                        updateScroll();
+                    }
+                };
+                element?.addEventListener('wheel', onWheel, { passive: false });
+                return () => {
+                    window.removeEventListener('resize', updateScroll);
+                    element?.removeEventListener('scroll', updateScroll);
+                    element?.removeEventListener('wheel', onWheel);
+                };
             }, [props.field]);
             if (!props.field)
                 return wp.element.createElement("aside", { className: "wof-builder-inspector" },
@@ -5547,13 +5559,13 @@ var WooOptionsFic;
                                 wp.element.createElement("line", { x1: "10", y1: "11", x2: "10", y2: "17" }),
                                 wp.element.createElement("line", { x1: "14", y1: "11", x2: "14", y2: "17" }))))),
                 wp.element.createElement("div", { className: "wof-inspector-tabs-shell" },
-                    canLeft ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-left", onClick: () => scrollerRef.current?.scrollBy({ left: -180, behavior: 'smooth' }) },
+                    canLeft ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-left", "aria-label": __('Scroll tabs left', 'wooptionsfic'), onClick: () => scrollerRef.current?.scrollBy({ left: -140, behavior: 'smooth' }) },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-left-alt2" })) : null,
-                    wp.element.createElement("div", { className: "wof-inspector-tabs", ref: scrollerRef }, visibleTabs.map(([tab, label]) => (wp.element.createElement("button", { type: "button", key: tab, className: activeTab === tab ? 'is-active' : '', onClick: (event) => {
+                    wp.element.createElement("div", { className: "wof-inspector-tabs", ref: scrollerRef, role: "tablist", "aria-label": __('Field Inspector Tabs', 'wooptionsfic') }, visibleTabs.map(([tab, label]) => (wp.element.createElement("button", { type: "button", key: tab, role: "tab", "aria-selected": activeTab === tab, className: activeTab === tab ? 'is-active' : '', onClick: (event) => {
                             props.onTabChange(tab);
                             event.currentTarget.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
                         } }, label)))),
-                    canRight ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-right", onClick: () => scrollerRef.current?.scrollBy({ left: 180, behavior: 'smooth' }) },
+                    canRight ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-right", "aria-label": __('Scroll tabs right', 'wooptionsfic'), onClick: () => scrollerRef.current?.scrollBy({ left: 140, behavior: 'smooth' }) },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-right-alt2" })) : null),
                 wp.element.createElement("div", { className: "wof-inspector-body" },
                     wp.element.createElement("section", { className: "wof-inspector-section" }, activeTab === 'content' ? (field.type === 'separator' ? (wp.element.createElement("div", { className: "wof-spacer-settings" },

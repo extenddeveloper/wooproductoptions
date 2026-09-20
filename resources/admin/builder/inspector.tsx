@@ -2983,15 +2983,27 @@ namespace WooOptionsFic.Builder {
     const updateScroll = () => {
       const element = scrollerRef.current;
       if (!element) return;
-      setCanLeft(element.scrollLeft > 4);
-      setCanRight(element.scrollLeft + element.clientWidth < element.scrollWidth - 4);
+      setCanLeft(element.scrollLeft > 2);
+      setCanRight(element.scrollLeft + element.clientWidth < element.scrollWidth - 2);
     };
     useEffect(() => {
       updateScroll();
       window.addEventListener('resize', updateScroll);
       const element = scrollerRef.current;
       element?.addEventListener('scroll', updateScroll, { passive: true });
-      return () => { window.removeEventListener('resize', updateScroll); element?.removeEventListener('scroll', updateScroll); };
+      const onWheel = (e: WheelEvent) => {
+        if (element && element.scrollWidth > element.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault();
+          element.scrollLeft += e.deltaY;
+          updateScroll();
+        }
+      };
+      element?.addEventListener('wheel', onWheel, { passive: false });
+      return () => {
+        window.removeEventListener('resize', updateScroll);
+        element?.removeEventListener('scroll', updateScroll);
+        element?.removeEventListener('wheel', onWheel);
+      };
     }, [props.field]);
 
     if (!props.field) return <aside className="wof-builder-inspector"><div className="wof-builder-pane__heading"><div><span className="wof-eyebrow">{__('Style', 'wooptionsfic')}</span><h2>{__('Option set styling', 'wooptionsfic')}</h2></div></div><div className="wof-inspector-body"><section className="wof-inspector-section"><StyleStudio document={props.document} onChange={props.onDocumentChange} /></section></div></aside>;
@@ -3021,12 +3033,14 @@ namespace WooOptionsFic.Builder {
         </div>
       </div>
       <div className="wof-inspector-tabs-shell">
-        {canLeft ? <button type="button" className="wof-inspector-tabs-arrow is-left" onClick={() => scrollerRef.current?.scrollBy({ left: -180, behavior: 'smooth' })}><WooOptionsFic.Components.Dashicon name="arrow-left-alt2" /></button> : null}
-        <div className="wof-inspector-tabs" ref={scrollerRef}>
+        {canLeft ? <button type="button" className="wof-inspector-tabs-arrow is-left" aria-label={__('Scroll tabs left', 'wooptionsfic')} onClick={() => scrollerRef.current?.scrollBy({ left: -140, behavior: 'smooth' })}><WooOptionsFic.Components.Dashicon name="arrow-left-alt2" /></button> : null}
+        <div className="wof-inspector-tabs" ref={scrollerRef} role="tablist" aria-label={__('Field Inspector Tabs', 'wooptionsfic')}>
           {visibleTabs.map(([tab, label]) => (
             <button
               type="button"
               key={tab}
+              role="tab"
+              aria-selected={activeTab === tab}
               className={activeTab === tab ? 'is-active' : ''}
               onClick={(event: Event) => {
                 props.onTabChange(tab);
@@ -3037,7 +3051,7 @@ namespace WooOptionsFic.Builder {
             </button>
           ))}
         </div>
-        {canRight ? <button type="button" className="wof-inspector-tabs-arrow is-right" onClick={() => scrollerRef.current?.scrollBy({ left: 180, behavior: 'smooth' })}><WooOptionsFic.Components.Dashicon name="arrow-right-alt2" /></button> : null}
+        {canRight ? <button type="button" className="wof-inspector-tabs-arrow is-right" aria-label={__('Scroll tabs right', 'wooptionsfic')} onClick={() => scrollerRef.current?.scrollBy({ left: 140, behavior: 'smooth' })}><WooOptionsFic.Components.Dashicon name="arrow-right-alt2" /></button> : null}
       </div>
       <div className="wof-inspector-body">
         <section className="wof-inspector-section">
