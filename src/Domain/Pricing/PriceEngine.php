@@ -103,13 +103,14 @@ final class PriceEngine {
 		string $currency,
 		int $scale
 	): array {
-		$lines    = [];
-		$warnings = [];
-		$override = null;
-		$pricing  = is_array($field['pricing'] ?? null) ? $field['pricing'] : ['strategy' => 'none'];
-		$strategy = (string) ($pricing['strategy'] ?? 'none');
+		$lines      = [];
+		$warnings   = [];
+		$override   = null;
+		$field_type = (string) ($field['type'] ?? '');
+		$pricing    = is_array($field['pricing'] ?? null) ? $field['pricing'] : ['strategy' => 'none'];
+		$strategy   = (string) ($pricing['strategy'] ?? 'none');
 
-		if ('customer_defined_price' === ($field['type'] ?? '') && '' !== (string) $value) {
+		if ('customer_defined_price' === $field_type && '' !== (string) $value) {
 			$override = Money::from_decimal((string) $value, $currency, $scale);
 			$lines[]  = $this->line(
 				$field,
@@ -197,13 +198,24 @@ final class PriceEngine {
 					continue;
 				}
 
-				$choice_label = (string) ($choice['label'] ?? __('Choice', 'wooptionsfic'));
-				$selected_labels[] = $choice_label;
-				$display_label = $this->choice_line_label($field, $choice_label);
+				$choice_label = trim((string) ($choice['label'] ?? ''));
 				$choice_pricing = is_array($choice['pricing'] ?? null) ? $choice['pricing'] : [];
 				$choice_strategy = (string) ($choice_pricing['strategy'] ?? 'none');
+				// Always initialize so it is defined for the 'fixed' block below,
+				// even when this choice belongs to a non-product field type.
+				$selected_var_id = 0;
 
-				if ('product' === ($field['type'] ?? '')) {
+				if ('product' === $field_type) {
+					$pid = (int) ($choice['productId'] ?? ($choice['linkedProductId'] ?? 0));
+					if (('' === $choice_label || 'Choice' === $choice_label) && $pid > 0 && function_exists('wc_get_product')) {
+						$wc_p = wc_get_product($pid);
+						if ($wc_p) {
+							$choice_label = wp_strip_all_tags($wc_p->get_name());
+						}
+					}
+					if ('' === $choice_label) {
+						$choice_label = __('Product', 'wooptionsfic');
+					}
 					$product_price = '';
 					$selected_var_id = (int) ($context['productVariations'][$choice_uuid] ?? 0);
 					if ($selected_var_id > 0 && function_exists('wc_get_product')) {
@@ -228,7 +240,6 @@ final class PriceEngine {
 									$choice_label .= ' (' . $var_name . ')';
 								}
 							}
-							$display_label = $this->choice_line_label($field, $choice_label);
 						}
 					}
 					// Fallback to choice productInfo variations array if wc_get_product didn't return a price
@@ -279,18 +290,36 @@ final class PriceEngine {
 					}
 				}
 
+				if ('product' === $field_type && (bool) apply_filters('wooptionsfic_add_linked_products_to_cart', true, [], '')) {
+					$choice_strategy = 'none';
+				}
+
+				$qty_multiplier = 1;
+				$qty_val = $context['choiceQuantities'][$choice_uuid] ?? null;
+				if (! empty($field['enableQuantity'])) {
+					$qty_multiplier = ! empty($qty_val) ? max(1, (int) $qty_val) : 1;
+				}
+
+				$choice_display_label = $choice_label;
+				if (! empty($field['enableQuantity'])) {
+					$choice_display_label = sprintf('%s Count: %d,', $choice_label, $qty_multiplier);
+				}
+
+				$selected_labels[] = $choice_display_label;
+				$display_label = $this->choice_line_label($field, $choice_display_label);
+
 				if ('fixed' === $choice_strategy) {
 					$raw_amount = (string) ($choice_pricing['amount'] ?? '0');
-					$qty_multiplier = 1;
-					$qty_val = $context['choiceQuantities'][$choice_uuid] ?? null;
-					if (! empty($field['enableQuantity']) && ! empty($qty_val)) {
-						$qty_multiplier = max(1, (int) $qty_val);
+					// Guard against non-numeric config values that would crash Decimal::from_string().
+					if ('' === $raw_amount || ! is_numeric($raw_amount)) {
+						$raw_amount = '0';
 					}
 					$money = Money::from_decimal($raw_amount, $currency, $scale);
+					// Use multiply_integer() — Money::multiply() does not exist on this class.
 					if ($qty_multiplier > 1) {
-						$money = $money->multiply(Decimal::from_string((string) $qty_multiplier));
+						$money = $money->multiply_integer($qty_multiplier);
 					}
-					$line_meta = ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_label];
+					$line_meta = ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_display_label];
 					if ($selected_var_id > 0) {
 						$line_meta['variationId'] = $selected_var_id;
 					}
@@ -299,14 +328,17 @@ final class PriceEngine {
 					$lines[] = $line;
 				} elseif ('percentage' === $choice_strategy) {
 					$money = $base->percentage((string) ($choice_pricing['percent'] ?? '0'));
-					$line = $this->line($field, 'choice_percentage', $money, ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_label], $money->to_decimal());
+					if ($qty_multiplier > 1) {
+						$money = $money->multiply_integer($qty_multiplier);
+					}
+					$line = $this->line($field, 'choice_percentage', $money, ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_display_label], $money->to_decimal());
 					$line['label'] = $display_label;
 					$lines[] = $line;
-				} elseif ('none' === $strategy) {
+				} elseif ('none' === $strategy || 'none' === $choice_strategy) {
 					// Itemized breakdown should still identify selected dropdown/radio choices,
 					// even when that choice does not alter the price.
 					$money = Money::from_minor(0, $currency, $scale);
-					$line = $this->line($field, 'choice_none', $money, ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_label], '0');
+					$line = $this->line($field, 'choice_none', $money, ['choiceUuid' => $choice_uuid, 'choiceLabel' => $choice_display_label], '0');
 					$line['label'] = $display_label;
 					$lines[] = $line;
 				}
@@ -314,7 +346,7 @@ final class PriceEngine {
 
 			// A field-level adjustment on a dropdown or radio group should name the
 			// selected choice instead of showing an ambiguous field-only row.
-			if ([] !== $selected_labels && 'none' !== $strategy) {
+			if ([] !== $selected_labels && 'none' !== $strategy && 'product' !== $field_type) {
 				$selection_label = (string) ($field['label'] ?? '');
 				if ('' !== $selection_label) {
 					$selection_label .= ': ';
@@ -331,7 +363,7 @@ final class PriceEngine {
 			}
 		}
 
-		if ('repeater' === ($field['type'] ?? '') && is_array($value)) {
+		if ('repeater' === $field_type && is_array($value)) {
 			foreach ($value as $row_index => $row) {
 				$row_values = is_array($row['values'] ?? null) ? $row['values'] : [];
 				foreach ((array) ($field['children'] ?? []) as $child) {

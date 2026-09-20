@@ -73,7 +73,8 @@ final class QuoteService {
 			$compiled,
 			$selection['values'],
 			(int) ($context['productId'] ?? 0),
-			max(1, (int) ($context['quantity'] ?? 1))
+			max(1, (int) ($context['quantity'] ?? 1)),
+			$context
 		);
 		$errors = array_merge($errors, $linked['errors']);
 
@@ -104,7 +105,8 @@ final class QuoteService {
 			$selection['values'],
 			$price,
 			(int) ($context['productId'] ?? 0),
-			(int) ($context['variationId'] ?? 0)
+			(int) ($context['variationId'] ?? 0),
+			$context
 		);
 
 		return [

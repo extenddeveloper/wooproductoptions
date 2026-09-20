@@ -23,6 +23,31 @@ final class CartIntegration {
 	private bool $adding_linked = false;
 	private bool $removing_related = false;
 
+	/**
+	 * WeakMap registry that stores custom unit prices per WC_Product instance.
+	 * Using WeakMap avoids the PHP 8.2+ dynamic-property deprecation while
+	 * still allowing GC once the product object is released.
+	 *
+	 * @var \WeakMap<\WC_Product, string>|null
+	 */
+	private static ?\WeakMap $price_registry = null;
+
+	private static function price_registry(): \WeakMap {
+		if ( null === self::$price_registry ) {
+			self::$price_registry = new \WeakMap();
+		}
+		return self::$price_registry;
+	}
+
+	private static function set_product_price( \WC_Product $product, string $price ): void {
+		self::price_registry()[ $product ] = $price;
+		$product->set_price( $price );
+	}
+
+	private static function get_product_price( \WC_Product $product ): ?string {
+		return self::price_registry()[ $product ] ?? null;
+	}
+
 	public function __construct(
 		private readonly QuoteService $quotes,
 		private readonly ProductContext $products,
@@ -149,8 +174,7 @@ final class CartIntegration {
 			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
 				$product = $cart_item['data'] ?? null;
 				if ($product instanceof \WC_Product) {
-					$product->set_price($decimal);
-					$product->wooptionsfic_custom_price = $decimal;
+					self::set_product_price($product, $decimal);
 				}
 			}
 		}
@@ -175,33 +199,55 @@ final class CartIntegration {
 		if (! function_exists('WC') || ! WC()->cart) {
 			return;
 		}
-		$this->adding_linked = true;
-		try {
-			foreach ((array) ($data['linkedProducts'] ?? []) as $linked) {
-				if (! is_array($linked)) {
-					continue;
+		// Selected product choices are added to the cart as separate products with their own product price.
+		if (apply_filters('wooptionsfic_add_linked_products_to_cart', true, $data, $cart_item_key)) {
+			$this->adding_linked = true;
+			try {
+				foreach ((array) ($data['linkedProducts'] ?? []) as $linked) {
+					if (! is_array($linked)) {
+						continue;
+					}
+					$factor       = max(1, (int) ($linked['quantity'] ?? 1));
+					$linked_id    = max(1, (int) ($linked['productId'] ?? 0));
+					$variation_id = max(0, (int) ($linked['variationId'] ?? 0));
+					$variation_args = [];
+					if ($variation_id > 0 && function_exists('wc_get_product')) {
+						$var_prod = wc_get_product($variation_id);
+						if ($var_prod instanceof \WC_Product_Variation) {
+							$variation_args = (array) $var_prod->get_variation_attributes();
+						}
+					} elseif ($variation_id <= 0 && function_exists('wc_get_product')) {
+						$linked_prod = wc_get_product($linked_id);
+						if ($linked_prod && $linked_prod->is_type('variable')) {
+							$children = $linked_prod->get_children();
+							if (! empty($children)) {
+								$variation_id = (int) reset($children);
+								$var_prod     = wc_get_product($variation_id);
+								if ($var_prod instanceof \WC_Product_Variation) {
+									$variation_args = (array) $var_prod->get_variation_attributes();
+								}
+							}
+						}
+					}
+					WC()->cart->add_to_cart(
+						$linked_id,
+						max(1, $quantity) * $factor,
+						$variation_id,
+						$variation_args,
+						[
+							'wooptionsfic_child' => [
+								'parentKey'  => $cart_item_key,
+								'factor'     => $factor,
+								'fieldUuid'  => (string) ($linked['fieldUuid'] ?? ''),
+								'choiceUuid' => (string) ($linked['choiceUuid'] ?? ''),
+								'label'      => (string) ($linked['label'] ?? ''),
+							],
+						]
+					);
 				}
-				$factor       = max(1, (int) ($linked['quantity'] ?? 1));
-				$linked_id    = max(1, (int) ($linked['productId'] ?? 0));
-				$variation_id = max(0, (int) ($linked['variationId'] ?? 0));
-				WC()->cart->add_to_cart(
-					$linked_id,
-					max(1, $quantity) * $factor,
-					$variation_id,
-					[],
-					[
-						'wooptionsfic_child' => [
-							'parentKey'  => $cart_item_key,
-							'factor'     => $factor,
-							'fieldUuid'  => (string) ($linked['fieldUuid'] ?? ''),
-							'choiceUuid' => (string) ($linked['choiceUuid'] ?? ''),
-							'label'      => (string) ($linked['label'] ?? ''),
-						],
-					]
-				);
+			} finally {
+				$this->adding_linked = false;
 			}
-		} finally {
-			$this->adding_linked = false;
 		}
 
 		$snapshot = (array) ($data['snapshot'] ?? []);
@@ -238,8 +284,7 @@ final class CartIntegration {
 			}
 			$decimal = (string) ($cart_item['wooptionsfic']['price']['unitPrice']['decimal'] ?? '');
 			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
-				$product->set_price($decimal);
-				$product->wooptionsfic_custom_price = $decimal;
+				self::set_product_price($product, $decimal);
 			}
 		}
 	}
@@ -252,11 +297,9 @@ final class CartIntegration {
 	 * @return mixed
 	 */
 	public function filter_product_price(mixed $price, \WC_Product $product): mixed {
-		if (isset($product->wooptionsfic_custom_price)) {
-			$decimal = (string) $product->wooptionsfic_custom_price;
-			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
-				return $decimal;
-			}
+		$custom = self::get_product_price($product);
+		if (null !== $custom && 1 === preg_match('/\A\d+(?:\.\d+)?\z/', $custom)) {
+			return $custom;
 		}
 		return $price;
 	}
@@ -267,8 +310,8 @@ final class CartIntegration {
 	 * @return list<array<string,mixed>>
 	 */
 	public function display_item_data(array $item_data, array $cart_item): array {
-		$hide_in_cart     = (bool) Settings::get('hide_addon_in_cart', false);
-		$hide_in_checkout = (bool) Settings::get('hide_addon_in_checkout', false);
+		$hide_in_cart     = (bool) apply_filters('wooptionsfic_hide_addon_in_cart', (bool) Settings::get('hide_addon_in_cart', false), $cart_item);
+		$hide_in_checkout = (bool) apply_filters('wooptionsfic_hide_addon_in_checkout', (bool) Settings::get('hide_addon_in_checkout', false), $cart_item);
 
 		$is_checkout = function_exists('is_checkout') && is_checkout();
 		if (! $is_checkout && wp_doing_ajax() && isset($_GET['wc-ajax']) && 'update_order_review' === $_GET['wc-ajax']) {
@@ -293,22 +336,59 @@ final class CartIntegration {
 				if (! is_array($line) || ! empty($line['sensitive'])) {
 					continue;
 				}
+				$field_type = (string) ($line['type'] ?? '');
+				if ('product' === $field_type && apply_filters('wooptionsfic_add_linked_products_to_cart', true, $wooptionsfic, '')) {
+					continue;
+				}
 				$field_uuid = (string) ($line['fieldUuid'] ?? '');
 				$raw_value  = (string) ($line['value'] ?? '');
 				$value      = self::format_value_with_price($raw_value, $field_uuid, $wooptionsfic);
+				if ('' === $value) {
+					continue;
+				}
+				$label = (string) ($line['label'] ?? __('Option', 'wooptionsfic'));
 				$item_data[] = [
-					'key'     => (string) ($line['label'] ?? __('Option', 'wooptionsfic')),
+					'key'     => $label,
+					'name'    => $label,
 					'value'   => $value,
-					'display' => esc_html($value),
+					'display' => $value,
 				];
 			}
 		}
+		if (empty($item_data) && ! empty($cart_item['wooptionsfic']['price']['contributions']) && is_array($cart_item['wooptionsfic']['price']['contributions'])) {
+			$wooptionsfic = (array) ($cart_item['wooptionsfic'] ?? []);
+			$rendered_sources = [];
+			foreach ($cart_item['wooptionsfic']['price']['contributions'] as $contrib) {
+				if (! is_array($contrib)) {
+					continue;
+				}
+				$source = (string) ($contrib['sourceUuid'] ?? '');
+				if ('' === $source || isset($rendered_sources[$source])) {
+					continue;
+				}
+				$rendered_sources[$source] = true;
+				$value = self::format_value_with_price('', $source, $wooptionsfic);
+				if ('' !== $value) {
+					$label = (string) ($contrib['label'] ?? __('Option', 'wooptionsfic'));
+					$item_data[] = [
+						'key'     => $label,
+						'name'    => $label,
+						'value'   => $value,
+						'display' => $value,
+					];
+				}
+			}
+		}
 		if (is_array($cart_item['wooptionsfic_child'] ?? null)) {
-			$item_data[] = [
-				'key'     => __('Part of configuration', 'wooptionsfic'),
-				'value'   => (string) ($cart_item['wooptionsfic_child']['label'] ?? ''),
-				'display' => esc_html((string) ($cart_item['wooptionsfic_child']['label'] ?? '')),
-			];
+			if (apply_filters('wooptionsfic_show_part_of_configuration_meta', false, $cart_item)) {
+				$child_label = (string) ($cart_item['wooptionsfic_child']['label'] ?? '');
+				$item_data[] = [
+					'key'     => __('Part of configuration', 'wooptionsfic'),
+					'name'    => __('Part of configuration', 'wooptionsfic'),
+					'value'   => $child_label,
+					'display' => esc_html($child_label),
+				];
+			}
 		}
 		return $item_data;
 	}
@@ -323,7 +403,7 @@ final class CartIntegration {
 	 */
 	public static function format_value_with_price(string $value, string $field_uuid, array $wooptionsfic): string {
 		$value = trim($value);
-		if ('' === $value || '' === $field_uuid) {
+		if ('' === $value && '' === $field_uuid) {
 			return $value;
 		}
 
@@ -343,7 +423,7 @@ final class CartIntegration {
 			}
 		}
 
-		$enhanced_label = '';
+		$choice_labels = [];
 		foreach ($contributions as $contrib) {
 			if (! is_array($contrib)) {
 				continue;
@@ -353,21 +433,29 @@ final class CartIntegration {
 				$total_minor += (int) ($contrib['rounded']['minor'] ?? 0);
 				$found = true;
 				if (! empty($contrib['operands']['choiceLabel']) && is_string($contrib['operands']['choiceLabel'])) {
-					$enhanced_label = (string) $contrib['operands']['choiceLabel'];
+					$lbl = trim((string) $contrib['operands']['choiceLabel']);
+					if ('' !== $lbl && ! in_array($lbl, $choice_labels, true)) {
+						$choice_labels[] = $lbl;
+					}
 				}
 			}
 		}
 
-		$base_display = '' !== $enhanced_label ? $enhanced_label : $value;
+		$enhanced_label = ! empty($choice_labels) ? implode(', ', $choice_labels) : '';
+		$base_display   = '' !== $enhanced_label ? $enhanced_label : $value;
+
+		if ('' === $base_display) {
+			return '';
+		}
 
 		if (! $found || 0 === $total_minor) {
-			return $base_display;
+			return rtrim($base_display, ',');
 		}
 
 		$amount    = $total_minor / (10 ** $scale);
 		$price_str = self::format_price_string(abs($amount), $scale);
 		if ('' === $price_str) {
-			return $base_display;
+			return rtrim($base_display, ',');
 		}
 
 		$sign      = $total_minor > 0 ? '+' : '-';
@@ -419,8 +507,7 @@ final class CartIntegration {
 			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
 				$product = $cart_item['data'] ?? null;
 				if ($product instanceof \WC_Product) {
-					$product->set_price($decimal);
-					$product->wooptionsfic_custom_price = $decimal;
+					self::set_product_price($product, $decimal);
 				}
 			}
 		}
@@ -465,8 +552,7 @@ final class CartIntegration {
 				if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
 					$product = $cart_item['data'] ?? null;
 					if ($product instanceof \WC_Product) {
-						$product->set_price($decimal);
-						$product->wooptionsfic_custom_price = $decimal;
+						self::set_product_price($product, $decimal);
 					}
 				}
 				WC()->cart->cart_contents[$key]         = $cart_item;

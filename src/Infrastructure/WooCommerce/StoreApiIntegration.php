@@ -48,6 +48,10 @@ final class StoreApiIntegration {
 			if (! is_array($line) || ! empty($line['sensitive'])) {
 				continue;
 			}
+			$field_type = (string) ($line['type'] ?? '');
+			if ('product' === $field_type && apply_filters('wooptionsfic_add_linked_products_to_cart', true, (array) ($cart_item['wooptionsfic'] ?? []), '')) {
+				continue;
+			}
 			$field_uuid    = (string) ($line['fieldUuid'] ?? '');
 			$raw_value     = (string) ($line['value'] ?? '');
 			$line['value'] = CartIntegration::format_value_with_price($raw_value, $field_uuid, (array) ($cart_item['wooptionsfic'] ?? []));

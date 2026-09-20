@@ -46,8 +46,13 @@ final class OrderIntegration {
 			$item->add_meta_data('_wooptionsfic_price', wp_json_encode($price, JSON_UNESCAPED_SLASHES), true);
 			$item->add_meta_data('_wooptionsfic_upload_refs', wp_json_encode(array_values((array) ($data['uploadRefs'] ?? []))), true);
 			$item->add_meta_data('_wooptionsfic_schema_version', 1, true);
+			$has_summary = false;
 			foreach ((array) ($snapshot['summary'] ?? []) as $summary) {
 				if (! is_array($summary) || ! empty($summary['sensitive'])) {
+					continue;
+				}
+				$field_type = (string) ($summary['type'] ?? '');
+				if ('product' === $field_type && apply_filters('wooptionsfic_add_linked_products_to_cart', true, $data, '')) {
 					continue;
 				}
 				$label = trim((string) ($summary['label'] ?? ''));
@@ -56,6 +61,25 @@ final class OrderIntegration {
 					$field_uuid       = (string) ($summary['fieldUuid'] ?? '');
 					$value_with_price = CartIntegration::format_value_with_price($value, $field_uuid, $data);
 					$item->add_meta_data($label, $value_with_price, false);
+					$has_summary = true;
+				}
+			}
+			if (! $has_summary && ! empty($price['contributions']) && is_array($price['contributions'])) {
+				$saved_sources = [];
+				foreach ($price['contributions'] as $contrib) {
+					if (! is_array($contrib)) {
+						continue;
+					}
+					$source = (string) ($contrib['sourceUuid'] ?? '');
+					if ('' === $source || isset($saved_sources[$source])) {
+						continue;
+					}
+					$saved_sources[$source] = true;
+					$value_with_price = CartIntegration::format_value_with_price('', $source, $data);
+					if ('' !== $value_with_price) {
+						$label = trim((string) ($contrib['label'] ?? __('Option', 'wooptionsfic')));
+						$item->add_meta_data($label, $value_with_price, false);
+					}
 				}
 			}
 		}

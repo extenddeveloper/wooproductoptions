@@ -63,6 +63,12 @@ final class ChoiceFieldType extends AbstractFieldType {
 			];
 			if ($is_product_type) {
 				$choice_entry['productId']           = max(0, (int) ($choice['productId'] ?? ($choice['linkedProductId'] ?? 0)));
+				if ($choice_entry['productId'] > 0 && (empty($choice_entry['label']) || 'Choice' === $choice_entry['label']) && function_exists('wc_get_product')) {
+					$wc_prod = wc_get_product($choice_entry['productId']);
+					if ($wc_prod) {
+						$choice_entry['label'] = wp_strip_all_tags($wc_prod->get_name());
+					}
+				}
 				$choice_entry['isVariable']          = ! empty($choice['isVariable']) || ! empty($choice['productInfo']['isVariable']);
 				$choice_entry['selectedVariationIds'] = array_values(
 					array_unique(
@@ -249,13 +255,31 @@ final class ChoiceFieldType extends AbstractFieldType {
 		return $errors;
 	}
 
-	public function format_value(mixed $value, array $definition): string {
+	public function format_value(mixed $value, array $definition, array $context = []): string {
 		$is_multiple = ! empty($definition['multiple']) || $this->multiple;
 		$selected    = $is_multiple ? (array) $value : ('' === (string) $value ? [] : [(string) $value]);
 		$labels      = [];
 		foreach ((array) ($definition['choices'] ?? []) as $choice) {
-			if (in_array((string) ($choice['uuid'] ?? ''), $selected, true)) {
-				$labels[] = (string) ($choice['label'] ?? '');
+			$cuuid = (string) ($choice['uuid'] ?? '');
+			if (in_array($cuuid, $selected, true)) {
+				$lbl = trim((string) ($choice['label'] ?? ''));
+				$pid = max(0, (int) ($choice['productId'] ?? ($choice['linkedProductId'] ?? 0)));
+				if (('' === $lbl || 'Choice' === $lbl) && $pid > 0 && function_exists('wc_get_product')) {
+					$wc_prod = wc_get_product($pid);
+					if ($wc_prod) {
+						$lbl = wp_strip_all_tags($wc_prod->get_name());
+					}
+				}
+				if ('' === $lbl) {
+					$lbl = trim((string) ($choice['adminLabel'] ?? ''));
+				}
+				if (! empty($definition['enableQuantity'])) {
+					$qty = ! empty($context['choiceQuantities'][$cuuid]) ? max(1, (int) $context['choiceQuantities'][$cuuid]) : 1;
+					$lbl = sprintf('%s Count: %d,', $lbl, $qty);
+				}
+				if ('' !== $lbl) {
+					$labels[] = $lbl;
+				}
 			}
 		}
 		return implode(', ', $labels);

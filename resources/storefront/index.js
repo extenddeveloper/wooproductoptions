@@ -138,7 +138,14 @@
             if (this.form && window.jQuery) {
             const e = () => this.scheduleQuote(50);
             window.jQuery(this.form).on("found_variation.wooptionsfic reset_data.wooptionsfic", e);
-        } }
+        }
+            // Re-quote when the main product quantity changes so extendedTotal stays in sync.
+            const qtyInput = this.form?.querySelector('input.qty');
+            if (qtyInput) {
+                qtyInput.addEventListener('change', () => this.scheduleQuote(50));
+                qtyInput.addEventListener('input', () => this.scheduleQuote(200));
+            }
+        }
         countryFlagSvg(country) {
             const c = String(country || 'US').toUpperCase();
             const s = 'border-radius:2px;overflow:hidden;flex-shrink:0;display:block;box-shadow:0 0 1px rgba(0,0,0,0.3);';
@@ -1109,7 +1116,10 @@
 
             if (e.price) {
                 const a = this.root.querySelector("[data-wof-total]");
-                if (a) a.textContent = this.money(e.price.unitPrice.decimal, e.price.unitPrice.currency);
+                // Show extendedTotal (unitPrice × product quantity) so the summary
+                // reflects the full order amount when product quantity > 1.
+                const displayPrice = e.price.extendedTotal ?? e.price.unitPrice;
+                if (a) a.textContent = this.money(displayPrice.decimal, displayPrice.currency);
                 const i = this.root.querySelector("[data-wof-summary-rows]"), n = !1 !== this.configuration?.settings?.showPriceBreakdown;
                 if (i) {
                     i.hidden = !n;
