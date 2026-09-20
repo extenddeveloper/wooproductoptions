@@ -12,7 +12,7 @@
       "fields": [
         {"uuid": "80000000-0000-4000-8000-000000000010", "type": "date_range", "label": "Rental dates", "required": true, "description": "This collects preferred dates; availability is confirmed separately."},
         {"uuid": "80000000-0000-4000-8000-000000000020", "type": "time", "label": "Preferred pickup time", "required": true},
-        {"uuid": "80000000-0000-4000-8000-000000000030", "type": "quantity", "label": "Guests", "required": true, "min": "1", "max": "50", "default": "2", "pricing": {"strategy": "per_unit", "amount": "5"}}
+        {"uuid": "80000000-0000-4000-8000-000000000030", "type": "number", "label": "Guests", "required": true, "min": "1", "max": "50", "default": "2", "pricing": {"strategy": "per_unit", "amount": "5"}}
       ],
       "rules": [],
       "preview": {"assets": [], "layers": [], "bindings": []},

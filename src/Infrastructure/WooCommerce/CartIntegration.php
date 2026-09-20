@@ -48,6 +48,60 @@ final class CartIntegration {
 		return self::price_registry()[ $product ] ?? null;
 	}
 
+	/**
+	 * Get the effective unit price for the parent cart item.
+	 * When linked products are added to the cart as separate line items,
+	 * deducts their contributions from the parent's unit price so the customer
+	 * is not double-charged.
+	 *
+	 * @param array<string,mixed> $cart_item Cart item data.
+	 * @return string|null Decimal price string, or null if no custom price.
+	 */
+	public static function get_cart_product_price(array $cart_item): ?string {
+		if (! isset($cart_item['wooptionsfic']['price']['unitPrice']['decimal'])) {
+			return null;
+		}
+		$wooptionsfic = (array) ($cart_item['wooptionsfic'] ?? []);
+		$decimal      = (string) ($wooptionsfic['price']['unitPrice']['decimal'] ?? '');
+		if (1 !== preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
+			return null;
+		}
+
+		if (apply_filters('wooptionsfic_add_linked_products_to_cart', true, $wooptionsfic, '')) {
+			$scale                = max(0, min(6, (int) ($wooptionsfic['price']['unitPrice']['scale'] ?? 2)));
+			$total_minor          = (int) ($wooptionsfic['price']['unitPrice']['minor'] ?? 0);
+			$product_choice_minor = 0;
+
+			$product_field_uuids = [];
+			foreach ((array) ($wooptionsfic['snapshot']['summary'] ?? []) as $summary_line) {
+				if (is_array($summary_line) && 'product' === ($summary_line['type'] ?? '')) {
+					$product_field_uuids[(string) ($summary_line['fieldUuid'] ?? '')] = true;
+				}
+			}
+			foreach ((array) ($wooptionsfic['linkedProducts'] ?? []) as $lp) {
+				if (is_array($lp) && ! empty($lp['fieldUuid'])) {
+					$product_field_uuids[(string) $lp['fieldUuid']] = true;
+				}
+			}
+
+			if (! empty($product_field_uuids)) {
+				$contributions = (array) ($wooptionsfic['price']['contributions'] ?? []);
+				foreach ($contributions as $contrib) {
+					if (is_array($contrib) && isset($product_field_uuids[(string) ($contrib['sourceUuid'] ?? '')])) {
+						$product_choice_minor += (int) ($contrib['rounded']['minor'] ?? 0);
+					}
+				}
+				if ($product_choice_minor > 0) {
+					$adjusted_minor  = max(0, $total_minor - $product_choice_minor);
+					$adjusted_amount = $adjusted_minor / (10 ** $scale);
+					return number_format($adjusted_amount, $scale, '.', '');
+				}
+			}
+		}
+
+		return $decimal;
+	}
+
 	public function __construct(
 		private readonly QuoteService $quotes,
 		private readonly ProductContext $products,
@@ -169,13 +223,11 @@ final class CartIntegration {
 	 */
 	public function add_cart_item(array $cart_item, string $cart_item_key = ''): array {
 		unset($cart_item_key);
-		if (isset($cart_item['wooptionsfic']['price']['unitPrice']['decimal'])) {
-			$decimal = (string) $cart_item['wooptionsfic']['price']['unitPrice']['decimal'];
-			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
-				$product = $cart_item['data'] ?? null;
-				if ($product instanceof \WC_Product) {
-					self::set_product_price($product, $decimal);
-				}
+		$decimal = self::get_cart_product_price($cart_item);
+		if (null !== $decimal) {
+			$product = $cart_item['data'] ?? null;
+			if ($product instanceof \WC_Product) {
+				self::set_product_price($product, $decimal);
 			}
 		}
 		return $cart_item;
@@ -282,8 +334,8 @@ final class CartIntegration {
 			if (! $product instanceof \WC_Product) {
 				continue;
 			}
-			$decimal = (string) ($cart_item['wooptionsfic']['price']['unitPrice']['decimal'] ?? '');
-			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
+			$decimal = self::get_cart_product_price($cart_item);
+			if (null !== $decimal) {
 				self::set_product_price($product, $decimal);
 			}
 		}
@@ -357,6 +409,17 @@ final class CartIntegration {
 		}
 		if (empty($item_data) && ! empty($cart_item['wooptionsfic']['price']['contributions']) && is_array($cart_item['wooptionsfic']['price']['contributions'])) {
 			$wooptionsfic = (array) ($cart_item['wooptionsfic'] ?? []);
+			$product_field_uuids = [];
+			foreach ((array) ($wooptionsfic['snapshot']['summary'] ?? []) as $summary_line) {
+				if (is_array($summary_line) && 'product' === ($summary_line['type'] ?? '')) {
+					$product_field_uuids[(string) ($summary_line['fieldUuid'] ?? '')] = true;
+				}
+			}
+			foreach ((array) ($wooptionsfic['linkedProducts'] ?? []) as $lp) {
+				if (is_array($lp) && ! empty($lp['fieldUuid'])) {
+					$product_field_uuids[(string) $lp['fieldUuid']] = true;
+				}
+			}
 			$rendered_sources = [];
 			foreach ($cart_item['wooptionsfic']['price']['contributions'] as $contrib) {
 				if (! is_array($contrib)) {
@@ -364,6 +427,9 @@ final class CartIntegration {
 				}
 				$source = (string) ($contrib['sourceUuid'] ?? '');
 				if ('' === $source || isset($rendered_sources[$source])) {
+					continue;
+				}
+				if (isset($product_field_uuids[$source]) && apply_filters('wooptionsfic_add_linked_products_to_cart', true, $wooptionsfic, '')) {
 					continue;
 				}
 				$rendered_sources[$source] = true;
@@ -502,13 +568,11 @@ final class CartIntegration {
 				$cart_item[$key] = $session_values[$key];
 			}
 		}
-		if (isset($cart_item['wooptionsfic']['price']['unitPrice']['decimal'])) {
-			$decimal = (string) $cart_item['wooptionsfic']['price']['unitPrice']['decimal'];
-			if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
-				$product = $cart_item['data'] ?? null;
-				if ($product instanceof \WC_Product) {
-					self::set_product_price($product, $decimal);
-				}
+		$decimal = self::get_cart_product_price($cart_item);
+		if (null !== $decimal) {
+			$product = $cart_item['data'] ?? null;
+			if ($product instanceof \WC_Product) {
+				self::set_product_price($product, $decimal);
 			}
 		}
 		return $cart_item;
@@ -548,8 +612,8 @@ final class CartIntegration {
 				$cart_item['wooptionsfic']['selection'] = $quote['values'];
 				$cart_item['wooptionsfic']['snapshot']  = $quote['snapshot'];
 				$cart_item['wooptionsfic']['price']     = $quote['price'];
-				$decimal = (string) ($quote['price']['unitPrice']['decimal'] ?? '');
-				if (1 === preg_match('/\A\d+(?:\.\d+)?\z/', $decimal)) {
+				$decimal = self::get_cart_product_price($cart_item);
+				if (null !== $decimal) {
 					$product = $cart_item['data'] ?? null;
 					if ($product instanceof \WC_Product) {
 						self::set_product_price($product, $decimal);

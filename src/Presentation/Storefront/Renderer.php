@@ -269,7 +269,7 @@ final class Renderer {
 			if ($required) {
 				echo ' <span class="wof-required" aria-hidden="true">*</span><span class="screen-reader-text">' . esc_html__('required', 'wooptionsfic') . '</span>';
 			}
-			if ('' !== $price_text && in_array($type, ['text', 'textarea', 'number', 'password', 'tel', 'email', 'url', 'range', 'quantity', 'customer_defined_price', 'file'], true)) {
+			if ('' !== $price_text && in_array($type, ['text', 'textarea', 'number', 'tel', 'email', 'url', 'range', 'customer_defined_price', 'file'], true)) {
 				echo ' <span class="wof-field__price">' . esc_html($price_text) . '</span>';
 			}
 			if ('' !== $help_text && 'tooltip' === $help_pos) {
@@ -956,8 +956,8 @@ final class Renderer {
 	 */
 	private function render_scalar(array $field, string $name, string $description_id): void {
 		$type_map = [
-			'textarea' => 'textarea', 'password' => 'password', 'tel' => 'tel', 'email' => 'email',
-			'url' => 'url', 'number' => 'number', 'range' => 'range', 'quantity' => 'number',
+			'textarea' => 'textarea', 'tel' => 'tel', 'email' => 'email',
+			'url' => 'url', 'number' => 'number', 'range' => 'range',
 			'date' => 'date', 'time' => 'time', 'datetime' => 'datetime-local',
 			'customer_defined_price' => 'number', 'color_picker' => 'color', 'text' => 'text',
 		];

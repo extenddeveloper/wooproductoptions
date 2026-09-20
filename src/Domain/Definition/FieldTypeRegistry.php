@@ -58,9 +58,9 @@ final class FieldTypeRegistry {
 		$this->register(new BooleanFieldType('toggle'));
 
 		foreach ([
-			['text', 'string'], ['textarea', 'string'], ['password', 'secret'],
+			['text', 'string'], ['textarea', 'string'],
 			['tel', 'tel'], ['email', 'email'], ['url', 'url'], ['number', 'decimal'],
-			['range', 'decimal'], ['quantity', 'integer'], ['date', 'date'],
+			['range', 'decimal'], ['date', 'date'],
 			['date_range', 'date_range'], ['time', 'time'], ['datetime', 'datetime'],
 			['customer_defined_price', 'decimal'], ['color_picker', 'color'],
 		] as [$key, $kind]) {

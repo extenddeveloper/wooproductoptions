@@ -592,7 +592,7 @@ var WooOptionsFic;
                 field.maxDays = 0;
                 field.allowSameDay = true;
             }
-            if (['text', 'textarea', 'password', 'tel', 'email', 'url', 'number', 'range', 'quantity', 'date', 'date_range', 'time', 'datetime', 'customer_defined_price', 'color_picker'].includes(type)) {
+            if (['text', 'textarea', 'tel', 'email', 'url', 'number', 'range', 'date', 'date_range', 'time', 'datetime', 'customer_defined_price', 'color_picker'].includes(type)) {
                 field.placeholder = '';
                 field.min = null;
                 field.max = null;
@@ -707,13 +707,11 @@ var WooOptionsFic;
             font: 'editor-textcolor',
             text: 'editor-textcolor',
             textarea: 'text-page',
-            password: 'lock',
             tel: 'phone',
             email: 'email',
             url: 'admin-links',
             number: 'editor-ol',
             range: 'leftright',
-            quantity: 'plus-alt2',
             date: 'calendar-alt',
             date_range: 'calendar',
             time: 'clock',
@@ -3005,7 +3003,7 @@ var WooOptionsFic;
                         priceText ? wp.element.createElement("span", { className: "wof-preview-datetime__price" }, priceText) : null)));
             }
             const inputType = {
-                password: 'password', tel: 'tel', email: 'email', url: 'url', number: 'number', quantity: 'number', customer_defined_price: 'number',
+                tel: 'tel', email: 'email', url: 'url', number: 'number', customer_defined_price: 'number',
             };
             const isNum = field.type === 'number';
             const defaultValue = field.default != null && field.default !== '' ? String(field.default) : undefined;
@@ -5037,7 +5035,7 @@ var WooOptionsFic;
                             wp.element.createElement(TextControl, { label: __('Allowed extensions', 'wooptionsfic'), value: (field.allowedExtensions ?? []).join(', '), onChange: (value) => update({ allowedExtensions: value.split(',').map((item) => item.trim().replace(/^\./, '')).filter(Boolean) }) }),
                             wp.element.createElement(TextControl, { label: __('Maximum files', 'wooptionsfic'), type: "number", value: String(field.maxFiles ?? 1), onChange: (value) => update({ maxFiles: Math.max(1, Number(value)) }) }),
                             wp.element.createElement(TextControl, { label: __('Maximum file size (MB)', 'wooptionsfic'), type: "number", value: String(field.maxFileMb ?? 5), onChange: (value) => update({ maxFileMb: Math.max(1, Number(value)) }) }))) : null,
-                        ['quantity', 'customer_defined_price'].includes(field.type) ? (wp.element.createElement(wp.element.Fragment, null,
+                        field.type === 'customer_defined_price' ? (wp.element.createElement(wp.element.Fragment, null,
                             wp.element.createElement(TextControl, { label: __('Minimum', 'wooptionsfic'), value: field.min ?? '', onChange: (value) => update({ min: value || null }) }),
                             wp.element.createElement(TextControl, { label: __('Maximum', 'wooptionsfic'), value: field.max ?? '', onChange: (value) => update({ max: value || null }) }),
                             wp.element.createElement(TextControl, { label: __('Step', 'wooptionsfic'), value: field.step ?? '', onChange: (value) => update({ step: value || null }) }))) : null,

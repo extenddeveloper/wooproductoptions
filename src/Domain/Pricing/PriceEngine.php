@@ -290,10 +290,6 @@ final class PriceEngine {
 					}
 				}
 
-				if ('product' === $field_type && (bool) apply_filters('wooptionsfic_add_linked_products_to_cart', true, [], '')) {
-					$choice_strategy = 'none';
-				}
-
 				$qty_multiplier = 1;
 				$qty_val = $context['choiceQuantities'][$choice_uuid] ?? null;
 				if (! empty($field['enableQuantity'])) {

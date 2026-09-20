@@ -65,6 +65,17 @@ final class OrderIntegration {
 				}
 			}
 			if (! $has_summary && ! empty($price['contributions']) && is_array($price['contributions'])) {
+				$product_field_uuids = [];
+				foreach ((array) ($snapshot['summary'] ?? []) as $summary_line) {
+					if (is_array($summary_line) && 'product' === ($summary_line['type'] ?? '')) {
+						$product_field_uuids[(string) ($summary_line['fieldUuid'] ?? '')] = true;
+					}
+				}
+				foreach ((array) ($data['linkedProducts'] ?? []) as $lp) {
+					if (is_array($lp) && ! empty($lp['fieldUuid'])) {
+						$product_field_uuids[(string) $lp['fieldUuid']] = true;
+					}
+				}
 				$saved_sources = [];
 				foreach ($price['contributions'] as $contrib) {
 					if (! is_array($contrib)) {
@@ -72,6 +83,9 @@ final class OrderIntegration {
 					}
 					$source = (string) ($contrib['sourceUuid'] ?? '');
 					if ('' === $source || isset($saved_sources[$source])) {
+						continue;
+					}
+					if (isset($product_field_uuids[$source]) && apply_filters('wooptionsfic_add_linked_products_to_cart', true, $data, '')) {
 						continue;
 					}
 					$saved_sources[$source] = true;

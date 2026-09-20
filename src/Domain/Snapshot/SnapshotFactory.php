@@ -34,18 +34,6 @@ final class SnapshotFactory {
 			if (! $type || ! $type->accepts_customer_value() || ! array_key_exists($uuid, $values)) {
 				continue;
 			}
-			if ('password' === ($field['type'] ?? '')) {
-				// Secret-mode values are validated for the immediate request only.
-				// They are intentionally excluded from cart/order snapshots.
-				unset($snapshot_values[$uuid]);
-				continue;
-			}
-			if ('repeater' === ($field['type'] ?? '')) {
-				$snapshot_values[$uuid] = $this->redact_repeater_secrets(
-					(array) $values[$uuid],
-					(array) ($field['children'] ?? [])
-				);
-			}
 			$formatted = $type instanceof \WooOptionsFic\Domain\Definition\Type\ChoiceFieldType
 				? $type->format_value($values[$uuid], $field, $context)
 				: $type->format_value($values[$uuid], $field);
@@ -87,7 +75,7 @@ final class SnapshotFactory {
 				'type'      => (string) ($field['type'] ?? ''),
 				'label'     => (string) ($field['label'] ?? ''),
 				'value'     => $formatted,
-				'sensitive' => 'password' === ($field['type'] ?? ''),
+				'sensitive' => false,
 			];
 		}
 
@@ -107,32 +95,5 @@ final class SnapshotFactory {
 		];
 		$snapshot['snapshotHash'] = CanonicalJson::hash($snapshot);
 		return $snapshot;
-	}
-
-	/**
-	 * @param list<array<string,mixed>> $rows Rows.
-	 * @param list<array<string,mixed>> $children Child fields.
-	 * @return list<array<string,mixed>>
-	 */
-	private function redact_repeater_secrets(array $rows, array $children): array {
-		$secret_ids = [];
-		foreach ($children as $child) {
-			if ('password' === ($child['type'] ?? '')) {
-				$secret_ids[] = (string) ($child['uuid'] ?? '');
-			}
-		}
-		if ([] === $secret_ids) {
-			return $rows;
-		}
-		foreach ($rows as &$row) {
-			if (! is_array($row) || ! is_array($row['values'] ?? null)) {
-				continue;
-			}
-			foreach ($secret_ids as $secret_id) {
-				unset($row['values'][$secret_id]);
-			}
-		}
-		unset($row);
-		return $rows;
 	}
 }

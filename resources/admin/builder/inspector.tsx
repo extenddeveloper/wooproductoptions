@@ -3109,7 +3109,7 @@ namespace WooOptionsFic.Builder {
                   <TextControl label={__('Maximum file size (MB)', 'wooptionsfic')} type="number" value={String(field.maxFileMb ?? 5)} onChange={(value: string) => update({ maxFileMb: Math.max(1, Number(value)) })} />
                 </>
               ) : null}
-              {['quantity', 'customer_defined_price'].includes(field.type) ? (
+              {field.type === 'customer_defined_price' ? (
                 <>
                   <TextControl label={__('Minimum', 'wooptionsfic')} value={field.min ?? ''} onChange={(value: string) => update({ min: value || null })} />
                   <TextControl label={__('Maximum', 'wooptionsfic')} value={field.max ?? ''} onChange={(value: string) => update({ max: value || null })} />

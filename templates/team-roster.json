@@ -18,7 +18,7 @@
             {"uuid": "a0000000-0000-4000-8000-000000000033", "label": "Large"},
             {"uuid": "a0000000-0000-4000-8000-000000000034", "label": "Extra large"}
           ]},
-          {"uuid": "a0000000-0000-4000-8000-000000000040", "type": "quantity", "label": "Jersey number", "required": true, "min": "0", "max": "99", "step": "1"}
+          {"uuid": "a0000000-0000-4000-8000-000000000040", "type": "number", "label": "Jersey number", "required": true, "min": "0", "max": "99", "step": "1"}
         ]}
       ],
       "rules": [],

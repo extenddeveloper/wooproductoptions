@@ -283,7 +283,7 @@ return [
 			'tested' => 'Tested for accessibility',
 		],
 		'footerIcons'   => ['calendar', 'list'],
-		'fieldTypes'    => ['date_range', 'time', 'quantity'],
+		'fieldTypes'    => ['date_range', 'time', 'number'],
 		'usage'         => 860,
 		'popularity'    => 81,
 		'order'         => 10,

@@ -872,7 +872,7 @@ namespace WooOptionsFic.Builder {
     }
 
     const inputType: Record<string, string> = {
-      password: 'password', tel: 'tel', email: 'email', url: 'url', number: 'number', quantity: 'number', customer_defined_price: 'number',
+      tel: 'tel', email: 'email', url: 'url', number: 'number', customer_defined_price: 'number',
     };
     const isNum = field.type === 'number';
     const defaultValue = field.default != null && field.default !== '' ? String(field.default) : undefined;

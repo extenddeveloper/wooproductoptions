@@ -113,7 +113,7 @@ namespace WooOptionsFic.FieldFactory {
       field.allowSameDay = true;
     }
 
-    if (['text', 'textarea', 'password', 'tel', 'email', 'url', 'number', 'range', 'quantity', 'date', 'date_range', 'time', 'datetime', 'customer_defined_price', 'color_picker'].includes(type)) {
+    if (['text', 'textarea', 'tel', 'email', 'url', 'number', 'range', 'date', 'date_range', 'time', 'datetime', 'customer_defined_price', 'color_picker'].includes(type)) {
       field.placeholder = '';
       field.min = null;
       field.max = null;
