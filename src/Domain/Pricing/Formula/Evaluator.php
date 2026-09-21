@@ -22,6 +22,65 @@ final class Evaluator {
 	}
 
 	/**
+	 * Pre-processes an expression replacing [Label], [uuid], {Label}, {uuid},
+	 * and FIELD("Label") with FIELD("uuid").
+	 *
+	 * @param string $expression Formula expression.
+	 * @param list<array<string, mixed>> $fields List of field definitions.
+	 * @return string Normalized expression with FIELD("uuid").
+	 */
+	public static function resolve_tokens(string $expression, array $fields = []): string {
+		if ('' === trim($expression)) {
+			return '0';
+		}
+
+		$uuid_map = [];
+		foreach ($fields as $f) {
+			if (! is_array($f)) {
+				continue;
+			}
+			$u = (string) ($f['uuid'] ?? '');
+			$l = trim((string) ($f['label'] ?? ''));
+			$n = trim((string) ($f['name'] ?? ''));
+			if ('' !== $u) {
+				$uuid_map[strtolower($u)] = $u;
+				if ('' !== $l) {
+					$uuid_map[strtolower($l)] = $u;
+				}
+				if ('' !== $n) {
+					$uuid_map[strtolower($n)] = $u;
+				}
+			}
+		}
+
+		// Replace [Tag] or [uuid]
+		$expression = (string) preg_replace_callback('/\[([^\]]+)\]/', static function (array $m) use ($uuid_map): string {
+			$raw = trim($m[1]);
+			$key = strtolower($raw);
+			$uuid = $uuid_map[$key] ?? $raw;
+			return 'FIELD("' . addslashes($uuid) . '")';
+		}, $expression);
+
+		// Replace {Tag} or {uuid}
+		$expression = (string) preg_replace_callback('/\{([^\}]+)\}/', static function (array $m) use ($uuid_map): string {
+			$raw = trim($m[1]);
+			$key = strtolower($raw);
+			$uuid = $uuid_map[$key] ?? $raw;
+			return 'FIELD("' . addslashes($uuid) . '")';
+		}, $expression);
+
+		// Also handle FIELD("Label") if user typed a label inside FIELD(...)
+		$expression = (string) preg_replace_callback('/FIELD\s*\(\s*(["\'])(.*?)\1\s*\)/i', static function (array $m) use ($uuid_map): string {
+			$raw = trim($m[2]);
+			$key = strtolower($raw);
+			$uuid = $uuid_map[$key] ?? $raw;
+			return 'FIELD("' . addslashes($uuid) . '")';
+		}, $expression);
+
+		return $expression;
+	}
+
+	/**
 	 * @param array<string, mixed> $variables Variables and `fields` map.
 	 * @param list<array<string, mixed>> $rows Repeater rows.
 	 */
@@ -30,6 +89,9 @@ final class Evaluator {
 		$variables['rows']      = $rows;
 		$variables['TRUE']      = true;
 		$variables['FALSE']     = false;
+		if (isset($variables['all_fields']) && is_array($variables['all_fields'])) {
+			$expression = self::resolve_tokens($expression, $variables['all_fields']);
+		}
 		$value                  = $this->evaluate_node($this->parser->parse($expression), $variables, 0);
 		return $this->as_decimal($value);
 	}
@@ -171,7 +233,15 @@ final class Evaluator {
 				throw new RuntimeException('wooptionsfic_formula_field_id_required');
 			}
 			$fields = is_array($variables['fields'] ?? null) ? $variables['fields'] : [];
-			return $this->normalize_value($fields[$field_id] ?? '0');
+			if (isset($fields[$field_id])) {
+				return $this->normalize_value($fields[$field_id]);
+			}
+			foreach ($fields as $key => $val) {
+				if (0 === strcasecmp((string) $key, $field_id)) {
+					return $this->normalize_value($val);
+				}
+			}
+			return $this->normalize_value('0');
 		}
 
 		if (in_array($name, ['SUM', 'AVG', 'COUNT'], true)) {
@@ -307,10 +377,17 @@ final class Evaluator {
 			return Decimal::from_int($value);
 		}
 		if (is_float($value)) {
-			throw new RuntimeException('wooptionsfic_formula_float_input_rejected');
+			$str = rtrim(rtrim(sprintf('%.6F', $value), '0'), '.');
+			return Decimal::from_string('' === $str ? '0' : $str);
 		}
-		if (is_string($value) && 1 === preg_match('/\A[+-]?\d+(?:\.\d+)?\z/', trim($value))) {
-			return Decimal::from_string(trim($value));
+		if (is_string($value)) {
+			$trimmed = trim($value);
+			if (1 === preg_match('/\A[+-]?\d+(?:\.\d+)?\z/', $trimmed)) {
+				return Decimal::from_string($trimmed);
+			}
+			if (preg_match('/\A\s*([+-]?\d+(?:\.\d+)?)/', $trimmed, $m)) {
+				return Decimal::from_string($m[1]);
+			}
 		}
 		return is_scalar($value) ? (string) $value : $value;
 	}
@@ -323,7 +400,10 @@ final class Evaluator {
 		if (is_bool($value)) {
 			return Decimal::from_int($value ? 1 : 0);
 		}
-		throw new RuntimeException('wooptionsfic_formula_number_required');
+		if (is_numeric($value)) {
+			return Decimal::from_string((string) $value);
+		}
+		return Decimal::zero();
 	}
 
 	private function as_boolean(mixed $value): bool {

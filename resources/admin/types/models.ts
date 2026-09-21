@@ -191,6 +191,10 @@ namespace WooOptionsFic {
     maxFileMb?: number;
     expression?: string;
     displayMode?: 'number' | 'currency' | 'text';
+    decimalPlaces?: number;
+    prefix?: string;
+    suffix?: string;
+    hideWhenZero?: boolean;
     displayDirection?: 'horizontal' | 'vertical';
     columns?: 'one' | 'two' | 1 | 2;
     imageStyle?: 'normal' | 'circle' | 'default' | 'overlay' | 'only_image';

@@ -239,9 +239,13 @@ namespace WooOptionsFic.FieldFactory {
       field.maxFileMb = 5;
     }
 
-    if (type === 'formula' || type === 'calculated') {
+    if (type === 'formula') {
       field.expression = '0';
       field.displayMode = 'number';
+      field.decimalPlaces = 2;
+      field.prefix = '';
+      field.suffix = '';
+      field.hideWhenZero = false;
     }
 
     if (type === 'repeater') {

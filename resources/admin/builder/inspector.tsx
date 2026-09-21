@@ -1,6 +1,6 @@
 namespace WooOptionsFic.Builder {
   const { Button, ColorPicker, Modal, SelectControl, TextControl, TextareaControl, ToggleControl } = wp.components;
-  const { __ } = wp.i18n;
+  const { __, sprintf } = wp.i18n;
   const { useEffect, useMemo, useRef, useState } = wp.element;
 
   const tabs: Array<[WooOptionsFic.InspectorTab, string]> = [
@@ -2912,6 +2912,309 @@ namespace WooOptionsFic.Builder {
     );
   }
 
+  function FormulaPanel(props: {
+    field: WooOptionsFic.FieldDefinition;
+    allFields: WooOptionsFic.FieldDefinition[];
+    onChange: (field: WooOptionsFic.FieldDefinition) => void;
+  }): any {
+    const { field, allFields, onChange } = props;
+    const update = (patch: Partial<WooOptionsFic.FieldDefinition>) => onChange({ ...field, ...patch });
+    const exprRef = useRef<HTMLTextAreaElement | null>(null);
+
+    const [testResult, setTestResult] = useState<{ value?: string; error?: string } | null>(null);
+    const [testing, setTesting] = useState(false);
+    const [refOpen, setRefOpen] = useState(false);
+
+    // Insert text at the current cursor position in the expression textarea.
+    const insertAtCursor = (text: string) => {
+      const el = exprRef.current;
+      const current = field.expression ?? '0';
+      if (!el) {
+        const next = current === '0' || current === '' ? text : current + text;
+        update({ expression: next });
+        return;
+      }
+      const start = el.selectionStart ?? 0;
+      const end = el.selectionEnd ?? 0;
+      let next = '';
+      let newCursorPos = 0;
+      if ((current === '0' || current === '') && (start === 0 && end <= 1)) {
+        next = text;
+        newCursorPos = text.length;
+      } else {
+        next = current.slice(0, start) + text + current.slice(end);
+        newCursorPos = start + text.length;
+      }
+      update({ expression: next });
+      setTimeout(() => {
+        el.focus();
+        el.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    };
+
+    const testExpression = async () => {
+      setTesting(true);
+      setTestResult(null);
+      try {
+        const result = await WooOptionsFic.Api.request<{ result: string }>('/test-formula', {
+          method: 'POST',
+          data: {
+            expression: field.expression ?? '0',
+            fields: allFields.map((f) => ({
+              uuid: f.uuid,
+              label: f.label || f.type,
+              default: f.default ?? '10',
+            })),
+          },
+        });
+        setTestResult({ value: result.result });
+      } catch (err: any) {
+        const msg = err?.message ?? String(err);
+        setTestResult({ error: msg.replace(/^wooptionsfic_formula_?/, '').replace(/_/g, ' ') });
+      } finally {
+        setTesting(false);
+      }
+    };
+
+    // Sibling fields that can be referenced with [Field Label] or FIELD("uuid").
+    const siblingFields = allFields.filter(
+      (f) => f.uuid !== field.uuid && !['formula', 'heading', 'paragraph', 'help', 'separator', 'spacer', 'content', 'modal'].includes(f.type)
+    );
+
+    const FUNCTION_REF = [
+      { name: 'IF(cond, true, false)', stub: 'IF(, , )' },
+      { name: 'FIELD("uuid")', stub: 'FIELD("")' },
+      { name: 'ROUND(n, places)', stub: 'ROUND(, 2)' },
+      { name: 'ABS(n)', stub: 'ABS()' },
+      { name: 'CEIL(n)', stub: 'CEIL()' },
+      { name: 'FLOOR(n)', stub: 'FLOOR()' },
+      { name: 'MIN(a, b, …)', stub: 'MIN(, )' },
+      { name: 'MAX(a, b, …)', stub: 'MAX(, )' },
+      { name: 'POW(base, exp)', stub: 'POW(, 2)' },
+      { name: 'SUM(rows, "field")', stub: 'SUM(rows, "")' },
+      { name: 'AVG(rows, "field")', stub: 'AVG(rows, "")' },
+      { name: 'COUNT(rows)', stub: 'COUNT(rows)' },
+    ];
+
+    return (
+      <div className="wof-formula-panel">
+        {/* ── Field Settings: Label, Help text, Position & Width ───── */}
+        <div className="wof-formula-section">
+          <TextControl
+            label={__('Label', 'wooptionsfic')}
+            value={field.label}
+            onChange={(label: string) => update({ label })}
+          />
+          <TextareaControl
+            label={__('Help text', 'wooptionsfic')}
+            value={field.help ?? field.description ?? ''}
+            onChange={(help: string) => update({ help, description: help })}
+            placeholder={__('Add helpful explanation for customers…', 'wooptionsfic')}
+          />
+          <div className="wof-help-position-control">
+            <label className="wof-segmented-label">
+              {__('HELP TEXT POSITION', 'wooptionsfic')}
+            </label>
+            <div className="wof-segmented-group">
+              {[
+                { label: __('Below Title', 'wooptionsfic'), value: 'below_title' },
+                { label: __('Tooltip', 'wooptionsfic'), value: 'tooltip' },
+                { label: __('Below Field', 'wooptionsfic'), value: 'below_field' },
+              ].map((opt) => {
+                const isSelected = (field.helpTextPosition ?? 'below_title') === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={WooOptionsFic.Utils.classNames('wof-segmented-btn', isSelected && 'is-selected')}
+                    onClick={() => update({ helpTextPosition: opt.value as 'below_title' | 'tooltip' | 'below_field' })}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="wof-field-width-setting">
+            <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+            <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+              {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+                const isSelected = (field.width || '100%') === w;
+                return (
+                  <button
+                    type="button"
+                    key={w}
+                    role="radio"
+                    aria-checked={isSelected}
+                    className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                    onClick={() => update({ width: w })}
+                  >
+                    {w}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Formula Expression ───────────────────── */}
+        <div className="wof-formula-section">
+          <strong className="wof-formula-section__title">{__('Formula Expression', 'wooptionsfic')}</strong>
+          <p className="wof-formula-hint">
+            {__('Use arithmetic operators (+, -, *, /), [Field Name], IF(), and built-in functions.', 'wooptionsfic')}
+          </p>
+          <textarea
+            ref={exprRef}
+            id="wof-formula-expression"
+            className="wof-formula-textarea"
+            value={field.expression ?? '0'}
+            rows={5}
+            spellCheck={false}
+            autoComplete="off"
+            onChange={(e: any) => update({ expression: e.target.value })}
+            aria-label={__('Formula expression', 'wooptionsfic')}
+          />
+
+          {/* Field-token helper */}
+          {siblingFields.length > 0 ? (
+            <div className="wof-formula-tokens">
+              <span className="wof-formula-tokens__label">{__('Insert field:', 'wooptionsfic')}</span>
+              <div className="wof-formula-tokens__list">
+                {siblingFields.map((f) => {
+                  const tokenName = f.label || f.type;
+                  return (
+                    <button
+                      key={f.uuid}
+                      type="button"
+                      className="wof-formula-token-btn"
+                      title={sprintf(__('Insert [%s]', 'wooptionsfic'), tokenName)}
+                      onClick={() => insertAtCursor(`[${tokenName}]`)}
+                    >
+                      <span className="wof-formula-token-plus" aria-hidden="true">+</span>
+                      <span className="wof-formula-token-text">{tokenName}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {/* Live test */}
+          <div className="wof-formula-test-row">
+            <button
+              type="button"
+              className="wof-formula-test-btn"
+              onClick={testExpression}
+              disabled={testing}
+            >
+              {testing ? __('Testing…', 'wooptionsfic') : __('▶ Test Expression', 'wooptionsfic')}
+            </button>
+            {testResult ? (
+              testResult.error ? (
+                <span className="wof-formula-test-result is-error">{testResult.error}</span>
+              ) : (
+                <span className="wof-formula-test-result is-success">{__('Result:', 'wooptionsfic')} {testResult.value}</span>
+              )
+            ) : null}
+          </div>
+        </div>
+
+        {/* ── Display Settings ─────────────────────── */}
+        <div className="wof-formula-section">
+          <strong className="wof-formula-section__title">{__('Display Settings', 'wooptionsfic')}</strong>
+
+          <div className="wof-field-width-setting" style={{ marginBottom: '12px' }}>
+            <span className="wof-field-width-label">{__('Output Mode', 'wooptionsfic')}</span>
+            <div className="wof-field-width-group" role="radiogroup" aria-label={__('Output mode', 'wooptionsfic')}>
+              {([
+                { label: __('Number', 'wooptionsfic'), value: 'number' },
+                { label: __('Currency', 'wooptionsfic'), value: 'currency' },
+                { label: __('Text', 'wooptionsfic'), value: 'text' },
+              ] as const).map((opt) => {
+                const isSelected = (field.displayMode ?? 'number') === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={isSelected}
+                    className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                    onClick={() => update({ displayMode: opt.value })}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {(field.displayMode ?? 'number') !== 'text' ? (
+            <TextControl
+              label={__('Decimal Places', 'wooptionsfic')}
+              type="number"
+              min={0}
+              max={6}
+              value={String(field.decimalPlaces ?? 2)}
+              onChange={(val: string) => update({ decimalPlaces: Math.max(0, Math.min(6, parseInt(val, 10) || 0)) })}
+            />
+          ) : null}
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' }}>
+            <TextControl
+              label={__('Prefix', 'wooptionsfic')}
+              value={field.prefix ?? ''}
+              placeholder={__('e.g. $', 'wooptionsfic')}
+              onChange={(prefix: string) => update({ prefix })}
+            />
+            <TextControl
+              label={__('Suffix', 'wooptionsfic')}
+              value={field.suffix ?? ''}
+              placeholder={__('e.g.  days', 'wooptionsfic')}
+              onChange={(suffix: string) => update({ suffix })}
+            />
+          </div>
+
+          <div style={{ marginTop: '8px' }}>
+            <ToggleControl
+              label={__('Hide when zero', 'wooptionsfic')}
+              help={__('Do not display the field when the formula evaluates to 0.', 'wooptionsfic')}
+              checked={Boolean(field.hideWhenZero)}
+              onChange={(hideWhenZero: boolean) => update({ hideWhenZero })}
+            />
+          </div>
+        </div>
+
+        {/* ── Function Reference ───────────────────── */}
+        <div className="wof-formula-section">
+          <button
+            type="button"
+            className="wof-formula-ref-toggle"
+            onClick={() => setRefOpen((o) => !o)}
+            aria-expanded={refOpen}
+          >
+            <span>{__('Function Reference', 'wooptionsfic')}</span>
+            <span className="wof-formula-ref-toggle__icon">{refOpen ? '▲' : '▼'}</span>
+          </button>
+          {refOpen ? (
+            <div className="wof-formula-ref-list">
+              {FUNCTION_REF.map((fn) => (
+                <button
+                  key={fn.stub}
+                  type="button"
+                  className="wof-formula-ref-item"
+                  onClick={() => insertAtCursor(fn.stub)}
+                  title={__('Click to insert', 'wooptionsfic')}
+                >
+                  <code>{fn.name}</code>
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   function PricingPanel(props: { field: WooOptionsFic.FieldDefinition; onChange: (field: WooOptionsFic.FieldDefinition) => void }): any {
     const pricing = props.field.pricing ?? WooOptionsFic.FieldFactory.emptyPricing();
     const update = (patch: Partial<WooOptionsFic.PricingDefinition>) => props.onChange({ ...props.field, pricing: { ...pricing, ...patch } });
@@ -3009,7 +3312,7 @@ namespace WooOptionsFic.Builder {
     if (!props.field) return <aside className="wof-builder-inspector"><div className="wof-builder-pane__heading"><div><span className="wof-eyebrow">{__('Style', 'wooptionsfic')}</span><h2>{__('Option set styling', 'wooptionsfic')}</h2></div></div><div className="wof-inspector-body"><section className="wof-inspector-section"><StyleStudio document={props.document} onChange={props.onDocumentChange} /></section></div></aside>;
     const field = props.field;
     const update = (patch: Partial<WooOptionsFic.FieldDefinition>) => props.onFieldChange({ ...field, ...patch });
-    const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help'];
+    const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help', 'formula'];
     const visibleTabs = tabs.filter(([tab]) => {
       if (tab === 'choices' && !Boolean(field.choices)) return false;
       if (tab === 'pricing' && contentFieldTypes.includes(field.type)) return false;
@@ -3211,6 +3514,12 @@ namespace WooOptionsFic.Builder {
                   </div>
                 </div>
               </div>
+            ) : field.type === 'formula' ? (
+              <FormulaPanel
+                field={field}
+                allFields={props.document.fields}
+                onChange={props.onFieldChange}
+              />
             ) : field.type === 'heading' ? (
               <div className="wof-heading-field-settings">
                 <TextControl

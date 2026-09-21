@@ -73,7 +73,6 @@ final class FieldTypeRegistry {
 
 		$this->register(new UploadFieldType());
 		$this->register(new CalculatedFieldType('formula'));
-		$this->register(new CalculatedFieldType('calculated'));
 		$this->register(new RepeaterFieldType($this, max(1, min(100, $this->maximum_repeater_rows))));
 	}
 }

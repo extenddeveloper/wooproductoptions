@@ -713,9 +713,13 @@ var WooOptionsFic;
                 field.maxFiles = 1;
                 field.maxFileMb = 5;
             }
-            if (type === 'formula' || type === 'calculated') {
+            if (type === 'formula') {
                 field.expression = '0';
                 field.displayMode = 'number';
+                field.decimalPlaces = 2;
+                field.prefix = '';
+                field.suffix = '';
+                field.hideWhenZero = false;
             }
             if (type === 'repeater') {
                 field.children = [create('text')];
@@ -2936,7 +2940,7 @@ var WooOptionsFic;
                 const h = Number(field.height ?? field.style?.height ?? 24);
                 return wp.element.createElement("div", { className: "wof-preview-spacer", style: { height: `${Math.max(0, h)}px` } });
             }
-            if (field.type === 'formula' || field.type === 'calculated')
+            if (field.type === 'formula')
                 return wp.element.createElement("output", { className: "wof-preview-output" }, "0.00");
             if (field.type === 'toggle') {
                 const isChecked = Boolean(field.default);
@@ -3341,6 +3345,22 @@ var WooOptionsFic;
                         wp.element.createElement("span", { className: "wof-picker-text" }, endPlaceholder),
                         priceText ? wp.element.createElement("span", { className: "wof-preview-datetime__price" }, priceText) : null)));
             }
+            if (field.type === 'formula') {
+                const mode = field.displayMode || 'number';
+                const decimals = Math.max(0, Math.min(6, field.decimalPlaces ?? 2));
+                const prefix = field.prefix || (mode === 'currency' ? '$' : '');
+                const suffix = field.suffix || '';
+                const sampleVal = mode === 'text' ? 'Sample output' : (0).toFixed(decimals);
+                const exprPreview = field.expression ? field.expression : '0';
+                return (wp.element.createElement("div", { className: "wof-preview-formula-wrap" },
+                    wp.element.createElement("div", { className: "wof-preview-formula-output" },
+                        prefix ? wp.element.createElement("span", { className: "wof-preview-formula-prefix" }, prefix) : null,
+                        wp.element.createElement("span", { className: "wof-preview-formula-value" }, sampleVal),
+                        suffix ? wp.element.createElement("span", { className: "wof-preview-formula-suffix" }, suffix) : null),
+                    wp.element.createElement("div", { className: "wof-preview-formula-badge", title: exprPreview },
+                        wp.element.createElement("span", { className: "wof-preview-formula-fx" }, "fx"),
+                        wp.element.createElement("span", { className: "wof-preview-formula-expr" }, exprPreview))));
+            }
             const inputType = {
                 tel: 'tel', email: 'email', url: 'url', number: 'number', customer_defined_price: 'number',
             };
@@ -3396,7 +3416,8 @@ var WooOptionsFic;
                 const term = search.trim().toLowerCase();
                 const map = new Map();
                 Object.entries(window.WooOptionsFicAdmin.fieldTypes).forEach(([type, manifest]) => {
-                    if (term && !`${type} ${manifest.label} ${manifest.group}`.toLowerCase().includes(term))
+                    const groupLabel = groupLabels[manifest.group] ?? manifest.group;
+                    if (term && !`${type} ${manifest.label} ${manifest.group} ${groupLabel}`.toLowerCase().includes(term))
                         return;
                     const items = map.get(manifest.group) ?? [];
                     items.push({ type, label: manifest.label });
@@ -3684,7 +3705,7 @@ var WooOptionsFic;
         const { SelectControl, TextControl, ToggleControl } = wp.components;
         const { __, sprintf } = wp.i18n;
         const { useMemo } = wp.element;
-        const contentOnlyTypes = ['heading', 'paragraph', 'help', 'separator', 'spacer', 'formula', 'calculated'];
+        const contentOnlyTypes = ['heading', 'paragraph', 'help', 'separator', 'spacer', 'formula'];
         const operatorOptions = [
             { label: __('equals', 'wooptionsfic'), value: 'equals' },
             { label: __('does not equal', 'wooptionsfic'), value: 'not_equals' },
@@ -3875,7 +3896,7 @@ var WooOptionsFic;
     var Builder;
     (function (Builder) {
         const { Button, ColorPicker, Modal, SelectControl, TextControl, TextareaControl, ToggleControl } = wp.components;
-        const { __ } = wp.i18n;
+        const { __, sprintf } = wp.i18n;
         const { useEffect, useMemo, useRef, useState } = wp.element;
         const tabs = [
             ['content', __('Content', 'wooptionsfic')],
@@ -5467,6 +5488,144 @@ var WooOptionsFic;
                     wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
                     __('Add choice', 'wooptionsfic'))));
         }
+        function FormulaPanel(props) {
+            const { field, allFields, onChange } = props;
+            const update = (patch) => onChange({ ...field, ...patch });
+            const exprRef = useRef(null);
+            const [testResult, setTestResult] = useState(null);
+            const [testing, setTesting] = useState(false);
+            const [refOpen, setRefOpen] = useState(false);
+            // Insert text at the current cursor position in the expression textarea.
+            const insertAtCursor = (text) => {
+                const el = exprRef.current;
+                const current = field.expression ?? '0';
+                if (!el) {
+                    const next = current === '0' || current === '' ? text : current + text;
+                    update({ expression: next });
+                    return;
+                }
+                const start = el.selectionStart ?? 0;
+                const end = el.selectionEnd ?? 0;
+                let next = '';
+                let newCursorPos = 0;
+                if ((current === '0' || current === '') && (start === 0 && end <= 1)) {
+                    next = text;
+                    newCursorPos = text.length;
+                }
+                else {
+                    next = current.slice(0, start) + text + current.slice(end);
+                    newCursorPos = start + text.length;
+                }
+                update({ expression: next });
+                setTimeout(() => {
+                    el.focus();
+                    el.setSelectionRange(newCursorPos, newCursorPos);
+                }, 0);
+            };
+            const testExpression = async () => {
+                setTesting(true);
+                setTestResult(null);
+                try {
+                    const result = await WooOptionsFic.Api.request('/test-formula', {
+                        method: 'POST',
+                        data: {
+                            expression: field.expression ?? '0',
+                            fields: allFields.map((f) => ({
+                                uuid: f.uuid,
+                                label: f.label || f.type,
+                                default: f.default ?? '10',
+                            })),
+                        },
+                    });
+                    setTestResult({ value: result.result });
+                }
+                catch (err) {
+                    const msg = err?.message ?? String(err);
+                    setTestResult({ error: msg.replace(/^wooptionsfic_formula_?/, '').replace(/_/g, ' ') });
+                }
+                finally {
+                    setTesting(false);
+                }
+            };
+            // Sibling fields that can be referenced with [Field Label] or FIELD("uuid").
+            const siblingFields = allFields.filter((f) => f.uuid !== field.uuid && !['formula', 'heading', 'paragraph', 'help', 'separator', 'spacer', 'content', 'modal'].includes(f.type));
+            const FUNCTION_REF = [
+                { name: 'IF(cond, true, false)', stub: 'IF(, , )' },
+                { name: 'FIELD("uuid")', stub: 'FIELD("")' },
+                { name: 'ROUND(n, places)', stub: 'ROUND(, 2)' },
+                { name: 'ABS(n)', stub: 'ABS()' },
+                { name: 'CEIL(n)', stub: 'CEIL()' },
+                { name: 'FLOOR(n)', stub: 'FLOOR()' },
+                { name: 'MIN(a, b, …)', stub: 'MIN(, )' },
+                { name: 'MAX(a, b, …)', stub: 'MAX(, )' },
+                { name: 'POW(base, exp)', stub: 'POW(, 2)' },
+                { name: 'SUM(rows, "field")', stub: 'SUM(rows, "")' },
+                { name: 'AVG(rows, "field")', stub: 'AVG(rows, "")' },
+                { name: 'COUNT(rows)', stub: 'COUNT(rows)' },
+            ];
+            return (wp.element.createElement("div", { className: "wof-formula-panel" },
+                wp.element.createElement("div", { className: "wof-formula-section" },
+                    wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
+                    wp.element.createElement(TextareaControl, { label: __('Help text', 'wooptionsfic'), value: field.help ?? field.description ?? '', onChange: (help) => update({ help, description: help }), placeholder: __('Add helpful explanation for customers…', 'wooptionsfic') }),
+                    wp.element.createElement("div", { className: "wof-help-position-control" },
+                        wp.element.createElement("label", { className: "wof-segmented-label" }, __('HELP TEXT POSITION', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-segmented-group" }, [
+                            { label: __('Below Title', 'wooptionsfic'), value: 'below_title' },
+                            { label: __('Tooltip', 'wooptionsfic'), value: 'tooltip' },
+                            { label: __('Below Field', 'wooptionsfic'), value: 'below_field' },
+                        ].map((opt) => {
+                            const isSelected = (field.helpTextPosition ?? 'below_title') === opt.value;
+                            return (wp.element.createElement("button", { key: opt.value, type: "button", className: WooOptionsFic.Utils.classNames('wof-segmented-btn', isSelected && 'is-selected'), onClick: () => update({ helpTextPosition: opt.value }) }, opt.label));
+                        }))),
+                    wp.element.createElement("div", { className: "wof-field-width-setting" },
+                        wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
+                            const isSelected = (field.width || '100%') === w;
+                            return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
+                        })))),
+                wp.element.createElement("div", { className: "wof-formula-section" },
+                    wp.element.createElement("strong", { className: "wof-formula-section__title" }, __('Formula Expression', 'wooptionsfic')),
+                    wp.element.createElement("p", { className: "wof-formula-hint" }, __('Use arithmetic operators (+, -, *, /), [Field Name], IF(), and built-in functions.', 'wooptionsfic')),
+                    wp.element.createElement("textarea", { ref: exprRef, id: "wof-formula-expression", className: "wof-formula-textarea", value: field.expression ?? '0', rows: 5, spellCheck: false, autoComplete: "off", onChange: (e) => update({ expression: e.target.value }), "aria-label": __('Formula expression', 'wooptionsfic') }),
+                    siblingFields.length > 0 ? (wp.element.createElement("div", { className: "wof-formula-tokens" },
+                        wp.element.createElement("span", { className: "wof-formula-tokens__label" }, __('Insert field:', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-formula-tokens__list" }, siblingFields.map((f) => {
+                            const tokenName = f.label || f.type;
+                            return (wp.element.createElement("button", { key: f.uuid, type: "button", className: "wof-formula-token-btn", title: sprintf(__('Insert [%s]', 'wooptionsfic'), tokenName), onClick: () => insertAtCursor(`[${tokenName}]`) },
+                                wp.element.createElement("span", { className: "wof-formula-token-plus", "aria-hidden": "true" }, "+"),
+                                wp.element.createElement("span", { className: "wof-formula-token-text" }, tokenName)));
+                        })))) : null,
+                    wp.element.createElement("div", { className: "wof-formula-test-row" },
+                        wp.element.createElement("button", { type: "button", className: "wof-formula-test-btn", onClick: testExpression, disabled: testing }, testing ? __('Testing…', 'wooptionsfic') : __('▶ Test Expression', 'wooptionsfic')),
+                        testResult ? (testResult.error ? (wp.element.createElement("span", { className: "wof-formula-test-result is-error" }, testResult.error)) : (wp.element.createElement("span", { className: "wof-formula-test-result is-success" },
+                            __('Result:', 'wooptionsfic'),
+                            " ",
+                            testResult.value))) : null)),
+                wp.element.createElement("div", { className: "wof-formula-section" },
+                    wp.element.createElement("strong", { className: "wof-formula-section__title" }, __('Display Settings', 'wooptionsfic')),
+                    wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: '12px' } },
+                        wp.element.createElement("span", { className: "wof-field-width-label" }, __('Output Mode', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Output mode', 'wooptionsfic') }, [
+                            { label: __('Number', 'wooptionsfic'), value: 'number' },
+                            { label: __('Currency', 'wooptionsfic'), value: 'currency' },
+                            { label: __('Text', 'wooptionsfic'), value: 'text' },
+                        ].map((opt) => {
+                            const isSelected = (field.displayMode ?? 'number') === opt.value;
+                            return (wp.element.createElement("button", { key: opt.value, type: "button", role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ displayMode: opt.value }) }, opt.label));
+                        }))),
+                    (field.displayMode ?? 'number') !== 'text' ? (wp.element.createElement(TextControl, { label: __('Decimal Places', 'wooptionsfic'), type: "number", min: 0, max: 6, value: String(field.decimalPlaces ?? 2), onChange: (val) => update({ decimalPlaces: Math.max(0, Math.min(6, parseInt(val, 10) || 0)) }) })) : null,
+                    wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '4px' } },
+                        wp.element.createElement(TextControl, { label: __('Prefix', 'wooptionsfic'), value: field.prefix ?? '', placeholder: __('e.g. $', 'wooptionsfic'), onChange: (prefix) => update({ prefix }) }),
+                        wp.element.createElement(TextControl, { label: __('Suffix', 'wooptionsfic'), value: field.suffix ?? '', placeholder: __('e.g.  days', 'wooptionsfic'), onChange: (suffix) => update({ suffix }) })),
+                    wp.element.createElement("div", { style: { marginTop: '8px' } },
+                        wp.element.createElement(ToggleControl, { label: __('Hide when zero', 'wooptionsfic'), help: __('Do not display the field when the formula evaluates to 0.', 'wooptionsfic'), checked: Boolean(field.hideWhenZero), onChange: (hideWhenZero) => update({ hideWhenZero }) }))),
+                wp.element.createElement("div", { className: "wof-formula-section" },
+                    wp.element.createElement("button", { type: "button", className: "wof-formula-ref-toggle", onClick: () => setRefOpen((o) => !o), "aria-expanded": refOpen },
+                        wp.element.createElement("span", null, __('Function Reference', 'wooptionsfic')),
+                        wp.element.createElement("span", { className: "wof-formula-ref-toggle__icon" }, refOpen ? '▲' : '▼')),
+                    refOpen ? (wp.element.createElement("div", { className: "wof-formula-ref-list" }, FUNCTION_REF.map((fn) => (wp.element.createElement("button", { key: fn.stub, type: "button", className: "wof-formula-ref-item", onClick: () => insertAtCursor(fn.stub), title: __('Click to insert', 'wooptionsfic') },
+                        wp.element.createElement("code", null, fn.name)))))) : null)));
+        }
         function PricingPanel(props) {
             const pricing = props.field.pricing ?? WooOptionsFic.FieldFactory.emptyPricing();
             const update = (patch) => props.onChange({ ...props.field, pricing: { ...pricing, ...patch } });
@@ -5533,7 +5692,7 @@ var WooOptionsFic;
                             wp.element.createElement(Builder.StyleStudio, { document: props.document, onChange: props.onDocumentChange }))));
             const field = props.field;
             const update = (patch) => props.onFieldChange({ ...field, ...patch });
-            const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help'];
+            const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help', 'formula'];
             const visibleTabs = tabs.filter(([tab]) => {
                 if (tab === 'choices' && !Boolean(field.choices))
                     return false;
@@ -5607,7 +5766,7 @@ var WooOptionsFic;
                             wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
                                 const isSelected = (field.width || '100%') === w;
                                 return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
-                            }))))) : field.type === 'heading' ? (wp.element.createElement("div", { className: "wof-heading-field-settings" },
+                            }))))) : field.type === 'formula' ? (wp.element.createElement(FormulaPanel, { field: field, allFields: props.document.fields, onChange: props.onFieldChange })) : field.type === 'heading' ? (wp.element.createElement("div", { className: "wof-heading-field-settings" },
                         wp.element.createElement(TextControl, { label: __('Heading Text', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
                         wp.element.createElement(TextareaControl, { label: __('Help text', 'wooptionsfic'), value: field.help ?? '', onChange: (help) => update({ help }) }),
                         wp.element.createElement("div", { className: "wof-help-position-control" },

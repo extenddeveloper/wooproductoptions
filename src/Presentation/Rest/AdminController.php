@@ -230,6 +230,15 @@ final class AdminController {
 		);
 		register_rest_route(
 			self::NAMESPACE,
+			'/test-formula',
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [$this, 'test_formula'],
+				'permission_callback' => [$this, 'can_edit'],
+			]
+		);
+		register_rest_route(
+			self::NAMESPACE,
 			'/exports/(?P<uuid>' . self::UUID_PATTERN . ')',
 			[
 				'methods'             => \WP_REST_Server::READABLE,
@@ -590,14 +599,44 @@ final class AdminController {
 	public function test_formula(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
 		return $this->respond(function () use ($request): array {
 			$body       = $this->body($request);
-			$expression = substr((string) ($body['expression'] ?? ''), 0, 2000);
-			$ast        = $this->formula_parser->parse($expression);
-			$result     = $this->formula_evaluator->evaluate(
-				$expression,
-				(array) ($body['variables'] ?? []),
+			$expression = substr(trim((string) ($body['expression'] ?? '0')), 0, 2000);
+			$fields     = (array) ($body['fields'] ?? []);
+			$resolved   = \WooOptionsFic\Domain\Pricing\Formula\Evaluator::resolve_tokens($expression, $fields);
+			$ast        = $this->formula_parser->parse($resolved);
+
+			$variables  = (array) ($body['variables'] ?? []);
+			if (! isset($variables['fields'])) {
+				$sample_fields = [];
+				foreach ($fields as $f) {
+					if (! is_array($f)) {
+						continue;
+					}
+					$u   = (string) ($f['uuid'] ?? '');
+					$def = $f['default'] ?? null;
+					$val = (is_numeric($def) && '' !== (string) $def) ? (string) $def : '10';
+					if ('' !== $u) {
+						$sample_fields[$u] = $val;
+					}
+					$l = (string) ($f['label'] ?? '');
+					if ('' !== $l) {
+						$sample_fields[$l] = $val;
+					}
+				}
+				$variables['fields'] = $sample_fields;
+			}
+			$variables['all_fields'] = $fields;
+
+			$result = $this->formula_evaluator->evaluate(
+				$resolved,
+				$variables,
 				(array) ($body['rows'] ?? [])
 			);
-			return ['valid' => true, 'ast' => $ast, 'result' => $result->to_string(false)];
+			return [
+				'valid'    => true,
+				'ast'      => $ast,
+				'result'   => $result->to_string(false),
+				'resolved' => $resolved,
+			];
 		});
 	}
 

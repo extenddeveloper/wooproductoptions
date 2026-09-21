@@ -38,10 +38,59 @@ final class PriceEngine {
 		$override   = null;
 		$warnings   = [];
 
-		foreach ((array) ($compiled['fields'] ?? []) as $field) {
+		$formulas          = [];
+		$all_fields        = (array) ($compiled['fields'] ?? []);
+		$formula_variables = $this->resolve_formula_variables($all_fields, $values, $context);
+
+		foreach ($all_fields as $field) {
 			$uuid  = (string) ($field['uuid'] ?? '');
 			$state = $states[$uuid] ?? ['visible' => true, 'enabled' => true];
 			if (empty($state['visible']) || empty($state['enabled'])) {
+				continue;
+			}
+
+			if ('formula' === ($field['type'] ?? '')) {
+				$expression = (string) ($field['expression'] ?? '0');
+				try {
+					$resolved = Formula\Evaluator::resolve_tokens($expression, $all_fields);
+					$decimal  = $this->formulas->evaluate(
+						$resolved,
+						[
+							'base_price' => $base->to_decimal(),
+							'quantity'   => $quantity,
+							'fields'     => $formula_variables,
+							'weight'     => (string) ($context['weight'] ?? '0'),
+							'width'      => (string) ($context['width'] ?? '0'),
+							'height'     => (string) ($context['height'] ?? '0'),
+							'length'     => (string) ($context['length'] ?? '0'),
+						],
+						[]
+					);
+					$val_str = $decimal->to_string(false);
+					$formula_variables[$uuid] = $val_str;
+					if (! empty($field['label'])) {
+						$formula_variables[(string) $field['label']] = $val_str;
+						$formula_variables[strtolower((string) $field['label'])] = $val_str;
+					}
+					$formulas[$uuid] = [
+						'value'         => $val_str,
+						'displayMode'   => (string) ($field['displayMode'] ?? 'number'),
+						'decimalPlaces' => (int) ($field['decimalPlaces'] ?? 2),
+						'prefix'        => (string) ($field['prefix'] ?? ''),
+						'suffix'        => (string) ($field['suffix'] ?? ''),
+						'hideWhenZero'  => ! empty($field['hideWhenZero']),
+					];
+				} catch (\Throwable $e) {
+					$formulas[$uuid] = [
+						'value'         => '0',
+						'displayMode'   => (string) ($field['displayMode'] ?? 'number'),
+						'decimalPlaces' => (int) ($field['decimalPlaces'] ?? 2),
+						'prefix'        => (string) ($field['prefix'] ?? ''),
+						'suffix'        => (string) ($field['suffix'] ?? ''),
+						'hideWhenZero'  => ! empty($field['hideWhenZero']),
+						'error'         => $e->getMessage(),
+					];
+				}
 				continue;
 			}
 
@@ -77,6 +126,7 @@ final class PriceEngine {
 		return [
 			'base'          => $base->to_array(),
 			'contributions' => $lines,
+			'formulas'      => $formulas,
 			'adjustment'    => $adjustment->to_array(),
 			'unitPrice'     => $unit->to_array(),
 			'quantity'      => $quantity,
@@ -442,5 +492,160 @@ final class PriceEngine {
 
 	private function empty(mixed $value): bool {
 		return null === $value || '' === $value || [] === $value || false === $value;
+	}
+
+	/**
+	 * Resolves all field values (including choices, pricing, inputs) into numeric values for formula evaluation.
+	 *
+	 * @param list<array<string, mixed>> $all_fields All field definitions.
+	 * @param array<string, mixed> $values Current submitted or selected field values.
+	 * @param array<string, mixed> $context Execution context (quantities, variations).
+	 * @return array<string, string> Map of field UUID and label to resolved numeric/string value.
+	 */
+	private function resolve_formula_variables(array $all_fields, array $values, array $context): array {
+		$resolved = [];
+
+		foreach ($all_fields as $field) {
+			$uuid  = (string) ($field['uuid'] ?? '');
+			$label = trim((string) ($field['label'] ?? ''));
+			$name  = trim((string) ($field['name'] ?? ''));
+			$type  = (string) ($field['type'] ?? '');
+			$val   = $values[$uuid] ?? null;
+
+			$field_num = '0';
+
+			if (in_array($type, ['number', 'range', 'customer_defined_price'], true)) {
+				if (is_numeric($val) && '' !== (string) $val) {
+					$field_num = (string) $val;
+				} elseif (isset($field['default']) && is_numeric($field['default']) && '' !== (string) $field['default']) {
+					$field_num = (string) $field['default'];
+				} else {
+					$field_num = '0';
+				}
+			} elseif (in_array($type, ['checkbox', 'toggle'], true)) {
+				$is_checked = ! empty($val) || (null === $val && ! empty($field['default']));
+				if ($is_checked) {
+					$amount = $field['pricing']['amount'] ?? null;
+					$field_num = (is_numeric($amount) && (float) $amount != 0) ? (string) $amount : '1';
+				} else {
+					$field_num = '0';
+				}
+			} elseif (isset($field['choices']) && is_array($field['choices'])) {
+				$selected_uuids = is_array($val)
+					? array_values(array_map('strval', $val))
+					: ('' === (string) $val || null === $val ? [] : [(string) $val]);
+
+				// If nothing passed in $values, check default choices
+				if ([] === $selected_uuids) {
+					foreach ($field['choices'] as $choice) {
+						if (! empty($choice['default'])) {
+							$selected_uuids[] = (string) ($choice['uuid'] ?? '');
+						}
+					}
+				}
+
+				if ([] === $selected_uuids) {
+					$field_num = '0';
+				} else {
+					$total_num   = 0.0;
+					$found_count = 0;
+
+					foreach ($field['choices'] as $choice) {
+						$c_uuid = (string) ($choice['uuid'] ?? '');
+						$c_val  = (string) ($choice['value'] ?? '');
+						$c_lbl  = trim((string) ($choice['label'] ?? ''));
+
+						if (! in_array($c_uuid, $selected_uuids, true)
+							&& ! in_array($c_val, $selected_uuids, true)
+							&& ! in_array($c_lbl, $selected_uuids, true)
+						) {
+							continue;
+						}
+
+						++$found_count;
+
+						$qty_multiplier = 1;
+						if (! empty($field['enableQuantity']) && ! empty($context['choiceQuantities'][$c_uuid])) {
+							$qty_multiplier = max(1, (int) $context['choiceQuantities'][$c_uuid]);
+						}
+
+						$c_num = null;
+
+						// 1. Choice pricing amount
+						$price_amount = $choice['pricing']['amount'] ?? null;
+						if (is_numeric($price_amount) && (float) $price_amount != 0) {
+							$c_num = (float) $price_amount;
+						}
+
+						// 2. Product choice price
+						if (null === $c_num && 'product' === $type) {
+							$pid = (int) ($choice['productId'] ?? ($choice['linkedProductId'] ?? 0));
+							if ($pid > 0 && function_exists('wc_get_product')) {
+								$wc_p = wc_get_product($pid);
+								if ($wc_p && is_numeric($wc_p->get_price())) {
+									$c_num = (float) $wc_p->get_price();
+								}
+							}
+						}
+
+						// 3. Choice custom value is numeric
+						if (null === $c_num && '' !== $c_val && is_numeric($c_val)) {
+							$c_num = (float) $c_val;
+						}
+
+						// 4. Choice label is numeric or starts with number (e.g. "10", "20 mm", "50 sqft")
+						if (null === $c_num && '' !== $c_lbl) {
+							if (is_numeric($c_lbl)) {
+								$c_num = (float) $c_lbl;
+							} elseif (preg_match('/^\s*([+-]?\d+(?:\.\d+)?)/', $c_lbl, $m)) {
+								$c_num = (float) $m[1];
+							}
+						}
+
+						// 5. Choice pricing amount even if 0
+						if (null === $c_num && isset($choice['pricing']['amount']) && is_numeric($choice['pricing']['amount'])) {
+							$c_num = (float) $choice['pricing']['amount'];
+						}
+
+						// 6. Fallback: selected choice without numbers evaluates to 1
+						if (null === $c_num) {
+							$c_num = 1.0;
+						}
+
+						$total_num += ($c_num * $qty_multiplier);
+					}
+
+					if ($found_count > 0) {
+						$field_num = (string) (floor($total_num) == $total_num ? (int) $total_num : $total_num);
+					} else {
+						$field_num = '0';
+					}
+				}
+			} elseif (is_numeric($val) && '' !== (string) $val) {
+				$field_num = (string) $val;
+			} elseif (is_string($val) && preg_match('/^\s*([+-]?\d+(?:\.\d+)?)/', trim($val), $m)) {
+				$field_num = $m[1];
+			} elseif (isset($field['default']) && is_numeric($field['default']) && '' !== (string) $field['default']) {
+				$field_num = (string) $field['default'];
+			} elseif (is_string($val) && '' !== trim($val)) {
+				$field_num = $val;
+			} else {
+				$field_num = '0';
+			}
+
+			if ('' !== $uuid) {
+				$resolved[$uuid] = $field_num;
+			}
+			if ('' !== $label) {
+				$resolved[$label] = $field_num;
+				$resolved[strtolower($label)] = $field_num;
+			}
+			if ('' !== $name) {
+				$resolved[$name] = $field_num;
+				$resolved[strtolower($name)] = $field_num;
+			}
+		}
+
+		return $resolved;
 	}
 }

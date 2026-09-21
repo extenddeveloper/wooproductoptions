@@ -276,7 +276,7 @@ namespace WooOptionsFic.Builder {
       const h = Number(field.height ?? (field.style as any)?.height ?? 24);
       return <div className="wof-preview-spacer" style={{ height: `${Math.max(0, h)}px` }} />;
     }
-    if (field.type === 'formula' || field.type === 'calculated') return <output className="wof-preview-output">0.00</output>;
+    if (field.type === 'formula') return <output className="wof-preview-output">0.00</output>;
     if (field.type === 'toggle') {
       const isChecked = Boolean(field.default);
       const priceText = formatChoicePrice(field.pricing);
@@ -900,6 +900,29 @@ namespace WooOptionsFic.Builder {
             {calendarSvg}
             <span className="wof-picker-text">{endPlaceholder}</span>
             {priceText ? <span className="wof-preview-datetime__price">{priceText}</span> : null}
+          </div>
+        </div>
+      );
+    }
+
+    if (field.type === 'formula') {
+      const mode = field.displayMode || 'number';
+      const decimals = Math.max(0, Math.min(6, field.decimalPlaces ?? 2));
+      const prefix = field.prefix || (mode === 'currency' ? '$' : '');
+      const suffix = field.suffix || '';
+      const sampleVal = mode === 'text' ? 'Sample output' : (0).toFixed(decimals);
+      const exprPreview = field.expression ? field.expression : '0';
+
+      return (
+        <div className="wof-preview-formula-wrap">
+          <div className="wof-preview-formula-output">
+            {prefix ? <span className="wof-preview-formula-prefix">{prefix}</span> : null}
+            <span className="wof-preview-formula-value">{sampleVal}</span>
+            {suffix ? <span className="wof-preview-formula-suffix">{suffix}</span> : null}
+          </div>
+          <div className="wof-preview-formula-badge" title={exprPreview}>
+            <span className="wof-preview-formula-fx">fx</span>
+            <span className="wof-preview-formula-expr">{exprPreview}</span>
           </div>
         </div>
       );

@@ -214,13 +214,56 @@ final class Renderer {
 			$this->render_content($field);
 			return;
 		}
-		if (in_array($type, ['formula', 'calculated'], true)) {
-			$is_disabled = ! empty($field['disabled']);
-			$classes     = 'wof-field wof-field--calculated' . ($is_disabled ? ' is-disabled' : '');
-			$style       = $is_disabled ? ' style="display:none;"' : '';
-			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '"' . $style . ($is_disabled ? ' hidden' : '') . '>';
-			echo '<span class="wof-field__label">' . esc_html((string) $field['label']) . '</span>';
-			echo '<output data-wof-calculated="' . esc_attr($uuid) . '">—</output></div>';
+		if ('formula' === $type) {
+			$is_disabled    = ! empty($field['disabled']);
+			$width          = (string) ($field['width'] ?? '100%');
+			if (! in_array($width, ['33%', '50%', '66%', '100%'], true)) {
+				$width = '100%';
+			}
+			$classes        = 'wof-field wof-field--formula wof-field--width-' . str_replace('%', '', $width);
+			if ($is_disabled) {
+				$classes .= ' is-disabled';
+			}
+			$style          = $is_disabled ? ' style="display:none;"' : '';
+			$display_mode   = in_array(($field['displayMode'] ?? ''), ['number', 'currency', 'text'], true) ? $field['displayMode'] : 'number';
+			$decimal_places = max(0, min(6, (int) ($field['decimalPlaces'] ?? 2)));
+			$prefix         = esc_attr((string) ($field['prefix'] ?? ''));
+			$suffix         = esc_attr((string) ($field['suffix'] ?? ''));
+			$hide_zero      = ! empty($field['hideWhenZero']) ? ' data-wof-hide-zero="1"' : '';
+			$help_text      = trim((string) ($field['help'] ?? $field['description'] ?? ''));
+			$help_pos       = (string) ($field['helpTextPosition'] ?? 'below_title');
+			$description_id = 'wof-description-' . str_replace('-', '', $uuid);
+
+			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="formula"' . $style . ($is_disabled ? ' hidden' : '') . '>';
+
+			if (! empty($field['label'])) {
+				echo '<label class="wof-field__label" for="wof-' . esc_attr($uuid) . '">';
+				echo esc_html((string) $field['label']);
+				if ('' !== $help_text && 'tooltip' === $help_pos) {
+					echo $this->render_tooltip_icon($help_text);
+				}
+				echo '</label>';
+			}
+			if ('' !== $help_text && 'below_title' === $help_pos) {
+				echo '<p class="wof-field__help wof-field__help--below-title" id="' . esc_attr($description_id) . '">' . esc_html($help_text) . '</p>';
+			}
+
+			echo '<div class="wof-formula-output-wrap">';
+			echo '<output data-wof-calculated="' . esc_attr($uuid) . '"'
+				. ' id="wof-' . esc_attr($uuid) . '"'
+				. ' class="wof-formula-output"'
+				. ' data-wof-display-mode="' . esc_attr($display_mode) . '"'
+				. ' data-wof-decimal-places="' . esc_attr((string) $decimal_places) . '"'
+				. ' data-wof-prefix="' . $prefix . '"'
+				. ' data-wof-suffix="' . $suffix . '"'
+				. $hide_zero
+				. '>—</output>';
+			echo '</div>';
+
+			if ('' !== $help_text && 'below_field' === $help_pos) {
+				echo '<p class="wof-field__help wof-field__help--below-field">' . esc_html($help_text) . '</p>';
+			}
+			echo '</div>';
 			return;
 		}
 

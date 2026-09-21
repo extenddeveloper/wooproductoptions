@@ -31,7 +31,8 @@ namespace WooOptionsFic.Builder {
       const term = search.trim().toLowerCase();
       const map = new Map<string, Array<{ type: string; label: string }>>();
       Object.entries(window.WooOptionsFicAdmin.fieldTypes).forEach(([type, manifest]) => {
-        if (term && !`${type} ${manifest.label} ${manifest.group}`.toLowerCase().includes(term)) return;
+        const groupLabel = groupLabels[manifest.group] ?? manifest.group;
+        if (term && !`${type} ${manifest.label} ${manifest.group} ${groupLabel}`.toLowerCase().includes(term)) return;
         const items = map.get(manifest.group) ?? [];
         items.push({ type, label: manifest.label });
         map.set(manifest.group, items);

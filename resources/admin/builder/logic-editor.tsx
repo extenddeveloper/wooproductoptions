@@ -40,7 +40,7 @@ namespace WooOptionsFic.Builder {
     wofEffect?: string;
   }
 
-  const contentOnlyTypes = ['heading', 'paragraph', 'help', 'separator', 'spacer', 'formula', 'calculated'];
+  const contentOnlyTypes = ['heading', 'paragraph', 'help', 'separator', 'spacer', 'formula'];
 
   const operatorOptions = [
     { label: __('equals', 'wooptionsfic'), value: 'equals' },

@@ -1201,9 +1201,42 @@
                             row.append(label, amount);
                             i.append(row);
                             const calcInput = this.root.querySelector(`[data-wof-calculated="${r(item.sourceUuid)}"]`);
-                            if (calcInput) calcInput.value = amount.textContent;
+                            if (calcInput) {
+                                calcInput.value = amount.textContent;
+                                calcInput.textContent = amount.textContent;
+                            }
                         });
                     }
+                }
+                if (e.price?.formulas) {
+                    const currency = e.price.unitPrice?.currency || window.WooOptionsFicStorefront?.currency || 'USD';
+                    Object.entries(e.price.formulas).forEach(([uuid, info]) => {
+                        const out = this.root.querySelector(`[data-wof-calculated="${r(uuid)}"]`);
+                        if (!out) return;
+                        const numVal = parseFloat(info.value) || 0;
+                        const fieldEl = out.closest('.wof-field');
+                        if (info.hideWhenZero && Math.abs(numVal) < 1e-9) {
+                            if (fieldEl) fieldEl.style.display = 'none';
+                        } else {
+                            if (fieldEl && !fieldEl.classList.contains('is-disabled')) {
+                                fieldEl.style.display = '';
+                            }
+                        }
+                        let formatted = '';
+                        const prefix = info.prefix ?? '';
+                        const suffix = info.suffix ?? '';
+                        if (info.displayMode === 'currency') {
+                            const dec = typeof info.decimalPlaces === 'number' ? info.decimalPlaces : 2;
+                            formatted = `${prefix}${this.money(numVal.toFixed(dec), currency)}${suffix}`;
+                        } else if (info.displayMode === 'text') {
+                            formatted = `${prefix}${info.value}${suffix}`;
+                        } else {
+                            const dec = typeof info.decimalPlaces === 'number' ? info.decimalPlaces : 2;
+                            formatted = `${prefix}${numVal.toFixed(dec)}${suffix}`;
+                        }
+                        out.value = formatted;
+                        out.textContent = formatted;
+                    });
                 }
             }
 

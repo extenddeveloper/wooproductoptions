@@ -899,6 +899,50 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	font-weight: 720;
 }
 
+.wof-field--formula {
+	display: block;
+	width: 100%;
+}
+
+.wof-field--formula .wof-field__label {
+	display: inline-block;
+	color: var(--wof-text);
+	font-size: .93rem;
+	font-weight: 680;
+	margin-bottom: .35rem;
+	text-align: left;
+}
+
+.wof-field--formula .wof-formula-output-wrap {
+	display: flex;
+	align-items: center;
+	width: 100%;
+	min-height: 46px;
+	padding: .64rem .85rem;
+	background-color: var(--wof-surface, #ffffff);
+	border: 1px solid var(--wof-border, #e2e8f0);
+	border-radius: 9px;
+	box-sizing: border-box;
+	transition: border-color .15s ease, background-color .15s ease;
+}
+
+.wof-field--formula:hover .wof-formula-output-wrap {
+	border-color: color-mix(in srgb, var(--wof-primary, #5b4ff5) 40%, var(--wof-border, #e2e8f0));
+}
+
+.wof-field--formula output.wof-formula-output {
+	color: var(--wof-text, #0f172a);
+	font-size: max(16px, 1rem);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.4;
+	display: block;
+	width: 100%;
+	text-align: left;
+	margin: 0;
+	padding: 0;
+}
+
 .wof-content-heading {
 	color: var(--wof-text);
 	font-size: 1.15rem;
