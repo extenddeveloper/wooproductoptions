@@ -222,6 +222,10 @@ namespace WooOptionsFic.Builder {
     const [targetDetails, setTargetDetails] = useState<Record<string, WooOptionsFic.AssignmentTarget>>({});
     const [saving, setSaving] = useState(false);
 
+    useEffect(() => {
+      setDraft(WooOptionsFic.Utils.clone(props.assignments));
+    }, [props.assignments]);
+
     const assignmentKey = useMemo(
       () => draft.map((assignment) => `${assignment.targetType}:${assignment.targetId ?? 'global'}`).sort().join('|'),
       [draft],
@@ -338,7 +342,9 @@ namespace WooOptionsFic.Builder {
           <span>{draft.length} {draft.length === 1 ? __('rule', 'wooptionsfic') : __('rules', 'wooptionsfic')}</span>
         </div>
 
-        {draft.length ? (
+        {props.busy && !draft.length ? (
+          <WooOptionsFic.Components.ModalLoading label={__('Loading assigned targets…', 'wooptionsfic')} />
+        ) : draft.length ? (
           <div className="wof-assignment-cards">
             {draft.map((assignment, index) => {
               const key = `${assignment.targetType}:${assignment.targetId ?? 'global'}`;

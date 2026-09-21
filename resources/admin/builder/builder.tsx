@@ -21,8 +21,15 @@ namespace WooOptionsFic.Builder {
     useEffect(() => {
       let active = true;
       setLoading(true);
-      WooOptionsFic.Api.getOptionSet(props.uuid)
-        .then((optionSet) => active && actions.loadSet(optionSet))
+      Promise.all([
+        WooOptionsFic.Api.getOptionSet(props.uuid),
+        WooOptionsFic.Api.getAssignments(props.uuid).catch(() => ({ items: [] as WooOptionsFic.AssignmentRecord[] })),
+      ])
+        .then(([optionSet, asg]) => {
+          if (!active) return;
+          actions.loadSet(optionSet);
+          setAssignments(asg.items);
+        })
         .catch((reason) => active && setFatal(WooOptionsFic.Utils.errorMessage(reason)))
         .finally(() => active && setLoading(false));
       return () => { active = false; };
@@ -85,6 +92,7 @@ namespace WooOptionsFic.Builder {
       if (!state.optionSet) return;
       setAssignmentOpen(true); setModalBusy(true);
       try { setAssignments((await WooOptionsFic.Api.getAssignments(state.optionSet.uuid)).items); }
+      catch (reason) { WooOptionsFic.Toast.error(WooOptionsFic.Utils.errorMessage(reason)); }
       finally { setModalBusy(false); }
     };
 

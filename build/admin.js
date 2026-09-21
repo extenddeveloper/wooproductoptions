@@ -6670,6 +6670,9 @@ var WooOptionsFic;
             const [draft, setDraft] = useState(() => WooOptionsFic.Utils.clone(props.assignments));
             const [targetDetails, setTargetDetails] = useState({});
             const [saving, setSaving] = useState(false);
+            useEffect(() => {
+                setDraft(WooOptionsFic.Utils.clone(props.assignments));
+            }, [props.assignments]);
             const assignmentKey = useMemo(() => draft.map((assignment) => `${assignment.targetType}:${assignment.targetId ?? 'global'}`).sort().join('|'), [draft]);
             useEffect(() => {
                 let active = true;
@@ -6760,7 +6763,7 @@ var WooOptionsFic;
                         draft.length,
                         " ",
                         draft.length === 1 ? __('rule', 'wooptionsfic') : __('rules', 'wooptionsfic'))),
-                draft.length ? (wp.element.createElement("div", { className: "wof-assignment-cards" }, draft.map((assignment, index) => {
+                props.busy && !draft.length ? (wp.element.createElement(WooOptionsFic.Components.ModalLoading, { label: __('Loading assigned targets…', 'wooptionsfic') })) : draft.length ? (wp.element.createElement("div", { className: "wof-assignment-cards" }, draft.map((assignment, index) => {
                     const key = `${assignment.targetType}:${assignment.targetId ?? 'global'}`;
                     const target = targetDetails[key];
                     const label = assignment.targetLabel
@@ -6835,8 +6838,16 @@ var WooOptionsFic;
             useEffect(() => {
                 let active = true;
                 setLoading(true);
-                WooOptionsFic.Api.getOptionSet(props.uuid)
-                    .then((optionSet) => active && actions.loadSet(optionSet))
+                Promise.all([
+                    WooOptionsFic.Api.getOptionSet(props.uuid),
+                    WooOptionsFic.Api.getAssignments(props.uuid).catch(() => ({ items: [] })),
+                ])
+                    .then(([optionSet, asg]) => {
+                    if (!active)
+                        return;
+                    actions.loadSet(optionSet);
+                    setAssignments(asg.items);
+                })
                     .catch((reason) => active && setFatal(WooOptionsFic.Utils.errorMessage(reason)))
                     .finally(() => active && setLoading(false));
                 return () => { active = false; };
@@ -6913,6 +6924,9 @@ var WooOptionsFic;
                 setModalBusy(true);
                 try {
                     setAssignments((await WooOptionsFic.Api.getAssignments(state.optionSet.uuid)).items);
+                }
+                catch (reason) {
+                    WooOptionsFic.Toast.error(WooOptionsFic.Utils.errorMessage(reason));
                 }
                 finally {
                     setModalBusy(false);
