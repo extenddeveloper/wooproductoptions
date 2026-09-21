@@ -482,6 +482,36 @@ namespace WooOptionsFic.Pages {
             </div>
 
             <div className="wof-toolbar-dropdowns-right">
+              <div className="wof-view-mode-toggle">
+                <button
+                  type="button"
+                  className={`wof-view-btn ${viewMode === 'grid' ? 'is-active' : ''}`}
+                  onClick={() => setViewMode('grid')}
+                  aria-label={__('Grid view', 'wooptionsfic')}
+                  title={__('Grid view', 'wooptionsfic')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                    <rect x="1" y="1" width="6" height="6" rx="1.5" />
+                    <rect x="9" y="1" width="6" height="6" rx="1.5" />
+                    <rect x="1" y="9" width="6" height="6" rx="1.5" />
+                    <rect x="9" y="9" width="6" height="6" rx="1.5" />
+                  </svg>
+                </button>
+                <button
+                  type="button"
+                  className={`wof-view-btn ${viewMode === 'list' ? 'is-active' : ''}`}
+                  onClick={() => setViewMode('list')}
+                  aria-label={__('List view', 'wooptionsfic')}
+                  title={__('List view', 'wooptionsfic')}
+                >
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
+                    <rect x="1" y="2" width="14" height="2" rx="1" />
+                    <rect x="1" y="7" width="14" height="2" rx="1" />
+                    <rect x="1" y="12" width="14" height="2" rx="1" />
+                  </svg>
+                </button>
+              </div>
+
               <div className="wof-select-wrapper">
                 <select
                   value={sort}
@@ -556,36 +586,6 @@ namespace WooOptionsFic.Pages {
                 </div>
 
                 <div className="wof-templates-bottom-controls">
-                  <div className="wof-view-mode-toggle">
-                    <button
-                      type="button"
-                      className={`wof-view-btn ${viewMode === 'grid' ? 'is-active' : ''}`}
-                      onClick={() => setViewMode('grid')}
-                      aria-label={__('Grid view', 'wooptionsfic')}
-                      title={__('Grid view', 'wooptionsfic')}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                        <rect x="1" y="1" width="6" height="6" rx="1.5" />
-                        <rect x="9" y="1" width="6" height="6" rx="1.5" />
-                        <rect x="1" y="9" width="6" height="6" rx="1.5" />
-                        <rect x="9" y="9" width="6" height="6" rx="1.5" />
-                      </svg>
-                    </button>
-                    <button
-                      type="button"
-                      className={`wof-view-btn ${viewMode === 'list' ? 'is-active' : ''}`}
-                      onClick={() => setViewMode('list')}
-                      aria-label={__('List view', 'wooptionsfic')}
-                      title={__('List view', 'wooptionsfic')}
-                    >
-                      <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor">
-                        <rect x="1" y="2" width="14" height="2" rx="1" />
-                        <rect x="1" y="7" width="14" height="2" rx="1" />
-                        <rect x="1" y="12" width="14" height="2" rx="1" />
-                      </svg>
-                    </button>
-                  </div>
-
                   <div className="wof-per-page-select-wrapper">
                     <select
                       value={perPage}
