@@ -127,8 +127,14 @@ namespace WooOptionsFic.Api {
     return request(`/exports/${uuid}`);
   }
 
-  export function analytics(): Promise<Record<string, any>> {
-    return request('/analytics');
+  export function analytics(params?: { range?: string; from?: string; to?: string; productId?: number }): Promise<Record<string, any>> {
+    const query = new URLSearchParams();
+    if (params?.range) query.set('range', params.range);
+    if (params?.from) query.set('from', params.from);
+    if (params?.to) query.set('to', params.to);
+    if (params?.productId) query.set('productId', String(params.productId));
+    const qs = query.toString();
+    return request(qs ? `/analytics?${qs}` : '/analytics');
   }
 
   export function getSettings(): Promise<Record<string, any>> {

@@ -240,8 +240,18 @@ var WooOptionsFic;
             return request(`/exports/${uuid}`);
         }
         Api.exportOptionSet = exportOptionSet;
-        function analytics() {
-            return request('/analytics');
+        function analytics(params) {
+            const query = new URLSearchParams();
+            if (params?.range)
+                query.set('range', params.range);
+            if (params?.from)
+                query.set('from', params.from);
+            if (params?.to)
+                query.set('to', params.to);
+            if (params?.productId)
+                query.set('productId', String(params.productId));
+            const qs = query.toString();
+            return request(qs ? `/analytics?${qs}` : '/analytics');
         }
         Api.analytics = analytics;
         function getSettings() {
@@ -2111,25 +2121,471 @@ var WooOptionsFic;
 (function (WooOptionsFic) {
     var Pages;
     (function (Pages) {
-        const { __ } = wp.i18n;
-        const { useEffect, useState } = wp.element;
-        function Analytics() {
+        const { __, sprintf } = wp.i18n;
+        const { useCallback, useEffect, useMemo, useRef, useState } = wp.element;
+        function formatMoney(amount, symbol = '$', position = 'right') {
+            const formatted = Number.isInteger(amount) ? amount.toString() : Number(amount.toFixed(2)).toString();
+            switch (position) {
+                case 'left':
+                    return `${symbol}${formatted}`;
+                case 'left_space':
+                    return `${symbol} ${formatted}`;
+                case 'right_space':
+                    return `${formatted} ${symbol}`;
+                case 'right':
+                default:
+                    return `${formatted}${symbol}`;
+            }
+        }
+        function buildMonotoneSpline(points) {
+            if (points.length === 0)
+                return '';
+            if (points.length === 1)
+                return `M ${points[0].x} ${points[0].y}`;
+            if (points.length === 2) {
+                return `M ${points[0].x} ${points[0].y} L ${points[1].x} ${points[1].y}`;
+            }
+            const n = points.length;
+            const d = [];
+            const m = [];
+            for (let i = 0; i < n - 1; i++) {
+                const dx = points[i + 1].x - points[i].x;
+                const dy = points[i + 1].y - points[i].y;
+                d[i] = dx !== 0 ? dy / dx : 0;
+            }
+            m[0] = d[0];
+            for (let i = 1; i < n - 1; i++) {
+                if (d[i - 1] * d[i] <= 0) {
+                    m[i] = 0;
+                }
+                else {
+                    m[i] = (d[i - 1] + d[i]) / 2;
+                }
+            }
+            m[n - 1] = d[n - 2];
+            for (let i = 0; i < n - 1; i++) {
+                if (d[i] === 0) {
+                    m[i] = 0;
+                    m[i + 1] = 0;
+                }
+                else {
+                    const alpha = m[i] / d[i];
+                    const beta = m[i + 1] / d[i];
+                    const dist = alpha * alpha + beta * beta;
+                    if (dist > 9) {
+                        const tau = 3 / Math.sqrt(dist);
+                        m[i] = tau * alpha * d[i];
+                        m[i + 1] = tau * beta * d[i];
+                    }
+                }
+            }
+            let path = `M ${points[0].x.toFixed(2)} ${points[0].y.toFixed(2)}`;
+            for (let i = 0; i < n - 1; i++) {
+                const dx = (points[i + 1].x - points[i].x) / 3;
+                const cp1x = points[i].x + dx;
+                const cp1y = points[i].y + m[i] * dx;
+                const cp2x = points[i + 1].x - dx;
+                const cp2y = points[i + 1].y - m[i + 1] * dx;
+                path += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${points[i + 1].x.toFixed(2)} ${points[i + 1].y.toFixed(2)}`;
+            }
+            return path;
+        }
+        function Analytics(props) {
+            const [range, setRange] = useState('30d');
             const [data, setData] = useState(null);
+            const [loading, setLoading] = useState(true);
             const [error, setError] = useState('');
-            useEffect(() => { WooOptionsFic.Api.analytics().then(setData).catch((reason) => setError(WooOptionsFic.Utils.errorMessage(reason))); }, []);
-            return wp.element.createElement("div", { className: "wof-page" },
-                wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Storefront signals', 'wooptionsfic'), title: __('Analytics', 'wooptionsfic'), description: __('Understand interactions, validation friction, and configured-product conversions.', 'wooptionsfic') }),
-                error ? wp.element.createElement(WooOptionsFic.Components.InlineNotice, { type: "error" }, error) : !data ? wp.element.createElement(WooOptionsFic.Components.Loading, null) : wp.element.createElement(wp.element.Fragment, null,
-                    wp.element.createElement("div", { className: "wof-stat-grid" }, Object.entries(data).slice(0, 4).map(([key, value]) => wp.element.createElement("div", { className: "wof-stat", key: key },
-                        wp.element.createElement("span", null, key.replace(/([A-Z])/g, ' $1')),
-                        wp.element.createElement("strong", null, typeof value === 'number' || typeof value === 'string' ? value : '—'),
-                        wp.element.createElement("small", null, __('Current reporting window', 'wooptionsfic'))))),
-                    wp.element.createElement("section", { className: "wof-panel" },
-                        wp.element.createElement("div", { className: "wof-panel__header" },
-                            wp.element.createElement("div", null,
-                                wp.element.createElement("h2", null, __('Analytics payload', 'wooptionsfic')),
-                                wp.element.createElement("p", null, __('Raw server-authoritative summary for development and verification.', 'wooptionsfic')))),
-                        wp.element.createElement("pre", { className: "wof-code-panel" }, JSON.stringify(data, null, 2)))));
+            const [activeMetric, setActiveMetric] = useState('clicks');
+            const [hoveredIdx, setHoveredIdx] = useState(null);
+            const [tableSearch, setTableSearch] = useState('');
+            const [tablePage, setTablePage] = useState(1);
+            const perPage = 5;
+            const chartSvgRef = useRef(null);
+            const loadData = useCallback((selectedRange) => {
+                setLoading(true);
+                setError('');
+                WooOptionsFic.Api.analytics({ range: selectedRange })
+                    .then((response) => setData(response))
+                    .catch((reason) => setError(WooOptionsFic.Utils.errorMessage(reason)))
+                    .finally(() => setLoading(false));
+            }, []);
+            useEffect(() => {
+                loadData(range);
+            }, [range, loadData]);
+            const rangeOptions = [
+                { key: '7d', label: __('Last 7 Days', 'wooptionsfic') },
+                { key: '30d', label: __('Last 30 Days', 'wooptionsfic') },
+                { key: '12m', label: __('Last 12 Months', 'wooptionsfic') },
+            ];
+            const currencySymbol = data?.currencySymbol || window.WooOptionsFicAdmin?.currencySymbol || '$';
+            const currencyPosition = data?.currencyPosition || window.WooOptionsFicAdmin?.currencyPosition || 'right';
+            // Chart parameters
+            const chartWidth = 960;
+            const chartHeight = 310;
+            const padLeft = 55;
+            const padRight = 30;
+            const padTop = 25;
+            const padBottom = 45;
+            const plotWidth = chartWidth - padLeft - padRight;
+            const plotHeight = chartHeight - padTop - padBottom;
+            const baselineY = chartHeight - padBottom;
+            const chartPoints = data?.chart || [];
+            const maxVal = useMemo(() => {
+                if (!chartPoints.length)
+                    return 3;
+                const values = chartPoints.map((p) => {
+                    if (activeMetric === 'sales')
+                        return p.sales;
+                    if (activeMetric === 'orders')
+                        return p.orders;
+                    if (activeMetric === 'addToCart')
+                        return p.addToCart;
+                    return p.clicks;
+                });
+                const highest = Math.max(...values);
+                if (highest <= 0)
+                    return 3;
+                if (highest <= 3)
+                    return 3;
+                if (highest <= 10)
+                    return Math.ceil(highest);
+                const mag = Math.pow(10, Math.floor(Math.log10(highest)));
+                return Math.ceil(highest / mag) * mag;
+            }, [chartPoints, activeMetric]);
+            const yTicks = useMemo(() => {
+                const ticks = [];
+                for (let i = 0; i <= 4; i++) {
+                    const val = (maxVal * i) / 4;
+                    const y = baselineY - (val / maxVal) * plotHeight;
+                    const label = activeMetric === 'sales'
+                        ? (Number.isInteger(val) ? val.toString() : val.toFixed(1))
+                        : (Number.isInteger(val) ? val.toString() : val.toFixed(2));
+                    ticks.push({ val, y, label });
+                }
+                return ticks;
+            }, [maxVal, baselineY, plotHeight, activeMetric]);
+            const coords = useMemo(() => {
+                if (!chartPoints.length)
+                    return [];
+                const count = chartPoints.length;
+                return chartPoints.map((p, idx) => {
+                    const x = count === 1 ? padLeft + plotWidth / 2 : padLeft + (idx / (count - 1)) * plotWidth;
+                    const val = activeMetric === 'sales' ? p.sales : activeMetric === 'orders' ? p.orders : activeMetric === 'addToCart' ? p.addToCart : p.clicks;
+                    const y = baselineY - Math.min(1, Math.max(0, val / maxVal)) * plotHeight;
+                    return { x, y };
+                });
+            }, [chartPoints, activeMetric, maxVal, padLeft, plotWidth, baselineY, plotHeight]);
+            const { strokeD, areaD } = useMemo(() => {
+                if (coords.length === 0)
+                    return { strokeD: '', areaD: '' };
+                const stroke = buildMonotoneSpline(coords);
+                const first = coords[0];
+                const last = coords[coords.length - 1];
+                const area = `${stroke} L ${last.x.toFixed(2)} ${baselineY} L ${first.x.toFixed(2)} ${baselineY} Z`;
+                return { strokeD: stroke, areaD: area };
+            }, [coords, baselineY]);
+            const xLabels = useMemo(() => {
+                if (!chartPoints.length)
+                    return [];
+                const total = chartPoints.length;
+                const step = total > 20 ? 2 : total > 10 ? 1 : 1;
+                const labels = [];
+                for (let i = 0; i < total; i += step) {
+                    const x = total === 1 ? padLeft + plotWidth / 2 : padLeft + (i / (total - 1)) * plotWidth;
+                    labels.push({ idx: i, x, label: chartPoints[i].label });
+                }
+                if (total > 1 && (total - 1) % step !== 0) {
+                    labels.push({
+                        idx: total - 1,
+                        x: padLeft + plotWidth,
+                        label: chartPoints[total - 1].label,
+                    });
+                }
+                return labels;
+            }, [chartPoints, padLeft, plotWidth]);
+            const handleMouseMove = (e) => {
+                if (!chartSvgRef.current || !chartPoints.length)
+                    return;
+                const rect = chartSvgRef.current.getBoundingClientRect();
+                const clientX = e.clientX - rect.left;
+                const svgX = (clientX / rect.width) * chartWidth;
+                if (svgX < padLeft || svgX > padLeft + plotWidth) {
+                    setHoveredIdx(null);
+                    return;
+                }
+                const fraction = (svgX - padLeft) / plotWidth;
+                const index = Math.round(fraction * (chartPoints.length - 1));
+                setHoveredIdx(Math.max(0, Math.min(chartPoints.length - 1, index)));
+            };
+            const handleMouseLeave = () => {
+                setHoveredIdx(null);
+            };
+            const hoveredPoint = hoveredIdx !== null ? chartPoints[hoveredIdx] : null;
+            const hoveredCoord = hoveredIdx !== null ? coords[hoveredIdx] : null;
+            // Filter & Paginate Option Sets
+            const filteredOptionSets = useMemo(() => {
+                const list = data?.optionSets || [];
+                if (!tableSearch.trim())
+                    return list;
+                const q = tableSearch.toLowerCase();
+                return list.filter((item) => item.name.toLowerCase().includes(q) || String(item.id).includes(q) || item.uuid.toLowerCase().includes(q));
+            }, [data?.optionSets, tableSearch]);
+            // Reset to page 1 when search query changes
+            useEffect(() => {
+                setTablePage(1);
+            }, [tableSearch]);
+            const totalTableItems = filteredOptionSets.length;
+            const totalTablePages = Math.max(1, Math.ceil(totalTableItems / perPage));
+            const paginatedOptionSets = useMemo(() => {
+                const start = (tablePage - 1) * perPage;
+                return filteredOptionSets.slice(start, start + perPage);
+            }, [filteredOptionSets, tablePage, perPage]);
+            const startItem = totalTableItems > 0 ? (tablePage - 1) * perPage + 1 : 0;
+            const endItem = Math.min(totalTableItems, tablePage * perPage);
+            // Color theme configuration based on active metric
+            const metricThemes = {
+                clicks: { color: '#5b4ff5', fillStop: 'rgba(91, 79, 245, 0.24)', label: __('Clicks', 'wooptionsfic'), unit: __('interactions', 'wooptionsfic') },
+                addToCart: { color: '#0284c7', fillStop: 'rgba(2, 132, 199, 0.22)', label: __('Add-to-Cart', 'wooptionsfic'), unit: __('items', 'wooptionsfic') },
+                orders: { color: '#10b981', fillStop: 'rgba(16, 185, 129, 0.22)', label: __('Orders', 'wooptionsfic'), unit: __('orders', 'wooptionsfic') },
+                sales: { color: '#8b5cf6', fillStop: 'rgba(139, 92, 246, 0.24)', label: __('Addon Revenue', 'wooptionsfic'), unit: currencySymbol },
+            };
+            const currentTheme = metricThemes[activeMetric];
+            return (wp.element.createElement("div", { className: "wof-page wof-analytics-page wof-analytics-bespoke" },
+                wp.element.createElement("div", { className: "wof-analytics-hero" },
+                    wp.element.createElement("div", { className: "wof-analytics-hero__info" },
+                        wp.element.createElement("span", { className: "wof-analytics-hero__badge" },
+                            wp.element.createElement("span", { className: "wof-pulse-dot" }),
+                            __('Storefront Telemetry', 'wooptionsfic')),
+                        wp.element.createElement("h1", { className: "wof-analytics-hero__title" }, __('Performance & Conversions', 'wooptionsfic')),
+                        wp.element.createElement("p", { className: "wof-analytics-hero__desc" }, __('Track user choices, validation impact, and addon revenue contribution in real-time.', 'wooptionsfic'))),
+                    wp.element.createElement("div", { className: "wof-analytics-hero__actions" },
+                        wp.element.createElement("div", { className: "wof-segmented-range", role: "group", "aria-label": __('Reporting Period', 'wooptionsfic') }, rangeOptions.map((opt) => (wp.element.createElement("button", { type: "button", key: opt.key, className: `wof-segmented-range__btn ${range === opt.key ? 'is-active' : ''}`, onClick: () => setRange(opt.key) }, opt.label)))),
+                        wp.element.createElement("button", { type: "button", className: "wof-refresh-btn", onClick: () => loadData(range), title: __('Refresh data', 'wooptionsfic'), disabled: loading },
+                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "update" })))),
+                error ? (wp.element.createElement(WooOptionsFic.Components.InlineNotice, { type: "error", onClose: () => setError('') }, error)) : null,
+                wp.element.createElement("div", { className: "wof-bespoke-kpi-grid" },
+                    wp.element.createElement("div", { className: `wof-bespoke-kpi-card wof-kpi--sales ${activeMetric === 'sales' ? 'is-active' : ''}`, onClick: () => setActiveMetric('sales'), role: "button", tabIndex: 0 },
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-header" },
+                            wp.element.createElement("span", { className: "wof-bespoke-kpi-icon wof-icon--sales" },
+                                wp.element.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                    wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                                    wp.element.createElement("path", { d: "M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" }),
+                                    wp.element.createElement("path", { d: "M12 18V6" }))),
+                            wp.element.createElement("span", { className: "wof-bespoke-kpi-title" }, __('Total Sales (Addons)', 'wooptionsfic')),
+                            activeMetric === 'sales' ? (wp.element.createElement("span", { className: "wof-kpi-active-pill" },
+                                wp.element.createElement("span", { className: "wof-kpi-active-dot" }),
+                                __('Active', 'wooptionsfic'))) : null),
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-body" },
+                            wp.element.createElement("strong", { className: "wof-bespoke-kpi-num" }, formatMoney(data?.totals?.totalSales ?? 0, currencySymbol, currencyPosition))),
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-footer" },
+                            wp.element.createElement("span", { className: "wof-kpi-hint" }, __('Net addon contribution to orders', 'wooptionsfic')))),
+                    wp.element.createElement("div", { className: `wof-bespoke-kpi-card wof-kpi--orders ${activeMetric === 'orders' ? 'is-active' : ''}`, onClick: () => setActiveMetric('orders'), role: "button", tabIndex: 0 },
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-header" },
+                            wp.element.createElement("span", { className: "wof-bespoke-kpi-icon wof-icon--orders" },
+                                wp.element.createElement("svg", { width: "17", height: "17", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                    wp.element.createElement("path", { d: "M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" }),
+                                    wp.element.createElement("line", { x1: "3", y1: "6", x2: "21", y2: "6" }),
+                                    wp.element.createElement("path", { d: "M16 10a4 4 0 0 1-8 0" }))),
+                            wp.element.createElement("span", { className: "wof-bespoke-kpi-title" }, __('Total Orders (Addons)', 'wooptionsfic')),
+                            activeMetric === 'orders' ? (wp.element.createElement("span", { className: "wof-kpi-active-pill" },
+                                wp.element.createElement("span", { className: "wof-kpi-active-dot" }),
+                                __('Active', 'wooptionsfic'))) : null),
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-body" },
+                            wp.element.createElement("strong", { className: "wof-bespoke-kpi-num" }, data?.totals?.totalOrders ?? 0)),
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-footer" },
+                            wp.element.createElement("span", { className: "wof-kpi-hint" }, __('Completed checkouts with options', 'wooptionsfic')))),
+                    wp.element.createElement("div", { className: `wof-bespoke-kpi-card wof-kpi--clicks ${activeMetric === 'clicks' ? 'is-active' : ''}`, onClick: () => setActiveMetric('clicks'), role: "button", tabIndex: 0 },
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-header" },
+                            wp.element.createElement("span", { className: "wof-bespoke-kpi-icon wof-icon--clicks" },
+                                wp.element.createElement("svg", { width: "17", height: "17", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                    wp.element.createElement("path", { d: "M15 15l5 5m-5-5l-2.5 7.5L11 14 3.5 11.5 11 9l4 6z" }))),
+                            wp.element.createElement("span", { className: "wof-bespoke-kpi-title" }, __('Clicks Count', 'wooptionsfic')),
+                            activeMetric === 'clicks' ? (wp.element.createElement("span", { className: "wof-kpi-active-pill" },
+                                wp.element.createElement("span", { className: "wof-kpi-active-dot" }),
+                                __('Active', 'wooptionsfic'))) : null),
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-body" },
+                            wp.element.createElement("strong", { className: "wof-bespoke-kpi-num" }, data?.totals?.clicksCount ?? 0)),
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-footer" },
+                            wp.element.createElement("span", { className: "wof-kpi-hint" }, __('Customer field clicks & inputs', 'wooptionsfic')))),
+                    wp.element.createElement("div", { className: `wof-bespoke-kpi-card wof-kpi--cart ${activeMetric === 'addToCart' ? 'is-active' : ''}`, onClick: () => setActiveMetric('addToCart'), role: "button", tabIndex: 0 },
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-header" },
+                            wp.element.createElement("span", { className: "wof-bespoke-kpi-icon wof-icon--cart" },
+                                wp.element.createElement("svg", { width: "17", height: "17", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                    wp.element.createElement("circle", { cx: "9", cy: "21", r: "1" }),
+                                    wp.element.createElement("circle", { cx: "20", cy: "21", r: "1" }),
+                                    wp.element.createElement("path", { d: "M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" }))),
+                            wp.element.createElement("span", { className: "wof-bespoke-kpi-title" }, __('Add-to-Cart Count', 'wooptionsfic')),
+                            activeMetric === 'addToCart' ? (wp.element.createElement("span", { className: "wof-kpi-active-pill" },
+                                wp.element.createElement("span", { className: "wof-kpi-active-dot" }),
+                                __('Active', 'wooptionsfic'))) : null),
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-body" },
+                            wp.element.createElement("strong", { className: "wof-bespoke-kpi-num" }, data?.totals?.addToCartCount ?? 0)),
+                        wp.element.createElement("div", { className: "wof-bespoke-kpi-footer" },
+                            wp.element.createElement("span", { className: "wof-kpi-hint" }, __('Customized configurations carted', 'wooptionsfic'))))),
+                wp.element.createElement("section", { className: "wof-panel wof-bespoke-chart-card" },
+                    wp.element.createElement("div", { className: "wof-bespoke-chart-header" },
+                        wp.element.createElement("div", null,
+                            wp.element.createElement("h2", { className: "wof-bespoke-chart-title" }, __('Telemetry Signal Timeline', 'wooptionsfic')),
+                            wp.element.createElement("p", { className: "wof-bespoke-chart-subtitle" }, sprintf(__('Daily progression of %s across active storefront option sets.', 'wooptionsfic'), currentTheme.label))),
+                        wp.element.createElement("div", { className: "wof-metric-switcher", role: "tablist" }, ['clicks', 'addToCart', 'orders', 'sales'].map((m) => (wp.element.createElement("button", { type: "button", key: m, role: "tab", "aria-selected": activeMetric === m, className: `wof-metric-tab ${activeMetric === m ? 'is-active' : ''}`, onClick: () => setActiveMetric(m) }, metricThemes[m].label))))),
+                    wp.element.createElement("div", { className: "wof-bespoke-chart-viewport" },
+                        loading ? (wp.element.createElement("div", { className: "wof-bespoke-chart-loading" },
+                            wp.element.createElement("span", { className: "wof-loader" }),
+                            wp.element.createElement("p", null, __('Calculating telemetry metrics…', 'wooptionsfic')))) : null,
+                        wp.element.createElement("div", { className: "wof-bespoke-svg-wrap" },
+                            wp.element.createElement("svg", { ref: chartSvgRef, viewBox: `0 0 ${chartWidth} ${chartHeight}`, className: "wof-bespoke-chart-svg", onMouseMove: handleMouseMove, onMouseLeave: handleMouseLeave },
+                                wp.element.createElement("defs", null,
+                                    wp.element.createElement("linearGradient", { id: "wofBespokeGrad", x1: "0", y1: "0", x2: "0", y2: "1" },
+                                        wp.element.createElement("stop", { offset: "0%", stopColor: currentTheme.color, stopOpacity: "0.16" }),
+                                        wp.element.createElement("stop", { offset: "80%", stopColor: currentTheme.color, stopOpacity: "0.02" }),
+                                        wp.element.createElement("stop", { offset: "100%", stopColor: currentTheme.color, stopOpacity: "0" }))),
+                                yTicks.map((tick, idx) => (wp.element.createElement("g", { key: `ytick-${idx}`, className: "wof-chart-tick-group" },
+                                    wp.element.createElement("line", { x1: padLeft, y1: tick.y, x2: chartWidth - padRight, y2: tick.y, stroke: "#f1f5f9", strokeDasharray: "4 4", strokeWidth: "1" }),
+                                    wp.element.createElement("text", { x: padLeft - 12, y: tick.y + 4, textAnchor: "end", fontSize: "11", fill: "#94a3b8", fontWeight: "400", fontFamily: "system-ui, sans-serif" }, tick.label)))),
+                                wp.element.createElement("line", { x1: padLeft, y1: baselineY, x2: chartWidth - padRight, y2: baselineY, stroke: "#e2e8f0", strokeWidth: "1" }),
+                                xLabels.map((xl) => (wp.element.createElement("text", { key: `xlabel-${xl.idx}`, x: xl.x, y: baselineY + 22, textAnchor: "middle", fontSize: "11", fill: "#64748b", fontWeight: "450", fontFamily: "system-ui, sans-serif" }, xl.label))),
+                                areaD ? wp.element.createElement("path", { d: areaD, fill: "url(#wofBespokeGrad)" }) : null,
+                                strokeD ? (wp.element.createElement("path", { d: strokeD, fill: "none", stroke: currentTheme.color, strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" })) : null,
+                                hoveredCoord && hoveredPoint ? (wp.element.createElement("g", { className: "wof-chart-hover-indicator" },
+                                    wp.element.createElement("line", { x1: hoveredCoord.x, y1: padTop, x2: hoveredCoord.x, y2: baselineY, stroke: currentTheme.color, strokeDasharray: "3 3", strokeWidth: "1.2", opacity: "0.7" }),
+                                    wp.element.createElement("circle", { cx: hoveredCoord.x, cy: hoveredCoord.y, r: "5.5", fill: currentTheme.color, stroke: "#ffffff", strokeWidth: "2.5" }))) : null),
+                            hoveredCoord && hoveredPoint ? (wp.element.createElement("div", { className: "wof-bespoke-tooltip", style: {
+                                    left: `${(hoveredCoord.x / chartWidth) * 100}%`,
+                                    top: `${(hoveredCoord.y / chartHeight) * 100}%`,
+                                } },
+                                wp.element.createElement("div", { className: "wof-bespoke-tooltip__head" },
+                                    wp.element.createElement("span", { className: "wof-bespoke-tooltip__calendar" }, "\uD83D\uDCC5"),
+                                    wp.element.createElement("span", null,
+                                        hoveredPoint.label,
+                                        " (",
+                                        hoveredPoint.date,
+                                        ")")),
+                                wp.element.createElement("div", { className: "wof-bespoke-tooltip__highlight" },
+                                    wp.element.createElement("span", null,
+                                        currentTheme.label,
+                                        ":"),
+                                    wp.element.createElement("strong", null, activeMetric === 'sales'
+                                        ? formatMoney(hoveredPoint.sales, currencySymbol, currencyPosition)
+                                        : activeMetric === 'orders'
+                                            ? hoveredPoint.orders
+                                            : activeMetric === 'addToCart'
+                                                ? hoveredPoint.addToCart
+                                                : hoveredPoint.clicks)),
+                                wp.element.createElement("div", { className: "wof-bespoke-tooltip__grid" },
+                                    wp.element.createElement("div", { className: "wof-tt-row" },
+                                        wp.element.createElement("span", { className: "wof-tt-dot wof-tt-dot--clicks" }),
+                                        wp.element.createElement("span", null,
+                                            __('Clicks', 'wooptionsfic'),
+                                            ":"),
+                                        wp.element.createElement("b", null, hoveredPoint.clicks)),
+                                    wp.element.createElement("div", { className: "wof-tt-row" },
+                                        wp.element.createElement("span", { className: "wof-tt-dot wof-tt-dot--cart" }),
+                                        wp.element.createElement("span", null,
+                                            __('Add to Cart', 'wooptionsfic'),
+                                            ":"),
+                                        wp.element.createElement("b", null, hoveredPoint.addToCart)),
+                                    wp.element.createElement("div", { className: "wof-tt-row" },
+                                        wp.element.createElement("span", { className: "wof-tt-dot wof-tt-dot--orders" }),
+                                        wp.element.createElement("span", null,
+                                            __('Orders', 'wooptionsfic'),
+                                            ":"),
+                                        wp.element.createElement("b", null, hoveredPoint.orders)),
+                                    wp.element.createElement("div", { className: "wof-tt-row" },
+                                        wp.element.createElement("span", { className: "wof-tt-dot wof-tt-dot--sales" }),
+                                        wp.element.createElement("span", null,
+                                            __('Revenue', 'wooptionsfic'),
+                                            ":"),
+                                        wp.element.createElement("b", null, formatMoney(hoveredPoint.sales, currencySymbol, currencyPosition)))))) : null))),
+                wp.element.createElement("section", { className: "wof-panel wof-bespoke-table-card" },
+                    wp.element.createElement("div", { className: "wof-bespoke-table-header" },
+                        wp.element.createElement("div", null,
+                            wp.element.createElement("h2", { className: "wof-bespoke-table-title" }, __('Option Sets Performance', 'wooptionsfic')),
+                            wp.element.createElement("p", { className: "wof-bespoke-table-desc" }, __('Granular conversion rates and order contributions per option set.', 'wooptionsfic'))),
+                        wp.element.createElement("div", { className: "wof-bespoke-table-tools" },
+                            wp.element.createElement("div", { className: "wof-table-search-box" },
+                                wp.element.createElement("span", { className: "wof-search-icon", "aria-hidden": "true" },
+                                    wp.element.createElement("svg", { width: "13", height: "13", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                        wp.element.createElement("circle", { cx: "11", cy: "11", r: "8" }),
+                                        wp.element.createElement("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" }))),
+                                wp.element.createElement("input", { type: "search", value: tableSearch, onChange: (e) => setTableSearch(e.target.value), placeholder: __('Search option sets…', 'wooptionsfic'), className: "wof-table-search-input" })),
+                            wp.element.createElement("span", { className: "wof-count-pill" },
+                                totalTableItems,
+                                " ",
+                                totalTableItems === 1 ? __('Set', 'wooptionsfic') : __('Sets', 'wooptionsfic')))),
+                    wp.element.createElement("div", { className: "wof-bespoke-table-wrap" },
+                        wp.element.createElement("table", { className: "wof-analytics-table wof-analytics-table--bespoke" },
+                            wp.element.createElement("thead", null,
+                                wp.element.createElement("tr", null,
+                                    wp.element.createElement("th", { className: "wof-col-set" }, __('OPTION SET', 'wooptionsfic')),
+                                    wp.element.createElement("th", { className: "wof-col-applied" }, __('SCOPE', 'wooptionsfic')),
+                                    wp.element.createElement("th", { className: "wof-col-clickrate" }, __('CLICK RATE', 'wooptionsfic')),
+                                    wp.element.createElement("th", { className: "wof-col-cartrate" }, __('CART CONVERSION', 'wooptionsfic')),
+                                    wp.element.createElement("th", { className: "wof-col-sales" }, __('ADDON REVENUE', 'wooptionsfic')),
+                                    wp.element.createElement("th", { className: "wof-col-actions" }, __('ACTION', 'wooptionsfic')))),
+                            wp.element.createElement("tbody", null, paginatedOptionSets.length > 0 ? (paginatedOptionSets.map((set) => (wp.element.createElement("tr", { key: set.uuid, className: "wof-table-row" },
+                                wp.element.createElement("td", { className: "wof-cell-set" },
+                                    wp.element.createElement("div", { className: "wof-set-identity" },
+                                        wp.element.createElement("span", { className: "wof-set-icon" },
+                                            wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "screenoptions" })),
+                                        wp.element.createElement("div", { className: "wof-set-meta" },
+                                            wp.element.createElement("button", { type: "button", className: "wof-set-name-link", onClick: () => props?.navigate?.(`builder/${set.uuid}`), title: __('Edit in Option Set Builder', 'wooptionsfic') }, set.name),
+                                            wp.element.createElement("span", { className: "wof-set-sub" },
+                                                "ID: ",
+                                                set.id,
+                                                " \u2022 ",
+                                                set.uuid.slice(0, 8),
+                                                "\u2026")))),
+                                wp.element.createElement("td", { className: "wof-cell-applied" },
+                                    wp.element.createElement("span", { className: "wof-scope-pill" },
+                                        set.thumbnailUrl ? (wp.element.createElement("img", { src: set.thumbnailUrl, alt: "", className: "wof-scope-thumb" })) : (wp.element.createElement("span", { className: "wof-scope-glyph-fallback", "aria-hidden": "true" },
+                                            wp.element.createElement("svg", { width: "13", height: "13", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                                wp.element.createElement("path", { d: "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" }),
+                                                wp.element.createElement("polyline", { points: "3.27 6.96 12 12.01 20.73 6.96" }),
+                                                wp.element.createElement("line", { x1: "12", y1: "22.08", x2: "12", y2: "12" })))),
+                                        wp.element.createElement("span", null, set.appliedText))),
+                                wp.element.createElement("td", { className: "wof-cell-clickrate" },
+                                    wp.element.createElement("div", { className: "wof-rate-meter" },
+                                        wp.element.createElement("div", { className: "wof-rate-bar-track" },
+                                            wp.element.createElement("div", { className: "wof-rate-bar-fill wof-fill--clicks", style: { width: `${Math.min(100, Math.max(0, set.clickRate))}%` } })),
+                                        wp.element.createElement("span", { className: "wof-rate-text" },
+                                            set.clickRate,
+                                            "%"))),
+                                wp.element.createElement("td", { className: "wof-cell-cartrate" },
+                                    wp.element.createElement("div", { className: "wof-rate-meter" },
+                                        wp.element.createElement("div", { className: "wof-rate-bar-track" },
+                                            wp.element.createElement("div", { className: "wof-rate-bar-fill wof-fill--cart", style: { width: `${Math.min(100, Math.max(0, set.addToCartRate))}%` } })),
+                                        wp.element.createElement("span", { className: "wof-rate-text" },
+                                            set.addToCartRate,
+                                            "%"))),
+                                wp.element.createElement("td", { className: "wof-cell-sales" },
+                                    wp.element.createElement("div", { className: "wof-sales-badge" },
+                                        wp.element.createElement("strong", { className: "wof-sales-amount" }, formatMoney(set.sales, currencySymbol, currencyPosition)),
+                                        wp.element.createElement("span", { className: "wof-sales-orders" },
+                                            set.orders,
+                                            " ",
+                                            set.orders === 1 ? __('order', 'wooptionsfic') : __('orders', 'wooptionsfic')))),
+                                wp.element.createElement("td", { className: "wof-cell-actions" },
+                                    wp.element.createElement("button", { type: "button", className: "wof-table-action-btn", onClick: () => props?.navigate?.(`builder/${set.uuid}`) },
+                                        wp.element.createElement("span", null, __('Edit', 'wooptionsfic')),
+                                        wp.element.createElement("span", { "aria-hidden": "true" }, "\u2192"))))))) : (wp.element.createElement("tr", null,
+                                wp.element.createElement("td", { colSpan: 6, className: "wof-table-empty-row" }, loading
+                                    ? __('Calculating performance metrics…', 'wooptionsfic')
+                                    : tableSearch
+                                        ? __('No option sets match your search filter.', 'wooptionsfic')
+                                        : __('No option set activity recorded for this period.', 'wooptionsfic'))))))),
+                    totalTableItems > 5 ? (wp.element.createElement("div", { className: "wof-table-pagination" },
+                        wp.element.createElement("div", { className: "wof-table-pagination__info" }, sprintf(__('Showing %1$d–%2$d of %3$d option sets', 'wooptionsfic'), startItem, endItem, totalTableItems)),
+                        wp.element.createElement("div", { className: "wof-table-pagination__controls" },
+                            wp.element.createElement("button", { type: "button", className: "wof-page-nav-btn", disabled: tablePage <= 1, onClick: () => setTablePage(Math.max(1, tablePage - 1)) },
+                                wp.element.createElement("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                    wp.element.createElement("polyline", { points: "15 18 9 12 15 6" })),
+                                wp.element.createElement("span", null, __('Previous', 'wooptionsfic'))),
+                            wp.element.createElement("div", { className: "wof-page-number-list" }, Array.from({ length: totalTablePages }, (_, i) => i + 1).map((p) => (wp.element.createElement("button", { type: "button", key: p, className: `wof-page-num-btn ${tablePage === p ? 'is-active' : ''}`, onClick: () => setTablePage(p) }, p)))),
+                            wp.element.createElement("button", { type: "button", className: "wof-page-nav-btn", disabled: tablePage >= totalTablePages, onClick: () => setTablePage(Math.min(totalTablePages, tablePage + 1)) },
+                                wp.element.createElement("span", null, __('Next', 'wooptionsfic')),
+                                wp.element.createElement("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                    wp.element.createElement("polyline", { points: "9 18 15 12 9 6" })))))) : totalTableItems > 0 ? (wp.element.createElement("div", { className: "wof-table-pagination wof-table-pagination--compact" },
+                        wp.element.createElement("span", { className: "wof-table-pagination__info" }, sprintf(__('Displaying all %d option sets', 'wooptionsfic'), totalTableItems)))) : null)));
         }
         Pages.Analytics = Analytics;
     })(Pages = WooOptionsFic.Pages || (WooOptionsFic.Pages = {}));
@@ -6627,7 +7083,7 @@ var WooOptionsFic;
                     page = wp.element.createElement(WooOptionsFic.Pages.Templates, { navigate: navigate });
                     break;
                 case 'analytics':
-                    page = wp.element.createElement(WooOptionsFic.Pages.Analytics, null);
+                    page = wp.element.createElement(WooOptionsFic.Pages.Analytics, { navigate: navigate });
                     break;
                 case 'settings':
                     page = wp.element.createElement(WooOptionsFic.Pages.Settings, null);

@@ -697,6 +697,7 @@ final class AdminController {
 
 	public function analytics(\WP_REST_Request $request): \WP_REST_Response|\WP_Error {
 		return $this->respond(fn (): array => $this->analytics->summary(
+			(string) ($request['range'] ?? '30d'),
 			(string) ($request['from'] ?? ''),
 			(string) ($request['to'] ?? ''),
 			(int) ($request['productId'] ?? 0)
