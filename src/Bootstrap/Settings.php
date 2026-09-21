@@ -58,7 +58,24 @@ final class Settings {
 		if (! is_array($value)) {
 			$value = [];
 		}
-		return array_replace(self::defaults(), $value);
+		$merged = array_replace(self::defaults(), $value);
+		if (! empty($merged['custom_fonts']) && is_array($merged['custom_fonts'])) {
+			$is_ssl = is_ssl() || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && 'https' === $_SERVER['HTTP_X_FORWARDED_PROTO']) || str_starts_with(home_url(), 'https://') || (isset($_SERVER['HTTPS']) && 'off' !== $_SERVER['HTTPS']);
+			if ($is_ssl) {
+				foreach ($merged['custom_fonts'] as &$cfont) {
+					if (! empty($cfont['files']) && is_array($cfont['files'])) {
+						foreach ($cfont['files'] as &$cf_url) {
+							if (is_string($cf_url)) {
+								$cf_url = preg_replace('/^http:\/\//i', 'https://', $cf_url);
+							}
+						}
+						unset($cf_url);
+					}
+				}
+				unset($cfont);
+			}
+		}
+		return $merged;
 	}
 
 	public static function get(string $key, mixed $fallback = null): mixed {

@@ -85,7 +85,13 @@ final class CustomFontService {
 			$family = ! empty($item['family']) ? trim((string) $item['family']) : "'" . $name . "', sans-serif";
 			$weight = ! empty($item['weight']) ? (string) $item['weight'] : '400';
 			$style  = ! empty($item['style']) && in_array($item['style'], ['normal', 'italic'], true) ? (string) $item['style'] : 'normal';
-			$files  = is_array($item['files'] ?? null) ? $item['files'] : [];
+			$raw_files = is_array($item['files'] ?? null) ? $item['files'] : [];
+			$files     = [];
+			foreach ($raw_files as $fmt => $furl) {
+				if (is_string($furl)) {
+					$files[$fmt] = self::normalize_url($furl);
+				}
+			}
 
 			$fonts[] = [
 				'id'          => $id,
@@ -101,6 +107,20 @@ final class CustomFontService {
 		}
 
 		return $fonts;
+	}
+
+	/**
+	 * Normalize font URL to match HTTPS scheme when page is served over SSL.
+	 */
+	public static function normalize_url(string $url): string {
+		$url = esc_url_raw(trim($url));
+		if ('' === $url) {
+			return '';
+		}
+		if (is_ssl() || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && 'https' === $_SERVER['HTTP_X_FORWARDED_PROTO']) || str_starts_with(home_url(), 'https://') || (isset($_SERVER['HTTPS']) && 'off' !== $_SERVER['HTTPS'])) {
+			$url = (string) preg_replace('/^http:\/\//i', 'https://', $url);
+		}
+		return (string) set_url_scheme($url);
 	}
 
 	/**
@@ -125,26 +145,26 @@ final class CustomFontService {
 			$sources = [];
 			// WOFF2
 			if (! empty($files['woff2'])) {
-				$url       = set_url_scheme(esc_url_raw((string) $files['woff2']));
+				$url       = self::normalize_url((string) $files['woff2']);
 				$sources[] = "url('" . $url . "') format('woff2')";
 				$sources[] = "url('" . $url . "')";
 			}
 			// WOFF
 			if (! empty($files['woff'])) {
-				$url       = set_url_scheme(esc_url_raw((string) $files['woff']));
+				$url       = self::normalize_url((string) $files['woff']);
 				$sources[] = "url('" . $url . "') format('woff')";
 				$sources[] = "url('" . $url . "')";
 			}
 			// TTF
 			if (! empty($files['ttf'])) {
-				$url       = set_url_scheme(esc_url_raw((string) $files['ttf']));
+				$url       = self::normalize_url((string) $files['ttf']);
 				$sources[] = "url('" . $url . "') format('truetype')";
 				$sources[] = "url('" . $url . "') format('opentype')";
 				$sources[] = "url('" . $url . "')";
 			}
 			// OTF (Support both OpenType CFF and TrueType outlines, plus direct URL fallback)
 			if (! empty($files['otf'])) {
-				$url       = set_url_scheme(esc_url_raw((string) $files['otf']));
+				$url       = self::normalize_url((string) $files['otf']);
 				$sources[] = "url('" . $url . "') format('opentype')";
 				$sources[] = "url('" . $url . "') format('truetype')";
 				$sources[] = "url('" . $url . "')";

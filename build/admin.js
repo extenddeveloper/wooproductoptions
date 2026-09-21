@@ -1306,25 +1306,68 @@ var WooOptionsFic;
     var Components;
     (function (Components) {
         const { __ } = wp.i18n;
+        const { useState } = wp.element;
         function AdminShell(props) {
             const isBuilder = props.route.startsWith('builder/');
-            const isTemplateStudio = props.route === 'templates';
-            if (isBuilder || isTemplateStudio) {
-                return (wp.element.createElement("div", { className: isBuilder ? "wof-admin is-builder" : "wof-admin is-template-studio" },
+            const [mobileOpen, setMobileOpen] = useState(false);
+            if (isBuilder) {
+                return (wp.element.createElement("div", { className: "wof-admin is-builder" },
                     wp.element.createElement("main", { className: "wof-admin__content" }, props.children),
                     wp.element.createElement(Components.ToastContainer, null)));
             }
+            const navItems = [
+                { id: 'dashboard', label: __('Dashboard', 'wooptionsfic') },
+                { id: 'option-sets', label: __('Option Sets', 'wooptionsfic') },
+                { id: 'templates', label: __('Templates', 'wooptionsfic') },
+                { id: 'analytics', label: __('Analytics', 'wooptionsfic') },
+                { id: 'settings', label: __('Settings', 'wooptionsfic') },
+            ];
             return (wp.element.createElement("div", { className: "wof-admin" },
                 wp.element.createElement("header", { className: "wof-admin__masthead" },
-                    wp.element.createElement("button", { type: "button", className: "wof-brand", onClick: () => props.navigate('dashboard') },
+                    wp.element.createElement("button", { type: "button", className: "wof-brand", onClick: () => props.navigate('dashboard'), title: __('Go to Dashboard', 'wooptionsfic') },
                         wp.element.createElement("span", { className: "wof-brand-mark" },
                             wp.element.createElement(Components.Dashicon, { name: "screenoptions" })),
-                        wp.element.createElement("span", { className: "wof-brand-copy" },
-                            wp.element.createElement("strong", null, "WooOptionsFic"),
-                            wp.element.createElement("small", null, __('Precision Workshop', 'wooptionsfic')))),
-                    wp.element.createElement("div", { className: "wof-masthead__meta" },
-                        wp.element.createElement("span", { className: "wof-beta-pill" }, window.WooOptionsFicAdmin.version),
-                        wp.element.createElement("span", { className: "wof-user-chip" }, window.WooOptionsFicAdmin.currentUser.name))),
+                        wp.element.createElement("span", { className: "wof-brand-name" }, "WooOptionsFic")),
+                    wp.element.createElement("nav", { className: "wof-masthead__nav", "aria-label": __('Primary navigation', 'wooptionsfic') }, navItems.map((item) => {
+                        const isActive = props.route === item.id;
+                        return (wp.element.createElement("button", { type: "button", key: item.id, className: `wof-masthead__nav-item ${isActive ? 'is-active' : ''}`, onClick: () => props.navigate(item.id) }, item.label));
+                    })),
+                    wp.element.createElement("div", { className: "wof-masthead__right" },
+                        wp.element.createElement("div", { className: "wof-masthead__support" },
+                            wp.element.createElement("span", { className: "wof-masthead__support-text" }, __('Having troubles?', 'wooptionsfic')),
+                            ' ',
+                            wp.element.createElement("a", { href: "https://wholesalefic.com/support", target: "_blank", rel: "noopener noreferrer", className: "wof-masthead__tutorial-link" }, __('Tutorial', 'wooptionsfic'))),
+                        wp.element.createElement("button", { type: "button", className: "wof-masthead__hamburger", onClick: () => setMobileOpen(!mobileOpen), "aria-label": __('Toggle mobile navigation', 'wooptionsfic'), "aria-expanded": mobileOpen },
+                            wp.element.createElement("svg", { width: "20", height: "20", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                wp.element.createElement("line", { x1: "3", y1: "12", x2: "21", y2: "12" }),
+                                wp.element.createElement("line", { x1: "3", y1: "6", x2: "21", y2: "6" }),
+                                wp.element.createElement("line", { x1: "3", y1: "18", x2: "21", y2: "18" }))))),
+                mobileOpen && (wp.element.createElement(wp.element.Fragment, null,
+                    wp.element.createElement("div", { className: "wof-mobile-nav-backdrop", onClick: () => setMobileOpen(false), "aria-hidden": "true" }),
+                    wp.element.createElement("aside", { className: "wof-mobile-nav-drawer", role: "dialog", "aria-label": __('Mobile navigation', 'wooptionsfic') },
+                        wp.element.createElement("div", { className: "wof-mobile-nav__header" },
+                            wp.element.createElement("div", { className: "wof-brand" },
+                                wp.element.createElement("span", { className: "wof-brand-mark" },
+                                    wp.element.createElement(Components.Dashicon, { name: "screenoptions" })),
+                                wp.element.createElement("span", { className: "wof-brand-name" }, "WooOptionsFic")),
+                            wp.element.createElement("button", { type: "button", className: "wof-mobile-nav__close", onClick: () => setMobileOpen(false), "aria-label": __('Close menu', 'wooptionsfic') },
+                                wp.element.createElement("svg", { width: "18", height: "18", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                    wp.element.createElement("line", { x1: "18", y1: "6", x2: "6", y2: "18" }),
+                                    wp.element.createElement("line", { x1: "6", y1: "6", x2: "18", y2: "18" })))),
+                        wp.element.createElement("div", { className: "wof-mobile-nav__body" }, navItems.map((item) => {
+                            const isActive = props.route === item.id;
+                            return (wp.element.createElement("button", { type: "button", key: item.id, className: `wof-mobile-nav__item ${isActive ? 'is-active' : ''}`, onClick: () => {
+                                    props.navigate(item.id);
+                                    setMobileOpen(false);
+                                } },
+                                wp.element.createElement("span", null, item.label),
+                                isActive && wp.element.createElement("span", { className: "wof-mobile-nav__active-dot", "aria-hidden": "true" }, "\u25CF")));
+                        })),
+                        wp.element.createElement("div", { className: "wof-mobile-nav__footer" },
+                            wp.element.createElement("div", { className: "wof-masthead__support" },
+                                wp.element.createElement("span", null, __('Having troubles?', 'wooptionsfic')),
+                                ' ',
+                                wp.element.createElement("a", { href: "https://wholesalefic.com/support", target: "_blank", rel: "noopener noreferrer", className: "wof-masthead__tutorial-link" }, __('Tutorial', 'wooptionsfic'))))))),
                 wp.element.createElement("div", { className: "wof-admin__body" },
                     wp.element.createElement("main", { className: "wof-admin__content" }, props.children)),
                 wp.element.createElement(Components.ToastContainer, null)));
@@ -2610,19 +2653,25 @@ var WooOptionsFic;
                     styleTag.id = 'wof-custom-fonts-live';
                     document.head.appendChild(styleTag);
                 }
+                const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
+                const fixUrl = (u) => {
+                    if (!u || typeof u !== 'string')
+                        return '';
+                    return isHttps ? u.replace(/^http:\/\//i, 'https://') : u;
+                };
                 let css = '';
                 props.fonts.forEach((f) => {
                     if (!f.files)
                         return;
                     const srcs = [];
                     if (f.files.woff2)
-                        srcs.push(`url('${f.files.woff2}') format('woff2')`);
+                        srcs.push(`url('${fixUrl(f.files.woff2)}') format('woff2')`);
                     if (f.files.woff)
-                        srcs.push(`url('${f.files.woff}') format('woff')`);
+                        srcs.push(`url('${fixUrl(f.files.woff)}') format('woff')`);
                     if (f.files.ttf)
-                        srcs.push(`url('${f.files.ttf}') format('truetype')`);
+                        srcs.push(`url('${fixUrl(f.files.ttf)}') format('truetype')`);
                     if (f.files.otf)
-                        srcs.push(`url('${f.files.otf}') format('opentype')`);
+                        srcs.push(`url('${fixUrl(f.files.otf)}') format('opentype')`);
                     if (srcs.length > 0) {
                         const clean = (f.name || '').replace(/['"]/g, '');
                         css += `@font-face { font-family: '${clean}'; src: ${srcs.join(', ')}; font-weight: ${f.weight || '400'}; font-style: ${f.style || 'normal'}; font-display: swap; }\n`;
@@ -2631,13 +2680,13 @@ var WooOptionsFic;
                 if (name && Object.keys(files).length > 0) {
                     const srcs = [];
                     if (files.woff2)
-                        srcs.push(`url('${files.woff2}') format('woff2')`);
+                        srcs.push(`url('${fixUrl(files.woff2)}') format('woff2')`);
                     if (files.woff)
-                        srcs.push(`url('${files.woff}') format('woff')`);
+                        srcs.push(`url('${fixUrl(files.woff)}') format('woff')`);
                     if (files.ttf)
-                        srcs.push(`url('${files.ttf}') format('truetype')`);
+                        srcs.push(`url('${fixUrl(files.ttf)}') format('truetype')`);
                     if (files.otf)
-                        srcs.push(`url('${files.otf}') format('opentype')`);
+                        srcs.push(`url('${fixUrl(files.otf)}') format('opentype')`);
                     if (srcs.length > 0) {
                         const clean = name.replace(/['"]/g, '');
                         css += `@font-face { font-family: '${clean}'; src: ${srcs.join(', ')}; font-weight: ${weight}; font-style: ${style}; font-display: swap; }\n`;
@@ -2659,9 +2708,11 @@ var WooOptionsFic;
                     const selection = frame.state().get('selection');
                     const nextFiles = { ...files };
                     let detectedName = name;
+                    const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
                     selection.each((attachmentModel) => {
                         const att = attachmentModel.toJSON();
-                        const url = String(att.url || '');
+                        const rawUrl = String(att.url || '');
+                        const url = isHttps ? rawUrl.replace(/^http:\/\//i, 'https://') : rawUrl;
                         const filename = String(att.filename || att.title || '');
                         const ext = filename.split('.').pop()?.toLowerCase() || '';
                         if (['woff2', 'woff', 'ttf', 'otf'].includes(ext)) {
@@ -7023,18 +7074,32 @@ var WooOptionsFic;
     function injectCustomFontsCss(customFonts) {
         if (!Array.isArray(customFonts) || customFonts.length === 0)
             return;
+        const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
+        const fixUrl = (url) => {
+            if (!url || typeof url !== 'string')
+                return '';
+            return isHttps ? url.replace(/^http:\/\//i, 'https://') : url;
+        };
         let css = '';
         for (const font of customFonts) {
             const files = font.files || {};
             const sources = [];
-            if (files.woff2)
-                sources.push(`url('${files.woff2}') format('woff2')`, `url('${files.woff2}')`);
-            if (files.woff)
-                sources.push(`url('${files.woff}') format('woff')`, `url('${files.woff}')`);
-            if (files.ttf)
-                sources.push(`url('${files.ttf}') format('truetype')`, `url('${files.ttf}') format('opentype')`, `url('${files.ttf}')`);
-            if (files.otf)
-                sources.push(`url('${files.otf}') format('opentype')`, `url('${files.otf}') format('truetype')`, `url('${files.otf}')`);
+            if (files.woff2) {
+                const u = fixUrl(files.woff2);
+                sources.push(`url('${u}') format('woff2')`, `url('${u}')`);
+            }
+            if (files.woff) {
+                const u = fixUrl(files.woff);
+                sources.push(`url('${u}') format('woff')`, `url('${u}')`);
+            }
+            if (files.ttf) {
+                const u = fixUrl(files.ttf);
+                sources.push(`url('${u}') format('truetype')`, `url('${u}') format('opentype')`, `url('${u}')`);
+            }
+            if (files.otf) {
+                const u = fixUrl(files.otf);
+                sources.push(`url('${u}') format('opentype')`, `url('${u}') format('truetype')`, `url('${u}')`);
+            }
             if (sources.length === 0)
                 continue;
             const cleanName = (font.family || font.name || '').split(',')[0].replace(/['"]/g, '').trim();

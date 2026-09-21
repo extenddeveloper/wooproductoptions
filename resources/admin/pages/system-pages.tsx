@@ -20,14 +20,19 @@ namespace WooOptionsFic.Pages {
         styleTag.id = 'wof-custom-fonts-live';
         document.head.appendChild(styleTag);
       }
+      const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
+      const fixUrl = (u: string) => {
+        if (!u || typeof u !== 'string') return '';
+        return isHttps ? u.replace(/^http:\/\//i, 'https://') : u;
+      };
       let css = '';
       props.fonts.forEach((f) => {
         if (!f.files) return;
         const srcs: string[] = [];
-        if (f.files.woff2) srcs.push(`url('${f.files.woff2}') format('woff2')`);
-        if (f.files.woff) srcs.push(`url('${f.files.woff}') format('woff')`);
-        if (f.files.ttf) srcs.push(`url('${f.files.ttf}') format('truetype')`);
-        if (f.files.otf) srcs.push(`url('${f.files.otf}') format('opentype')`);
+        if (f.files.woff2) srcs.push(`url('${fixUrl(f.files.woff2)}') format('woff2')`);
+        if (f.files.woff) srcs.push(`url('${fixUrl(f.files.woff)}') format('woff')`);
+        if (f.files.ttf) srcs.push(`url('${fixUrl(f.files.ttf)}') format('truetype')`);
+        if (f.files.otf) srcs.push(`url('${fixUrl(f.files.otf)}') format('opentype')`);
         if (srcs.length > 0) {
           const clean = (f.name || '').replace(/['"]/g, '');
           css += `@font-face { font-family: '${clean}'; src: ${srcs.join(', ')}; font-weight: ${f.weight || '400'}; font-style: ${f.style || 'normal'}; font-display: swap; }\n`;
@@ -35,10 +40,10 @@ namespace WooOptionsFic.Pages {
       });
       if (name && Object.keys(files).length > 0) {
         const srcs: string[] = [];
-        if (files.woff2) srcs.push(`url('${files.woff2}') format('woff2')`);
-        if (files.woff) srcs.push(`url('${files.woff}') format('woff')`);
-        if (files.ttf) srcs.push(`url('${files.ttf}') format('truetype')`);
-        if (files.otf) srcs.push(`url('${files.otf}') format('opentype')`);
+        if (files.woff2) srcs.push(`url('${fixUrl(files.woff2)}') format('woff2')`);
+        if (files.woff) srcs.push(`url('${fixUrl(files.woff)}') format('woff')`);
+        if (files.ttf) srcs.push(`url('${fixUrl(files.ttf)}') format('truetype')`);
+        if (files.otf) srcs.push(`url('${fixUrl(files.otf)}') format('opentype')`);
         if (srcs.length > 0) {
           const clean = name.replace(/['"]/g, '');
           css += `@font-face { font-family: '${clean}'; src: ${srcs.join(', ')}; font-weight: ${weight}; font-style: ${style}; font-display: swap; }\n`;
@@ -62,10 +67,12 @@ namespace WooOptionsFic.Pages {
         const selection = frame.state().get('selection');
         const nextFiles = { ...files };
         let detectedName = name;
+        const isHttps = typeof window !== 'undefined' && window.location && window.location.protocol === 'https:';
 
         selection.each((attachmentModel: any) => {
           const att = attachmentModel.toJSON();
-          const url = String(att.url || '');
+          const rawUrl = String(att.url || '');
+          const url = isHttps ? rawUrl.replace(/^http:\/\//i, 'https://') : rawUrl;
           const filename = String(att.filename || att.title || '');
           const ext = filename.split('.').pop()?.toLowerCase() || '';
 
