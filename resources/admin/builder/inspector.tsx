@@ -2925,7 +2925,6 @@ namespace WooOptionsFic.Builder {
     const [testing, setTesting] = useState(false);
     const [refOpen, setRefOpen] = useState(false);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-    const [openChoiceSub, setOpenChoiceSub] = useState<string | null>(null);
 
     // Insert text at the current cursor position in the expression textarea.
     const insertAtCursor = (text: string) => {
@@ -3240,7 +3239,7 @@ namespace WooOptionsFic.Builder {
 
           {/* Dynamic Values — field token helper */}
           {siblingFields.length > 0 ? (
-            <div className="wof-formula-tokens" onClick={() => { setOpenDropdown(null); setOpenChoiceSub(null); }}>
+            <div className="wof-formula-tokens" onClick={() => setOpenDropdown(null)}>
               <span className="wof-formula-tokens__label">{__('Insert field:', 'wooptionsfic')}</span>
               <div className="wof-formula-tokens__list">
                 {siblingFields.map((f) => {
@@ -3263,7 +3262,6 @@ namespace WooOptionsFic.Builder {
                         onClick={() => {
                           if (hasDynOptions) {
                             setOpenDropdown(isOpen ? null : f.uuid);
-                            setOpenChoiceSub(null);
                           } else {
                             insertAtCursor(fieldToken(f, 'value'));
                           }
@@ -3277,50 +3275,39 @@ namespace WooOptionsFic.Builder {
                       {isOpen && hasDynOptions && (
                         <div className="wof-dv-dropdown">
                           {dynValues.map((dv, dvIdx) => {
-                            // "Options" row — flyout with choices
+                            // "Options" row — CSS :hover reveals sub-panel (no JS state)
                             if (dv.isOptions) {
                               if (choices.length === 0) return null;
-                              const isChoiceOpen = openChoiceSub === `${f.uuid}:options`;
                               return (
-                                <div key={dvIdx} className={`wof-dv-item wof-dv-item--has-sub${isChoiceOpen ? ' is-open' : ''}`}
-                                  onMouseEnter={() => setOpenChoiceSub(`${f.uuid}:options`)}
-                                >
+                                <div key={dvIdx} className="wof-dv-item wof-dv-item--has-sub">
                                   <span className="wof-dv-item-label">{dv.label}</span>
                                   <span className="wof-dv-item-arrow">›</span>
-                                  {isChoiceOpen && (
-                                    <div className="wof-dv-sub-panel">
-                                      {choices.map((c: any, ci: number) => {
-                                        const choiceLabel = c.label ?? c.value ?? `Option ${ci + 1}`;
-                                        const isChoiceItemOpen = openChoiceSub === `${f.uuid}:choice:${ci}`;
-                                        return (
-                                          <div
-                                            key={ci}
-                                            className={`wof-dv-item wof-dv-item--has-sub${isChoiceItemOpen ? ' is-open' : ''}`}
-                                            onMouseEnter={() => setOpenChoiceSub(`${f.uuid}:choice:${ci}`)}
-                                          >
-                                            <span className="wof-dv-item-label">{choiceLabel}</span>
-                                            <span className="wof-dv-item-arrow">›</span>
-                                            {isChoiceItemOpen && (
-                                              <div className="wof-dv-sub-panel">
-                                                {choiceOptionProps.map((op) => (
-                                                  <button
-                                                    key={op.prop}
-                                                    type="button"
-                                                    className="wof-dv-item"
-                                                    onClick={() => {
-                                                      insertAtCursor(optionToken(f, choiceLabel, op.prop));
-                                                      setOpenDropdown(null);
-                                                      setOpenChoiceSub(null);
-                                                    }}
-                                                >{op.label}</button>
-                                                ))}
-                                              </div>
-                                            )}
+                                  {/* Choices sub-panel: always in DOM, shown via CSS :hover */}
+                                  <div className="wof-dv-sub-panel">
+                                    {choices.map((c: any, ci: number) => {
+                                      const choiceLabel = c.label ?? c.value ?? `Option ${ci + 1}`;
+                                      return (
+                                        <div key={ci} className="wof-dv-item wof-dv-item--has-sub">
+                                          <span className="wof-dv-item-label">{choiceLabel}</span>
+                                          <span className="wof-dv-item-arrow">›</span>
+                                          {/* Props sub-panel: always in DOM, shown via CSS :hover */}
+                                          <div className="wof-dv-sub-panel">
+                                            {choiceOptionProps.map((op) => (
+                                              <button
+                                                key={op.prop}
+                                                type="button"
+                                                className="wof-dv-item"
+                                                onClick={() => {
+                                                  insertAtCursor(optionToken(f, choiceLabel, op.prop));
+                                                  setOpenDropdown(null);
+                                                }}
+                                              >{op.label}</button>
+                                            ))}
                                           </div>
-                                        );
-                                      })}
-                                    </div>
-                                  )}
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
                               );
                             }
@@ -3330,11 +3317,9 @@ namespace WooOptionsFic.Builder {
                                 key={dvIdx}
                                 type="button"
                                 className="wof-dv-item"
-                                onMouseEnter={() => setOpenChoiceSub(null)}
                                 onClick={() => {
                                   insertAtCursor(fieldToken(f, dv.prop));
                                   setOpenDropdown(null);
-                                  setOpenChoiceSub(null);
                                 }}
                               >{dv.label}</button>
                             );

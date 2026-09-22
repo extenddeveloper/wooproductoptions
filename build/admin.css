@@ -14047,24 +14047,30 @@ body.rtl .wof-toast__progress-bar,
 	display: inline-block;
 }
 
+/* Main dropdown — opens leftward from button's right edge so it stays within the panel */
 .wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown {
 	position: absolute;
-	top: calc(100% + 3px);
-	left: 0;
+	top: calc(100% + 4px);
+	right: 0;         /* align to button right edge */
+	left: auto;       /* expand leftward */
 	z-index: 9999;
-	min-width: 200px;
+	min-width: 210px;
 	max-width: 260px;
+	width: max-content;
 	background: #ffffff;
 	border: 1px solid #e2e8f0;
 	border-radius: 6px;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13), 0 1px 4px rgba(0, 0, 0, 0.06);
 	padding: 4px;
 	display: flex;
 	flex-direction: column;
 	gap: 1px;
+	overflow: visible; /* allow sub-panels to escape */
 }
 
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-item {
+/* Every item inside any panel/sub-panel */
+.wof-dv-dropdown .wof-dv-item,
+.wof-dv-sub-panel .wof-dv-item {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -14077,77 +14083,69 @@ body.rtl .wof-toast__progress-bar,
 	border: none;
 	border-radius: 4px;
 	cursor: pointer;
-	transition: background 0.1s;
+	transition: background 0.1s, color 0.1s;
 	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
 	position: relative;
 	box-sizing: border-box;
 }
 
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-item .wof-dv-item-label {
+.wof-dv-dropdown .wof-dv-item:hover,
+.wof-dv-sub-panel .wof-dv-item:hover,
+.wof-dv-dropdown .wof-dv-item--has-sub:hover {
+	background: #eff6ff;
+	color: #1d4ed8;
+}
+
+.wof-dv-item .wof-dv-item-label,
+.wof-dv-item--has-sub .wof-dv-item-label {
 	flex: 1;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
 
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-item .wof-dv-item-arrow {
+.wof-dv-item .wof-dv-item-arrow,
+.wof-dv-item--has-sub .wof-dv-item-arrow {
 	flex-shrink: 0;
-	font-size: 14px;
+	font-size: 13px;
 	color: #94a3b8;
-	margin-left: 4px;
+	margin-left: 6px;
 	line-height: 1;
 }
 
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-item:hover,
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-item.is-open {
-	background: #eff6ff;
-	color: #1d4ed8;
-	overflow: visible;
-}
-
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-item.is-open .wof-dv-item-arrow {
+.wof-dv-item--has-sub:hover .wof-dv-item-arrow {
 	color: #1d4ed8;
 }
 
-/* Flyout sub-panel (choices level & props level) */
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-sub-panel {
+/* Sub-panels: hidden by default, shown on parent :hover via CSS — no JS state needed */
+.wof-dv-sub-panel {
+	display: none;
 	position: absolute;
 	top: -4px;
-	left: 100%;
-	margin-left: 3px;
-	z-index: 10000;
-	min-width: 160px;
-	max-width: 220px;
+	right: calc(100% + 4px); /* open to the LEFT to avoid right-edge overflow */
+	left: auto;
+	z-index: 10001;
+	min-width: 150px;
+	max-width: 200px;
+	width: max-content;
 	background: #ffffff;
 	border: 1px solid #e2e8f0;
 	border-radius: 6px;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 1px 4px rgba(0, 0, 0, 0.06);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.13), 0 1px 4px rgba(0, 0, 0, 0.06);
 	padding: 4px;
-	display: flex;
 	flex-direction: column;
 	gap: 1px;
+	overflow: visible;
 }
 
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-group {
-	margin-bottom: 2px;
-}
-
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-group-label {
-	display: block;
-	font-size: 10px;
-	font-weight: 700;
-	text-transform: uppercase;
-	letter-spacing: 0.05em;
-	color: #94a3b8;
-	padding: 4px 9px 2px;
-}
-
-.wof-formula-panel .wof-formula-section .wof-formula-tokens .wof-dv-wrap .wof-dv-dropdown .wof-dv-group-items {
+/* Reveal sub-panel when its parent item is hovered */
+.wof-dv-item--has-sub:hover > .wof-dv-sub-panel {
 	display: flex;
-	flex-direction: column;
-	gap: 1px;
+}
+
+/* Hover highlight must not clip the sub-panel */
+.wof-dv-item--has-sub {
+	overflow: visible;
 }
 
 /* Function Reference inline (within Formula Expression section) */

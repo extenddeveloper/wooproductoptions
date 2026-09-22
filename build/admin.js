@@ -6003,7 +6003,6 @@ var WooOptionsFic;
             const [testing, setTesting] = useState(false);
             const [refOpen, setRefOpen] = useState(false);
             const [openDropdown, setOpenDropdown] = useState(null);
-            const [openChoiceSub, setOpenChoiceSub] = useState(null);
             // Insert text at the current cursor position in the expression textarea.
             const insertAtCursor = (text) => {
                 const el = exprRef.current;
@@ -6230,7 +6229,7 @@ var WooOptionsFic;
                         __('Result:', 'wooptionsfic'),
                         " ",
                         testResult.value))) : null,
-                    siblingFields.length > 0 ? (wp.element.createElement("div", { className: "wof-formula-tokens", onClick: () => { setOpenDropdown(null); setOpenChoiceSub(null); } },
+                    siblingFields.length > 0 ? (wp.element.createElement("div", { className: "wof-formula-tokens", onClick: () => setOpenDropdown(null) },
                         wp.element.createElement("span", { className: "wof-formula-tokens__label" }, __('Insert field:', 'wooptionsfic')),
                         wp.element.createElement("div", { className: "wof-formula-tokens__list" }, siblingFields.map((f) => {
                             const tokenName = f.label || f.type;
@@ -6243,7 +6242,6 @@ var WooOptionsFic;
                                 wp.element.createElement("button", { type: "button", className: `wof-formula-token-btn${isOpen ? ' is-open' : ''}`, title: sprintf(__('Dynamic values for %s', 'wooptionsfic'), tokenName), onClick: () => {
                                         if (hasDynOptions) {
                                             setOpenDropdown(isOpen ? null : f.uuid);
-                                            setOpenChoiceSub(null);
                                         }
                                         else {
                                             insertAtCursor(fieldToken(f, 'value'));
@@ -6252,32 +6250,28 @@ var WooOptionsFic;
                                     wp.element.createElement("span", { className: "wof-formula-token-text" }, tokenName),
                                     hasDynOptions && (wp.element.createElement("span", { className: "wof-formula-token-arrow", "aria-hidden": "true" }, "\u25BE"))),
                                 isOpen && hasDynOptions && (wp.element.createElement("div", { className: "wof-dv-dropdown" }, dynValues.map((dv, dvIdx) => {
-                                    // "Options" row — flyout with choices
+                                    // "Options" row — CSS :hover reveals sub-panel (no JS state)
                                     if (dv.isOptions) {
                                         if (choices.length === 0)
                                             return null;
-                                        const isChoiceOpen = openChoiceSub === `${f.uuid}:options`;
-                                        return (wp.element.createElement("div", { key: dvIdx, className: `wof-dv-item wof-dv-item--has-sub${isChoiceOpen ? ' is-open' : ''}`, onMouseEnter: () => setOpenChoiceSub(`${f.uuid}:options`) },
+                                        return (wp.element.createElement("div", { key: dvIdx, className: "wof-dv-item wof-dv-item--has-sub" },
                                             wp.element.createElement("span", { className: "wof-dv-item-label" }, dv.label),
                                             wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
-                                            isChoiceOpen && (wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choices.map((c, ci) => {
+                                            wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choices.map((c, ci) => {
                                                 const choiceLabel = c.label ?? c.value ?? `Option ${ci + 1}`;
-                                                const isChoiceItemOpen = openChoiceSub === `${f.uuid}:choice:${ci}`;
-                                                return (wp.element.createElement("div", { key: ci, className: `wof-dv-item wof-dv-item--has-sub${isChoiceItemOpen ? ' is-open' : ''}`, onMouseEnter: () => setOpenChoiceSub(`${f.uuid}:choice:${ci}`) },
+                                                return (wp.element.createElement("div", { key: ci, className: "wof-dv-item wof-dv-item--has-sub" },
                                                     wp.element.createElement("span", { className: "wof-dv-item-label" }, choiceLabel),
                                                     wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
-                                                    isChoiceItemOpen && (wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choiceOptionProps.map((op) => (wp.element.createElement("button", { key: op.prop, type: "button", className: "wof-dv-item", onClick: () => {
+                                                    wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choiceOptionProps.map((op) => (wp.element.createElement("button", { key: op.prop, type: "button", className: "wof-dv-item", onClick: () => {
                                                             insertAtCursor(optionToken(f, choiceLabel, op.prop));
                                                             setOpenDropdown(null);
-                                                            setOpenChoiceSub(null);
-                                                        } }, op.label)))))));
-                                            })))));
+                                                        } }, op.label))))));
+                                            }))));
                                     }
                                     // Regular value row
-                                    return (wp.element.createElement("button", { key: dvIdx, type: "button", className: "wof-dv-item", onMouseEnter: () => setOpenChoiceSub(null), onClick: () => {
+                                    return (wp.element.createElement("button", { key: dvIdx, type: "button", className: "wof-dv-item", onClick: () => {
                                             insertAtCursor(fieldToken(f, dv.prop));
                                             setOpenDropdown(null);
-                                            setOpenChoiceSub(null);
                                         } }, dv.label));
                                 })))));
                         })))) : null,
