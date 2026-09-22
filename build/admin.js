@@ -6003,6 +6003,7 @@ var WooOptionsFic;
             const [testing, setTesting] = useState(false);
             const [refOpen, setRefOpen] = useState(false);
             const [openDropdown, setOpenDropdown] = useState(null);
+            const [openChoiceSub, setOpenChoiceSub] = useState(null);
             // Insert text at the current cursor position in the expression textarea.
             const insertAtCursor = (text) => {
                 const el = exprRef.current;
@@ -6071,114 +6072,134 @@ var WooOptionsFic;
                 { name: 'AVG(rows, "field")', stub: 'AVG(rows, "")' },
                 { name: 'COUNT(rows)', stub: 'COUNT(rows)' },
             ];
+            // Readable slug: spaces → underscores
+            const toSlug = (s) => (s || '').trim().replace(/\s+/g, '_');
+            // Build readable token: [FieldLabel.property]
+            const fieldToken = (f, prop) => `[${toSlug(f.label || f.type)}.${prop}]`;
+            // Build readable option token: [FieldLabel.options.ChoiceLabel.prop]
+            const optionToken = (f, choiceLabel, prop) => `[${toSlug(f.label || f.type)}.options.${toSlug(choiceLabel)}.${prop}]`;
             const DYNAMIC_VALUES = {
                 checkbox: [
-                    { label: 'Options', token: '', sub: [] }, // filled per-field below
-                    { label: 'If none selected', token: `FIELD("${'{uuid}'}":none_selected)` },
-                    { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
-                    { label: 'If all selected', token: `FIELD("${'{uuid}'}":all_selected)` },
-                    { label: 'Count selected', token: `FIELD("${'{uuid}'}":count_selected)` },
-                    { label: 'Min selected formula value', token: `FIELD("${'{uuid}'}":min_formula)` },
-                    { label: 'Max selected formula value', token: `FIELD("${'{uuid}'}":max_formula)` },
-                    { label: 'Sum of selected value', token: `FIELD("${'{uuid}'}":sum_formula)` },
-                    { label: 'Total quantity', token: `FIELD("${'{uuid}'}":total_qty)` },
+                    { label: 'Options', prop: '', isOptions: true },
+                    { label: 'If none selected', prop: 'selected-none' },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'If all selected', prop: 'selected-all' },
+                    { label: 'Count selected', prop: 'count-selected' },
+                    { label: 'Min selected formula value', prop: 'min-formula' },
+                    { label: 'Max selected formula value', prop: 'max-formula' },
+                    { label: 'Sum of selected value', prop: 'sum-formula' },
+                    { label: 'Total quantity', prop: 'total-qty' },
                 ],
                 image_swatch: [
-                    { label: 'Images', token: '', sub: [] },
-                    { label: 'If none selected', token: `FIELD("${'{uuid}'}":none_selected)` },
-                    { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
-                    { label: 'If all selected', token: `FIELD("${'{uuid}'}":all_selected)` },
-                    { label: 'Count selected', token: `FIELD("${'{uuid}'}":count_selected)` },
-                    { label: 'Min selected formula value', token: `FIELD("${'{uuid}'}":min_formula)` },
-                    { label: 'Max selected formula value', token: `FIELD("${'{uuid}'}":max_formula)` },
-                    { label: 'Sum of selected value', token: `FIELD("${'{uuid}'}":sum_formula)` },
-                    { label: 'Total quantity', token: `FIELD("${'{uuid}'}":total_qty)` },
+                    { label: 'Images', prop: '', isOptions: true },
+                    { label: 'If none selected', prop: 'selected-none' },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'If all selected', prop: 'selected-all' },
+                    { label: 'Count selected', prop: 'count-selected' },
+                    { label: 'Min selected formula value', prop: 'min-formula' },
+                    { label: 'Max selected formula value', prop: 'max-formula' },
+                    { label: 'Sum of selected value', prop: 'sum-formula' },
+                    { label: 'Total quantity', prop: 'total-qty' },
                 ],
                 color_swatch: [
-                    { label: 'Colors', token: '', sub: [] },
-                    { label: 'If none selected', token: `FIELD("${'{uuid}'}":none_selected)` },
-                    { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
-                    { label: 'If all selected', token: `FIELD("${'{uuid}'}":all_selected)` },
-                    { label: 'Count selected', token: `FIELD("${'{uuid}'}":count_selected)` },
-                    { label: 'Min selected formula value', token: `FIELD("${'{uuid}'}":min_formula)` },
-                    { label: 'Max selected formula value', token: `FIELD("${'{uuid}'}":max_formula)` },
-                    { label: 'Sum of selected value', token: `FIELD("${'{uuid}'}":sum_formula)` },
-                    { label: 'Total quantity', token: `FIELD("${'{uuid}'}":total_qty)` },
+                    { label: 'Colors', prop: '', isOptions: true },
+                    { label: 'If none selected', prop: 'selected-none' },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'If all selected', prop: 'selected-all' },
+                    { label: 'Count selected', prop: 'count-selected' },
+                    { label: 'Min selected formula value', prop: 'min-formula' },
+                    { label: 'Max selected formula value', prop: 'max-formula' },
+                    { label: 'Sum of selected value', prop: 'sum-formula' },
+                    { label: 'Total quantity', prop: 'total-qty' },
                 ],
                 radio: [
-                    { label: 'Options', token: '', sub: [] },
-                    { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
-                    { label: 'Selected formula value', token: `FIELD("${'{uuid}'}":selected_formula)` },
-                    { label: 'Quantity', token: `FIELD("${'{uuid}'}":quantity)` },
+                    { label: 'Options', prop: '', isOptions: true },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'Selected formula value', prop: 'selected-formula' },
+                    { label: 'Quantity', prop: 'qty' },
                 ],
                 select: [
-                    { label: 'Options', token: '', sub: [] },
-                    { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
-                    { label: 'Selected formula value', token: `FIELD("${'{uuid}'}":selected_formula)` },
+                    { label: 'Options', prop: '', isOptions: true },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'Selected formula value', prop: 'selected-formula' },
                 ],
                 button: [
-                    { label: 'Options', token: '', sub: [] },
-                    { label: 'If none selected', token: `FIELD("${'{uuid}'}":none_selected)` },
-                    { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
-                    { label: 'If all selected', token: `FIELD("${'{uuid}'}":all_selected)` },
-                    { label: 'Count selected', token: `FIELD("${'{uuid}'}":count_selected)` },
-                    { label: 'Min selected formula value', token: `FIELD("${'{uuid}'}":min_formula)` },
-                    { label: 'Max selected formula value', token: `FIELD("${'{uuid}'}":max_formula)` },
-                    { label: 'Sum of selected value', token: `FIELD("${'{uuid}'}":sum_formula)` },
+                    { label: 'Options', prop: '', isOptions: true },
+                    { label: 'If none selected', prop: 'selected-none' },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'If all selected', prop: 'selected-all' },
+                    { label: 'Count selected', prop: 'count-selected' },
+                    { label: 'Min selected formula value', prop: 'min-formula' },
+                    { label: 'Max selected formula value', prop: 'max-formula' },
+                    { label: 'Sum of selected value', prop: 'sum-formula' },
                 ],
                 date: [
-                    { label: 'Days from today', token: `FIELD("${'{uuid}'}":days_from_today)` },
-                    { label: 'Year', token: `FIELD("${'{uuid}'}":year)` },
-                    { label: 'Month (1–12)', token: `FIELD("${'{uuid}'}":month)` },
-                    { label: 'Day (1–31)', token: `FIELD("${'{uuid}'}":day)` },
-                    { label: 'Weekday (Mon:1, Sun:7)', token: `FIELD("${'{uuid}'}":weekday)` },
+                    { label: 'Days from today', prop: 'days-from-today' },
+                    { label: 'Year', prop: 'year' },
+                    { label: 'Month (1–12)', prop: 'month' },
+                    { label: 'Day (1–31)', prop: 'day' },
+                    { label: 'Weekday (Mon:1, Sun:7)', prop: 'weekday' },
                 ],
                 switch: [
-                    { label: 'Selected', token: `FIELD("${'{uuid}'}":selected)` },
-                    { label: 'Formula Value', token: `FIELD("${'{uuid}'}":formula_value)` },
-                    { label: 'Quantity', token: `FIELD("${'{uuid}'}":quantity)` },
+                    { label: 'Selected', prop: 'selected' },
+                    { label: 'Formula Value', prop: 'formula-value' },
+                    { label: 'Quantity', prop: 'qty' },
                 ],
                 email: [
-                    { label: 'Character count', token: `FIELD("${'{uuid}'}":char_count)` },
-                    { label: 'Word count', token: `FIELD("${'{uuid}'}":word_count)` },
+                    { label: 'Character count', prop: 'char-count' },
+                    { label: 'Word count', prop: 'word-count' },
                 ],
                 textarea: [
-                    { label: 'Character count', token: `FIELD("${'{uuid}'}":char_count)` },
-                    { label: 'Word count', token: `FIELD("${'{uuid}'}":word_count)` },
+                    { label: 'Character count', prop: 'char-count' },
+                    { label: 'Word count', prop: 'word-count' },
                 ],
                 text: [
-                    { label: 'Character count', token: `FIELD("${'{uuid}'}":char_count)` },
-                    { label: 'Word count', token: `FIELD("${'{uuid}'}":word_count)` },
+                    { label: 'Character count', prop: 'char-count' },
+                    { label: 'Word count', prop: 'word-count' },
                 ],
                 url: [
-                    { label: 'Character count', token: `FIELD("${'{uuid}'}":char_count)` },
-                    { label: 'Word count', token: `FIELD("${'{uuid}'}":word_count)` },
+                    { label: 'Character count', prop: 'char-count' },
+                    { label: 'Word count', prop: 'word-count' },
                 ],
                 range: [
-                    { label: 'Range value', token: `FIELD("${'{uuid}'}":value)` },
+                    { label: 'Range value', prop: 'value' },
                 ],
                 number: [
-                    { label: 'Number value', token: `FIELD("${'{uuid}'}":value)` },
+                    { label: 'Number value', prop: 'value' },
                 ],
                 upload: [
-                    { label: 'File count', token: `FIELD("${'{uuid}'}":value)` },
+                    { label: 'File count', prop: 'value' },
                 ],
             };
-            // fallback
             const getDynamicValues = (f) => {
                 const t = f.type;
                 return (DYNAMIC_VALUES[t] ??
                     DYNAMIC_VALUES[t.replace('-', '_')] ??
-                    [{ label: f.label || f.type, token: `[${f.label || f.type}]` }]);
+                    [{ label: f.label || f.type, prop: 'value' }]);
             };
-            const getOptionSubs = (f) => {
-                const choices = f.choices ?? f.options ?? [];
-                return choices.map((c) => [
-                    { label: `${c.label ?? c.value} — Checked`, token: `FIELD("${f.uuid}":option:"${c.uuid ?? c.value}":selected)` },
-                    { label: `${c.label ?? c.value} — Formula Value`, token: `FIELD("${f.uuid}":option:"${c.uuid ?? c.value}":formula)` },
-                    { label: `${c.label ?? c.value} — Quantity`, token: `FIELD("${f.uuid}":option:"${c.uuid ?? c.value}":qty)` },
-                ]).flat();
+            // Per-choice option sub-items: Checked, Formula Value, Quantity (type-aware)
+            const getChoiceOptionProps = (fieldType) => {
+                if (['radio', 'select'].includes(fieldType)) {
+                    return [
+                        { label: 'Checked', prop: 'checked' },
+                        { label: 'Formula Value', prop: 'formula' },
+                    ];
+                }
+                if (['switch'].includes(fieldType)) {
+                    return [
+                        { label: 'Checked', prop: 'checked' },
+                        { label: 'Formula Value', prop: 'formula' },
+                        { label: 'Quantity', prop: 'qty' },
+                    ];
+                }
+                // checkbox, button, image_swatch, color_swatch
+                return [
+                    { label: 'Checked', prop: 'checked' },
+                    { label: 'Formula Value', prop: 'formula' },
+                    { label: 'Quantity', prop: 'qty' },
+                ];
             };
+            const getFieldChoices = (f) => f.choices ?? f.options ?? [];
             return (wp.element.createElement("div", { className: "wof-formula-panel" },
                 wp.element.createElement("div", { className: "wof-formula-section" },
                     wp.element.createElement(TextControl, { label: __('Label', 'wooptionsfic'), value: field.label, onChange: (label) => update({ label }) }),
@@ -6209,37 +6230,55 @@ var WooOptionsFic;
                         __('Result:', 'wooptionsfic'),
                         " ",
                         testResult.value))) : null,
-                    siblingFields.length > 0 ? (wp.element.createElement("div", { className: "wof-formula-tokens", onClick: () => setOpenDropdown(null) },
+                    siblingFields.length > 0 ? (wp.element.createElement("div", { className: "wof-formula-tokens", onClick: () => { setOpenDropdown(null); setOpenChoiceSub(null); } },
                         wp.element.createElement("span", { className: "wof-formula-tokens__label" }, __('Insert field:', 'wooptionsfic')),
                         wp.element.createElement("div", { className: "wof-formula-tokens__list" }, siblingFields.map((f) => {
                             const tokenName = f.label || f.type;
                             const dynValues = getDynamicValues(f);
                             const isOpen = openDropdown === f.uuid;
-                            // If field only has a single direct token (no sub-options), keep simple insert
-                            const hasDynOptions = dynValues.some((dv) => dv.token !== '' || dv.sub);
+                            const hasDynOptions = dynValues.length > 0;
+                            const choices = getFieldChoices(f);
+                            const choiceOptionProps = getChoiceOptionProps(f.type);
                             return (wp.element.createElement("div", { key: f.uuid, className: "wof-dv-wrap", onClick: (e) => e.stopPropagation() },
                                 wp.element.createElement("button", { type: "button", className: `wof-formula-token-btn${isOpen ? ' is-open' : ''}`, title: sprintf(__('Dynamic values for %s', 'wooptionsfic'), tokenName), onClick: () => {
                                         if (hasDynOptions) {
                                             setOpenDropdown(isOpen ? null : f.uuid);
+                                            setOpenChoiceSub(null);
                                         }
                                         else {
-                                            insertAtCursor(`[${tokenName}]`);
+                                            insertAtCursor(fieldToken(f, 'value'));
                                         }
                                     } },
                                     wp.element.createElement("span", { className: "wof-formula-token-text" }, tokenName),
                                     hasDynOptions && (wp.element.createElement("span", { className: "wof-formula-token-arrow", "aria-hidden": "true" }, "\u25BE"))),
                                 isOpen && hasDynOptions && (wp.element.createElement("div", { className: "wof-dv-dropdown" }, dynValues.map((dv, dvIdx) => {
-                                    const token = dv.token.replace(/{uuid}/g, f.uuid);
-                                    // "Options" item — show sub-menu with choices
-                                    if (dv.token === '' || (dv.sub !== undefined)) {
-                                        const subs = getOptionSubs(f);
-                                        if (subs.length === 0)
+                                    // "Options" row — flyout with choices
+                                    if (dv.isOptions) {
+                                        if (choices.length === 0)
                                             return null;
-                                        return (wp.element.createElement("div", { key: dvIdx, className: "wof-dv-group" },
-                                            wp.element.createElement("span", { className: "wof-dv-group-label" }, dv.label),
-                                            wp.element.createElement("div", { className: "wof-dv-group-items" }, subs.map((s, si) => (wp.element.createElement("button", { key: si, type: "button", className: "wof-dv-item", onClick: () => { insertAtCursor(s.token); setOpenDropdown(null); } }, s.label))))));
+                                        const isChoiceOpen = openChoiceSub === `${f.uuid}:options`;
+                                        return (wp.element.createElement("div", { key: dvIdx, className: `wof-dv-item wof-dv-item--has-sub${isChoiceOpen ? ' is-open' : ''}`, onMouseEnter: () => setOpenChoiceSub(`${f.uuid}:options`) },
+                                            wp.element.createElement("span", { className: "wof-dv-item-label" }, dv.label),
+                                            wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
+                                            isChoiceOpen && (wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choices.map((c, ci) => {
+                                                const choiceLabel = c.label ?? c.value ?? `Option ${ci + 1}`;
+                                                const isChoiceItemOpen = openChoiceSub === `${f.uuid}:choice:${ci}`;
+                                                return (wp.element.createElement("div", { key: ci, className: `wof-dv-item wof-dv-item--has-sub${isChoiceItemOpen ? ' is-open' : ''}`, onMouseEnter: () => setOpenChoiceSub(`${f.uuid}:choice:${ci}`) },
+                                                    wp.element.createElement("span", { className: "wof-dv-item-label" }, choiceLabel),
+                                                    wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
+                                                    isChoiceItemOpen && (wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choiceOptionProps.map((op) => (wp.element.createElement("button", { key: op.prop, type: "button", className: "wof-dv-item", onClick: () => {
+                                                            insertAtCursor(optionToken(f, choiceLabel, op.prop));
+                                                            setOpenDropdown(null);
+                                                            setOpenChoiceSub(null);
+                                                        } }, op.label)))))));
+                                            })))));
                                     }
-                                    return (wp.element.createElement("button", { key: dvIdx, type: "button", className: "wof-dv-item", onClick: () => { insertAtCursor(token); setOpenDropdown(null); } }, dv.label));
+                                    // Regular value row
+                                    return (wp.element.createElement("button", { key: dvIdx, type: "button", className: "wof-dv-item", onMouseEnter: () => setOpenChoiceSub(null), onClick: () => {
+                                            insertAtCursor(fieldToken(f, dv.prop));
+                                            setOpenDropdown(null);
+                                            setOpenChoiceSub(null);
+                                        } }, dv.label));
                                 })))));
                         })))) : null,
                     wp.element.createElement("div", { className: "wof-formula-ref-inline" },
