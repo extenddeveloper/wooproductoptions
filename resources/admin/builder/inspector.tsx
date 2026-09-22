@@ -2924,6 +2924,7 @@ namespace WooOptionsFic.Builder {
     const [testResult, setTestResult] = useState<{ value?: string; error?: string } | null>(null);
     const [testing, setTesting] = useState(false);
     const [refOpen, setRefOpen] = useState(false);
+    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
     // Insert text at the current cursor position in the expression textarea.
     const insertAtCursor = (text: string) => {
@@ -2996,6 +2997,119 @@ namespace WooOptionsFic.Builder {
       { name: 'COUNT(rows)', stub: 'COUNT(rows)' },
     ];
 
+    // Dynamic values per field type
+    type DynValue = { label: string; token: string; sub?: { label: string; token: string }[] };
+    const DYNAMIC_VALUES: Record<string, DynValue[]> = {
+      checkbox: [
+        { label: 'Options', token: '', sub: [] }, // filled per-field below
+        { label: 'If none selected', token: `FIELD("${'{uuid}'}":none_selected)` },
+        { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
+        { label: 'If all selected', token: `FIELD("${'{uuid}'}":all_selected)` },
+        { label: 'Count selected', token: `FIELD("${'{uuid}'}":count_selected)` },
+        { label: 'Min selected formula value', token: `FIELD("${'{uuid}'}":min_formula)` },
+        { label: 'Max selected formula value', token: `FIELD("${'{uuid}'}":max_formula)` },
+        { label: 'Sum of selected value', token: `FIELD("${'{uuid}'}":sum_formula)` },
+        { label: 'Total quantity', token: `FIELD("${'{uuid}'}":total_qty)` },
+      ],
+      image_swatch: [
+        { label: 'Images', token: '', sub: [] },
+        { label: 'If none selected', token: `FIELD("${'{uuid}'}":none_selected)` },
+        { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
+        { label: 'If all selected', token: `FIELD("${'{uuid}'}":all_selected)` },
+        { label: 'Count selected', token: `FIELD("${'{uuid}'}":count_selected)` },
+        { label: 'Min selected formula value', token: `FIELD("${'{uuid}'}":min_formula)` },
+        { label: 'Max selected formula value', token: `FIELD("${'{uuid}'}":max_formula)` },
+        { label: 'Sum of selected value', token: `FIELD("${'{uuid}'}":sum_formula)` },
+        { label: 'Total quantity', token: `FIELD("${'{uuid}'}":total_qty)` },
+      ],
+      color_swatch: [
+        { label: 'Colors', token: '', sub: [] },
+        { label: 'If none selected', token: `FIELD("${'{uuid}'}":none_selected)` },
+        { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
+        { label: 'If all selected', token: `FIELD("${'{uuid}'}":all_selected)` },
+        { label: 'Count selected', token: `FIELD("${'{uuid}'}":count_selected)` },
+        { label: 'Min selected formula value', token: `FIELD("${'{uuid}'}":min_formula)` },
+        { label: 'Max selected formula value', token: `FIELD("${'{uuid}'}":max_formula)` },
+        { label: 'Sum of selected value', token: `FIELD("${'{uuid}'}":sum_formula)` },
+        { label: 'Total quantity', token: `FIELD("${'{uuid}'}":total_qty)` },
+      ],
+      radio: [
+        { label: 'Options', token: '', sub: [] },
+        { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
+        { label: 'Selected formula value', token: `FIELD("${'{uuid}'}":selected_formula)` },
+        { label: 'Quantity', token: `FIELD("${'{uuid}'}":quantity)` },
+      ],
+      select: [
+        { label: 'Options', token: '', sub: [] },
+        { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
+        { label: 'Selected formula value', token: `FIELD("${'{uuid}'}":selected_formula)` },
+      ],
+      button: [
+        { label: 'Options', token: '', sub: [] },
+        { label: 'If none selected', token: `FIELD("${'{uuid}'}":none_selected)` },
+        { label: 'If any selected', token: `FIELD("${'{uuid}'}":any_selected)` },
+        { label: 'If all selected', token: `FIELD("${'{uuid}'}":all_selected)` },
+        { label: 'Count selected', token: `FIELD("${'{uuid}'}":count_selected)` },
+        { label: 'Min selected formula value', token: `FIELD("${'{uuid}'}":min_formula)` },
+        { label: 'Max selected formula value', token: `FIELD("${'{uuid}'}":max_formula)` },
+        { label: 'Sum of selected value', token: `FIELD("${'{uuid}'}":sum_formula)` },
+      ],
+      date: [
+        { label: 'Days from today', token: `FIELD("${'{uuid}'}":days_from_today)` },
+        { label: 'Year', token: `FIELD("${'{uuid}'}":year)` },
+        { label: 'Month (1–12)', token: `FIELD("${'{uuid}'}":month)` },
+        { label: 'Day (1–31)', token: `FIELD("${'{uuid}'}":day)` },
+        { label: 'Weekday (Mon:1, Sun:7)', token: `FIELD("${'{uuid}'}":weekday)` },
+      ],
+      switch: [
+        { label: 'Selected', token: `FIELD("${'{uuid}'}":selected)` },
+        { label: 'Formula Value', token: `FIELD("${'{uuid}'}":formula_value)` },
+        { label: 'Quantity', token: `FIELD("${'{uuid}'}":quantity)` },
+      ],
+      email: [
+        { label: 'Character count', token: `FIELD("${'{uuid}'}":char_count)` },
+        { label: 'Word count', token: `FIELD("${'{uuid}'}":word_count)` },
+      ],
+      textarea: [
+        { label: 'Character count', token: `FIELD("${'{uuid}'}":char_count)` },
+        { label: 'Word count', token: `FIELD("${'{uuid}'}":word_count)` },
+      ],
+      text: [
+        { label: 'Character count', token: `FIELD("${'{uuid}'}":char_count)` },
+        { label: 'Word count', token: `FIELD("${'{uuid}'}":word_count)` },
+      ],
+      url: [
+        { label: 'Character count', token: `FIELD("${'{uuid}'}":char_count)` },
+        { label: 'Word count', token: `FIELD("${'{uuid}'}":word_count)` },
+      ],
+      range: [
+        { label: 'Range value', token: `FIELD("${'{uuid}'}":value)` },
+      ],
+      number: [
+        { label: 'Number value', token: `FIELD("${'{uuid}'}":value)` },
+      ],
+      upload: [
+        { label: 'File count', token: `FIELD("${'{uuid}'}":value)` },
+      ],
+    };
+    // fallback
+    const getDynamicValues = (f: WooOptionsFic.FieldDefinition): DynValue[] => {
+      const t = f.type;
+      return (
+        DYNAMIC_VALUES[t] ??
+        DYNAMIC_VALUES[t.replace('-', '_')] ??
+        [{ label: f.label || f.type, token: `[${f.label || f.type}]` }]
+      );
+    };
+    const getOptionSubs = (f: WooOptionsFic.FieldDefinition) => {
+      const choices: any[] = (f as any).choices ?? (f as any).options ?? [];
+      return choices.map((c: any) => [
+        { label: `${c.label ?? c.value} — Checked`, token: `FIELD("${f.uuid}":option:"${c.uuid ?? c.value}":selected)` },
+        { label: `${c.label ?? c.value} — Formula Value`, token: `FIELD("${f.uuid}":option:"${c.uuid ?? c.value}":formula)` },
+        { label: `${c.label ?? c.value} — Quantity`, token: `FIELD("${f.uuid}":option:"${c.uuid ?? c.value}":qty)` },
+      ]).flat();
+    };
+
     return (
       <div className="wof-formula-panel">
         {/* ── Field Settings: Label, Help text, Position & Width ───── */}
@@ -3059,7 +3173,18 @@ namespace WooOptionsFic.Builder {
 
         {/* ── Formula Expression ───────────────────── */}
         <div className="wof-formula-section">
-          <strong className="wof-formula-section__title">{__('Formula Expression', 'wooptionsfic')}</strong>
+          {/* Title row with Run Test button */}
+          <div className="wof-formula-expr-header">
+            <strong className="wof-formula-section__title">{__('Formula Expression', 'wooptionsfic')}</strong>
+            <button
+              type="button"
+              className="wof-formula-run-test-btn"
+              onClick={testExpression}
+              disabled={testing}
+            >
+              {testing ? __('Testing…', 'wooptionsfic') : __('▶ Run Test', 'wooptionsfic')}
+            </button>
+          </div>
           <p className="wof-formula-hint">
             {__('Use arithmetic operators (+, -, *, /), [Field Name], IF(), and built-in functions.', 'wooptionsfic')}
           </p>
@@ -3074,47 +3199,116 @@ namespace WooOptionsFic.Builder {
             onChange={(e: any) => update({ expression: e.target.value })}
             aria-label={__('Formula expression', 'wooptionsfic')}
           />
+          {/* Test result inline */}
+          {testResult ? (
+            testResult.error ? (
+              <span className="wof-formula-test-result is-error">{testResult.error}</span>
+            ) : (
+              <span className="wof-formula-test-result is-success">{__('Result:', 'wooptionsfic')} {testResult.value}</span>
+            )
+          ) : null}
 
-          {/* Field-token helper */}
+          {/* Dynamic Values — field token helper */}
           {siblingFields.length > 0 ? (
-            <div className="wof-formula-tokens">
+            <div className="wof-formula-tokens" onClick={() => setOpenDropdown(null)}>
               <span className="wof-formula-tokens__label">{__('Insert field:', 'wooptionsfic')}</span>
               <div className="wof-formula-tokens__list">
                 {siblingFields.map((f) => {
                   const tokenName = f.label || f.type;
+                  const dynValues = getDynamicValues(f);
+                  const isOpen = openDropdown === f.uuid;
+                  // If field only has a single direct token (no sub-options), keep simple insert
+                  const hasDynOptions = dynValues.some((dv) => dv.token !== '' || dv.sub);
                   return (
-                    <button
+                    <div
                       key={f.uuid}
-                      type="button"
-                      className="wof-formula-token-btn"
-                      title={sprintf(__('Insert [%s]', 'wooptionsfic'), tokenName)}
-                      onClick={() => insertAtCursor(`[${tokenName}]`)}
+                      className="wof-dv-wrap"
+                      onClick={(e: any) => e.stopPropagation()}
                     >
-                      <span className="wof-formula-token-plus" aria-hidden="true">+</span>
-                      <span className="wof-formula-token-text">{tokenName}</span>
-                    </button>
+                      <button
+                        type="button"
+                        className={`wof-formula-token-btn${isOpen ? ' is-open' : ''}`}
+                        title={sprintf(__('Dynamic values for %s', 'wooptionsfic'), tokenName)}
+                        onClick={() => {
+                          if (hasDynOptions) {
+                            setOpenDropdown(isOpen ? null : f.uuid);
+                          } else {
+                            insertAtCursor(`[${tokenName}]`);
+                          }
+                        }}
+                      >
+                        <span className="wof-formula-token-text">{tokenName}</span>
+                        {hasDynOptions && (
+                          <span className="wof-formula-token-arrow" aria-hidden="true">▾</span>
+                        )}
+                      </button>
+                      {isOpen && hasDynOptions && (
+                        <div className="wof-dv-dropdown">
+                          {dynValues.map((dv, dvIdx) => {
+                            const token = dv.token.replace(/{uuid}/g, f.uuid);
+                            // "Options" item — show sub-menu with choices
+                            if (dv.token === '' || (dv.sub !== undefined)) {
+                              const subs = getOptionSubs(f);
+                              if (subs.length === 0) return null;
+                              return (
+                                <div key={dvIdx} className="wof-dv-group">
+                                  <span className="wof-dv-group-label">{dv.label}</span>
+                                  <div className="wof-dv-group-items">
+                                    {subs.map((s, si) => (
+                                      <button
+                                        key={si}
+                                        type="button"
+                                        className="wof-dv-item"
+                                        onClick={() => { insertAtCursor(s.token); setOpenDropdown(null); }}
+                                      >{s.label}</button>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            }
+                            return (
+                              <button
+                                key={dvIdx}
+                                type="button"
+                                className="wof-dv-item"
+                                onClick={() => { insertAtCursor(token); setOpenDropdown(null); }}
+                              >{dv.label}</button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
             </div>
           ) : null}
 
-          {/* Live test */}
-          <div className="wof-formula-test-row">
+          {/* Function Reference — moved here, after Insert field */}
+          <div className="wof-formula-ref-inline">
             <button
               type="button"
-              className="wof-formula-test-btn"
-              onClick={testExpression}
-              disabled={testing}
+              className="wof-formula-ref-toggle"
+              onClick={() => setRefOpen((o) => !o)}
+              aria-expanded={refOpen}
             >
-              {testing ? __('Testing…', 'wooptionsfic') : __('▶ Test Expression', 'wooptionsfic')}
+              <span>{__('Function Reference', 'wooptionsfic')}</span>
+              <span className="wof-formula-ref-toggle__icon">{refOpen ? '▲' : '▼'}</span>
             </button>
-            {testResult ? (
-              testResult.error ? (
-                <span className="wof-formula-test-result is-error">{testResult.error}</span>
-              ) : (
-                <span className="wof-formula-test-result is-success">{__('Result:', 'wooptionsfic')} {testResult.value}</span>
-              )
+            {refOpen ? (
+              <div className="wof-formula-ref-list">
+                {FUNCTION_REF.map((fn) => (
+                  <button
+                    key={fn.stub}
+                    type="button"
+                    className="wof-formula-ref-item"
+                    onClick={() => insertAtCursor(fn.stub)}
+                    title={__('Click to insert', 'wooptionsfic')}
+                  >
+                    <code>{fn.name}</code>
+                  </button>
+                ))}
+              </div>
             ) : null}
           </div>
         </div>
@@ -3184,33 +3378,7 @@ namespace WooOptionsFic.Builder {
           </div>
         </div>
 
-        {/* ── Function Reference ───────────────────── */}
-        <div className="wof-formula-section">
-          <button
-            type="button"
-            className="wof-formula-ref-toggle"
-            onClick={() => setRefOpen((o) => !o)}
-            aria-expanded={refOpen}
-          >
-            <span>{__('Function Reference', 'wooptionsfic')}</span>
-            <span className="wof-formula-ref-toggle__icon">{refOpen ? '▲' : '▼'}</span>
-          </button>
-          {refOpen ? (
-            <div className="wof-formula-ref-list">
-              {FUNCTION_REF.map((fn) => (
-                <button
-                  key={fn.stub}
-                  type="button"
-                  className="wof-formula-ref-item"
-                  onClick={() => insertAtCursor(fn.stub)}
-                  title={__('Click to insert', 'wooptionsfic')}
-                >
-                  <code>{fn.name}</code>
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </div>
+        {/* Function Reference moved into Formula Expression section above */}
       </div>
     );
   }
