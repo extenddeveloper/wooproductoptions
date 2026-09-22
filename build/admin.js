@@ -6003,7 +6003,80 @@ var WooOptionsFic;
             const [testing, setTesting] = useState(false);
             const [refOpen, setRefOpen] = useState(false);
             const [openDropdown, setOpenDropdown] = useState(null);
-            const [openChoiceSub, setOpenChoiceSub] = useState(null);
+            const [dropdownPos, setDropdownPos] = useState(null);
+            const activeDropdownRef = useRef(null);
+            // Event delegation: close open dropdown on click outside
+            useEffect(() => {
+                if (!openDropdown)
+                    return;
+                const onDocClick = (e) => {
+                    const target = e.target;
+                    if (!target?.closest('.wof-dv-wrap') && !target?.closest('.wof-dv-portal')) {
+                        setOpenDropdown(null);
+                        setDropdownPos(null);
+                    }
+                };
+                document.addEventListener('mousedown', onDocClick);
+                return () => {
+                    document.removeEventListener('mousedown', onDocClick);
+                };
+            }, [openDropdown]);
+            // Close dropdown on window/sidebar scroll to avoid detached floating menus
+            useEffect(() => {
+                if (!openDropdown)
+                    return;
+                const onScroll = () => {
+                    setOpenDropdown(null);
+                    setDropdownPos(null);
+                };
+                window.addEventListener('scroll', onScroll, true);
+                return () => {
+                    window.removeEventListener('scroll', onScroll, true);
+                };
+            }, [openDropdown]);
+            // Keep dropdown inside screen boundaries
+            useEffect(() => {
+                if (!openDropdown || !activeDropdownRef.current)
+                    return;
+                const el = activeDropdownRef.current;
+                const rect = el.getBoundingClientRect();
+                if (rect.right > window.innerWidth - 8) {
+                    el.classList.add('is-align-right');
+                }
+                else {
+                    el.classList.remove('is-align-right');
+                }
+            }, [openDropdown]);
+            // Sub-panel boundary check: dynamically adjust orientation to stay within viewport
+            const handleSubMouseEnter = (e) => {
+                const item = e.currentTarget;
+                const sub = item.querySelector(':scope > .wof-dv-sub-panel');
+                if (!sub)
+                    return;
+                const itemRect = item.getBoundingClientRect();
+                const subWidth = 180;
+                if (itemRect.left - subWidth < 10) {
+                    sub.style.left = '100%';
+                    sub.style.right = 'auto';
+                    sub.style.marginLeft = '3px';
+                    sub.style.marginRight = '0';
+                }
+                else {
+                    sub.style.left = 'auto';
+                    sub.style.right = '100%';
+                    sub.style.marginLeft = '0';
+                    sub.style.marginRight = '3px';
+                }
+                const subHeight = sub.offsetHeight || 150;
+                if (itemRect.top + subHeight > window.innerHeight - 10) {
+                    sub.style.top = 'auto';
+                    sub.style.bottom = '-4px';
+                }
+                else {
+                    sub.style.top = '-4px';
+                    sub.style.bottom = 'auto';
+                }
+            };
             // Insert text at the current cursor position in the expression textarea.
             const insertAtCursor = (text) => {
                 const el = exprRef.current;
@@ -6090,6 +6163,17 @@ var WooOptionsFic;
                     { label: 'Sum of selected value', prop: 'sum-formula' },
                     { label: 'Total quantity', prop: 'total-qty' },
                 ],
+                checkbox_group: [
+                    { label: 'Options', prop: '', isOptions: true },
+                    { label: 'If none selected', prop: 'selected-none' },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'If all selected', prop: 'selected-all' },
+                    { label: 'Count selected', prop: 'count-selected' },
+                    { label: 'Min selected formula value', prop: 'min-formula' },
+                    { label: 'Max selected formula value', prop: 'max-formula' },
+                    { label: 'Sum of selected value', prop: 'sum-formula' },
+                    { label: 'Total quantity', prop: 'total-qty' },
+                ],
                 image_swatch: [
                     { label: 'Images', prop: '', isOptions: true },
                     { label: 'If none selected', prop: 'selected-none' },
@@ -6123,6 +6207,16 @@ var WooOptionsFic;
                     { label: 'If any selected', prop: 'selected-any' },
                     { label: 'Selected formula value', prop: 'selected-formula' },
                 ],
+                segmented: [
+                    { label: 'Options', prop: '', isOptions: true },
+                    { label: 'If none selected', prop: 'selected-none' },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'If all selected', prop: 'selected-all' },
+                    { label: 'Count selected', prop: 'count-selected' },
+                    { label: 'Min selected formula value', prop: 'min-formula' },
+                    { label: 'Max selected formula value', prop: 'max-formula' },
+                    { label: 'Sum of selected value', prop: 'sum-formula' },
+                ],
                 button: [
                     { label: 'Options', prop: '', isOptions: true },
                     { label: 'If none selected', prop: 'selected-none' },
@@ -6133,6 +6227,22 @@ var WooOptionsFic;
                     { label: 'Max selected formula value', prop: 'max-formula' },
                     { label: 'Sum of selected value', prop: 'sum-formula' },
                 ],
+                product: [
+                    { label: 'Options', prop: '', isOptions: true },
+                    { label: 'If none selected', prop: 'selected-none' },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'If all selected', prop: 'selected-all' },
+                    { label: 'Count selected', prop: 'count-selected' },
+                    { label: 'Min selected formula value', prop: 'min-formula' },
+                    { label: 'Max selected formula value', prop: 'max-formula' },
+                    { label: 'Sum of selected value', prop: 'sum-formula' },
+                    { label: 'Total quantity', prop: 'total-qty' },
+                ],
+                font: [
+                    { label: 'Options', prop: '', isOptions: true },
+                    { label: 'If any selected', prop: 'selected-any' },
+                    { label: 'Selected formula value', prop: 'selected-formula' },
+                ],
                 date: [
                     { label: 'Days from today', prop: 'days-from-today' },
                     { label: 'Year', prop: 'year' },
@@ -6140,7 +6250,25 @@ var WooOptionsFic;
                     { label: 'Day (1–31)', prop: 'day' },
                     { label: 'Weekday (Mon:1, Sun:7)', prop: 'weekday' },
                 ],
+                datetime: [
+                    { label: 'Days from today', prop: 'days-from-today' },
+                    { label: 'Year', prop: 'year' },
+                    { label: 'Month (1–12)', prop: 'month' },
+                    { label: 'Day (1–31)', prop: 'day' },
+                    { label: 'Weekday (Mon:1, Sun:7)', prop: 'weekday' },
+                ],
+                date_range: [
+                    { label: 'Days from today', prop: 'days-from-today' },
+                    { label: 'Year', prop: 'year' },
+                    { label: 'Month (1–12)', prop: 'month' },
+                    { label: 'Day (1–31)', prop: 'day' },
+                ],
                 switch: [
+                    { label: 'Selected', prop: 'selected' },
+                    { label: 'Formula Value', prop: 'formula-value' },
+                    { label: 'Quantity', prop: 'qty' },
+                ],
+                toggle: [
                     { label: 'Selected', prop: 'selected' },
                     { label: 'Formula Value', prop: 'formula-value' },
                     { label: 'Quantity', prop: 'qty' },
@@ -6161,38 +6289,47 @@ var WooOptionsFic;
                     { label: 'Character count', prop: 'char-count' },
                     { label: 'Word count', prop: 'word-count' },
                 ],
+                tel: [
+                    { label: 'Character count', prop: 'char-count' },
+                    { label: 'Word count', prop: 'word-count' },
+                ],
                 range: [
                     { label: 'Range value', prop: 'value' },
                 ],
                 number: [
                     { label: 'Number value', prop: 'value' },
                 ],
+                customer_defined_price: [
+                    { label: 'Price value', prop: 'value' },
+                ],
                 upload: [
+                    { label: 'File count', prop: 'value' },
+                ],
+                file: [
                     { label: 'File count', prop: 'value' },
                 ],
             };
             const getDynamicValues = (f) => {
                 const t = f.type;
-                return (DYNAMIC_VALUES[t] ??
+                let values = DYNAMIC_VALUES[t] ??
                     DYNAMIC_VALUES[t.replace('-', '_')] ??
-                    [{ label: f.label || f.type, prop: 'value' }]);
+                    [{ label: f.label || f.type, prop: 'value' }];
+                // Safety: If this field is a choice type or has choices configured, ensure an 'Options' entry is present
+                const isChoiceField = ['select', 'radio', 'checkbox_group', 'checkbox', 'segmented', 'button', 'color_swatch', 'image_swatch', 'product', 'font'].includes(t);
+                const choices = f.choices ?? f.options ?? [];
+                if ((isChoiceField || choices.length > 0) && !values.some((v) => v.isOptions)) {
+                    values = [{ label: 'Options', prop: '', isOptions: true }, ...values];
+                }
+                return values;
             };
             // Per-choice option sub-items: Checked, Formula Value, Quantity (type-aware)
             const getChoiceOptionProps = (fieldType) => {
-                if (['radio', 'select'].includes(fieldType)) {
+                if (['radio', 'select', 'font'].includes(fieldType)) {
                     return [
                         { label: 'Checked', prop: 'checked' },
                         { label: 'Formula Value', prop: 'formula' },
                     ];
                 }
-                if (['switch'].includes(fieldType)) {
-                    return [
-                        { label: 'Checked', prop: 'checked' },
-                        { label: 'Formula Value', prop: 'formula' },
-                        { label: 'Quantity', prop: 'qty' },
-                    ];
-                }
-                // checkbox, button, image_swatch, color_swatch
                 return [
                     { label: 'Checked', prop: 'checked' },
                     { label: 'Formula Value', prop: 'formula' },
@@ -6230,7 +6367,7 @@ var WooOptionsFic;
                         __('Result:', 'wooptionsfic'),
                         " ",
                         testResult.value))) : null,
-                    siblingFields.length > 0 ? (wp.element.createElement("div", { className: "wof-formula-tokens", onClick: () => { setOpenDropdown(null); setOpenChoiceSub(null); } },
+                    siblingFields.length > 0 ? (wp.element.createElement("div", { className: "wof-formula-tokens" },
                         wp.element.createElement("span", { className: "wof-formula-tokens__label" }, __('Insert field:', 'wooptionsfic')),
                         wp.element.createElement("div", { className: "wof-formula-tokens__list" }, siblingFields.map((f) => {
                             const tokenName = f.label || f.type;
@@ -6240,10 +6377,20 @@ var WooOptionsFic;
                             const choices = getFieldChoices(f);
                             const choiceOptionProps = getChoiceOptionProps(f.type);
                             return (wp.element.createElement("div", { key: f.uuid, className: "wof-dv-wrap", onClick: (e) => e.stopPropagation() },
-                                wp.element.createElement("button", { type: "button", className: `wof-formula-token-btn${isOpen ? ' is-open' : ''}`, title: sprintf(__('Dynamic values for %s', 'wooptionsfic'), tokenName), onClick: () => {
+                                wp.element.createElement("button", { type: "button", className: `wof-formula-token-btn${isOpen ? ' is-open' : ''}`, title: sprintf(__('Dynamic values for %s', 'wooptionsfic'), tokenName), onClick: (e) => {
                                         if (hasDynOptions) {
-                                            setOpenDropdown(isOpen ? null : f.uuid);
-                                            setOpenChoiceSub(null);
+                                            if (isOpen) {
+                                                setOpenDropdown(null);
+                                                setDropdownPos(null);
+                                            }
+                                            else {
+                                                const btn = e.currentTarget;
+                                                const rect = btn.getBoundingClientRect();
+                                                const alignRight = rect.left + 230 > window.innerWidth - 10;
+                                                const left = alignRight ? Math.max(10, rect.right - 210) : rect.left;
+                                                setDropdownPos({ top: rect.bottom + 4, left });
+                                                setOpenDropdown(f.uuid);
+                                            }
                                         }
                                         else {
                                             insertAtCursor(fieldToken(f, 'value'));
@@ -6251,35 +6398,47 @@ var WooOptionsFic;
                                     } },
                                     wp.element.createElement("span", { className: "wof-formula-token-text" }, tokenName),
                                     hasDynOptions && (wp.element.createElement("span", { className: "wof-formula-token-arrow", "aria-hidden": "true" }, "\u25BE"))),
-                                isOpen && hasDynOptions && (wp.element.createElement("div", { className: "wof-dv-dropdown" }, dynValues.map((dv, dvIdx) => {
-                                    // "Options" row — flyout with choices
-                                    if (dv.isOptions) {
-                                        if (choices.length === 0)
-                                            return null;
-                                        const isChoiceOpen = openChoiceSub === `${f.uuid}:options`;
-                                        return (wp.element.createElement("div", { key: dvIdx, className: `wof-dv-item wof-dv-item--has-sub${isChoiceOpen ? ' is-open' : ''}`, onMouseEnter: () => setOpenChoiceSub(`${f.uuid}:options`) },
-                                            wp.element.createElement("span", { className: "wof-dv-item-label" }, dv.label),
-                                            wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
-                                            isChoiceOpen && (wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choices.map((c, ci) => {
-                                                const choiceLabel = c.label ?? c.value ?? `Option ${ci + 1}`;
-                                                const isChoiceItemOpen = openChoiceSub === `${f.uuid}:choice:${ci}`;
-                                                return (wp.element.createElement("div", { key: ci, className: `wof-dv-item wof-dv-item--has-sub${isChoiceItemOpen ? ' is-open' : ''}`, onMouseEnter: () => setOpenChoiceSub(`${f.uuid}:choice:${ci}`) },
-                                                    wp.element.createElement("span", { className: "wof-dv-item-label" }, choiceLabel),
-                                                    wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
-                                                    isChoiceItemOpen && (wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choiceOptionProps.map((op) => (wp.element.createElement("button", { key: op.prop, type: "button", className: "wof-dv-item", onClick: () => {
-                                                            insertAtCursor(optionToken(f, choiceLabel, op.prop));
-                                                            setOpenDropdown(null);
-                                                            setOpenChoiceSub(null);
-                                                        } }, op.label)))))));
-                                            })))));
+                                isOpen && hasDynOptions && (() => {
+                                    const renderItems = () => dynValues.map((dv, dvIdx) => {
+                                        // "Options" row — flyout with choices
+                                        if (dv.isOptions) {
+                                            return (wp.element.createElement("div", { key: dvIdx, className: "wof-dv-item wof-dv-item--has-sub", onMouseEnter: handleSubMouseEnter },
+                                                wp.element.createElement("span", { className: "wof-dv-item-label" }, dv.label),
+                                                wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
+                                                wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choices.length === 0 ? (wp.element.createElement("span", { className: "wof-dv-empty-msg" }, __('No options configured', 'wooptionsfic'))) : (choices.map((c, ci) => {
+                                                    const choiceLabel = (c.label || c.title || c.productTitle || c.adminLabel || c.value || `Option ${ci + 1}`).trim();
+                                                    return (wp.element.createElement("div", { key: ci, className: "wof-dv-item wof-dv-item--has-sub", onMouseEnter: handleSubMouseEnter },
+                                                        wp.element.createElement("span", { className: "wof-dv-item-label" }, choiceLabel),
+                                                        wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
+                                                        wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choiceOptionProps.map((op) => (wp.element.createElement("button", { key: op.prop, type: "button", className: "wof-dv-item", onClick: () => {
+                                                                insertAtCursor(optionToken(f, choiceLabel, op.prop));
+                                                                setOpenDropdown(null);
+                                                                setDropdownPos(null);
+                                                            } }, op.label))))));
+                                                })))));
+                                        }
+                                        // Regular value row
+                                        return (wp.element.createElement("button", { key: dvIdx, type: "button", className: "wof-dv-item", onClick: () => {
+                                                insertAtCursor(fieldToken(f, dv.prop));
+                                                setOpenDropdown(null);
+                                                setDropdownPos(null);
+                                            } }, dv.label));
+                                    });
+                                    const createPortalFn = wp.element.createPortal;
+                                    if (typeof createPortalFn === 'function' && dropdownPos) {
+                                        return createPortalFn(wp.element.createElement("div", { className: "wof-formula-panel wof-dv-portal", style: {
+                                                position: 'fixed',
+                                                top: dropdownPos.top,
+                                                left: dropdownPos.left,
+                                                zIndex: 999999,
+                                            }, onClick: (e) => e.stopPropagation() },
+                                            wp.element.createElement("div", { className: "wof-formula-section", style: { padding: 0, margin: 0, border: 'none' } },
+                                                wp.element.createElement("div", { className: "wof-formula-tokens", style: { padding: 0, margin: 0, border: 'none', background: 'transparent' } },
+                                                    wp.element.createElement("div", { className: "wof-dv-wrap" },
+                                                        wp.element.createElement("div", { ref: activeDropdownRef, className: "wof-dv-dropdown is-portal", style: { position: 'static' } }, renderItems()))))), document.body);
                                     }
-                                    // Regular value row
-                                    return (wp.element.createElement("button", { key: dvIdx, type: "button", className: "wof-dv-item", onMouseEnter: () => setOpenChoiceSub(null), onClick: () => {
-                                            insertAtCursor(fieldToken(f, dv.prop));
-                                            setOpenDropdown(null);
-                                            setOpenChoiceSub(null);
-                                        } }, dv.label));
-                                })))));
+                                    return (wp.element.createElement("div", { ref: activeDropdownRef, className: "wof-dv-dropdown" }, renderItems()));
+                                })()));
                         })))) : null,
                     wp.element.createElement("div", { className: "wof-formula-ref-inline" },
                         wp.element.createElement("button", { type: "button", className: "wof-formula-ref-toggle", onClick: () => setRefOpen((o) => !o), "aria-expanded": refOpen },

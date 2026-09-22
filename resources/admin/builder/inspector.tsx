@@ -2925,7 +2925,77 @@ namespace WooOptionsFic.Builder {
     const [testing, setTesting] = useState(false);
     const [refOpen, setRefOpen] = useState(false);
     const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-    const [openChoiceSub, setOpenChoiceSub] = useState<string | null>(null);
+    const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
+    const activeDropdownRef = useRef<HTMLDivElement | null>(null);
+
+    // Event delegation: close open dropdown on click outside
+    useEffect(() => {
+      if (!openDropdown) return;
+      const onDocClick = (e: any) => {
+        const target = e.target as HTMLElement | null;
+        if (!target?.closest('.wof-dv-wrap') && !target?.closest('.wof-dv-portal')) {
+          setOpenDropdown(null);
+          setDropdownPos(null);
+        }
+      };
+      document.addEventListener('mousedown', onDocClick);
+      return () => {
+        document.removeEventListener('mousedown', onDocClick);
+      };
+    }, [openDropdown]);
+
+    // Close dropdown on window/sidebar scroll to avoid detached floating menus
+    useEffect(() => {
+      if (!openDropdown) return;
+      const onScroll = () => {
+        setOpenDropdown(null);
+        setDropdownPos(null);
+      };
+      window.addEventListener('scroll', onScroll, true);
+      return () => {
+        window.removeEventListener('scroll', onScroll, true);
+      };
+    }, [openDropdown]);
+
+    // Keep dropdown inside screen boundaries
+    useEffect(() => {
+      if (!openDropdown || !activeDropdownRef.current) return;
+      const el = activeDropdownRef.current;
+      const rect = el.getBoundingClientRect();
+      if (rect.right > window.innerWidth - 8) {
+        el.classList.add('is-align-right');
+      } else {
+        el.classList.remove('is-align-right');
+      }
+    }, [openDropdown]);
+
+    // Sub-panel boundary check: dynamically adjust orientation to stay within viewport
+    const handleSubMouseEnter = (e: any) => {
+      const item = e.currentTarget as HTMLElement;
+      const sub = item.querySelector(':scope > .wof-dv-sub-panel') as HTMLElement | null;
+      if (!sub) return;
+      const itemRect = item.getBoundingClientRect();
+      const subWidth = 180;
+      if (itemRect.left - subWidth < 10) {
+        sub.style.left = '100%';
+        sub.style.right = 'auto';
+        sub.style.marginLeft = '3px';
+        sub.style.marginRight = '0';
+      } else {
+        sub.style.left = 'auto';
+        sub.style.right = '100%';
+        sub.style.marginLeft = '0';
+        sub.style.marginRight = '3px';
+      }
+      const subHeight = sub.offsetHeight || 150;
+      if (itemRect.top + subHeight > window.innerHeight - 10) {
+        sub.style.top = 'auto';
+        sub.style.bottom = '-4px';
+      } else {
+        sub.style.top = '-4px';
+        sub.style.bottom = 'auto';
+      }
+    };
 
     // Insert text at the current cursor position in the expression textarea.
     const insertAtCursor = (text: string) => {
@@ -3023,6 +3093,17 @@ namespace WooOptionsFic.Builder {
         { label: 'Sum of selected value', prop: 'sum-formula' },
         { label: 'Total quantity', prop: 'total-qty' },
       ],
+      checkbox_group: [
+        { label: 'Options', prop: '', isOptions: true },
+        { label: 'If none selected', prop: 'selected-none' },
+        { label: 'If any selected', prop: 'selected-any' },
+        { label: 'If all selected', prop: 'selected-all' },
+        { label: 'Count selected', prop: 'count-selected' },
+        { label: 'Min selected formula value', prop: 'min-formula' },
+        { label: 'Max selected formula value', prop: 'max-formula' },
+        { label: 'Sum of selected value', prop: 'sum-formula' },
+        { label: 'Total quantity', prop: 'total-qty' },
+      ],
       image_swatch: [
         { label: 'Images', prop: '', isOptions: true },
         { label: 'If none selected', prop: 'selected-none' },
@@ -3056,6 +3137,16 @@ namespace WooOptionsFic.Builder {
         { label: 'If any selected', prop: 'selected-any' },
         { label: 'Selected formula value', prop: 'selected-formula' },
       ],
+      segmented: [
+        { label: 'Options', prop: '', isOptions: true },
+        { label: 'If none selected', prop: 'selected-none' },
+        { label: 'If any selected', prop: 'selected-any' },
+        { label: 'If all selected', prop: 'selected-all' },
+        { label: 'Count selected', prop: 'count-selected' },
+        { label: 'Min selected formula value', prop: 'min-formula' },
+        { label: 'Max selected formula value', prop: 'max-formula' },
+        { label: 'Sum of selected value', prop: 'sum-formula' },
+      ],
       button: [
         { label: 'Options', prop: '', isOptions: true },
         { label: 'If none selected', prop: 'selected-none' },
@@ -3066,6 +3157,22 @@ namespace WooOptionsFic.Builder {
         { label: 'Max selected formula value', prop: 'max-formula' },
         { label: 'Sum of selected value', prop: 'sum-formula' },
       ],
+      product: [
+        { label: 'Options', prop: '', isOptions: true },
+        { label: 'If none selected', prop: 'selected-none' },
+        { label: 'If any selected', prop: 'selected-any' },
+        { label: 'If all selected', prop: 'selected-all' },
+        { label: 'Count selected', prop: 'count-selected' },
+        { label: 'Min selected formula value', prop: 'min-formula' },
+        { label: 'Max selected formula value', prop: 'max-formula' },
+        { label: 'Sum of selected value', prop: 'sum-formula' },
+        { label: 'Total quantity', prop: 'total-qty' },
+      ],
+      font: [
+        { label: 'Options', prop: '', isOptions: true },
+        { label: 'If any selected', prop: 'selected-any' },
+        { label: 'Selected formula value', prop: 'selected-formula' },
+      ],
       date: [
         { label: 'Days from today', prop: 'days-from-today' },
         { label: 'Year', prop: 'year' },
@@ -3073,7 +3180,25 @@ namespace WooOptionsFic.Builder {
         { label: 'Day (1–31)', prop: 'day' },
         { label: 'Weekday (Mon:1, Sun:7)', prop: 'weekday' },
       ],
+      datetime: [
+        { label: 'Days from today', prop: 'days-from-today' },
+        { label: 'Year', prop: 'year' },
+        { label: 'Month (1–12)', prop: 'month' },
+        { label: 'Day (1–31)', prop: 'day' },
+        { label: 'Weekday (Mon:1, Sun:7)', prop: 'weekday' },
+      ],
+      date_range: [
+        { label: 'Days from today', prop: 'days-from-today' },
+        { label: 'Year', prop: 'year' },
+        { label: 'Month (1–12)', prop: 'month' },
+        { label: 'Day (1–31)', prop: 'day' },
+      ],
       switch: [
+        { label: 'Selected', prop: 'selected' },
+        { label: 'Formula Value', prop: 'formula-value' },
+        { label: 'Quantity', prop: 'qty' },
+      ],
+      toggle: [
         { label: 'Selected', prop: 'selected' },
         { label: 'Formula Value', prop: 'formula-value' },
         { label: 'Quantity', prop: 'qty' },
@@ -3094,42 +3219,51 @@ namespace WooOptionsFic.Builder {
         { label: 'Character count', prop: 'char-count' },
         { label: 'Word count', prop: 'word-count' },
       ],
+      tel: [
+        { label: 'Character count', prop: 'char-count' },
+        { label: 'Word count', prop: 'word-count' },
+      ],
       range: [
         { label: 'Range value', prop: 'value' },
       ],
       number: [
         { label: 'Number value', prop: 'value' },
       ],
+      customer_defined_price: [
+        { label: 'Price value', prop: 'value' },
+      ],
       upload: [
+        { label: 'File count', prop: 'value' },
+      ],
+      file: [
         { label: 'File count', prop: 'value' },
       ],
     };
 
     const getDynamicValues = (f: WooOptionsFic.FieldDefinition): DynValue[] => {
       const t = f.type;
-      return (
+      let values =
         DYNAMIC_VALUES[t] ??
         DYNAMIC_VALUES[t.replace('-', '_')] ??
-        [{ label: f.label || f.type, prop: 'value' }]
-      );
+        [{ label: f.label || f.type, prop: 'value' }];
+
+      // Safety: If this field is a choice type or has choices configured, ensure an 'Options' entry is present
+      const isChoiceField = ['select', 'radio', 'checkbox_group', 'checkbox', 'segmented', 'button', 'color_swatch', 'image_swatch', 'product', 'font'].includes(t);
+      const choices = (f as any).choices ?? (f as any).options ?? [];
+      if ((isChoiceField || choices.length > 0) && !values.some((v) => v.isOptions)) {
+        values = [{ label: 'Options', prop: '', isOptions: true }, ...values];
+      }
+      return values;
     };
 
     // Per-choice option sub-items: Checked, Formula Value, Quantity (type-aware)
     const getChoiceOptionProps = (fieldType: string): { label: string; prop: string }[] => {
-      if (['radio', 'select'].includes(fieldType)) {
+      if (['radio', 'select', 'font'].includes(fieldType)) {
         return [
           { label: 'Checked', prop: 'checked' },
           { label: 'Formula Value', prop: 'formula' },
         ];
       }
-      if (['switch'].includes(fieldType)) {
-        return [
-          { label: 'Checked', prop: 'checked' },
-          { label: 'Formula Value', prop: 'formula' },
-          { label: 'Quantity', prop: 'qty' },
-        ];
-      }
-      // checkbox, button, image_swatch, color_swatch
       return [
         { label: 'Checked', prop: 'checked' },
         { label: 'Formula Value', prop: 'formula' },
@@ -3240,7 +3374,7 @@ namespace WooOptionsFic.Builder {
 
           {/* Dynamic Values — field token helper */}
           {siblingFields.length > 0 ? (
-            <div className="wof-formula-tokens" onClick={() => { setOpenDropdown(null); setOpenChoiceSub(null); }}>
+            <div className="wof-formula-tokens">
               <span className="wof-formula-tokens__label">{__('Insert field:', 'wooptionsfic')}</span>
               <div className="wof-formula-tokens__list">
                 {siblingFields.map((f) => {
@@ -3260,10 +3394,19 @@ namespace WooOptionsFic.Builder {
                         type="button"
                         className={`wof-formula-token-btn${isOpen ? ' is-open' : ''}`}
                         title={sprintf(__('Dynamic values for %s', 'wooptionsfic'), tokenName)}
-                        onClick={() => {
+                        onClick={(e: any) => {
                           if (hasDynOptions) {
-                            setOpenDropdown(isOpen ? null : f.uuid);
-                            setOpenChoiceSub(null);
+                            if (isOpen) {
+                              setOpenDropdown(null);
+                              setDropdownPos(null);
+                            } else {
+                              const btn = e.currentTarget as HTMLElement;
+                              const rect = btn.getBoundingClientRect();
+                              const alignRight = rect.left + 230 > window.innerWidth - 10;
+                              const left = alignRight ? Math.max(10, rect.right - 210) : rect.left;
+                              setDropdownPos({ top: rect.bottom + 4, left });
+                              setOpenDropdown(f.uuid);
+                            }
                           } else {
                             insertAtCursor(fieldToken(f, 'value'));
                           }
@@ -3274,73 +3417,109 @@ namespace WooOptionsFic.Builder {
                           <span className="wof-formula-token-arrow" aria-hidden="true">▾</span>
                         )}
                       </button>
-                      {isOpen && hasDynOptions && (
-                        <div className="wof-dv-dropdown">
-                          {dynValues.map((dv, dvIdx) => {
-                            // "Options" row — flyout with choices
-                            if (dv.isOptions) {
-                              if (choices.length === 0) return null;
-                              const isChoiceOpen = openChoiceSub === `${f.uuid}:options`;
-                              return (
-                                <div key={dvIdx} className={`wof-dv-item wof-dv-item--has-sub${isChoiceOpen ? ' is-open' : ''}`}
-                                  onMouseEnter={() => setOpenChoiceSub(`${f.uuid}:options`)}
-                                >
-                                  <span className="wof-dv-item-label">{dv.label}</span>
-                                  <span className="wof-dv-item-arrow">›</span>
-                                  {isChoiceOpen && (
-                                    <div className="wof-dv-sub-panel">
-                                      {choices.map((c: any, ci: number) => {
-                                        const choiceLabel = c.label ?? c.value ?? `Option ${ci + 1}`;
-                                        const isChoiceItemOpen = openChoiceSub === `${f.uuid}:choice:${ci}`;
-                                        return (
-                                          <div
-                                            key={ci}
-                                            className={`wof-dv-item wof-dv-item--has-sub${isChoiceItemOpen ? ' is-open' : ''}`}
-                                            onMouseEnter={() => setOpenChoiceSub(`${f.uuid}:choice:${ci}`)}
-                                          >
-                                            <span className="wof-dv-item-label">{choiceLabel}</span>
-                                            <span className="wof-dv-item-arrow">›</span>
-                                            {isChoiceItemOpen && (
-                                              <div className="wof-dv-sub-panel">
-                                                {choiceOptionProps.map((op) => (
-                                                  <button
-                                                    key={op.prop}
-                                                    type="button"
-                                                    className="wof-dv-item"
-                                                    onClick={() => {
-                                                      insertAtCursor(optionToken(f, choiceLabel, op.prop));
-                                                      setOpenDropdown(null);
-                                                      setOpenChoiceSub(null);
-                                                    }}
-                                                >{op.label}</button>
-                                                ))}
-                                              </div>
-                                            )}
+                      {isOpen && hasDynOptions && (() => {
+                        const renderItems = () => dynValues.map((dv, dvIdx) => {
+                          // "Options" row — flyout with choices
+                          if (dv.isOptions) {
+                            return (
+                              <div
+                                key={dvIdx}
+                                className="wof-dv-item wof-dv-item--has-sub"
+                                onMouseEnter={handleSubMouseEnter}
+                              >
+                                <span className="wof-dv-item-label">{dv.label}</span>
+                                <span className="wof-dv-item-arrow">›</span>
+                                <div className="wof-dv-sub-panel">
+                                  {choices.length === 0 ? (
+                                    <span className="wof-dv-empty-msg">{__('No options configured', 'wooptionsfic')}</span>
+                                  ) : (
+                                    choices.map((c: any, ci: number) => {
+                                      const choiceLabel = (c.label || c.title || c.productTitle || c.adminLabel || c.value || `Option ${ci + 1}`).trim();
+                                      return (
+                                        <div
+                                          key={ci}
+                                          className="wof-dv-item wof-dv-item--has-sub"
+                                          onMouseEnter={handleSubMouseEnter}
+                                        >
+                                          <span className="wof-dv-item-label">{choiceLabel}</span>
+                                          <span className="wof-dv-item-arrow">›</span>
+                                          <div className="wof-dv-sub-panel">
+                                            {choiceOptionProps.map((op) => (
+                                              <button
+                                                key={op.prop}
+                                                type="button"
+                                                className="wof-dv-item"
+                                                onClick={() => {
+                                                  insertAtCursor(optionToken(f, choiceLabel, op.prop));
+                                                  setOpenDropdown(null);
+                                                  setDropdownPos(null);
+                                                }}
+                                              >{op.label}</button>
+                                            ))}
                                           </div>
-                                        );
-                                      })}
-                                    </div>
+                                        </div>
+                                      );
+                                    })
                                   )}
                                 </div>
-                              );
-                            }
-                            // Regular value row
-                            return (
-                              <button
-                                key={dvIdx}
-                                type="button"
-                                className="wof-dv-item"
-                                onMouseEnter={() => setOpenChoiceSub(null)}
-                                onClick={() => {
-                                  insertAtCursor(fieldToken(f, dv.prop));
-                                  setOpenDropdown(null);
-                                  setOpenChoiceSub(null);
-                                }}
-                              >{dv.label}</button>
+                              </div>
                             );
-                          })}
-                        </div>
-                      )}
+                          }
+                          // Regular value row
+                          return (
+                            <button
+                              key={dvIdx}
+                              type="button"
+                              className="wof-dv-item"
+                              onClick={() => {
+                                insertAtCursor(fieldToken(f, dv.prop));
+                                setOpenDropdown(null);
+                                setDropdownPos(null);
+                              }}
+                            >{dv.label}</button>
+                          );
+                        });
+
+                        const createPortalFn = (wp.element as any).createPortal;
+                        if (typeof createPortalFn === 'function' && dropdownPos) {
+                          return createPortalFn(
+                            <div
+                              className="wof-formula-panel wof-dv-portal"
+                              style={{
+                                position: 'fixed',
+                                top: dropdownPos.top,
+                                left: dropdownPos.left,
+                                zIndex: 999999,
+                              }}
+                              onClick={(e: any) => e.stopPropagation()}
+                            >
+                              <div className="wof-formula-section" style={{ padding: 0, margin: 0, border: 'none' }}>
+                                <div className="wof-formula-tokens" style={{ padding: 0, margin: 0, border: 'none', background: 'transparent' }}>
+                                  <div className="wof-dv-wrap">
+                                    <div
+                                      ref={activeDropdownRef}
+                                      className="wof-dv-dropdown is-portal"
+                                      style={{ position: 'static' }}
+                                    >
+                                      {renderItems()}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>,
+                            document.body
+                          );
+                        }
+
+                        return (
+                          <div
+                            ref={activeDropdownRef}
+                            className="wof-dv-dropdown"
+                          >
+                            {renderItems()}
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}
