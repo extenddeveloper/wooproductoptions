@@ -773,7 +773,10 @@ final class PriceEngine
 				} else {
 					$field_num = '0';
 				}
-				$field_props['selected'] = $is_checked ? '1' : '0';
+				$field_props['checked'] = $field_num;
+				$field_props['selected'] = $field_num;
+				$field_props['is-checked'] = $is_checked ? '1' : '0';
+				$field_props['is_checked'] = $is_checked ? '1' : '0';
 				$field_props['formula-value'] = $field_num;
 				$field_props['formula_value'] = $field_num;
 				$field_props['qty'] = $is_checked ? '1' : '0';
@@ -830,8 +833,8 @@ final class PriceEngine
 					? array_values(array_map('strval', $val))
 					: ('' === (string) $val || null === $val ? [] : [(string) $val]);
 
-				// Check defaults if nothing selected
-				if ([] === $selected_uuids) {
+				// Check defaults only if field was not submitted in values or is null
+				if ([] === $selected_uuids && (!array_key_exists($uuid, $values) || null === $val)) {
 					foreach ($choices as $choice) {
 						if (!empty($choice['default'])) {
 							$selected_uuids[] = (string) ($choice['uuid'] ?? '');
