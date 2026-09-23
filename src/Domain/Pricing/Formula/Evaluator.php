@@ -35,6 +35,8 @@ final class Evaluator {
 		}
 
 		$uuid_map = [];
+		$to_slug  = static fn (string $s): string => (string) preg_replace('/\s+/', '_', trim($s));
+
 		foreach ($fields as $f) {
 			if (! is_array($f)) {
 				continue;
@@ -42,31 +44,57 @@ final class Evaluator {
 			$u = (string) ($f['uuid'] ?? '');
 			$l = trim((string) ($f['label'] ?? ''));
 			$n = trim((string) ($f['name'] ?? ''));
+			$t = trim((string) ($f['type'] ?? ''));
 			if ('' !== $u) {
 				$uuid_map[strtolower($u)] = $u;
 				if ('' !== $l) {
 					$uuid_map[strtolower($l)] = $u;
+					$uuid_map[strtolower($to_slug($l))] = $u;
+					$uuid_map[strtolower((string) preg_replace('/[^a-z0-9]/', '', $l))] = $u;
 				}
 				if ('' !== $n) {
 					$uuid_map[strtolower($n)] = $u;
+					$uuid_map[strtolower($to_slug($n))] = $u;
+				}
+				if ('' !== $t) {
+					$uuid_map[strtolower($t)] = $u;
+					$uuid_map[strtolower($to_slug($t))] = $u;
 				}
 			}
 		}
 
-		// Replace [Tag] or [uuid]
-		$expression = (string) preg_replace_callback('/\[([^\]]+)\]/', static function (array $m) use ($uuid_map): string {
-			$raw = trim($m[1]);
+		$resolve_single_token = static function (string $raw) use ($uuid_map): string {
+			$raw = trim($raw);
 			$key = strtolower($raw);
-			$uuid = $uuid_map[$key] ?? $raw;
-			return 'FIELD("' . addslashes($uuid) . '")';
+
+			// Special tokens
+			if (in_array($key, ['product_price', 'base_price', 'productprice', 'baseprice'], true)) {
+				return 'FIELD("product_price")';
+			}
+			if (in_array($key, ['quantity', 'cart_quantity', 'cartquantity'], true)) {
+				return 'FIELD("quantity")';
+			}
+			if (in_array($key, ['weight', 'width', 'height', 'length'], true)) {
+				return 'FIELD("' . $key . '")';
+			}
+
+			// Direct match in uuid_map (plain label, name, or uuid)
+			if (isset($uuid_map[$key])) {
+				return 'FIELD("' . addslashes($uuid_map[$key]) . '")';
+			}
+
+			// Property or choice tokens e.g. [Field_Slug.prop] or [Field_Slug.options.Choice_Slug.prop]
+			return 'FIELD("' . addslashes($raw) . '")';
+		};
+
+		// Replace [Tag]
+		$expression = (string) preg_replace_callback('/\[([^\]]+)\]/', static function (array $m) use ($resolve_single_token): string {
+			return $resolve_single_token($m[1]);
 		}, $expression);
 
-		// Replace {Tag} or {uuid}
-		$expression = (string) preg_replace_callback('/\{([^\}]+)\}/', static function (array $m) use ($uuid_map): string {
-			$raw = trim($m[1]);
-			$key = strtolower($raw);
-			$uuid = $uuid_map[$key] ?? $raw;
-			return 'FIELD("' . addslashes($uuid) . '")';
+		// Replace {Tag}
+		$expression = (string) preg_replace_callback('/\{([^\}]+)\}/', static function (array $m) use ($resolve_single_token): string {
+			return $resolve_single_token($m[1]);
 		}, $expression);
 
 		// Also handle FIELD("Label") if user typed a label inside FIELD(...)
@@ -124,6 +152,35 @@ final class Evaluator {
 		$upper = strtoupper($name);
 		if (array_key_exists($upper, $variables)) {
 			return $this->normalize_value($variables[$upper]);
+		}
+		$lower = strtolower($name);
+		if (in_array($lower, ['product_price', 'base_price', 'productprice', 'baseprice'], true)) {
+			if (isset($variables['base_price'])) {
+				return $this->normalize_value($variables['base_price']);
+			}
+			if (isset($variables['product_price'])) {
+				return $this->normalize_value($variables['product_price']);
+			}
+		}
+		if (in_array($lower, ['quantity', 'cart_quantity', 'cartquantity'], true)) {
+			if (isset($variables['quantity'])) {
+				return $this->normalize_value($variables['quantity']);
+			}
+		}
+		if (in_array($lower, ['weight', 'width', 'height', 'length'], true)) {
+			if (isset($variables[$lower])) {
+				return $this->normalize_value($variables[$lower]);
+			}
+		}
+		// Also check fields map
+		$fields = is_array($variables['fields'] ?? null) ? $variables['fields'] : [];
+		if (isset($fields[$name])) {
+			return $this->normalize_value($fields[$name]);
+		}
+		foreach ($fields as $key => $val) {
+			if (0 === strcasecmp((string) $key, $name)) {
+				return $this->normalize_value($val);
+			}
 		}
 		throw new RuntimeException('wooptionsfic_formula_unknown_variable_' . $name);
 	}
@@ -233,14 +290,58 @@ final class Evaluator {
 				throw new RuntimeException('wooptionsfic_formula_field_id_required');
 			}
 			$fields = is_array($variables['fields'] ?? null) ? $variables['fields'] : [];
+
+			// 1. Exact match
 			if (isset($fields[$field_id])) {
 				return $this->normalize_value($fields[$field_id]);
 			}
+
+			// 2. Case-insensitive exact match
 			foreach ($fields as $key => $val) {
 				if (0 === strcasecmp((string) $key, $field_id)) {
 					return $this->normalize_value($val);
 				}
 			}
+
+			// 3. Dot-normalized match (spaces / hyphens / underscores normalized)
+			$clean_id = preg_replace('/[^a-z0-9.]/', '', strtolower($field_id));
+			if ('' !== $clean_id) {
+				foreach ($fields as $key => $val) {
+					$clean_key = preg_replace('/[^a-z0-9.]/', '', strtolower((string) $key));
+					if ($clean_key === $clean_id) {
+						return $this->normalize_value($val);
+					}
+				}
+			}
+
+			// 4. Fully alphanumeric match
+			$alphanumeric_id = preg_replace('/[^a-z0-9]/', '', strtolower($field_id));
+			if ('' !== $alphanumeric_id) {
+				foreach ($fields as $key => $val) {
+					$alphanumeric_key = preg_replace('/[^a-z0-9]/', '', strtolower((string) $key));
+					if ($alphanumeric_key === $alphanumeric_id) {
+						return $this->normalize_value($val);
+					}
+				}
+			}
+
+			// 5. Special fallback for product_price / base_price
+			if (in_array(strtolower($field_id), ['product_price', 'base_price', 'productprice', 'baseprice'], true)) {
+				if (isset($variables['base_price'])) {
+					return $this->normalize_value($variables['base_price']);
+				}
+				if (isset($variables['product_price'])) {
+					return $this->normalize_value($variables['product_price']);
+				}
+			}
+
+			// 6. Special fallback for quantity
+			if (in_array(strtolower($field_id), ['quantity', 'cart_quantity', 'cartquantity'], true)) {
+				if (isset($variables['quantity'])) {
+					return $this->normalize_value($variables['quantity']);
+				}
+			}
+
 			return $this->normalize_value('0');
 		}
 

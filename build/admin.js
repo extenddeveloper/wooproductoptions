@@ -6114,9 +6114,18 @@ var WooOptionsFic;
                             expression: field.expression ?? '0',
                             fields: allFields.map((f) => ({
                                 uuid: f.uuid,
+                                type: f.type,
                                 label: f.label || f.type,
+                                name: f.name || '',
                                 default: f.default ?? '10',
+                                choices: f.choices ?? f.options ?? [],
+                                pricing: f.pricing ?? {},
+                                enableQuantity: Boolean(f.enableQuantity),
                             })),
+                            context: {
+                                basePrice: '100',
+                                quantity: 1,
+                            },
                         },
                     });
                     setTestResult({ value: result.result });
@@ -6322,17 +6331,17 @@ var WooOptionsFic;
                 }
                 return values;
             };
-            // Per-choice option sub-items: Checked, Formula Value, Quantity (type-aware)
+            // Per-choice option sub-items: Option Price, Checked, Quantity (type-aware)
             const getChoiceOptionProps = (fieldType) => {
                 if (['radio', 'select', 'font'].includes(fieldType)) {
                     return [
+                        { label: 'Option Price', prop: 'formula' },
                         { label: 'Checked', prop: 'checked' },
-                        { label: 'Formula Value', prop: 'formula' },
                     ];
                 }
                 return [
+                    { label: 'Option Price', prop: 'formula' },
                     { label: 'Checked', prop: 'checked' },
-                    { label: 'Formula Value', prop: 'formula' },
                     { label: 'Quantity', prop: 'qty' },
                 ];
             };
@@ -6367,79 +6376,87 @@ var WooOptionsFic;
                         __('Result:', 'wooptionsfic'),
                         " ",
                         testResult.value))) : null,
-                    siblingFields.length > 0 ? (wp.element.createElement("div", { className: "wof-formula-tokens" },
+                    wp.element.createElement("div", { className: "wof-formula-tokens" },
                         wp.element.createElement("span", { className: "wof-formula-tokens__label" }, __('Insert field:', 'wooptionsfic')),
-                        wp.element.createElement("div", { className: "wof-formula-tokens__list" }, siblingFields.map((f) => {
-                            const tokenName = f.label || f.type;
-                            const dynValues = getDynamicValues(f);
-                            const isOpen = openDropdown === f.uuid;
-                            const hasDynOptions = dynValues.length > 0;
-                            const choices = getFieldChoices(f);
-                            const choiceOptionProps = getChoiceOptionProps(f.type);
-                            return (wp.element.createElement("div", { key: f.uuid, className: "wof-dv-wrap", onClick: (e) => e.stopPropagation() },
-                                wp.element.createElement("button", { type: "button", className: `wof-formula-token-btn${isOpen ? ' is-open' : ''}`, title: sprintf(__('Dynamic values for %s', 'wooptionsfic'), tokenName), onClick: (e) => {
-                                        if (hasDynOptions) {
-                                            if (isOpen) {
-                                                setOpenDropdown(null);
-                                                setDropdownPos(null);
+                        wp.element.createElement("div", { className: "wof-formula-tokens__list" },
+                            wp.element.createElement("button", { type: "button", className: "wof-formula-token-btn", title: __('Base product price [product_price]', 'wooptionsfic'), onClick: () => insertAtCursor('[product_price]') },
+                                wp.element.createElement("span", { className: "wof-formula-token-text" }, __('Product Price', 'wooptionsfic'))),
+                            siblingFields.map((f) => {
+                                const tokenName = f.label || f.type;
+                                const dynValues = getDynamicValues(f);
+                                const isOpen = openDropdown === f.uuid;
+                                const hasDynOptions = dynValues.length > 0;
+                                const choices = getFieldChoices(f);
+                                const choiceOptionProps = getChoiceOptionProps(f.type);
+                                return (wp.element.createElement("div", { key: f.uuid, className: "wof-dv-wrap", onClick: (e) => e.stopPropagation() },
+                                    wp.element.createElement("button", { type: "button", className: `wof-formula-token-btn${isOpen ? ' is-open' : ''}`, title: sprintf(__('Dynamic values for %s', 'wooptionsfic'), tokenName), onClick: (e) => {
+                                            if (hasDynOptions) {
+                                                if (isOpen) {
+                                                    setOpenDropdown(null);
+                                                    setDropdownPos(null);
+                                                }
+                                                else {
+                                                    const btn = e.currentTarget;
+                                                    const rect = btn.getBoundingClientRect();
+                                                    const alignRight = rect.left + 230 > window.innerWidth - 10;
+                                                    const left = alignRight ? Math.max(10, rect.right - 210) : rect.left;
+                                                    setDropdownPos({ top: rect.bottom + 4, left });
+                                                    setOpenDropdown(f.uuid);
+                                                }
                                             }
                                             else {
-                                                const btn = e.currentTarget;
-                                                const rect = btn.getBoundingClientRect();
-                                                const alignRight = rect.left + 230 > window.innerWidth - 10;
-                                                const left = alignRight ? Math.max(10, rect.right - 210) : rect.left;
-                                                setDropdownPos({ top: rect.bottom + 4, left });
-                                                setOpenDropdown(f.uuid);
+                                                insertAtCursor(fieldToken(f, 'value'));
                                             }
+                                        } },
+                                        wp.element.createElement("span", { className: "wof-formula-token-text" }, tokenName),
+                                        hasDynOptions && (wp.element.createElement("span", { className: "wof-formula-token-arrow", "aria-hidden": "true" }, "\u25BE"))),
+                                    isOpen && hasDynOptions && (() => {
+                                        const renderItems = () => dynValues.map((dv, dvIdx) => {
+                                            // "Options" row — flyout with choices
+                                            if (dv.isOptions) {
+                                                return (wp.element.createElement("div", { key: dvIdx, className: "wof-dv-item wof-dv-item--has-sub", onMouseEnter: handleSubMouseEnter },
+                                                    wp.element.createElement("span", { className: "wof-dv-item-label" }, dv.label),
+                                                    wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
+                                                    wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choices.length === 0 ? (wp.element.createElement("span", { className: "wof-dv-empty-msg" }, __('No options configured', 'wooptionsfic'))) : (choices.map((c, ci) => {
+                                                        const choiceLabel = (c.label || c.title || c.productTitle || c.adminLabel || c.value || `Option ${ci + 1}`).trim();
+                                                        return (wp.element.createElement("div", { key: ci, className: "wof-dv-item wof-dv-item--has-sub", onMouseEnter: handleSubMouseEnter },
+                                                            wp.element.createElement("span", { className: "wof-dv-item-label", onClick: (e) => {
+                                                                    e.stopPropagation();
+                                                                    insertAtCursor(optionToken(f, choiceLabel, 'formula'));
+                                                                    setOpenDropdown(null);
+                                                                    setDropdownPos(null);
+                                                                }, title: __('Click to insert option price, or hover for more properties', 'wooptionsfic') }, choiceLabel),
+                                                            wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
+                                                            wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choiceOptionProps.map((op) => (wp.element.createElement("button", { key: op.prop, type: "button", className: "wof-dv-item", onClick: () => {
+                                                                    insertAtCursor(optionToken(f, choiceLabel, op.prop));
+                                                                    setOpenDropdown(null);
+                                                                    setDropdownPos(null);
+                                                                } }, op.label))))));
+                                                    })))));
+                                            }
+                                            // Regular value row
+                                            return (wp.element.createElement("button", { key: dvIdx, type: "button", className: "wof-dv-item", onClick: () => {
+                                                    insertAtCursor(fieldToken(f, dv.prop));
+                                                    setOpenDropdown(null);
+                                                    setDropdownPos(null);
+                                                } }, dv.label));
+                                        });
+                                        const createPortalFn = wp.element.createPortal;
+                                        if (typeof createPortalFn === 'function' && dropdownPos) {
+                                            return createPortalFn(wp.element.createElement("div", { className: "wof-formula-panel wof-dv-portal", style: {
+                                                    position: 'fixed',
+                                                    top: dropdownPos.top,
+                                                    left: dropdownPos.left,
+                                                    zIndex: 999999,
+                                                }, onClick: (e) => e.stopPropagation() },
+                                                wp.element.createElement("div", { className: "wof-formula-section", style: { padding: 0, margin: 0, border: 'none' } },
+                                                    wp.element.createElement("div", { className: "wof-formula-tokens", style: { padding: 0, margin: 0, border: 'none', background: 'transparent' } },
+                                                        wp.element.createElement("div", { className: "wof-dv-wrap" },
+                                                            wp.element.createElement("div", { ref: activeDropdownRef, className: "wof-dv-dropdown is-portal", style: { position: 'static' } }, renderItems()))))), document.body);
                                         }
-                                        else {
-                                            insertAtCursor(fieldToken(f, 'value'));
-                                        }
-                                    } },
-                                    wp.element.createElement("span", { className: "wof-formula-token-text" }, tokenName),
-                                    hasDynOptions && (wp.element.createElement("span", { className: "wof-formula-token-arrow", "aria-hidden": "true" }, "\u25BE"))),
-                                isOpen && hasDynOptions && (() => {
-                                    const renderItems = () => dynValues.map((dv, dvIdx) => {
-                                        // "Options" row — flyout with choices
-                                        if (dv.isOptions) {
-                                            return (wp.element.createElement("div", { key: dvIdx, className: "wof-dv-item wof-dv-item--has-sub", onMouseEnter: handleSubMouseEnter },
-                                                wp.element.createElement("span", { className: "wof-dv-item-label" }, dv.label),
-                                                wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
-                                                wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choices.length === 0 ? (wp.element.createElement("span", { className: "wof-dv-empty-msg" }, __('No options configured', 'wooptionsfic'))) : (choices.map((c, ci) => {
-                                                    const choiceLabel = (c.label || c.title || c.productTitle || c.adminLabel || c.value || `Option ${ci + 1}`).trim();
-                                                    return (wp.element.createElement("div", { key: ci, className: "wof-dv-item wof-dv-item--has-sub", onMouseEnter: handleSubMouseEnter },
-                                                        wp.element.createElement("span", { className: "wof-dv-item-label" }, choiceLabel),
-                                                        wp.element.createElement("span", { className: "wof-dv-item-arrow" }, "\u203A"),
-                                                        wp.element.createElement("div", { className: "wof-dv-sub-panel" }, choiceOptionProps.map((op) => (wp.element.createElement("button", { key: op.prop, type: "button", className: "wof-dv-item", onClick: () => {
-                                                                insertAtCursor(optionToken(f, choiceLabel, op.prop));
-                                                                setOpenDropdown(null);
-                                                                setDropdownPos(null);
-                                                            } }, op.label))))));
-                                                })))));
-                                        }
-                                        // Regular value row
-                                        return (wp.element.createElement("button", { key: dvIdx, type: "button", className: "wof-dv-item", onClick: () => {
-                                                insertAtCursor(fieldToken(f, dv.prop));
-                                                setOpenDropdown(null);
-                                                setDropdownPos(null);
-                                            } }, dv.label));
-                                    });
-                                    const createPortalFn = wp.element.createPortal;
-                                    if (typeof createPortalFn === 'function' && dropdownPos) {
-                                        return createPortalFn(wp.element.createElement("div", { className: "wof-formula-panel wof-dv-portal", style: {
-                                                position: 'fixed',
-                                                top: dropdownPos.top,
-                                                left: dropdownPos.left,
-                                                zIndex: 999999,
-                                            }, onClick: (e) => e.stopPropagation() },
-                                            wp.element.createElement("div", { className: "wof-formula-section", style: { padding: 0, margin: 0, border: 'none' } },
-                                                wp.element.createElement("div", { className: "wof-formula-tokens", style: { padding: 0, margin: 0, border: 'none', background: 'transparent' } },
-                                                    wp.element.createElement("div", { className: "wof-dv-wrap" },
-                                                        wp.element.createElement("div", { ref: activeDropdownRef, className: "wof-dv-dropdown is-portal", style: { position: 'static' } }, renderItems()))))), document.body);
-                                    }
-                                    return (wp.element.createElement("div", { ref: activeDropdownRef, className: "wof-dv-dropdown" }, renderItems()));
-                                })()));
-                        })))) : null,
+                                        return (wp.element.createElement("div", { ref: activeDropdownRef, className: "wof-dv-dropdown" }, renderItems()));
+                                    })()));
+                            }))),
                     wp.element.createElement("div", { className: "wof-formula-ref-inline" },
                         wp.element.createElement("button", { type: "button", className: "wof-formula-ref-toggle", onClick: () => setRefOpen((o) => !o), "aria-expanded": refOpen },
                             wp.element.createElement("span", null, __('Function Reference', 'wooptionsfic')),
