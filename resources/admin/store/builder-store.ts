@@ -31,8 +31,8 @@ namespace WooOptionsFic.BuilderStore {
     updateDocument(patch: Partial<WooOptionsFic.OptionSetDefinition>) {
       return { type: 'UPDATE_DOCUMENT', patch };
     },
-    addField(field: WooOptionsFic.FieldDefinition, index?: number) {
-      return { type: 'ADD_FIELD', field, index };
+    addField(field: WooOptionsFic.FieldDefinition, index?: number, parentUuid?: string) {
+      return { type: 'ADD_FIELD', field, index, parentUuid };
     },
     updateField(uuid: string, patch: Partial<WooOptionsFic.FieldDefinition>) {
       return { type: 'UPDATE_FIELD', uuid, patch };
@@ -45,6 +45,12 @@ namespace WooOptionsFic.BuilderStore {
     },
     moveField(from: number, to: number) {
       return { type: 'MOVE_FIELD', from, to };
+    },
+    moveChildField(parentUuid: string, from: number, to: number) {
+      return { type: 'MOVE_CHILD_FIELD', parentUuid, from, to };
+    },
+    moveFieldToParent(fieldUuid: string, parentUuid: string, index?: number) {
+      return { type: 'MOVE_FIELD_TO_PARENT', fieldUuid, parentUuid, index };
     },
     selectField(uuid: string | null) {
       return { type: 'SELECT_FIELD', uuid };
@@ -105,9 +111,18 @@ namespace WooOptionsFic.BuilderStore {
       case 'ADD_FIELD': {
         if (!state.document) return state;
         const next = pushHistory(state);
-        const fields = [...state.document.fields];
-        const index = typeof action.index === 'number' ? Math.max(0, Math.min(fields.length, action.index)) : fields.length;
-        fields.splice(index, 0, action.field);
+        let fields = [...state.document.fields];
+        if (action.parentUuid) {
+          fields = WooOptionsFic.Utils.updateFieldTree(fields, action.parentUuid, (parent) => {
+            const children = [...(parent.children ?? [])];
+            const index = typeof action.index === 'number' ? Math.max(0, Math.min(children.length, action.index)) : children.length;
+            children.splice(index, 0, action.field);
+            return { ...parent, children };
+          });
+        } else {
+          const index = typeof action.index === 'number' ? Math.max(0, Math.min(fields.length, action.index)) : fields.length;
+          fields.splice(index, 0, action.field);
+        }
         return {
           ...next,
           document: { ...state.document, fields },
@@ -150,6 +165,33 @@ namespace WooOptionsFic.BuilderStore {
         const to = Math.max(0, Math.min(fields.length - 1, action.to));
         const [field] = fields.splice(from, 1);
         fields.splice(to, 0, field);
+        return { ...next, document: { ...state.document, fields }, dirty: true, saveStatus: 'dirty' };
+      }
+      case 'MOVE_CHILD_FIELD': {
+        if (!state.document || action.from === action.to) return state;
+        const next = pushHistory(state);
+        const fields = WooOptionsFic.Utils.updateFieldTree(state.document.fields, action.parentUuid, (parent) => {
+          const children = [...(parent.children ?? [])];
+          const from = Math.max(0, Math.min(children.length - 1, action.from));
+          const to = Math.max(0, Math.min(children.length - 1, action.to));
+          const [moved] = children.splice(from, 1);
+          children.splice(to, 0, moved);
+          return { ...parent, children };
+        });
+        return { ...next, document: { ...state.document, fields }, dirty: true, saveStatus: 'dirty' };
+      }
+      case 'MOVE_FIELD_TO_PARENT': {
+        if (!state.document) return state;
+        const fieldToMove = WooOptionsFic.Utils.fieldByUuid(state.document, action.fieldUuid);
+        if (!fieldToMove || fieldToMove.uuid === action.parentUuid) return state;
+        const next = pushHistory(state);
+        let fields = WooOptionsFic.Utils.removeFieldTree(state.document.fields, action.fieldUuid);
+        fields = WooOptionsFic.Utils.updateFieldTree(fields, action.parentUuid, (parent) => {
+          const children = [...(parent.children ?? [])];
+          const index = typeof action.index === 'number' ? Math.max(0, Math.min(children.length, action.index)) : children.length;
+          children.splice(index, 0, fieldToMove);
+          return { ...parent, children };
+        });
         return { ...next, document: { ...state.document, fields }, dirty: true, saveStatus: 'dirty' };
       }
       case 'SELECT_FIELD':

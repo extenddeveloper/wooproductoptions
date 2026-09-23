@@ -826,10 +826,8 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 
 .wof-repeater__actions {
 	display: flex;
-	gap: .15rem;
-	position: absolute;
-	right: .5rem;
-	top: .5rem;
+	gap: 4px;
+	align-items: center;
 }
 
 .wof-icon-button {
@@ -4487,5 +4485,331 @@ body.wof-modal-open {
 	color: var(--wof-primary, #5b4ff5);
 	text-decoration: underline;
 }
+
+/* ==========================================================================
+   Storefront Section & Repeatable Section Field Styles
+   ========================================================================== */
+
+.wof-field--repeater.wof-section {
+	margin-bottom: 1.25rem;
+}
+
+.wof-section--section {
+	background: var(--wof-surface, #ffffff);
+	border: 1px solid var(--wof-border, #e2e8f0);
+	border-radius: 12px;
+	padding: 1.25rem;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+}
+
+.wof-section--accordion {
+	background: var(--wof-surface, #ffffff);
+	border: 1px solid var(--wof-border, #e2e8f0);
+	border-radius: 12px;
+	padding: 0;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+	/* overflow: hidden; */
+}
+
+.wof-section--accordion .wof-section__header {
+	padding: 1rem 1.25rem;
+	margin-bottom: 0;
+	border-bottom: 1px solid var(--wof-border, #f1f5f9);
+	cursor: pointer;
+	user-select: none;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	transition: background 0.15s ease;
+}
+
+.wof-section--accordion:not(.is-open) .wof-section__header {
+	border-bottom-color: transparent;
+}
+
+.wof-section--accordion .wof-section__header:hover {
+	background: color-mix(in srgb, var(--wof-surface, #fff) 96%, var(--wof-text, #000));
+}
+
+.wof-section--accordion .wof-section__body {
+	padding: 1.25rem;
+}
+
+.wof-section--blank {
+	background: transparent;
+	border: none;
+	padding: 0;
+	box-shadow: none;
+}
+
+.wof-section__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 1rem;
+}
+
+.wof-section__heading {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.wof-section__title {
+	font-size: 1.05rem;
+	font-weight: 700;
+	color: var(--wof-text, #0f172a);
+	margin: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.wof-section__chevron {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--wof-muted, #64748b);
+	transition: transform 0.2s ease;
+}
+
+.wof-section.is-open .wof-section__chevron {
+	transform: rotate(180deg);
+}
+
+.wof-section__fields {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+}
+
+/* Repeater Row */
+.wof-repeater__row {
+	background: color-mix(in srgb, var(--wof-background, #f8fafc) 70%, var(--wof-surface, #fff));
+	border: 1px solid var(--wof-border, #e2e8f0);
+	border-radius: 10px;
+	margin: 0 0 1rem 0;
+	padding: 1.15rem;
+	position: relative;
+}
+
+.wof-repeater__row-header {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	padding-bottom: 10px !important;
+	border-bottom: 1px solid var(--wof-border, #e2e8f0) !important;
+	margin-bottom: 12px !important;
+}
+
+.wof-repeater__row-heading {
+	display: flex !important;
+	align-items: baseline !important;
+	gap: 8px !important;
+}
+
+.wof-repeater__row-title {
+	font-size: 15px !important;
+	font-weight: 700 !important;
+	color: var(--wof-text, #0f172a) !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	line-height: 1.4 !important;
+}
+
+.wof-repeater__row-price {
+	font-size: 13.5px !important;
+	font-weight: 500 !important;
+	color: #64748b !important;
+	background: transparent !important;
+	padding: 0 !important;
+	margin: 0 !important;
+}
+
+.wof-repeater__row-price .woocommerce-Price-amount {
+	color: #64748b !important;
+	font-weight: 500 !important;
+}
+
+.wof-repeater__actions {
+	position: static !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	gap: 4px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+.wof-repeater__actions .wof-icon-button,
+.wof-repeater__actions button {
+	width: 28px !important;
+	min-width: 28px !important;
+	max-width: 28px !important;
+	height: 28px !important;
+	min-height: 28px !important;
+	max-height: 28px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	line-height: 1 !important;
+	border: 1px solid var(--wof-border, #d8deea) !important;
+	background: var(--wof-surface, #ffffff) !important;
+	border-radius: 6px !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	cursor: pointer !important;
+	color: #64748b !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+	transition: all 0.15s ease !important;
+	box-sizing: border-box !important;
+	outline: none !important;
+}
+
+.wof-repeater__actions .wof-icon-button svg,
+.wof-repeater__actions button svg {
+	width: 12px !important;
+	height: 12px !important;
+	stroke: currentColor !important;
+	display: block !important;
+	pointer-events: none !important;
+}
+
+.wof-repeater__actions .wof-icon-button:hover,
+.wof-repeater__actions button:hover {
+	background: #f8fafc !important;
+	border-color: #94a3b8 !important;
+	color: #1e293b !important;
+}
+
+.wof-repeater__actions .wof-icon-button.is-remove:hover,
+.wof-repeater__actions button[data-wof-remove-row]:hover {
+	background: #fef2f2 !important;
+	border-color: #fca5a5 !important;
+	color: #dc2626 !important;
+}
+
+.wof-repeater__row-fields {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.85rem;
+}
+
+/* Quantity Stepper Control in Repeater */
+.wof-repeater__quantity-control {
+	display: flex !important;
+	align-items: center !important;
+	justify-content: space-between !important;
+	padding: 10px 14px !important;
+	background: var(--wof-surface, #ffffff) !important;
+	border: 1px solid var(--wof-border, #e2e8f0) !important;
+	border-radius: 8px !important;
+	margin-bottom: 12px !important;
+}
+
+.wof-repeater__quantity-label {
+	font-size: 14px !important;
+	font-weight: 600 !important;
+	color: var(--wof-text, #1e293b) !important;
+	margin: 0 !important;
+}
+
+.wof-qty-stepper {
+	display: inline-flex !important;
+	align-items: center !important;
+	border: 1.5px solid var(--wof-border, #d8deea) !important;
+	border-radius: 6px !important;
+	overflow: hidden !important;
+	background: var(--wof-surface, #ffffff) !important;
+	width: auto !important;
+	max-width: 126px !important;
+	height: 36px !important;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+.wof-qty-stepper__btn {
+	background: #f8fafc !important;
+	border: none !important;
+	width: 36px !important;
+	min-width: 36px !important;
+	max-width: 36px !important;
+	height: 36px !important;
+	min-height: 36px !important;
+	max-height: 36px !important;
+	font-size: 16px !important;
+	font-weight: 600 !important;
+	color: #475569 !important;
+	cursor: pointer !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	transition: all 0.15s ease !important;
+	line-height: 1 !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	border-radius: 0 !important;
+	box-shadow: none !important;
+}
+
+.wof-qty-stepper__btn:hover:not(:disabled) {
+	background: #e2e8f0 !important;
+	color: #0f172a !important;
+}
+
+.wof-qty-stepper__btn:disabled {
+	opacity: 0.4 !important;
+	cursor: not-allowed !important;
+}
+
+.wof-qty-stepper__input {
+	width: 48px !important;
+	min-width: 48px !important;
+	max-width: 48px !important;
+	height: 36px !important;
+	padding: 0 !important;
+	margin: 0 !important;
+	font-size: 14px !important;
+	font-weight: 600 !important;
+	color: #0f172a !important;
+	text-align: center !important;
+	border: none !important;
+	border-left: 1px solid #e2e8f0 !important;
+	border-right: 1px solid #e2e8f0 !important;
+	border-radius: 0 !important;
+	background: #ffffff !important;
+	box-shadow: none !important;
+	outline: none !important;
+	-moz-appearance: textfield !important;
+}
+
+.wof-qty-stepper__input::-webkit-outer-spin-button,
+.wof-qty-stepper__input::-webkit-inner-spin-button {
+	-webkit-appearance: none;
+	margin: 0;
+}
+
+/* Add Another Button (Mockup 3 dark style) */
+.wof-repeater__footer {
+	margin-top: 0.5rem;
+}
+
+.wof-repeater__add-btn {
+	background: #0f172a !important;
+	color: #ffffff !important;
+	border: none !important;
+	border-radius: 6px !important;
+	padding: 0.65rem 1.25rem !important;
+	font-size: 0.88rem !important;
+	font-weight: 600 !important;
+	cursor: pointer !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	transition: background 0.15s ease !important;
+}
+
+.wof-repeater__add-btn:hover {
+	background: #1e293b !important;
+}
+
 
 

@@ -183,7 +183,7 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $field Field definition.
 	 */
-	private function render_field(array $field, string $name_prefix = 'wooptionsfic_selection'): void {
+	private function render_field(array $field, string $name_prefix = 'wooptionsfic_selection', string $row_uuid = ''): void {
 		$type = (string) ($field['type'] ?? '');
 		$uuid = (string) ($field['uuid'] ?? '');
 		if ('' === $uuid) {
@@ -232,12 +232,13 @@ final class Renderer {
 			$hide_zero      = ! empty($field['hideWhenZero']) ? ' data-wof-hide-zero="1"' : '';
 			$help_text      = trim((string) ($field['help'] ?? $field['description'] ?? ''));
 			$help_pos       = (string) ($field['helpTextPosition'] ?? 'below_title');
-			$description_id = 'wof-description-' . str_replace('-', '', $uuid);
+			$row_suffix     = '' !== $row_uuid ? '-' . $row_uuid : '';
+			$description_id = 'wof-description-' . str_replace('-', '', $uuid) . str_replace('-', '', $row_suffix);
 
 			echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="formula"' . $style . ($is_disabled ? ' hidden' : '') . '>';
 
 			if (! empty($field['label'])) {
-				echo '<label class="wof-field__label" for="wof-' . esc_attr($uuid) . '">';
+				echo '<label class="wof-field__label" for="wof-' . esc_attr($uuid . $row_suffix) . '">';
 				echo esc_html((string) $field['label']);
 				if ('' !== $help_text && 'tooltip' === $help_pos) {
 					echo $this->render_tooltip_icon($help_text);
@@ -250,7 +251,7 @@ final class Renderer {
 
 			echo '<div class="wof-formula-output-wrap">';
 			echo '<output data-wof-calculated="' . esc_attr($uuid) . '"'
-				. ' id="wof-' . esc_attr($uuid) . '"'
+				. ' id="wof-' . esc_attr($uuid . $row_suffix) . '"'
 				. ' class="wof-formula-output"'
 				. ' data-wof-display-mode="' . esc_attr($display_mode) . '"'
 				. ' data-wof-decimal-places="' . esc_attr((string) $decimal_places) . '"'
@@ -267,7 +268,8 @@ final class Renderer {
 			return;
 		}
 
-		$description_id = 'wof-description-' . str_replace('-', '', $uuid);
+		$row_suffix     = '' !== $row_uuid ? '-' . $row_uuid : '';
+		$description_id = 'wof-description-' . str_replace('-', '', $uuid) . str_replace('-', '', $row_suffix);
 		$required       = ! empty($field['required']);
 		$is_disabled    = ! empty($field['disabled']);
 		$width          = (string) ($field['width'] ?? '100%');
@@ -287,9 +289,24 @@ final class Renderer {
 			}
 		}
 
+		if ('repeater' === $type) {
+			$section_style = (string) ($field['sectionStyle'] ?? 'section');
+			$classes .= ' wof-section wof-section--' . sanitize_html_class($section_style);
+			if ('accordion' === $section_style) {
+				$init_state = (string) ($field['initialState'] ?? 'open');
+				if ('close' !== $init_state) {
+					$classes .= ' is-open';
+				}
+			}
+		}
+
 		echo '<div class="' . esc_attr($classes) . '" data-wof-field="' . esc_attr($uuid) . '" data-wof-type="' . esc_attr($type) . '"';
 		if ($is_disabled) {
 			echo ' hidden style="display:none;"';
+		}
+		if ('repeater' === $type && 'accordion' === ($field['sectionStyle'] ?? 'section')) {
+			$init_state = (string) ($field['initialState'] ?? 'open');
+			echo ' data-wof-accordion="1" data-wof-initial-state="' . esc_attr($init_state) . '"';
 		}
 		if ('image_swatch' === $type && ! empty($field['updateProductImage'])) {
 			echo ' data-wof-update-product-image="1"';
@@ -312,8 +329,8 @@ final class Renderer {
 
 		$price_text = $this->choice_price_text($field, false);
 
-		if (! in_array($type, ['checkbox', 'toggle'], true)) {
-			echo '<label class="wof-field__label" for="wof-' . esc_attr($uuid) . '">';
+		if (! in_array($type, ['checkbox', 'toggle', 'repeater'], true)) {
+			echo '<label class="wof-field__label" for="wof-' . esc_attr($uuid . $row_suffix) . '">';
 			echo esc_html((string) ($field['label'] ?? __('Option', 'wooptionsfic')));
 			if ($required) {
 				echo ' <span class="wof-required" aria-hidden="true">*</span><span class="screen-reader-text">' . esc_html__('required', 'wooptionsfic') . '</span>';
@@ -326,35 +343,35 @@ final class Renderer {
 			}
 			echo '</label>';
 		}
-		if ('' !== $help_text && 'below_title' === $help_pos && ! in_array($type, ['checkbox', 'toggle'], true)) {
+		if ('' !== $help_text && 'below_title' === $help_pos && ! in_array($type, ['checkbox', 'toggle', 'repeater'], true)) {
 			echo '<p class="wof-field__help wof-field__help--below-title" id="' . esc_attr($description_id) . '">' . esc_html($help_text) . '</p>';
 		}
 
 		$name = $name_prefix . '[' . $uuid . ']';
 		if (in_array($type, ['select', 'font'], true)) {
-			$this->render_select($field, $name, $description_id);
+			$this->render_select($field, $name, $description_id, $row_uuid);
 		} elseif ('color_swatch' === $type) {
-			$this->render_color_swatches($field, $name, $description_id);
+			$this->render_color_swatches($field, $name, $description_id, $row_uuid);
 		} elseif ('image_swatch' === $type) {
-			$this->render_image_swatches($field, $name, $description_id);
+			$this->render_image_swatches($field, $name, $description_id, $row_uuid);
 		} elseif ('radio' === $type) {
-			$this->render_radio_list($field, $name, $description_id);
+			$this->render_radio_list($field, $name, $description_id, $row_uuid);
 		} elseif ('checkbox_group' === $type) {
-			$this->render_checkbox_list($field, $name, $description_id);
+			$this->render_checkbox_list($field, $name, $description_id, $row_uuid);
 		} elseif (in_array($type, ['segmented'], true)) {
-			$this->render_choices($field, $name, $description_id);
+			$this->render_choices($field, $name, $description_id, $row_uuid);
 		} elseif ('product' === $type) {
-			$this->render_product_choices($field, $name, $description_id);
+			$this->render_product_choices($field, $name, $description_id, $row_uuid);
 		} elseif (in_array($type, ['checkbox', 'toggle'], true)) {
-			$this->render_boolean($field, $name, $description_id);
+			$this->render_boolean($field, $name, $description_id, $row_uuid);
 		} elseif ('file' === $type) {
-			$this->render_upload($field, $name, $description_id);
+			$this->render_upload($field, $name, $description_id, $row_uuid);
 		} elseif ('repeater' === $type) {
 			$this->render_repeater($field, $name);
 		} elseif ('color_picker' === $type) {
-			$this->render_color_picker($field, $name, $description_id);
+			$this->render_color_picker($field, $name, $description_id, $row_uuid);
 		} else {
-			$this->render_scalar($field, $name, $description_id);
+			$this->render_scalar($field, $name, $description_id, $row_uuid);
 		}
 
 		if ('' !== $help_text && 'below_field' === $help_pos) {
@@ -367,7 +384,7 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_select(array $field, string $name, string $description_id): void {
+	private function render_select(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$uuid         = (string) $field['uuid'];
 		$type         = (string) ($field['type'] ?? 'select');
 		$is_font_type = 'font' === $type;
@@ -476,7 +493,7 @@ final class Renderer {
 		echo '</div>';
 
 		// Native select
-		echo '<select id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '" class="wof-custom-select__native" tabindex="-1" aria-hidden="true"';
+		echo '<select id="wof-' . esc_attr($uuid) . ('' !== $row_uuid ? '-' . esc_attr($row_uuid) : '') . '" name="' . esc_attr($name) . '" class="wof-custom-select__native" tabindex="-1" aria-hidden="true"';
 		echo $this->input_attributes($field, $description_id) . '>';
 		echo '<option value="">' . esc_html($empty_label) . '</option>';
 		foreach ($choices as $choice) {
@@ -506,7 +523,7 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_choices(array $field, string $name, string $description_id): void {
+	private function render_choices(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$type     = (string) $field['type'];
 		$multiple = ! empty($field['multiple']) || 'product' === $type;
 		$input    = $multiple ? 'checkbox' : 'radio';
@@ -533,7 +550,7 @@ final class Renderer {
 		echo '<div class="' . esc_attr($grid_class) . '" role="group" aria-label="' . esc_attr((string) $field['label']) . '"' . $dir_attr . '>';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid  = (string) ($choice['uuid'] ?? '');
-			$id           = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$id           = 'wof-' . $field['uuid'] . '-' . $choice_uuid . ('' !== $row_uuid ? '-' . $row_uuid : '');
 			$checked      = ! empty($choice['default']);
 			$label_class  = 'segmented' === $type ? 'wof-choice wof-choice--btn' : 'wof-choice';
 			echo '<label class="' . esc_attr($label_class) . '" for="' . esc_attr($id) . '"' . ('' !== $choice_item_style ? ' style="' . $choice_item_style . '"' : '') . '>';
@@ -572,7 +589,7 @@ final class Renderer {
 	 *
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_product_choices(array $field, string $name, string $description_id): void {
+	private function render_product_choices(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$multiple     = ! empty($field['multiple']);
 		$merge_vars   = ! empty($field['mergeVariationProducts']);
 		$input        = $multiple ? 'checkbox' : 'radio';
@@ -601,7 +618,7 @@ final class Renderer {
 		echo '<div class="wof-product-choices" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid  = (string) ($choice['uuid'] ?? '');
-			$id           = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$id           = 'wof-' . $field['uuid'] . '-' . $choice_uuid . ('' !== $row_uuid ? '-' . $row_uuid : '');
 			$checked      = ! empty($choice['default']);
 			$is_variable  = ! empty($choice['isVariable']) || ! empty($choice['productInfo']['isVariable']);
 			$product_info = is_array($choice['productInfo'] ?? null) ? $choice['productInfo'] : [];
@@ -746,7 +763,7 @@ final class Renderer {
 	 *
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_color_swatches(array $field, string $name, string $description_id): void {
+	private function render_color_swatches(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$multiple = ! empty($field['multiple']);
 		$input    = $multiple ? 'checkbox' : 'radio';
 		$group    = $multiple ? $name . '[]' : $name;
@@ -764,7 +781,7 @@ final class Renderer {
 		echo '<div class="wof-swatches" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
-			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid . ('' !== $row_uuid ? '-' . $row_uuid : '');
 			$checked     = ! empty($choice['default']);
 			$color       = (string) ($choice['color'] ?? '#ddd');
 			echo '<label class="wof-swatch-item" for="' . esc_attr($id) . '">';
@@ -799,7 +816,7 @@ final class Renderer {
 	 *
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_image_swatches(array $field, string $name, string $description_id): void {
+	private function render_image_swatches(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$multiple = ! empty($field['multiple']);
 		$input    = $multiple ? 'checkbox' : 'radio';
 		$group    = $multiple ? $name . '[]' : $name;
@@ -817,7 +834,7 @@ final class Renderer {
 		echo '<div class="wof-image-swatches" role="group" aria-label="' . esc_attr((string) $field['label']) . '">';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
-			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid . ('' !== $row_uuid ? '-' . $row_uuid : '');
 			$checked     = ! empty($choice['default']);
 			echo '<label class="wof-image-swatch-item" for="' . esc_attr($id) . '">';
 			echo '<input id="' . esc_attr($id) . '" type="' . esc_attr($input) . '" name="' . esc_attr($group) . '" value="' . esc_attr($choice_uuid) . '"';
@@ -879,7 +896,7 @@ final class Renderer {
 	 *
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_radio_list(array $field, string $name, string $description_id): void {
+	private function render_radio_list(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$is_two_cols  = in_array((string) ($field['columns'] ?? 'one'), ['two', '2'], true);
 		$list_class   = 'wof-radio-list' . ($is_two_cols ? ' wof-radio-list--cols-2' : '');
 		$col_attr     = $is_two_cols ? ' data-columns="2"' : '';
@@ -889,7 +906,7 @@ final class Renderer {
 		echo '<div class="' . esc_attr($list_class) . '" role="radiogroup" aria-label="' . esc_attr((string) $field['label']) . '"' . $col_attr . '>';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
-			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid . ('' !== $row_uuid ? '-' . $row_uuid : '');
 			$checked     = ! empty($choice['default']) || (string) ($field['default'] ?? '') === $choice_uuid;
 			echo '<label class="wof-radio-item" for="' . esc_attr($id) . '">';
 			echo '<input id="' . esc_attr($id) . '" type="radio" name="' . esc_attr($name) . '" value="' . esc_attr($choice_uuid) . '"';
@@ -927,7 +944,7 @@ final class Renderer {
 	 *
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_checkbox_list(array $field, string $name, string $description_id): void {
+	private function render_checkbox_list(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$is_two_cols  = in_array((string) ($field['columns'] ?? 'one'), ['two', '2'], true);
 		$list_class   = 'wof-checkbox-list' . ($is_two_cols ? ' wof-checkbox-list--cols-2' : '');
 		$col_attr     = $is_two_cols ? ' data-columns="2"' : '';
@@ -937,7 +954,7 @@ final class Renderer {
 		echo '<div class="' . esc_attr($list_class) . '" role="group" aria-label="' . esc_attr((string) $field['label']) . '"' . $col_attr . '>';
 		foreach ((array) ($field['choices'] ?? []) as $choice) {
 			$choice_uuid = (string) ($choice['uuid'] ?? '');
-			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid;
+			$id          = 'wof-' . $field['uuid'] . '-' . $choice_uuid . ('' !== $row_uuid ? '-' . $row_uuid : '');
 			$checked     = ! empty($choice['default']) || (is_array($field['default'] ?? null) && in_array($choice_uuid, (array) $field['default'], true)) || (string) ($field['default'] ?? '') === $choice_uuid;
 			echo '<label class="wof-checkbox-item" for="' . esc_attr($id) . '">';
 			echo '<input id="' . esc_attr($id) . '" type="checkbox" name="' . esc_attr($name . '[]') . '" value="' . esc_attr($choice_uuid) . '"';
@@ -973,12 +990,14 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_boolean(array $field, string $name, string $description_id): void {
+	private function render_boolean(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$uuid         = (string) $field['uuid'];
+		$row_suffix   = '' !== $row_uuid ? '-' . $row_uuid : '';
+		$id           = 'wof-' . $uuid . $row_suffix;
 		$is_checkbox  = 'checkbox' === ((string) ($field['type'] ?? ''));
 		$wrapper_cls  = 'wof-boolean' . ($is_checkbox ? ' wof-boolean--checkbox' : ' wof-boolean--toggle');
-		echo '<label class="' . esc_attr($wrapper_cls) . '" for="wof-' . esc_attr($uuid) . '">';
-		echo '<input id="wof-' . esc_attr($uuid) . '" type="checkbox" name="' . esc_attr($name) . '" value="1"';
+		echo '<label class="' . esc_attr($wrapper_cls) . '" for="' . esc_attr($id) . '">';
+		echo '<input id="' . esc_attr($id) . '" type="checkbox" name="' . esc_attr($name) . '" value="1"';
 		echo checked(! empty($field['default']), true, false) . $this->input_attributes($field, $description_id) . '>';
 		echo '<span class="wof-boolean__control" aria-hidden="true">';
 		if ($is_checkbox) {
@@ -1005,15 +1024,17 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_color_picker(array $field, string $name, string $description_id): void {
-		$uuid  = (string) $field['uuid'];
-		$value = strtoupper((string) ($field['default'] ?? '#5B4FF5'));
+	private function render_color_picker(array $field, string $name, string $description_id, string $row_uuid = ''): void {
+		$uuid       = (string) $field['uuid'];
+		$row_suffix = '' !== $row_uuid ? '-' . $row_uuid : '';
+		$id         = 'wof-' . $uuid . $row_suffix;
+		$value      = strtoupper((string) ($field['default'] ?? '#5B4FF5'));
 		if (1 !== preg_match('/\A#[0-9A-F]{6}\z/', $value)) {
 			$value = '#5B4FF5';
 		}
 		$price_text = $this->choice_price_text($field, false);
 		echo '<div class="wof-color-picker" data-wof-color-picker>';
-		echo '<input id="wof-' . esc_attr($uuid) . '" type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '" data-wof-color-input';
+		echo '<input id="' . esc_attr($id) . '" type="hidden" name="' . esc_attr($name) . '" value="' . esc_attr($value) . '" data-wof-color-input';
 		echo $this->input_attributes($field, $description_id) . '>';
 		echo '<div class="wof-color-picker__trigger" data-wof-color-trigger tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
 		echo '<span class="wof-color-picker__swatch" style="background-color:' . esc_attr($value) . '" data-wof-color-swatch aria-hidden="true"></span>';
@@ -1030,7 +1051,7 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_scalar(array $field, string $name, string $description_id): void {
+	private function render_scalar(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$type_map = [
 			'textarea' => 'textarea', 'tel' => 'tel', 'email' => 'email',
 			'url' => 'url', 'number' => 'number', 'range' => 'range',
@@ -1039,6 +1060,8 @@ final class Renderer {
 		];
 		$uuid = (string) ($field['uuid'] ?? '');
 		$type = (string) ($field['type'] ?? 'text');
+		$row_suffix = '' !== $row_uuid ? '-' . $row_uuid : '';
+		$id         = 'wof-' . $uuid . $row_suffix;
 		$transform_style = '';
 		$text_transform  = (string) ($field['textTransform'] ?? 'none');
 		if (in_array($text_transform, ['uppercase', 'lowercase', 'capitalize'], true)) {
@@ -1047,16 +1070,16 @@ final class Renderer {
 
 		if ('textarea' === $type) {
 			$rows = max(1, (int) ($field['rows'] ?? 4));
-			echo '<textarea id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '" rows="' . esc_attr((string) $rows) . '"' . $transform_style . ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? '')) . '"';
+			echo '<textarea id="' . esc_attr($id) . '" name="' . esc_attr($name) . '" rows="' . esc_attr((string) $rows) . '"' . $transform_style . ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? '')) . '"';
 			echo $this->input_attributes($field, $description_id) . '>' . esc_textarea((string) ($field['default'] ?? '')) . '</textarea>';
 			return;
 		}
 		if ('date_range' === $type) {
-			$this->render_custom_date_range($field, $name, $description_id);
+			$this->render_custom_date_range($field, $name, $description_id, $row_uuid);
 			return;
 		}
 		if (in_array($type, ['datetime', 'date', 'time'], true)) {
-			$this->render_custom_datetime($field, $name, $description_id);
+			$this->render_custom_datetime($field, $name, $description_id, $row_uuid);
 			return;
 		}
 		if ('tel' === $type) {
@@ -1086,7 +1109,7 @@ final class Renderer {
 				}
 				echo '</select>';
 				echo '</div>';
-				echo '<input id="wof-' . esc_attr($uuid) . '" type="tel" name="' . esc_attr($name . '[number]') . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '" class="wof-phone-number-input"';
+				echo '<input id="' . esc_attr($id) . '" type="tel" name="' . esc_attr($name . '[number]') . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '" class="wof-phone-number-input"';
 				echo ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? __('Enter phone number…', 'wooptionsfic'))) . '"';
 				echo $this->input_attributes($field, $description_id) . '>';
 				echo '</div>';
@@ -1112,7 +1135,7 @@ final class Renderer {
 			$box_class      = ($enable_postfix && '' !== $postfix) ? 'wof-range-box' : 'wof-range-box wof-range-box--no-postfix';
 
 			echo '<div class="wof-range-wrap" data-wof-range-wrap>';
-			echo '<input id="wof-' . esc_attr($uuid) . '" type="range" class="wof-range-slider" name="' . esc_attr($name) . '" value="' . esc_attr($default_val) . '"';
+			echo '<input id="' . esc_attr($id) . '" type="range" class="wof-range-slider" name="' . esc_attr($name) . '" value="' . esc_attr($default_val) . '"';
 			echo $this->input_attributes($field, $description_id) . ' data-wof-range-slider>';
 			echo '<div class="' . esc_attr($box_class) . '">';
 			echo '<span class="wof-range-output" data-wof-range-output>' . esc_html($default_val) . '</span>';
@@ -1125,7 +1148,7 @@ final class Renderer {
 		}
 		$html_type  = $type_map[$type] ?? 'text';
 		$style_attr = ('text' === $type) ? $transform_style : '';
-		echo '<input id="wof-' . esc_attr($uuid) . '" type="' . esc_attr($html_type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '"' . $style_attr;
+		echo '<input id="' . esc_attr($id) . '" type="' . esc_attr($html_type) . '" name="' . esc_attr($name) . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '"' . $style_attr;
 		echo ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? '')) . '"';
 		echo $this->input_attributes($field, $description_id) . '>';
 	}
@@ -1133,10 +1156,12 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_custom_datetime(array $field, string $name, string $description_id): void {
+	private function render_custom_datetime(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$type            = (string) ($field['type'] ?? 'datetime');
 		$date_time_type  = (string) ($field['dateTimeType'] ?? ('time' === $type ? 'time' : 'date'));
 		$uuid            = (string) $field['uuid'];
+		$row_suffix      = '' !== $row_uuid ? '-' . $row_uuid : '';
+		$id              = 'wof-' . $uuid . $row_suffix;
 		$default_val     = (string) ($field['default'] ?? '');
 		$placeholder     = (string) ($field['placeholder'] ?? '');
 		$date_format     = (string) ($field['dateFormat'] ?? 'DD/MM/YYYY');
@@ -1168,7 +1193,7 @@ final class Renderer {
 		$price_text = $this->choice_price_text($field, false);
 
 		echo '<div class="wof-custom-datetime" data-wof-custom-datetime data-wof-datetime-config="' . esc_attr(wp_json_encode($config)) . '">';
-		echo '<input type="hidden" id="wof-' . esc_attr($uuid) . '" name="' . esc_attr($name) . '" value="' . esc_attr($default_val) . '" ' . $this->input_attributes($field, $description_id) . ' data-wof-datetime-value>';
+		echo '<input type="hidden" id="' . esc_attr($id) . '" name="' . esc_attr($name) . '" value="' . esc_attr($default_val) . '" ' . $this->input_attributes($field, $description_id) . ' data-wof-datetime-value>';
 
 		if ('date' === $date_time_type) {
 			echo '<div class="wof-custom-datetime__trigger" data-wof-datetime-trigger="date" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false">';
@@ -1209,8 +1234,9 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_custom_date_range(array $field, string $name, string $description_id): void {
+	private function render_custom_date_range(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$uuid          = (string) $field['uuid'];
+		$row_suffix    = '' !== $row_uuid ? '-' . $row_uuid : '';
 		$placeholder   = (string) ($field['placeholder'] ?? '');
 		$date_format   = (string) ($field['dateFormat'] ?? 'DD/MM/YYYY');
 		$default       = $field['default'] ?? null;
@@ -1240,8 +1266,8 @@ final class Renderer {
 		$price_text = $this->choice_price_text($field, false);
 
 		echo '<div class="wof-custom-daterange" data-wof-custom-daterange data-wof-daterange-config="' . esc_attr(wp_json_encode($config)) . '">';
-		echo '<input type="hidden" id="wof-' . esc_attr($uuid) . '-start" name="' . esc_attr($name . '[start]') . '" value="' . esc_attr($default_start) . '" ' . $this->input_attributes($field, $description_id) . ' data-wof-daterange-start>';
-		echo '<input type="hidden" id="wof-' . esc_attr($uuid) . '-end" name="' . esc_attr($name . '[end]') . '" value="' . esc_attr($default_end) . '" data-wof-daterange-end>';
+		echo '<input type="hidden" id="wof-' . esc_attr($uuid . $row_suffix) . '-start" name="' . esc_attr($name . '[start]') . '" value="' . esc_attr($default_start) . '" ' . $this->input_attributes($field, $description_id) . ' data-wof-daterange-start>';
+		echo '<input type="hidden" id="wof-' . esc_attr($uuid . $row_suffix) . '-end" name="' . esc_attr($name . '[end]') . '" value="' . esc_attr($default_end) . '" data-wof-daterange-end>';
 
 		echo '<div class="wof-custom-daterange__group">';
 		echo '<div class="wof-custom-datetime__trigger wof-custom-daterange__trigger--start" data-wof-daterange-trigger="start" tabindex="0" role="button" aria-haspopup="dialog" aria-expanded="false" aria-label="' . esc_attr__('Start date', 'wooptionsfic') . '">';
@@ -1369,11 +1395,12 @@ final class Renderer {
 	/**
 	 * @param array<string,mixed> $field Field.
 	 */
-	private function render_upload(array $field, string $name, string $description_id): void {
+	private function render_upload(array $field, string $name, string $description_id, string $row_uuid = ''): void {
 		$maximum_files = max(1, min(10, (int) ($field['maxFiles'] ?? 1)));
 		$maximum_mb    = max(1, min(50, (int) ($field['maxFileMb'] ?? 5)));
 		$uuid          = (string) ($field['uuid'] ?? '');
-		$input_id      = 'wof-upload-' . $uuid;
+		$row_suffix    = '' !== $row_uuid ? '-' . $row_uuid : '';
+		$input_id      = 'wof-upload-' . $uuid . $row_suffix;
 
 		echo '<div class="wof-upload" data-wof-upload data-max-files="' . esc_attr((string) $maximum_files) . '" data-max-file-mb="' . esc_attr((string) $maximum_mb) . '">';
 		echo '<input type="hidden" name="' . esc_attr($name . '[]') . '" value="" data-wof-upload-ref data-wof-upload-template>';
@@ -1394,34 +1421,153 @@ final class Renderer {
 	}
 
 	/**
-	 * @param array<string,mixed> $field Repeater.
+	 * @param array<string,mixed> $field Section / Repeater.
 	 */
 	private function render_repeater(array $field, string $name): void {
-		$count = max((int) ($field['minRows'] ?? 0), (int) ($field['defaultRows'] ?? 1));
-		echo '<div class="wof-repeater" data-wof-repeater data-min="' . esc_attr((string) ($field['minRows'] ?? 0)) . '" data-max="' . esc_attr((string) ($field['maxRows'] ?? 10)) . '">';
-		echo '<div data-wof-repeater-rows>';
-		for ($index = 0; $index < $count; ++$index) {
-			$this->render_repeater_row($field, $name, Uuid::v4(), $index + 1);
+		$section_style = (string) ($field['sectionStyle'] ?? 'section');
+		$is_accordion  = 'accordion' === $section_style;
+		$initial_state = (string) ($field['initialState'] ?? 'open');
+		$is_open       = 'close' !== $initial_state;
+		$hide_title    = ! empty($field['hideSectionTitle']);
+		$title         = (string) ($field['label'] ?? __('Section Container', 'wooptionsfic'));
+		$help_text     = trim((string) ($field['help'] ?? ''));
+		$help_pos      = (string) ($field['helpTextPosition'] ?? 'below_title');
+		$repeatable    = ! isset($field['repeatable']) || ! empty($field['repeatable']);
+
+		// Section Header
+		if (! $hide_title && '' !== trim($title)) {
+			if ($is_accordion) {
+				echo '<div class="wof-section__header wof-accordion-trigger" data-wof-accordion-trigger role="button" tabindex="0" aria-expanded="' . ($is_open ? 'true' : 'false') . '">';
+				echo '<div class="wof-section__heading">';
+				echo '<h4 class="wof-section__title">' . esc_html($title) . '</h4>';
+				if ('' !== $help_text && 'tooltip' === $help_pos) {
+					echo $this->render_tooltip_icon($help_text);
+				}
+				echo '</div>';
+				echo '<span class="wof-section__chevron" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>';
+				echo '</div>';
+			} else {
+				echo '<div class="wof-section__header">';
+				echo '<div class="wof-section__heading">';
+				echo '<h4 class="wof-section__title">' . esc_html($title) . '</h4>';
+				if ('' !== $help_text && 'tooltip' === $help_pos) {
+					echo $this->render_tooltip_icon($help_text);
+				}
+				echo '</div>';
+				echo '</div>';
+			}
+			if ('' !== $help_text && 'below_title' === $help_pos) {
+				echo '<p class="wof-field__help wof-field__help--below-title">' . esc_html($help_text) . '</p>';
+			}
 		}
-		echo '</div><button type="button" class="wof-button wof-button--quiet" data-wof-add-row>＋ ' . esc_html__('Add another', 'wooptionsfic') . '</button>';
-		echo '<div class="screen-reader-text" aria-live="polite" data-wof-repeater-live></div></div>';
+
+		echo '<div class="wof-section__body" data-wof-accordion-body' . ($is_accordion && ! $is_open ? ' hidden style="display:none;"' : '') . '>';
+
+		if (! $repeatable) {
+			// Static Section: render single set of child fields
+			echo '<div class="wof-section__fields">';
+			$prefix = $name . '[rows][static][values]';
+			foreach ((array) ($field['children'] ?? []) as $child) {
+				if (is_array($child)) {
+					$this->render_field($child, $prefix, 'static');
+				}
+			}
+			echo '</div>';
+		} else {
+			// Repeatable Section
+			$price_badge = '';
+			$price_type  = (string) ($field['repeatPriceType'] ?? 'none');
+			if ('fixed' === $price_type) {
+				$reg  = (string) ($field['repeatRegularPrice'] ?? '');
+				$sale = (string) ($field['repeatSalePrice'] ?? '');
+				if ('' !== $sale && '' !== $reg && function_exists('wc_price')) {
+					$price_badge = wc_price((float) $sale);
+				} elseif ('' !== $reg && function_exists('wc_price')) {
+					$price_badge = wc_price((float) $reg);
+				}
+			} elseif ('percentage' === $price_type) {
+				$reg = (string) ($field['repeatRegularPrice'] ?? '');
+				if ('' !== $reg) {
+					$price_badge = '+' . $reg . '%';
+				}
+			}
+
+			$repeat_method = (string) ($field['repeatMethod'] ?? 'button');
+			$min_repeats   = max(0, (int) ($field['minRepeats'] ?? $field['minRows'] ?? 0));
+			$max_repeats   = max(0, (int) ($field['maxRepeats'] ?? $field['maxRows'] ?? 0));
+			$initial_rows  = max(1, $min_repeats, (int) ($field['defaultRows'] ?? 1));
+			$repeat_label  = (string) ($field['repeatLabel'] ?? ($field['rowTitle'] ?? 'Item {n}'));
+			$button_label  = (string) ($field['buttonLabel'] ?? __('Add Another', 'wooptionsfic'));
+
+			if ('quantity' === $repeat_method) {
+				echo '<div class="wof-repeater__quantity-control" data-wof-repeater-quantity>';
+				echo '<label class="wof-repeater__quantity-label">' . esc_html__('Quantity', 'wooptionsfic') . '</label>';
+				echo '<div class="wof-qty-stepper">';
+				echo '<button type="button" class="wof-qty-stepper__btn" data-wof-repeater-qty-dec aria-label="' . esc_attr__('Decrease quantity', 'wooptionsfic') . '">−</button>';
+				echo '<input type="number" class="wof-qty-stepper__input" data-wof-repeater-qty-input value="' . esc_attr((string) $initial_rows) . '" min="' . esc_attr((string) max(1, $min_repeats)) . '"' . ($max_repeats > 0 ? ' max="' . esc_attr((string) $max_repeats) . '"' : '') . ' readonly />';
+				echo '<button type="button" class="wof-qty-stepper__btn" data-wof-repeater-qty-inc aria-label="' . esc_attr__('Increase quantity', 'wooptionsfic') . '">+</button>';
+				echo '</div>';
+				echo '</div>';
+			}
+
+			echo '<div class="wof-repeater" data-wof-repeater data-min="' . esc_attr((string) $min_repeats) . '" data-max="' . esc_attr((string) ($max_repeats > 0 ? $max_repeats : 100)) . '" data-wof-repeat-label="' . esc_attr($repeat_label) . '" data-repeat-method="' . esc_attr($repeat_method) . '">';
+			echo '<div data-wof-repeater-rows>';
+			for ($index = 0; $index < $initial_rows; ++$index) {
+				$this->render_repeater_row($field, $name, Uuid::v4(), $index + 1, $price_badge);
+			}
+			echo '</div>';
+
+			if ('button' === $repeat_method) {
+				echo '<div class="wof-repeater__footer">';
+				echo '<button type="button" class="wof-button wof-repeater__add-btn" data-wof-add-row>' . esc_html($button_label) . '</button>';
+				echo '</div>';
+			}
+
+			echo '<div class="screen-reader-text" aria-live="polite" data-wof-repeater-live></div>';
+			echo '</div>';
+		}
+
+		echo '</div>'; // End .wof-section__body
+
+		if ('' !== $help_text && 'below_field' === $help_pos) {
+			echo '<p class="wof-field__help wof-field__help--below-field">' . esc_html($help_text) . '</p>';
+		}
 	}
 
 	/**
 	 * @param array<string,mixed> $field Repeater.
 	 */
-	private function render_repeater_row(array $field, string $name, string $row_uuid, int $number): void {
-		$title = str_replace('{index}', (string) $number, (string) ($field['rowTitle'] ?? __('Item {index}', 'wooptionsfic')));
-		echo '<fieldset class="wof-repeater__row" data-wof-row="' . esc_attr($row_uuid) . '"><legend>' . esc_html($title) . '</legend>';
-		echo '<div class="wof-repeater__actions"><button type="button" class="wof-icon-button" data-wof-move-row="up" aria-label="' . esc_attr__('Move up', 'wooptionsfic') . '">↑</button>';
-		echo '<button type="button" class="wof-icon-button" data-wof-move-row="down" aria-label="' . esc_attr__('Move down', 'wooptionsfic') . '">↓</button>';
-		echo '<button type="button" class="wof-icon-button" data-wof-remove-row aria-label="' . esc_attr__('Remove row', 'wooptionsfic') . '">×</button></div>';
+	private function render_repeater_row(array $field, string $name, string $row_uuid, int $number, string $price_badge = ''): void {
+		$repeat_label  = (string) ($field['repeatLabel'] ?? ($field['rowTitle'] ?? 'Item {n}'));
+		$title         = str_replace(['{n}', '{index}'], (string) $number, $repeat_label);
+		$repeat_method = (string) ($field['repeatMethod'] ?? 'button');
+
+		echo '<fieldset class="wof-repeater__row" data-wof-row="' . esc_attr($row_uuid) . '">';
+		echo '<legend class="screen-reader-text">' . esc_html($title) . '</legend>';
+		echo '<div class="wof-repeater__row-header">';
+		echo '<div class="wof-repeater__row-heading">';
+		echo '<span class="wof-repeater__row-title" data-wof-row-title>' . esc_html($title) . '</span>';
+		if ('' !== $price_badge) {
+			echo '<span class="wof-repeater__row-price">' . wp_kses_post($price_badge) . '</span>';
+		}
+		echo '</div>';
+		if ('button' === $repeat_method) {
+			echo '<div class="wof-repeater__actions">';
+			echo '<button type="button" class="wof-icon-button" data-wof-move-row="up" aria-label="' . esc_attr__('Move up', 'wooptionsfic') . '" title="' . esc_attr__('Move up', 'wooptionsfic') . '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg></button>';
+			echo '<button type="button" class="wof-icon-button" data-wof-move-row="down" aria-label="' . esc_attr__('Move down', 'wooptionsfic') . '" title="' . esc_attr__('Move down', 'wooptionsfic') . '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></button>';
+			echo '<button type="button" class="wof-icon-button is-remove" data-wof-remove-row aria-label="' . esc_attr__('Remove row', 'wooptionsfic') . '" title="' . esc_attr__('Remove row', 'wooptionsfic') . '"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>';
+			echo '</div>';
+		}
+		echo '</div>';
+
 		$prefix = $name . '[rows][' . $row_uuid . '][values]';
+		echo '<div class="wof-repeater__row-fields">';
 		foreach ((array) ($field['children'] ?? []) as $child) {
 			if (is_array($child)) {
-				$this->render_field($child, $prefix);
+				$this->render_field($child, $prefix, $row_uuid);
 			}
 		}
+		echo '</div>';
 		echo '</fieldset>';
 	}
 

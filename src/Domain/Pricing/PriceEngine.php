@@ -459,8 +459,10 @@ final class PriceEngine
 		}
 
 		if ('repeater' === $field_type && is_array($value)) {
-			foreach ($value as $row_index => $row) {
-				$row_values = is_array($row['values'] ?? null) ? $row['values'] : [];
+			$repeatable = ! isset($field['repeatable']) || ! empty($field['repeatable']);
+			if (! $repeatable) {
+				$first_row = reset($value);
+				$row_values = is_array($first_row['values'] ?? null) ? $first_row['values'] : (array) $first_row;
 				foreach ((array) ($field['children'] ?? []) as $child) {
 					$child_uuid = (string) ($child['uuid'] ?? '');
 					$child_result = $this->field_contributions(
@@ -474,8 +476,65 @@ final class PriceEngine
 						$scale
 					);
 					foreach ($child_result['lines'] as $child_line) {
-						$child_line['label'] = (string) ($field['label'] ?? '') . ' #' . ($row_index + 1) . ' / ' . $child_line['label'];
+						if (! empty($field['label'])) {
+							$child_line['label'] = $field['label'] . ' - ' . $child_line['label'];
+						}
 						$lines[] = $child_line;
+					}
+				}
+			} else {
+				$row_price_type   = (string) ($field['repeatPriceType'] ?? ($field['pricing']['strategy'] ?? 'none'));
+				$repeat_label_tpl = (string) ($field['repeatLabel'] ?? ($field['rowTitle'] ?? 'Item {n}'));
+
+				foreach ($value as $row_index => $row) {
+					$item_label = str_replace(['{n}', '{index}'], (string) ($row_index + 1), $repeat_label_tpl);
+
+					// If repeater has row price (fixed or percentage)
+					if (in_array($row_price_type, ['fixed', 'percentage'], true)) {
+						$raw_price = (string) ($field['repeatRegularPrice'] ?? '');
+						if (isset($field['repeatSalePrice']) && '' !== (string) $field['repeatSalePrice']) {
+							$raw_price = (string) $field['repeatSalePrice'];
+						}
+						if ('' !== $raw_price && is_numeric($raw_price) && (float) $raw_price > 0) {
+							if ('percentage' === $row_price_type) {
+								$ratio = Decimal::from_string($raw_price)->divide(Decimal::from_int(100), 8);
+								$unrounded_dec = $base->to_decimal()->multiply($ratio, 8);
+								$row_money = Money::from_decimal($unrounded_dec->to_string(false), $currency, $scale);
+							} else {
+								$row_money = Money::from_decimal($raw_price, $currency, $scale);
+							}
+							$row_line = $this->line(
+								$field,
+								$row_price_type,
+								$row_money,
+								['row' => $row_index + 1, 'price' => $raw_price],
+								$row_money->to_decimal()
+							);
+							$row_line['label'] = (string) ($field['label'] ?? '') . ' (' . $item_label . ')';
+							$row_line['sourceUuid'] = $field['uuid'] . ':row:' . ($row_index + 1);
+							$lines[] = $row_line;
+						}
+					}
+
+					$row_values = is_array($row['values'] ?? null) ? $row['values'] : [];
+					$item_prefix = '' !== (string) ($field['label'] ?? '') ? $field['label'] . ' (' . $item_label . ')' : $item_label;
+					foreach ((array) ($field['children'] ?? []) as $child) {
+						$child_uuid = (string) ($child['uuid'] ?? '');
+						$child_result = $this->field_contributions(
+							$child,
+							$row_values[$child_uuid] ?? null,
+							$base,
+							$quantity,
+							$values,
+							$context,
+							$currency,
+							$scale
+						);
+						foreach ($child_result['lines'] as $child_line) {
+							$child_line['label'] = $item_prefix . ' - ' . $child_line['label'];
+							$child_line['sourceUuid'] = $child_uuid . ':row:' . ($row_index + 1);
+							$lines[] = $child_line;
+						}
 					}
 				}
 			}

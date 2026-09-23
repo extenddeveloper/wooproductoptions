@@ -495,7 +495,14 @@ final class CartIntegration {
 				continue;
 			}
 			$source = (string) ($contrib['sourceUuid'] ?? '');
-			if ($source === $field_uuid || isset($child_uuids[$source])) {
+			$match  = false;
+			if (str_contains($field_uuid, ':row:')) {
+				$match = ($source === $field_uuid);
+			} else {
+				$source_base = str_contains($source, ':row:') ? explode(':row:', $source)[0] : $source;
+				$match       = ($source === $field_uuid || $source_base === $field_uuid || isset($child_uuids[$source]) || isset($child_uuids[$source_base]));
+			}
+			if ($match) {
 				$total_minor += (int) ($contrib['rounded']['minor'] ?? 0);
 				$found = true;
 				if (! empty($contrib['operands']['choiceLabel']) && is_string($contrib['operands']['choiceLabel'])) {
@@ -511,7 +518,12 @@ final class CartIntegration {
 		$base_display   = '' !== $enhanced_label ? $enhanced_label : $value;
 
 		if ('' === $base_display) {
-			return '';
+			if (! $found || 0 === $total_minor) {
+				return '';
+			}
+			$amount    = $total_minor / (10 ** $scale);
+			$price_str = self::format_price_string(abs($amount), $scale);
+			return '' !== $price_str ? ($total_minor > 0 ? '+' : '-') . $price_str : '';
 		}
 
 		if (! $found || 0 === $total_minor) {

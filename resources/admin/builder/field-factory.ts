@@ -249,9 +249,19 @@ namespace WooOptionsFic.FieldFactory {
     }
 
     if (type === 'repeater') {
-      field.children = [create('text')];
-      field.minRows = 0;
-      field.maxRows = 10;
+      field.label = 'Section Container';
+      field.sectionStyle = 'section';
+      field.initialState = 'open';
+      field.repeatable = true;
+      field.repeatMethod = 'button';
+      field.repeatLabel = 'Item {n}';
+      field.repeatPriceType = 'fixed';
+      field.repeatRegularPrice = '3';
+      field.repeatSalePrice = '';
+      field.buttonLabel = 'Add Another';
+      field.maxRepeats = 0;
+      field.minRepeats = 1;
+      field.children = [];
     }
 
     if (type === 'heading') {

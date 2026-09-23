@@ -3,10 +3,404 @@ namespace WooOptionsFic.Builder {
   const { useEffect, useMemo, useState } = wp.element;
   const FIELD_TYPE_MIME = 'application/x-wooptionsfic-field-type';
   const FIELD_INDEX_MIME = 'application/x-wooptionsfic-field-index';
+  const FIELD_UUID_MIME = 'application/x-wooptionsfic-field-uuid';
+  const FIELD_CHILD_INDEX_MIME = 'application/x-wooptionsfic-child-index';
 
   function hasBuilderDrag(event: DragEvent): boolean {
     const types = Array.from(event.dataTransfer?.types ?? []);
-    return types.includes(FIELD_TYPE_MIME) || types.includes(FIELD_INDEX_MIME);
+    return types.includes(FIELD_TYPE_MIME) || types.includes(FIELD_INDEX_MIME) || types.includes(FIELD_UUID_MIME) || types.includes(FIELD_CHILD_INDEX_MIME);
+  }
+
+  function NestedCanvasField(props: {
+    parentUuid: string;
+    child: WooOptionsFic.FieldDefinition;
+    index: number;
+    count: number;
+    selected: boolean;
+    onSelect: () => void;
+    onDuplicate: () => void;
+    onDelete: () => void;
+    onMove: (from: number, to: number) => void;
+  }): any {
+    const [dropEdge, setDropEdge] = useState<'before' | 'after' | null>(null);
+
+    const dragStart = (event: DragEvent) => {
+      event.stopPropagation();
+      event.dataTransfer?.setData(FIELD_CHILD_INDEX_MIME, String(props.index));
+      event.dataTransfer?.setData(FIELD_UUID_MIME, props.child.uuid);
+      if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    };
+
+    const dragOver = (event: DragEvent) => {
+      if (!hasBuilderDrag(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const element = event.currentTarget as HTMLElement;
+      const bounds = element.getBoundingClientRect();
+      setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+    };
+
+    const dragLeave = (event: DragEvent) => {
+      const element = event.currentTarget as HTMLElement;
+      if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget)) return;
+      setDropEdge(null);
+    };
+
+    const drop = (event: DragEvent) => {
+      if (!hasBuilderDrag(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const sourceChild = Number(event.dataTransfer?.getData(FIELD_CHILD_INDEX_MIME));
+      const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+      setDropEdge(null);
+      if (Number.isInteger(sourceChild) && sourceChild >= 0) {
+        let finalIndex = insertIndex;
+        if (sourceChild < insertIndex) finalIndex -= 1;
+        finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+        if (finalIndex !== sourceChild) props.onMove(sourceChild, finalIndex);
+      }
+    };
+
+    const width = props.child.width || '100%';
+    const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.child.type]?.label ?? props.child.type;
+
+    return (
+      <article
+        className={WooOptionsFic.Utils.classNames(
+          'wof-canvas-field',
+          'wof-nested-canvas-field',
+          props.selected && 'is-selected',
+          props.child.disabled && 'is-disabled',
+          dropEdge === 'before' && 'is-drop-before',
+          dropEdge === 'after' && 'is-drop-after',
+          `wof-canvas-field--width-${width.replace('%', '')}`
+        )}
+        style={{
+          width: width === '33%' ? 'calc(33.333% - 8px)' : width === '50%' ? 'calc(50% - 8px)' : width === '66%' ? 'calc(66.666% - 8px)' : '100%',
+          flex: width === '33%' ? '0 0 calc(33.333% - 8px)' : width === '50%' ? '0 0 calc(50% - 8px)' : width === '66%' ? '0 0 calc(66.666% - 8px)' : '0 0 100%',
+          boxSizing: 'border-box',
+        }}
+        onDragOver={dragOver}
+        onDragLeave={dragLeave}
+        onDrop={drop}
+        onClick={(e: any) => {
+          e.stopPropagation();
+          props.onSelect();
+        }}
+        data-field-uuid={props.child.uuid}
+      >
+        {props.selected ? (
+          <span className="wof-canvas-field__type-badge">{typeLabel}</span>
+        ) : null}
+
+        <div className="wof-canvas-field__toolbar" onClick={(event: Event) => event.stopPropagation()}>
+          <button type="button" draggable className="wof-canvas-field__drag-handle" onDragStart={dragStart} onDragEnd={() => setDropEdge(null)} aria-label={__('Drag field', 'wooptionsfic')} title={__('Drag to reorder', 'wooptionsfic')}><WooOptionsFic.Components.GripIcon /></button>
+          <button type="button" onClick={props.onSelect} aria-label={__('Field settings', 'wooptionsfic')} title={__('Settings', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="admin-generic" /></button>
+          <button type="button" onClick={props.onDuplicate} aria-label={__('Duplicate field', 'wooptionsfic')} title={__('Duplicate', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="admin-page" /></button>
+          <button type="button" className="is-destructive" onClick={props.onDelete} aria-label={__('Delete field', 'wooptionsfic')} title={__('Delete', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="trash" /></button>
+        </div>
+
+        <div className="wof-canvas-field__copy">
+          <strong className="wof-canvas-field__title">
+            {props.child.label || __('Untitled field', 'wooptionsfic')}
+          </strong>
+          {props.child.required ? <span className="wof-canvas-field__required">{__('REQUIRED', 'wooptionsfic')}</span> : null}
+        </div>
+
+        <div className="wof-canvas-field__preview">
+          <FieldPreview field={props.child} />
+        </div>
+      </article>
+    );
+  }
+
+  function CanvasSectionField(props: {
+    field: WooOptionsFic.FieldDefinition;
+    allFields?: WooOptionsFic.FieldDefinition[];
+    index: number;
+    count: number;
+    selected: boolean;
+    selectedUuid?: string | null;
+    onSelect: () => void;
+    onSelectUuid?: (uuid: string) => void;
+    onAdd: (field: WooOptionsFic.FieldDefinition, index?: number) => void;
+    onAddChild?: (parentUuid: string, field: WooOptionsFic.FieldDefinition, index?: number) => void;
+    onMove: (from: number, to: number) => void;
+    onMoveChild?: (parentUuid: string, from: number, to: number) => void;
+    onMoveToParent?: (fieldUuid: string, parentUuid: string, index?: number) => void;
+    onDuplicate: () => void;
+    onDelete: () => void;
+    onDeleteField?: (uuid: string) => void;
+  }): any {
+    const [dropEdge, setDropEdge] = useState<'before' | 'after' | null>(null);
+    const [innerDropActive, setInnerDropActive] = useState(false);
+    const [isExpanded, setIsExpanded] = useState(props.field.initialState !== 'close');
+
+    useEffect(() => {
+      setIsExpanded(props.field.initialState !== 'close');
+    }, [props.field.initialState]);
+
+    const dragStart = (event: DragEvent) => {
+      event.stopPropagation();
+      event.dataTransfer?.setData(FIELD_INDEX_MIME, String(props.index));
+      event.dataTransfer?.setData(FIELD_UUID_MIME, props.field.uuid);
+      if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
+    };
+
+    const dragOver = (event: DragEvent) => {
+      if (!hasBuilderDrag(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes(FIELD_TYPE_MIME) ? 'copy' : 'move';
+      const element = event.currentTarget as HTMLElement;
+      const bounds = element.getBoundingClientRect();
+      setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+    };
+
+    const dragLeave = (event: DragEvent) => {
+      const element = event.currentTarget as HTMLElement;
+      if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget)) return;
+      setDropEdge(null);
+    };
+
+    const drop = (event: DragEvent) => {
+      if (!hasBuilderDrag(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const type = event.dataTransfer?.getData(FIELD_TYPE_MIME) ?? '';
+      const sourceText = event.dataTransfer?.getData(FIELD_INDEX_MIME) ?? '';
+      const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+      setDropEdge(null);
+
+      if (type) {
+        props.onAdd(WooOptionsFic.FieldFactory.create(type), insertIndex);
+        return;
+      }
+
+      const source = Number(sourceText);
+      if (!Number.isInteger(source)) return;
+      let finalIndex = insertIndex;
+      if (source < insertIndex) finalIndex -= 1;
+      finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+      if (finalIndex !== source) props.onMove(source, finalIndex);
+    };
+
+    const innerDragOver = (event: DragEvent) => {
+      if (!hasBuilderDrag(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setInnerDropActive(true);
+      if (event.dataTransfer) event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes(FIELD_TYPE_MIME) ? 'copy' : 'move';
+    };
+
+    const innerDragLeave = (event: DragEvent) => {
+      const element = event.currentTarget as HTMLElement;
+      if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget)) return;
+      setInnerDropActive(false);
+    };
+
+    const innerDrop = (event: DragEvent) => {
+      if (!hasBuilderDrag(event)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setInnerDropActive(false);
+
+      const type = event.dataTransfer?.getData(FIELD_TYPE_MIME) ?? '';
+      const fieldUuid = event.dataTransfer?.getData(FIELD_UUID_MIME) ?? '';
+
+      if (type) {
+        props.onAddChild?.(props.field.uuid, WooOptionsFic.FieldFactory.create(type));
+        return;
+      }
+
+      if (fieldUuid && fieldUuid !== props.field.uuid) {
+        props.onMoveToParent?.(fieldUuid, props.field.uuid);
+      }
+    };
+
+    const width = props.field.width || '100%';
+    const widthStyle: any = {
+      width: width === '33%' ? 'calc(33.333% - 8px)' : width === '50%' ? 'calc(50% - 8px)' : width === '66%' ? 'calc(66.666% - 8px)' : '100%',
+      flex: width === '33%' ? '0 0 calc(33.333% - 8px)' : width === '50%' ? '0 0 calc(50% - 8px)' : width === '66%' ? '0 0 calc(66.666% - 8px)' : '0 0 100%',
+      boxSizing: 'border-box',
+    };
+
+    const styleVariant = props.field.sectionStyle || 'section';
+    const isAccordion = styleVariant === 'accordion';
+    const children = props.field.children ?? [];
+
+    const adminConfig = (window as any).WooOptionsFicAdmin;
+    const currency = adminConfig?.currencySymbol || adminConfig?.currency || '$';
+
+    let priceLabel = '';
+    if (props.field.repeatPriceType === 'fixed') {
+      if (props.field.repeatSalePrice && props.field.repeatRegularPrice) {
+        priceLabel = `${currency} ${props.field.repeatSalePrice}`;
+      } else if (props.field.repeatRegularPrice) {
+        priceLabel = `${currency} ${props.field.repeatRegularPrice}`;
+      }
+    } else if (props.field.repeatPriceType === 'percentage' && props.field.repeatRegularPrice) {
+      priceLabel = `${props.field.repeatRegularPrice}%`;
+    }
+
+    const itemTitle = (props.field.repeatLabel || 'Item {n}').replace('{n}', '1');
+
+    return (
+      <article
+        className={WooOptionsFic.Utils.classNames(
+          'wof-canvas-field',
+          'wof-canvas-section',
+          `wof-canvas-section--${styleVariant}`,
+          props.selected && 'is-selected',
+          props.field.disabled && 'is-disabled',
+          dropEdge === 'before' && 'is-drop-before',
+          dropEdge === 'after' && 'is-drop-after',
+          `wof-canvas-field--width-${width.replace('%', '')}`
+        )}
+        style={widthStyle}
+        onDragOver={dragOver}
+        onDragLeave={dragLeave}
+        onDrop={drop}
+        onClick={props.onSelect}
+        data-field-uuid={props.field.uuid}
+      >
+        {props.selected ? (
+          <span className="wof-canvas-field__type-badge">
+            {__('Repeatable Section', 'wooptionsfic')}
+          </span>
+        ) : null}
+
+        <div className="wof-canvas-field__toolbar" onClick={(event: Event) => event.stopPropagation()}>
+          <button type="button" draggable className="wof-canvas-field__drag-handle" onDragStart={dragStart} onDragEnd={() => setDropEdge(null)} aria-label={__('Drag section', 'wooptionsfic')} title={__('Drag to reorder', 'wooptionsfic')}><WooOptionsFic.Components.GripIcon /></button>
+          <button type="button" onClick={props.onSelect} aria-label={__('Section settings', 'wooptionsfic')} title={__('Settings', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="admin-generic" /></button>
+          <button type="button" onClick={props.onDuplicate} aria-label={__('Duplicate section', 'wooptionsfic')} title={__('Duplicate', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="admin-page" /></button>
+          <button type="button" className="is-destructive" onClick={props.onDelete} aria-label={__('Delete section', 'wooptionsfic')} title={__('Delete', 'wooptionsfic')}><WooOptionsFic.Components.Dashicon name="trash" /></button>
+        </div>
+
+        {/* Section Header */}
+        {!props.field.hideSectionTitle ? (
+          <div
+            className={WooOptionsFic.Utils.classNames(
+              'wof-canvas-section__header',
+              isAccordion && 'is-accordion-trigger'
+            )}
+            onClick={(e: any) => {
+              if (isAccordion) {
+                e.stopPropagation();
+                setIsExpanded(!isExpanded);
+              }
+            }}
+          >
+            <strong className="wof-canvas-section__title">
+              {props.field.label || __('Section Container', 'wooptionsfic')}
+              {props.field.help && props.field.helpTextPosition === 'tooltip' ? (
+                <span
+                  className="wof-field__tooltip-preview"
+                  title={props.field.help}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+                </span>
+              ) : null}
+            </strong>
+            {isAccordion ? (
+              <span className={WooOptionsFic.Utils.classNames('wof-canvas-section__chevron', isExpanded && 'is-open')}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+
+        {props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) && !props.field.hideSectionTitle ? (
+          <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-title" style={{ margin: '-4px 0 12px 0' }}>
+            {props.field.help}
+          </p>
+        ) : null}
+
+        {/* Section Body (Collapsible for Accordion) */}
+        {(!isAccordion || isExpanded) ? (
+          <div className="wof-canvas-section__body">
+            {/* Repeater Item Header */}
+            {props.field.repeatable ? (
+              <div className="wof-canvas-section__item-header">
+                <span className="wof-canvas-section__item-title">{itemTitle}</span>
+                {priceLabel ? <span className="wof-canvas-section__item-price">{priceLabel}</span> : null}
+              </div>
+            ) : null}
+
+            {/* Nested Children Fields */}
+            {children.length > 0 ? (
+              <div className="wof-canvas-section__children-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' }}>
+                {children.map((child, cIdx) => (
+                  <NestedCanvasField
+                    key={child.uuid}
+                    parentUuid={props.field.uuid}
+                    child={child}
+                    index={cIdx}
+                    count={children.length}
+                    selected={child.uuid === props.selectedUuid}
+                    onSelect={() => props.onSelectUuid?.(child.uuid)}
+                    onDuplicate={() => props.onAddChild?.(props.field.uuid, WooOptionsFic.FieldFactory.duplicate(child))}
+                    onDelete={() => props.onDeleteField?.(child.uuid)}
+                    onMove={(from, to) => props.onMoveChild?.(props.field.uuid, from, to)}
+                  />
+                ))}
+              </div>
+            ) : null}
+
+            {/* Inner Drop Zone with center blue + button (Mockup 3) */}
+            <div
+              className={WooOptionsFic.Utils.classNames(
+                'wof-canvas-section__dropzone',
+                innerDropActive && 'is-drag-over'
+              )}
+              onDragOver={innerDragOver}
+              onDragLeave={innerDragLeave}
+              onDrop={innerDrop}
+            >
+              <div className="wof-canvas-section__dropzone-inner">
+                <button
+                  type="button"
+                  className="wof-canvas-section__add-btn"
+                  title={__('Add field to section', 'wooptionsfic')}
+                  onClick={(e: any) => {
+                    e.stopPropagation();
+                    props.onAddChild?.(props.field.uuid, WooOptionsFic.FieldFactory.create('text'));
+                  }}
+                >
+                  <WooOptionsFic.Components.Dashicon name="plus-alt2" />
+                </button>
+              </div>
+            </div>
+
+            {/* Bottom Add Another / Quantity Selector Footer */}
+            {props.field.repeatable ? (
+              props.field.repeatMethod === 'quantity' ? (
+                <div className="wof-canvas-section__qty-preview">
+                  <span className="wof-canvas-section__qty-label">{__('Quantity', 'wooptionsfic')}</span>
+                  <div className="wof-qty-stepper">
+                    <button type="button" disabled>−</button>
+                    <span>1</span>
+                    <button type="button" disabled>+</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="wof-canvas-section__footer">
+                  <button type="button" className="wof-canvas-section__add-another-btn">
+                    {props.field.buttonLabel || __('Add Another', 'wooptionsfic')}
+                  </button>
+                </div>
+              )
+            ) : null}
+          </div>
+        ) : null}
+
+        {props.field.help && props.field.helpTextPosition === 'below_field' ? (
+          <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-field" style={{ margin: '12px 0 0 0' }}>
+            {props.field.help}
+          </p>
+        ) : null}
+      </article>
+    );
   }
 
   function CanvasField(props: {
@@ -15,19 +409,49 @@ namespace WooOptionsFic.Builder {
     index: number;
     count: number;
     selected: boolean;
+    selectedUuid?: string | null;
     onSelect: () => void;
+    onSelectUuid?: (uuid: string) => void;
     onAdd: (field: WooOptionsFic.FieldDefinition, index?: number) => void;
+    onAddChild?: (parentUuid: string, field: WooOptionsFic.FieldDefinition, index?: number) => void;
     onMove: (from: number, to: number) => void;
+    onMoveChild?: (parentUuid: string, from: number, to: number) => void;
+    onMoveToParent?: (fieldUuid: string, parentUuid: string, index?: number) => void;
     onDuplicate: () => void;
     onDelete: () => void;
+    onDeleteField?: (uuid: string) => void;
   }): any {
     const [dropEdge, setDropEdge] = useState<'before' | 'after' | null>(null);
 
     const dragStart = (event: DragEvent) => {
       event.stopPropagation();
       event.dataTransfer?.setData(FIELD_INDEX_MIME, String(props.index));
+      event.dataTransfer?.setData(FIELD_UUID_MIME, props.field.uuid);
       if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move';
     };
+
+    if (props.field.type === 'repeater') {
+      return (
+        <CanvasSectionField
+          field={props.field}
+          allFields={props.allFields}
+          index={props.index}
+          count={props.count}
+          selected={props.selected}
+          selectedUuid={props.selectedUuid}
+          onSelect={props.onSelect}
+          onSelectUuid={props.onSelectUuid}
+          onAdd={props.onAdd}
+          onAddChild={props.onAddChild}
+          onMove={props.onMove}
+          onMoveChild={props.onMoveChild}
+          onMoveToParent={props.onMoveToParent}
+          onDuplicate={props.onDuplicate}
+          onDelete={props.onDelete}
+          onDeleteField={props.onDeleteField}
+        />
+      );
+    }
 
     const dragOver = (event: DragEvent) => {
       if (!hasBuilderDrag(event)) return;
@@ -149,7 +573,10 @@ namespace WooOptionsFic.Builder {
     device: WooOptionsFic.PreviewDevice;
     onSelect: (uuid: string) => void;
     onAdd: (field: WooOptionsFic.FieldDefinition, index?: number) => void;
+    onAddChild?: (parentUuid: string, field: WooOptionsFic.FieldDefinition, index?: number) => void;
     onMove: (from: number, to: number) => void;
+    onMoveChild?: (parentUuid: string, from: number, to: number) => void;
+    onMoveToParent?: (fieldUuid: string, parentUuid: string, index?: number) => void;
     onDuplicate: (field: WooOptionsFic.FieldDefinition) => void;
     onDelete: (uuid: string) => void;
   }): any {
@@ -218,7 +645,7 @@ namespace WooOptionsFic.Builder {
       <div className="wof-canvas-toolbar"><div className="wof-canvas-toolbar__copy"><h2>{__('Live storefront canvas', 'wooptionsfic')}</h2><p>{__('The builder and product page use the same component stylesheet.', 'wooptionsfic')}</p></div><div className="wof-canvas-toolbar__controls"><div className="wof-zoom-control"><button type="button" disabled={zoom <= 75} onClick={() => setZoom(Math.max(75, zoom - 10))}><WooOptionsFic.Components.Dashicon name="minus" /></button><output>{zoom}%</output><button type="button" disabled={zoom >= 125} onClick={() => setZoom(Math.min(125, zoom + 10))}><WooOptionsFic.Components.Dashicon name="plus-alt2" /></button></div><span className="wof-interactive-status"><i />{__('Interactive', 'wooptionsfic')}</span></div></div>
       <div className={`wof-canvas-device is-${props.device}`} style={style}>
         <div className="wof-canvas-device__chrome"><span>{__('Live customer preview', 'wooptionsfic')}</span><small>{props.device} · {props.document.layout.type}</small></div>
-        <div className="wof-canvas-frame"><div className={WooOptionsFic.Utils.classNames('wof-canvas-sheet', dragActive && 'is-drag-active')} onDragEnter={canvasDragOver} onDragOver={canvasDragOver} onDragLeave={canvasDragLeave} onDrop={dropAtEnd}><div className="wof-product-shell"><aside className="wof-product-shell__media"><div className="wof-product-gallery__hero"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumbs"><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div></div></aside><div className="wof-product-shell__content"><div className="wof-product-preview-meta"><span className="wof-product-preview-meta__eyebrow">{__('Live product preview', 'wooptionsfic')}</span><h1>{__('WooOptionsFic Product (Preview)', 'wooptionsfic')}</h1><strong className="wof-product-preview-meta__price">{`20.00 ${(window as any).WooOptionsFicAdmin?.currency || 'USD'}`}</strong></div>{props.document.fields.length ? <div className={`wof-canvas-fields is-${props.document.layout.type}`} style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-start' }}>{props.document.fields.map((field, index) => <CanvasField key={field.uuid} field={field} allFields={props.document.fields} index={index} count={props.document.fields.length} selected={field.uuid === props.selectedUuid} onSelect={() => props.onSelect(field.uuid)} onAdd={props.onAdd} onMove={props.onMove} onDuplicate={() => props.onDuplicate(field)} onDelete={() => props.onDelete(field.uuid)} />)}<div className={WooOptionsFic.Utils.classNames('wof-canvas-drop-end', dragActive && 'is-active')} onDragOver={canvasDragOver} onDrop={dropAtEnd}><WooOptionsFic.Components.Dashicon name="plus-alt2" />{__('Drop a field here', 'wooptionsfic')}</div></div> : <div className={WooOptionsFic.Utils.classNames('wof-canvas-empty', dragActive && 'is-active')} onDragOver={canvasDragOver} onDrop={dropAtEnd}><div><WooOptionsFic.Components.Dashicon name="layout" /></div><h3>{__('Your canvas is ready', 'wooptionsfic')}</h3><p>{__('Choose a field from the palette or drag one into this product page preview.', 'wooptionsfic')}</p></div>}</div></div></div></div>
+        <div className="wof-canvas-frame"><div className={WooOptionsFic.Utils.classNames('wof-canvas-sheet', dragActive && 'is-drag-active')} onDragEnter={canvasDragOver} onDragOver={canvasDragOver} onDragLeave={canvasDragLeave} onDrop={dropAtEnd}><div className="wof-product-shell"><aside className="wof-product-shell__media"><div className="wof-product-gallery__hero"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumbs"><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div><div className="wof-product-gallery__thumb"><WooOptionsFic.Components.Dashicon name="format-image" /></div></div></aside><div className="wof-product-shell__content"><div className="wof-product-preview-meta"><span className="wof-product-preview-meta__eyebrow">{__('Live product preview', 'wooptionsfic')}</span><h1>{__('WooOptionsFic Product (Preview)', 'wooptionsfic')}</h1><strong className="wof-product-preview-meta__price">{`20.00 ${(window as any).WooOptionsFicAdmin?.currency || 'USD'}`}</strong></div>{props.document.fields.length ? <div className={`wof-canvas-fields is-${props.document.layout.type}`} style={{ display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-start' }}>{props.document.fields.map((field, index) => <CanvasField key={field.uuid} field={field} allFields={props.document.fields} index={index} count={props.document.fields.length} selected={field.uuid === props.selectedUuid} selectedUuid={props.selectedUuid} onSelect={() => props.onSelect(field.uuid)} onSelectUuid={props.onSelect} onAdd={props.onAdd} onAddChild={props.onAddChild} onMove={props.onMove} onMoveChild={props.onMoveChild} onMoveToParent={props.onMoveToParent} onDuplicate={() => props.onDuplicate(field)} onDelete={() => props.onDelete(field.uuid)} onDeleteField={props.onDelete} />)}<div className={WooOptionsFic.Utils.classNames('wof-canvas-drop-end', dragActive && 'is-active')} onDragOver={canvasDragOver} onDrop={dropAtEnd}><WooOptionsFic.Components.Dashicon name="plus-alt2" />{__('Drop a field here', 'wooptionsfic')}</div></div> : <div className={WooOptionsFic.Utils.classNames('wof-canvas-empty', dragActive && 'is-active')} onDragOver={canvasDragOver} onDrop={dropAtEnd}><div><WooOptionsFic.Components.Dashicon name="layout" /></div><h3>{__('Your canvas is ready', 'wooptionsfic')}</h3><p>{__('Choose a field from the palette or drag one into this product page preview.', 'wooptionsfic')}</p></div>}</div></div></div></div>
       </div>
     </section>;
   }

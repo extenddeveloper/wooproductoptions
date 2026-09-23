@@ -203,6 +203,18 @@ namespace WooOptionsFic {
     minRows?: number;
     maxRows?: number;
     appliedFields?: UUID[];
+    sectionStyle?: 'section' | 'accordion' | 'blank';
+    initialState?: 'open' | 'close';
+    repeatable?: boolean;
+    repeatMethod?: 'button' | 'quantity';
+    repeatLabel?: string;
+    repeatPriceType?: 'none' | 'fixed' | 'percentage';
+    repeatRegularPrice?: string;
+    repeatSalePrice?: string;
+    buttonLabel?: string;
+    maxRepeats?: number;
+    minRepeats?: number;
+    hideSectionTitle?: boolean;
   }
 
   export interface TypographyDefinition {

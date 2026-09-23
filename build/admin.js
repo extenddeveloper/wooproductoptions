@@ -298,8 +298,8 @@ var WooOptionsFic;
             updateDocument(patch) {
                 return { type: 'UPDATE_DOCUMENT', patch };
             },
-            addField(field, index) {
-                return { type: 'ADD_FIELD', field, index };
+            addField(field, index, parentUuid) {
+                return { type: 'ADD_FIELD', field, index, parentUuid };
             },
             updateField(uuid, patch) {
                 return { type: 'UPDATE_FIELD', uuid, patch };
@@ -312,6 +312,12 @@ var WooOptionsFic;
             },
             moveField(from, to) {
                 return { type: 'MOVE_FIELD', from, to };
+            },
+            moveChildField(parentUuid, from, to) {
+                return { type: 'MOVE_CHILD_FIELD', parentUuid, from, to };
+            },
+            moveFieldToParent(fieldUuid, parentUuid, index) {
+                return { type: 'MOVE_FIELD_TO_PARENT', fieldUuid, parentUuid, index };
             },
             selectField(uuid) {
                 return { type: 'SELECT_FIELD', uuid };
@@ -373,9 +379,19 @@ var WooOptionsFic;
                     if (!state.document)
                         return state;
                     const next = pushHistory(state);
-                    const fields = [...state.document.fields];
-                    const index = typeof action.index === 'number' ? Math.max(0, Math.min(fields.length, action.index)) : fields.length;
-                    fields.splice(index, 0, action.field);
+                    let fields = [...state.document.fields];
+                    if (action.parentUuid) {
+                        fields = WooOptionsFic.Utils.updateFieldTree(fields, action.parentUuid, (parent) => {
+                            const children = [...(parent.children ?? [])];
+                            const index = typeof action.index === 'number' ? Math.max(0, Math.min(children.length, action.index)) : children.length;
+                            children.splice(index, 0, action.field);
+                            return { ...parent, children };
+                        });
+                    }
+                    else {
+                        const index = typeof action.index === 'number' ? Math.max(0, Math.min(fields.length, action.index)) : fields.length;
+                        fields.splice(index, 0, action.field);
+                    }
                     return {
                         ...next,
                         document: { ...state.document, fields },
@@ -422,6 +438,36 @@ var WooOptionsFic;
                     const to = Math.max(0, Math.min(fields.length - 1, action.to));
                     const [field] = fields.splice(from, 1);
                     fields.splice(to, 0, field);
+                    return { ...next, document: { ...state.document, fields }, dirty: true, saveStatus: 'dirty' };
+                }
+                case 'MOVE_CHILD_FIELD': {
+                    if (!state.document || action.from === action.to)
+                        return state;
+                    const next = pushHistory(state);
+                    const fields = WooOptionsFic.Utils.updateFieldTree(state.document.fields, action.parentUuid, (parent) => {
+                        const children = [...(parent.children ?? [])];
+                        const from = Math.max(0, Math.min(children.length - 1, action.from));
+                        const to = Math.max(0, Math.min(children.length - 1, action.to));
+                        const [moved] = children.splice(from, 1);
+                        children.splice(to, 0, moved);
+                        return { ...parent, children };
+                    });
+                    return { ...next, document: { ...state.document, fields }, dirty: true, saveStatus: 'dirty' };
+                }
+                case 'MOVE_FIELD_TO_PARENT': {
+                    if (!state.document)
+                        return state;
+                    const fieldToMove = WooOptionsFic.Utils.fieldByUuid(state.document, action.fieldUuid);
+                    if (!fieldToMove || fieldToMove.uuid === action.parentUuid)
+                        return state;
+                    const next = pushHistory(state);
+                    let fields = WooOptionsFic.Utils.removeFieldTree(state.document.fields, action.fieldUuid);
+                    fields = WooOptionsFic.Utils.updateFieldTree(fields, action.parentUuid, (parent) => {
+                        const children = [...(parent.children ?? [])];
+                        const index = typeof action.index === 'number' ? Math.max(0, Math.min(children.length, action.index)) : children.length;
+                        children.splice(index, 0, fieldToMove);
+                        return { ...parent, children };
+                    });
                     return { ...next, document: { ...state.document, fields }, dirty: true, saveStatus: 'dirty' };
                 }
                 case 'SELECT_FIELD':
@@ -732,9 +778,19 @@ var WooOptionsFic;
                 field.hideWhenZero = false;
             }
             if (type === 'repeater') {
-                field.children = [create('text')];
-                field.minRows = 0;
-                field.maxRows = 10;
+                field.label = 'Section Container';
+                field.sectionStyle = 'section';
+                field.initialState = 'open';
+                field.repeatable = true;
+                field.repeatMethod = 'button';
+                field.repeatLabel = 'Item {n}';
+                field.repeatPriceType = 'fixed';
+                field.repeatRegularPrice = '3';
+                field.repeatSalePrice = '';
+                field.buttonLabel = 'Add Another';
+                field.maxRepeats = 0;
+                field.minRepeats = 1;
+                field.children = [];
             }
             if (type === 'heading') {
                 field.label = 'Section heading';
@@ -3960,18 +4016,249 @@ var WooOptionsFic;
         const { useEffect, useMemo, useState } = wp.element;
         const FIELD_TYPE_MIME = 'application/x-wooptionsfic-field-type';
         const FIELD_INDEX_MIME = 'application/x-wooptionsfic-field-index';
+        const FIELD_UUID_MIME = 'application/x-wooptionsfic-field-uuid';
+        const FIELD_CHILD_INDEX_MIME = 'application/x-wooptionsfic-child-index';
         function hasBuilderDrag(event) {
             const types = Array.from(event.dataTransfer?.types ?? []);
-            return types.includes(FIELD_TYPE_MIME) || types.includes(FIELD_INDEX_MIME);
+            return types.includes(FIELD_TYPE_MIME) || types.includes(FIELD_INDEX_MIME) || types.includes(FIELD_UUID_MIME) || types.includes(FIELD_CHILD_INDEX_MIME);
+        }
+        function NestedCanvasField(props) {
+            const [dropEdge, setDropEdge] = useState(null);
+            const dragStart = (event) => {
+                event.stopPropagation();
+                event.dataTransfer?.setData(FIELD_CHILD_INDEX_MIME, String(props.index));
+                event.dataTransfer?.setData(FIELD_UUID_MIME, props.child.uuid);
+                if (event.dataTransfer)
+                    event.dataTransfer.effectAllowed = 'move';
+            };
+            const dragOver = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                const element = event.currentTarget;
+                const bounds = element.getBoundingClientRect();
+                setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+            };
+            const dragLeave = (event) => {
+                const element = event.currentTarget;
+                if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget))
+                    return;
+                setDropEdge(null);
+            };
+            const drop = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                const sourceChild = Number(event.dataTransfer?.getData(FIELD_CHILD_INDEX_MIME));
+                const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+                setDropEdge(null);
+                if (Number.isInteger(sourceChild) && sourceChild >= 0) {
+                    let finalIndex = insertIndex;
+                    if (sourceChild < insertIndex)
+                        finalIndex -= 1;
+                    finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+                    if (finalIndex !== sourceChild)
+                        props.onMove(sourceChild, finalIndex);
+                }
+            };
+            const width = props.child.width || '100%';
+            const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.child.type]?.label ?? props.child.type;
+            return (wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', 'wof-nested-canvas-field', props.selected && 'is-selected', props.child.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', `wof-canvas-field--width-${width.replace('%', '')}`), style: {
+                    width: width === '33%' ? 'calc(33.333% - 8px)' : width === '50%' ? 'calc(50% - 8px)' : width === '66%' ? 'calc(66.666% - 8px)' : '100%',
+                    flex: width === '33%' ? '0 0 calc(33.333% - 8px)' : width === '50%' ? '0 0 calc(50% - 8px)' : width === '66%' ? '0 0 calc(66.666% - 8px)' : '0 0 100%',
+                    boxSizing: 'border-box',
+                }, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: (e) => {
+                    e.stopPropagation();
+                    props.onSelect();
+                }, "data-field-uuid": props.child.uuid },
+                props.selected ? (wp.element.createElement("span", { className: "wof-canvas-field__type-badge" }, typeLabel)) : null,
+                wp.element.createElement("div", { className: "wof-canvas-field__toolbar", onClick: (event) => event.stopPropagation() },
+                    wp.element.createElement("button", { type: "button", draggable: true, className: "wof-canvas-field__drag-handle", onDragStart: dragStart, onDragEnd: () => setDropEdge(null), "aria-label": __('Drag field', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.GripIcon, null)),
+                    wp.element.createElement("button", { type: "button", onClick: props.onSelect, "aria-label": __('Field settings', 'wooptionsfic'), title: __('Settings', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-generic" })),
+                    wp.element.createElement("button", { type: "button", onClick: props.onDuplicate, "aria-label": __('Duplicate field', 'wooptionsfic'), title: __('Duplicate', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-page" })),
+                    wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete field', 'wooptionsfic'), title: __('Delete', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))),
+                wp.element.createElement("div", { className: "wof-canvas-field__copy" },
+                    wp.element.createElement("strong", { className: "wof-canvas-field__title" }, props.child.label || __('Untitled field', 'wooptionsfic')),
+                    props.child.required ? wp.element.createElement("span", { className: "wof-canvas-field__required" }, __('REQUIRED', 'wooptionsfic')) : null),
+                wp.element.createElement("div", { className: "wof-canvas-field__preview" },
+                    wp.element.createElement(Builder.FieldPreview, { field: props.child }))));
+        }
+        function CanvasSectionField(props) {
+            const [dropEdge, setDropEdge] = useState(null);
+            const [innerDropActive, setInnerDropActive] = useState(false);
+            const [isExpanded, setIsExpanded] = useState(props.field.initialState !== 'close');
+            useEffect(() => {
+                setIsExpanded(props.field.initialState !== 'close');
+            }, [props.field.initialState]);
+            const dragStart = (event) => {
+                event.stopPropagation();
+                event.dataTransfer?.setData(FIELD_INDEX_MIME, String(props.index));
+                event.dataTransfer?.setData(FIELD_UUID_MIME, props.field.uuid);
+                if (event.dataTransfer)
+                    event.dataTransfer.effectAllowed = 'move';
+            };
+            const dragOver = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                if (event.dataTransfer)
+                    event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes(FIELD_TYPE_MIME) ? 'copy' : 'move';
+                const element = event.currentTarget;
+                const bounds = element.getBoundingClientRect();
+                setDropEdge(event.clientY < bounds.top + bounds.height / 2 ? 'before' : 'after');
+            };
+            const dragLeave = (event) => {
+                const element = event.currentTarget;
+                if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget))
+                    return;
+                setDropEdge(null);
+            };
+            const drop = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                const type = event.dataTransfer?.getData(FIELD_TYPE_MIME) ?? '';
+                const sourceText = event.dataTransfer?.getData(FIELD_INDEX_MIME) ?? '';
+                const insertIndex = props.index + (dropEdge === 'after' ? 1 : 0);
+                setDropEdge(null);
+                if (type) {
+                    props.onAdd(WooOptionsFic.FieldFactory.create(type), insertIndex);
+                    return;
+                }
+                const source = Number(sourceText);
+                if (!Number.isInteger(source))
+                    return;
+                let finalIndex = insertIndex;
+                if (source < insertIndex)
+                    finalIndex -= 1;
+                finalIndex = Math.max(0, Math.min(props.count - 1, finalIndex));
+                if (finalIndex !== source)
+                    props.onMove(source, finalIndex);
+            };
+            const innerDragOver = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                setInnerDropActive(true);
+                if (event.dataTransfer)
+                    event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes(FIELD_TYPE_MIME) ? 'copy' : 'move';
+            };
+            const innerDragLeave = (event) => {
+                const element = event.currentTarget;
+                if (event.relatedTarget instanceof Node && element.contains(event.relatedTarget))
+                    return;
+                setInnerDropActive(false);
+            };
+            const innerDrop = (event) => {
+                if (!hasBuilderDrag(event))
+                    return;
+                event.preventDefault();
+                event.stopPropagation();
+                setInnerDropActive(false);
+                const type = event.dataTransfer?.getData(FIELD_TYPE_MIME) ?? '';
+                const fieldUuid = event.dataTransfer?.getData(FIELD_UUID_MIME) ?? '';
+                if (type) {
+                    props.onAddChild?.(props.field.uuid, WooOptionsFic.FieldFactory.create(type));
+                    return;
+                }
+                if (fieldUuid && fieldUuid !== props.field.uuid) {
+                    props.onMoveToParent?.(fieldUuid, props.field.uuid);
+                }
+            };
+            const width = props.field.width || '100%';
+            const widthStyle = {
+                width: width === '33%' ? 'calc(33.333% - 8px)' : width === '50%' ? 'calc(50% - 8px)' : width === '66%' ? 'calc(66.666% - 8px)' : '100%',
+                flex: width === '33%' ? '0 0 calc(33.333% - 8px)' : width === '50%' ? '0 0 calc(50% - 8px)' : width === '66%' ? '0 0 calc(66.666% - 8px)' : '0 0 100%',
+                boxSizing: 'border-box',
+            };
+            const styleVariant = props.field.sectionStyle || 'section';
+            const isAccordion = styleVariant === 'accordion';
+            const children = props.field.children ?? [];
+            const adminConfig = window.WooOptionsFicAdmin;
+            const currency = adminConfig?.currencySymbol || adminConfig?.currency || '$';
+            let priceLabel = '';
+            if (props.field.repeatPriceType === 'fixed') {
+                if (props.field.repeatSalePrice && props.field.repeatRegularPrice) {
+                    priceLabel = `${currency} ${props.field.repeatSalePrice}`;
+                }
+                else if (props.field.repeatRegularPrice) {
+                    priceLabel = `${currency} ${props.field.repeatRegularPrice}`;
+                }
+            }
+            else if (props.field.repeatPriceType === 'percentage' && props.field.repeatRegularPrice) {
+                priceLabel = `${props.field.repeatRegularPrice}%`;
+            }
+            const itemTitle = (props.field.repeatLabel || 'Item {n}').replace('{n}', '1');
+            return (wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', 'wof-canvas-section', `wof-canvas-section--${styleVariant}`, props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
+                props.selected ? (wp.element.createElement("span", { className: "wof-canvas-field__type-badge" }, __('Repeatable Section', 'wooptionsfic'))) : null,
+                wp.element.createElement("div", { className: "wof-canvas-field__toolbar", onClick: (event) => event.stopPropagation() },
+                    wp.element.createElement("button", { type: "button", draggable: true, className: "wof-canvas-field__drag-handle", onDragStart: dragStart, onDragEnd: () => setDropEdge(null), "aria-label": __('Drag section', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.GripIcon, null)),
+                    wp.element.createElement("button", { type: "button", onClick: props.onSelect, "aria-label": __('Section settings', 'wooptionsfic'), title: __('Settings', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-generic" })),
+                    wp.element.createElement("button", { type: "button", onClick: props.onDuplicate, "aria-label": __('Duplicate section', 'wooptionsfic'), title: __('Duplicate', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "admin-page" })),
+                    wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete section', 'wooptionsfic'), title: __('Delete', 'wooptionsfic') },
+                        wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))),
+                !props.field.hideSectionTitle ? (wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-section__header', isAccordion && 'is-accordion-trigger'), onClick: (e) => {
+                        if (isAccordion) {
+                            e.stopPropagation();
+                            setIsExpanded(!isExpanded);
+                        }
+                    } },
+                    wp.element.createElement("strong", { className: "wof-canvas-section__title" },
+                        props.field.label || __('Section Container', 'wooptionsfic'),
+                        props.field.help && props.field.helpTextPosition === 'tooltip' ? (wp.element.createElement("span", { className: "wof-field__tooltip-preview", title: props.field.help },
+                            wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                                wp.element.createElement("path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" }),
+                                wp.element.createElement("line", { x1: "12", y1: "17", x2: "12.01", y2: "17" })))) : null),
+                    isAccordion ? (wp.element.createElement("span", { className: WooOptionsFic.Utils.classNames('wof-canvas-section__chevron', isExpanded && 'is-open') },
+                        wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("polyline", { points: "6 9 12 15 18 9" })))) : null)) : null,
+                props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) && !props.field.hideSectionTitle ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-title", style: { margin: '-4px 0 12px 0' } }, props.field.help)) : null,
+                (!isAccordion || isExpanded) ? (wp.element.createElement("div", { className: "wof-canvas-section__body" },
+                    props.field.repeatable ? (wp.element.createElement("div", { className: "wof-canvas-section__item-header" },
+                        wp.element.createElement("span", { className: "wof-canvas-section__item-title" }, itemTitle),
+                        priceLabel ? wp.element.createElement("span", { className: "wof-canvas-section__item-price" }, priceLabel) : null)) : null,
+                    children.length > 0 ? (wp.element.createElement("div", { className: "wof-canvas-section__children-list", style: { display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '12px' } }, children.map((child, cIdx) => (wp.element.createElement(NestedCanvasField, { key: child.uuid, parentUuid: props.field.uuid, child: child, index: cIdx, count: children.length, selected: child.uuid === props.selectedUuid, onSelect: () => props.onSelectUuid?.(child.uuid), onDuplicate: () => props.onAddChild?.(props.field.uuid, WooOptionsFic.FieldFactory.duplicate(child)), onDelete: () => props.onDeleteField?.(child.uuid), onMove: (from, to) => props.onMoveChild?.(props.field.uuid, from, to) }))))) : null,
+                    wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-section__dropzone', innerDropActive && 'is-drag-over'), onDragOver: innerDragOver, onDragLeave: innerDragLeave, onDrop: innerDrop },
+                        wp.element.createElement("div", { className: "wof-canvas-section__dropzone-inner" },
+                            wp.element.createElement("button", { type: "button", className: "wof-canvas-section__add-btn", title: __('Add field to section', 'wooptionsfic'), onClick: (e) => {
+                                    e.stopPropagation();
+                                    props.onAddChild?.(props.field.uuid, WooOptionsFic.FieldFactory.create('text'));
+                                } },
+                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" })))),
+                    props.field.repeatable ? (props.field.repeatMethod === 'quantity' ? (wp.element.createElement("div", { className: "wof-canvas-section__qty-preview" },
+                        wp.element.createElement("span", { className: "wof-canvas-section__qty-label" }, __('Quantity', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-qty-stepper" },
+                            wp.element.createElement("button", { type: "button", disabled: true }, "\u2212"),
+                            wp.element.createElement("span", null, "1"),
+                            wp.element.createElement("button", { type: "button", disabled: true }, "+")))) : (wp.element.createElement("div", { className: "wof-canvas-section__footer" },
+                        wp.element.createElement("button", { type: "button", className: "wof-canvas-section__add-another-btn" }, props.field.buttonLabel || __('Add Another', 'wooptionsfic'))))) : null)) : null,
+                props.field.help && props.field.helpTextPosition === 'below_field' ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-field", style: { margin: '12px 0 0 0' } }, props.field.help)) : null));
         }
         function CanvasField(props) {
             const [dropEdge, setDropEdge] = useState(null);
             const dragStart = (event) => {
                 event.stopPropagation();
                 event.dataTransfer?.setData(FIELD_INDEX_MIME, String(props.index));
+                event.dataTransfer?.setData(FIELD_UUID_MIME, props.field.uuid);
                 if (event.dataTransfer)
                     event.dataTransfer.effectAllowed = 'move';
             };
+            if (props.field.type === 'repeater') {
+                return (wp.element.createElement(CanvasSectionField, { field: props.field, allFields: props.allFields, index: props.index, count: props.count, selected: props.selected, selectedUuid: props.selectedUuid, onSelect: props.onSelect, onSelectUuid: props.onSelectUuid, onAdd: props.onAdd, onAddChild: props.onAddChild, onMove: props.onMove, onMoveChild: props.onMoveChild, onMoveToParent: props.onMoveToParent, onDuplicate: props.onDuplicate, onDelete: props.onDelete, onDeleteField: props.onDeleteField }));
+            }
             const dragOver = (event) => {
                 if (!hasBuilderDrag(event))
                     return;
@@ -4157,7 +4444,7 @@ var WooOptionsFic;
                                         wp.element.createElement("h1", null, __('WooOptionsFic Product (Preview)', 'wooptionsfic')),
                                         wp.element.createElement("strong", { className: "wof-product-preview-meta__price" }, `20.00 ${window.WooOptionsFicAdmin?.currency || 'USD'}`)),
                                     props.document.fields.length ? wp.element.createElement("div", { className: `wof-canvas-fields is-${props.document.layout.type}`, style: { display: 'flex', flexWrap: 'wrap', gap: '14px', alignItems: 'flex-start' } },
-                                        props.document.fields.map((field, index) => wp.element.createElement(CanvasField, { key: field.uuid, field: field, allFields: props.document.fields, index: index, count: props.document.fields.length, selected: field.uuid === props.selectedUuid, onSelect: () => props.onSelect(field.uuid), onAdd: props.onAdd, onMove: props.onMove, onDuplicate: () => props.onDuplicate(field), onDelete: () => props.onDelete(field.uuid) })),
+                                        props.document.fields.map((field, index) => wp.element.createElement(CanvasField, { key: field.uuid, field: field, allFields: props.document.fields, index: index, count: props.document.fields.length, selected: field.uuid === props.selectedUuid, selectedUuid: props.selectedUuid, onSelect: () => props.onSelect(field.uuid), onSelectUuid: props.onSelect, onAdd: props.onAdd, onAddChild: props.onAddChild, onMove: props.onMove, onMoveChild: props.onMoveChild, onMoveToParent: props.onMoveToParent, onDuplicate: () => props.onDuplicate(field), onDelete: () => props.onDelete(field.uuid), onDeleteField: props.onDelete })),
                                         wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-drop-end', dragActive && 'is-active'), onDragOver: canvasDragOver, onDrop: dropAtEnd },
                                             wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "plus-alt2" }),
                                             __('Drop a field here', 'wooptionsfic'))) : wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-canvas-empty', dragActive && 'is-active'), onDragOver: canvasDragOver, onDrop: dropAtEnd },
@@ -6507,6 +6794,131 @@ var WooOptionsFic;
                             props.onChange(val);
                         }, "aria-label": props.label ?? __('Height in pixels input', 'wooptionsfic') }))));
         }
+        function SectionRepeaterInspector(props) {
+            const { field, update } = props;
+            const isAccordion = field.sectionStyle === 'accordion';
+            return (wp.element.createElement("div", { className: "wof-section-repeater-settings" },
+                wp.element.createElement(TextControl, { label: __('Section Title', 'wooptionsfic'), value: field.label ?? '', placeholder: "Section Container", onChange: (label) => update({ label }) }),
+                wp.element.createElement(ToggleControl, { label: __('Hide Section Title', 'wooptionsfic'), checked: Boolean(field.hideSectionTitle), onChange: (hideSectionTitle) => update({ hideSectionTitle }) }),
+                wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: '16px' } },
+                    wp.element.createElement("span", { className: "wof-field-width-label" }, __('Style', 'wooptionsfic')),
+                    wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Style', 'wooptionsfic') }, [
+                        { label: __('Section', 'wooptionsfic'), value: 'section' },
+                        { label: __('Accordion', 'wooptionsfic'), value: 'accordion' },
+                        { label: __('Blank', 'wooptionsfic'), value: 'blank' },
+                    ].map((st) => {
+                        const isSelected = (field.sectionStyle || 'section') === st.value;
+                        return (wp.element.createElement("button", { type: "button", key: st.value, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ sectionStyle: st.value }) }, st.label));
+                    }))),
+                isAccordion ? (wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: '16px' } },
+                    wp.element.createElement("span", { className: "wof-field-width-label" }, __('Initial State', 'wooptionsfic')),
+                    wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Initial State', 'wooptionsfic') }, [
+                        { label: __('Open', 'wooptionsfic'), value: 'open' },
+                        { label: __('Close', 'wooptionsfic'), value: 'close' },
+                    ].map((st) => {
+                        const isSelected = (field.initialState || 'open') === st.value;
+                        return (wp.element.createElement("button", { type: "button", key: st.value, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ initialState: st.value }) }, st.label));
+                    })))) : null,
+                wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: '16px' } },
+                    wp.element.createElement("span", { className: "wof-field-width-label" }, __('Width', 'wooptionsfic')),
+                    wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Width', 'wooptionsfic') }, ['33%', '50%', '66%', '100%'].map((w) => {
+                        const isSelected = (field.width || '100%') === w;
+                        return (wp.element.createElement("button", { type: "button", key: w, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ width: w }) }, w));
+                    }))),
+                wp.element.createElement("div", { className: "wof-repeater-toggle-wrap", style: { marginBottom: '16px' } },
+                    wp.element.createElement(ToggleControl, { label: __('Enable Repeatable Section', 'wooptionsfic'), help: __('Let customers add the same fields multiple times on the product page.', 'wooptionsfic'), checked: Boolean(field.repeatable), onChange: (repeatable) => update({ repeatable }) })),
+                field.repeatable ? (wp.element.createElement("div", { className: "wof-repeater-config", style: { borderTop: '1px solid #e2e8f0', paddingTop: '16px', marginBottom: '16px' } },
+                    wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: '16px' } },
+                        wp.element.createElement("span", { className: "wof-field-width-label" }, __('Repeat Method', 'wooptionsfic')),
+                        wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Repeat Method', 'wooptionsfic') }, [
+                            { label: __('Add Button', 'wooptionsfic'), value: 'button' },
+                            { label: __('Quantity Selector', 'wooptionsfic'), value: 'quantity' },
+                        ].map((m) => {
+                            const isSelected = (field.repeatMethod || 'button') === m.value;
+                            return (wp.element.createElement("button", { type: "button", key: m.value, role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ repeatMethod: m.value }) }, m.label));
+                        }))),
+                    wp.element.createElement("div", { style: { marginBottom: '16px' } },
+                        wp.element.createElement(TextControl, { label: __('Repeat Label', 'wooptionsfic'), value: field.repeatLabel ?? 'Item {n}', placeholder: "Item {n}", help: __('Use {n} for auto-numbering, like Person {n} → Person 1, Person 2.', 'wooptionsfic'), onChange: (repeatLabel) => update({ repeatLabel }) })),
+                    wp.element.createElement("div", { className: "wof-repeater-price-card", style: {
+                            background: '#f8fafc',
+                            border: '1px solid #e2e8f0',
+                            borderRadius: '6px',
+                            padding: '12px',
+                            marginBottom: '16px',
+                        } },
+                        wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '8px', marginBottom: '6px' } },
+                            wp.element.createElement("span", { style: { fontSize: '12px', fontWeight: 600, color: '#475569' } }, __('Price Type', 'wooptionsfic')),
+                            wp.element.createElement("span", { style: { fontSize: '12px', fontWeight: 600, color: '#475569' } }, __('Regular', 'wooptionsfic')),
+                            wp.element.createElement("span", { style: { fontSize: '12px', fontWeight: 600, color: '#475569' } }, __('Sales', 'wooptionsfic'))),
+                        wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '8px' } },
+                            wp.element.createElement("select", { value: field.repeatPriceType ?? 'none', style: {
+                                    height: '36px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #cbd5e1',
+                                    padding: '0 8px',
+                                    fontSize: '13px',
+                                    background: '#fff',
+                                    width: '100%',
+                                }, onChange: (e) => {
+                                    const priceType = e.target.value;
+                                    update({
+                                        repeatPriceType: priceType,
+                                        pricing: {
+                                            strategy: priceType === 'percentage' ? 'percentage' : priceType === 'fixed' ? 'fixed' : 'none',
+                                            amount: field.repeatRegularPrice ?? '',
+                                            percent: priceType === 'percentage' ? (field.repeatRegularPrice ?? '') : '',
+                                            mode: 'adjustment',
+                                        },
+                                    });
+                                } },
+                                wp.element.createElement("option", { value: "none" }, __('No cost', 'wooptionsfic')),
+                                wp.element.createElement("option", { value: "fixed" }, __('Fixed Price', 'wooptionsfic')),
+                                wp.element.createElement("option", { value: "percentage" }, __('Percentage', 'wooptionsfic'))),
+                            wp.element.createElement("input", { type: "number", step: "any", min: "0", value: field.repeatRegularPrice ?? '', placeholder: "0", disabled: field.repeatPriceType === 'none', style: {
+                                    height: '36px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #cbd5e1',
+                                    padding: '0 8px',
+                                    fontSize: '13px',
+                                    background: field.repeatPriceType === 'none' ? '#f1f5f9' : '#fff',
+                                    width: '100%',
+                                }, onChange: (e) => {
+                                    const val = e.target.value;
+                                    update({
+                                        repeatRegularPrice: val,
+                                        pricing: {
+                                            ...(field.pricing ?? { mode: 'adjustment' }),
+                                            strategy: field.repeatPriceType === 'percentage' ? 'percentage' : field.repeatPriceType === 'fixed' ? 'fixed' : 'none',
+                                            amount: val,
+                                            percent: field.repeatPriceType === 'percentage' ? val : '',
+                                        },
+                                    });
+                                } }),
+                            wp.element.createElement("input", { type: "number", step: "any", min: "0", value: field.repeatSalePrice ?? '', placeholder: "", disabled: field.repeatPriceType === 'none', style: {
+                                    height: '36px',
+                                    borderRadius: '4px',
+                                    border: '1px solid #cbd5e1',
+                                    padding: '0 8px',
+                                    fontSize: '13px',
+                                    background: field.repeatPriceType === 'none' ? '#f1f5f9' : '#fff',
+                                    width: '100%',
+                                }, onChange: (e) => update({ repeatSalePrice: e.target.value }) }))),
+                    field.repeatMethod !== 'quantity' ? (wp.element.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' } },
+                        wp.element.createElement(TextControl, { label: __('Button Label', 'wooptionsfic'), value: field.buttonLabel ?? 'Add Another', placeholder: "Add Another", onChange: (buttonLabel) => update({ buttonLabel }) }),
+                        wp.element.createElement(TextControl, { label: __('Maximum Repeats', 'wooptionsfic'), type: "number", min: 0, value: field.maxRepeats != null ? String(field.maxRepeats) : '0', placeholder: "0", help: __('Enter 0 to allow unlimited repeats.', 'wooptionsfic'), onChange: (val) => update({ maxRepeats: val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0) }) }))) : null)) : null,
+                wp.element.createElement(TextareaControl, { label: __('Help text', 'wooptionsfic'), value: field.help ?? '', onChange: (help) => update({ help }) }),
+                wp.element.createElement("div", { className: "wof-help-position-control" },
+                    wp.element.createElement("label", { className: "wof-segmented-label" }, __('HELP TEXT POSITION', 'wooptionsfic')),
+                    wp.element.createElement("div", { className: "wof-segmented-group" }, [
+                        { label: __('Below Title', 'wooptionsfic'), value: 'below_title' },
+                        { label: __('Tooltip', 'wooptionsfic'), value: 'tooltip' },
+                        { label: __('Below Field', 'wooptionsfic'), value: 'below_field' },
+                    ].map((opt) => {
+                        const isSelected = (field.helpTextPosition ?? 'below_title') === opt.value;
+                        return (wp.element.createElement("button", { key: opt.value, type: "button", className: WooOptionsFic.Utils.classNames('wof-segmented-btn', isSelected && 'is-selected'), onClick: () => update({ helpTextPosition: opt.value }) }, opt.label));
+                    }))),
+                wp.element.createElement(ToggleControl, { label: __('Required', 'wooptionsfic'), checked: Boolean(field.required), onChange: (required) => update({ required }) })));
+        }
         function Inspector(props) {
             const scrollerRef = useRef(null);
             const [canLeft, setCanLeft] = useState(false);
@@ -6548,7 +6960,7 @@ var WooOptionsFic;
                             wp.element.createElement(Builder.StyleStudio, { document: props.document, onChange: props.onDocumentChange }))));
             const field = props.field;
             const update = (patch) => props.onFieldChange({ ...field, ...patch });
-            const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help', 'formula'];
+            const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help', 'formula', 'repeater'];
             const visibleTabs = tabs.filter(([tab]) => {
                 if (tab === 'choices' && !Boolean(field.choices))
                     return false;
@@ -6583,7 +6995,7 @@ var WooOptionsFic;
                     canRight ? wp.element.createElement("button", { type: "button", className: "wof-inspector-tabs-arrow is-right", "aria-label": __('Scroll tabs right', 'wooptionsfic'), onClick: () => scrollerRef.current?.scrollBy({ left: 140, behavior: 'smooth' }) },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "arrow-right-alt2" })) : null),
                 wp.element.createElement("div", { className: "wof-inspector-body" },
-                    wp.element.createElement("section", { className: "wof-inspector-section" }, activeTab === 'content' ? (field.type === 'separator' ? (wp.element.createElement("div", { className: "wof-spacer-settings" },
+                    wp.element.createElement("section", { className: "wof-inspector-section" }, activeTab === 'content' ? (field.type === 'repeater' ? (wp.element.createElement(SectionRepeaterInspector, { field: field, update: update })) : field.type === 'separator' ? (wp.element.createElement("div", { className: "wof-spacer-settings" },
                         wp.element.createElement(SpacerHeightControl, { value: Number(field.height ?? field.style?.height ?? 1), defaultValue: 1, onChange: (height) => update({ height, style: { ...(field.style ?? {}), height } }) }),
                         wp.element.createElement(ChoiceColorControl, { label: __('Spacer color', 'wooptionsfic'), color: String(field.color ?? field.style?.color ?? '#E2E8F0'), onChange: (color) => update({ color, style: { ...(field.style ?? {}), color } }) }),
                         wp.element.createElement("div", { className: "wof-field-width-setting" },
@@ -7289,7 +7701,7 @@ var WooOptionsFic;
                     wp.element.createElement("p", null, fatal),
                     wp.element.createElement(Button, { variant: "primary", onClick: () => props.navigate('option-sets') }, __('Back to option sets', 'wooptionsfic')));
             const selectedField = WooOptionsFic.Utils.fieldByUuid(state.document, state.selectedUuid);
-            const addField = (field, index) => { actions.addField(field, index); actions.selectField(field.uuid); actions.setInspectorTab('content'); };
+            const addField = (field, index, parentUuid) => { actions.addField(field, index, parentUuid); actions.selectField(field.uuid); actions.setInspectorTab('content'); };
             const duplicateSelected = () => selectedField && addField(WooOptionsFic.FieldFactory.duplicate(selectedField));
             return wp.element.createElement("div", { className: "wof-builder" },
                 wp.element.createElement("header", { className: "wof-builder-topbar" },
@@ -7329,7 +7741,7 @@ var WooOptionsFic;
                         wp.element.createElement(Button, { variant: "primary", className: "wof-header-publish", isBusy: publishBusy, disabled: state.errors.length > 0 || publishBusy, onClick: publish }, publishBusy ? __('Publishing…', 'wooptionsfic') : __('Publish', 'wooptionsfic')))),
                 wp.element.createElement("div", { className: "wof-builder-workspace" },
                     wp.element.createElement(Builder.ElementsPanel, { onAdd: addField, onOpenStyle: () => { actions.selectField(null); actions.setInspectorTab('style'); } }),
-                    wp.element.createElement(Builder.Canvas, { document: state.document, selectedUuid: state.selectedUuid, device: state.device, onSelect: (uuid) => { actions.selectField(uuid); actions.setInspectorTab('content'); }, onAdd: addField, onMove: actions.moveField, onDuplicate: (field) => addField(WooOptionsFic.FieldFactory.duplicate(field)), onDelete: setDeleteUuid }),
+                    wp.element.createElement(Builder.Canvas, { document: state.document, selectedUuid: state.selectedUuid, device: state.device, onSelect: (uuid) => { actions.selectField(uuid); actions.setInspectorTab('content'); }, onAdd: addField, onAddChild: (parentUuid, field, index) => addField(field, index, parentUuid), onMove: actions.moveField, onMoveChild: actions.moveChildField, onMoveToParent: actions.moveFieldToParent, onDuplicate: (field) => addField(WooOptionsFic.FieldFactory.duplicate(field)), onDelete: setDeleteUuid }),
                     wp.element.createElement(Builder.Inspector, { field: selectedField, document: state.document, tab: state.inspectorTab, onTabChange: actions.setInspectorTab, onFieldChange: (field) => actions.replaceField(field.uuid, field), onDocumentChange: actions.updateDocument, onDuplicate: duplicateSelected, onDelete: () => selectedField && setDeleteUuid(selectedField.uuid) })),
                 wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-diagnostics-drawer', diagnosticsOpen && 'is-open') },
                     wp.element.createElement("button", { type: "button", className: "wof-diagnostics-toggle", onClick: () => setDiagnosticsOpen(!diagnosticsOpen) },

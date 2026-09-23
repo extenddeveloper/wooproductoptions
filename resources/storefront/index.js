@@ -91,7 +91,7 @@
                     document.body.classList.remove("wof-modal-open");
                     return;
                 }
-                const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
+                const accTrigger = t.closest("[data-wof-accordion-trigger]"); if (accTrigger) { const sec = accTrigger.closest("[data-wof-accordion]"); if (sec) { const isOpen = sec.classList.contains("is-open"); sec.classList.toggle("is-open", !isOpen); const body = sec.querySelector("[data-wof-accordion-body]"); if (body) { body.hidden = isOpen; body.style.display = isOpen ? "none" : ""; } accTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const qtyInc = t.closest("[data-wof-repeater-qty-inc]"); if (qtyInc) { const wrap = qtyInc.closest("[data-wof-repeater-quantity]"); const rep = wrap?.closest("[data-wof-field]")?.querySelector("[data-wof-repeater]"); const input = wrap?.querySelector("[data-wof-repeater-qty-input]"); if (rep && input) { const max = Number(rep.dataset.max || 100); const curr = Number(input.value || 1); if (curr < max) { input.value = String(curr + 1); this.addRow(rep); } } return; } const qtyDec = t.closest("[data-wof-repeater-qty-dec]"); if (qtyDec) { const wrap = qtyDec.closest("[data-wof-repeater-quantity]"); const rep = wrap?.closest("[data-wof-field]")?.querySelector("[data-wof-repeater]"); const input = wrap?.querySelector("[data-wof-repeater-qty-input]"); if (rep && input) { const min = Math.max(1, Number(rep.dataset.min || 1)); const curr = Number(input.value || 1); if (curr > min) { input.value = String(curr - 1); const rows = rep.querySelectorAll(":scope > [data-wof-repeater-rows] > [data-wof-row], :scope [data-wof-row]"); if (rows.length > 0) { this.removeRow(rows[rows.length - 1]); } } } return; } const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
             return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); });
@@ -1127,8 +1127,13 @@
             return; const r = document.createElement("link"); r.id = o, r.rel = "stylesheet", r.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(t).replace(/%3A/g, ":").replace(/%40/g, "@").replace(/%3B/g, ";").replace(/%2B/g, "+")}&display=swap`, r.crossOrigin = "anonymous", document.head.append(r); }
         readSelection() { const e = {}; return (this.configuration?.fields ?? []).forEach(t => { (!t.disabled && this.acceptsValue(t)) && (e[t.uuid] = this.readField(t, this.root)); }), e; }
         readField(e, t) { const o = t.querySelector(`[data-wof-field="${r(e.uuid)}"]`); if (!o)
-            return null; if ("repeater" === e.type)
-            return Array.from(o.querySelectorAll(":scope [data-wof-row]")).map(t => { const o = {}; return (e.children ?? []).forEach(e => { o[e.uuid] = this.readField(e, t); }), { rowUuid: t.dataset.wofRow, values: o }; }); if ("checkbox" === e.type || "toggle" === e.type)
+            return null; if ("repeater" === e.type) {
+                if (!1 === e.repeatable) {
+                    const s = {}; (e.children ?? []).forEach(child => { s[child.uuid] = this.readField(child, o); });
+                    return [{ rowUuid: "static", values: s }];
+                }
+                return Array.from(o.querySelectorAll(":scope [data-wof-row], :scope [data-wof-repeater-rows] > [data-wof-row]")).map(rowEl => { const rowValues = {}; return (e.children ?? []).forEach(child => { rowValues[child.uuid] = this.readField(child, rowEl); }), { rowUuid: rowEl.dataset.wofRow, values: rowValues }; });
+            } if ("checkbox" === e.type || "toggle" === e.type)
             return Boolean(o.querySelector('input[type="checkbox"]:checked')); if ("checkbox_group" === e.type || (e.multiple && "product" !== e.type)) {
                 const checked = Array.from(o.querySelectorAll('input[type="checkbox"]:checked'));
                 return checked.map(input => input.value);
@@ -1955,13 +1960,98 @@
         captureProductImageSnapshot() { if (this.productImageSnapshot) return; const e = this.root.closest(".product") ?? document, t = Array.from(e.querySelectorAll(".woocommerce-product-gallery__image.flex-active-slide img, .woocommerce-product-gallery__image:first-child img, .woocommerce-product-gallery .wp-post-image")).filter(e => !this.root.contains(e)), o = Array.from(new Set(t)); this.productImageSnapshot = o.map(e => ({ element: e, src: e.getAttribute("src"), srcset: e.getAttribute("srcset"), sizes: e.getAttribute("sizes"), dataSrc: e.getAttribute("data-src"), large: e.getAttribute("data-large_image"), parentHref: e.closest("a")?.getAttribute("href") ?? null })); }
         restoreProductImage() { if (!this.productImageSnapshot) return; this.productImageSnapshot.forEach(e => { const t = e.element, o = (r, a) => { null === a ? t.removeAttribute(r) : t.setAttribute(r, a); }; o("src", e.src), o("srcset", e.srcset), o("sizes", e.sizes), o("data-src", e.dataSrc), o("data-large_image", e.large); const r = t.closest("a"); r && (null === e.parentHref ? r.removeAttribute("href") : r.setAttribute("href", e.parentHref)); }); }
         updateProductImage(e = null) { const t = e?.closest?.('[data-wof-update-product-image="1"]') ?? this.root.querySelector('[data-wof-update-product-image="1"]'); if (!t) return; const o = t.querySelector('input:checked[data-wof-product-image-url]'), r = o?.dataset?.wofProductImageUrl ?? ""; if (!r) { o || this.restoreProductImage(); return; } this.captureProductImageSnapshot(), this.productImageSnapshot?.forEach(e => { const t = e.element; t.setAttribute("src", r), t.setAttribute("data-src", r), t.setAttribute("data-large_image", r), t.removeAttribute("srcset"), t.removeAttribute("sizes"); const o = t.closest("a"); o && o.setAttribute("href", r); }), this.root.dispatchEvent(new CustomEvent("wooptionsfic:product-image-updated", { detail: { url: r } })); }
-        addRow(e) { const t = e.closest("[data-wof-repeater]"), o = t?.querySelector("[data-wof-repeater-rows]"), r = o?.querySelectorAll(":scope > [data-wof-row]"); if (!t || !o || !r?.length)
-            return; const a = Number(t.dataset.max || 10); if (r.length >= a)
-            return; const i = r[r.length - 1], n = i.cloneNode(!0), s = i.dataset.wofRow ?? "", c = crypto.randomUUID(); n.dataset.wofRow = c, n.querySelectorAll("[name], [id], [for]").forEach(e => { ["name", "id", "for"].forEach(t => { const o = e.getAttribute(t); o && e.setAttribute(t, o.split(s).join(c)); }); }), n.querySelectorAll("input, textarea, select").forEach(e => { e instanceof HTMLInputElement ? ["checkbox", "radio"].includes(e.type) ? e.checked = !1 : "hidden" !== e.type && (e.value = "") : e.value = ""; }), o.append(n), this.renumberRows(t), n.querySelector("input, select, textarea")?.focus(), this.announceRows(t, "Row added."), this.scheduleQuote(50); }
+        addRow(e) {
+            const t = e.closest?.("[data-wof-repeater]") ?? (e.hasAttribute?.("data-wof-repeater") ? e : null),
+                o = t?.querySelector("[data-wof-repeater-rows]"),
+                r = o?.querySelectorAll(":scope > [data-wof-row]");
+            if (!t || !o || !r?.length) return;
+            const a = Number(t.dataset.max || 10);
+            if (r.length >= a) return;
+            const i = r[r.length - 1],
+                n = i.cloneNode(true),
+                s = i.dataset.wofRow ?? "",
+                c = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : 'row_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+            n.dataset.wofRow = c;
+
+            // Scope all names, IDs, label fors, and aria-describedby attributes to the new row
+            n.querySelectorAll("[name], [id], [for], [aria-describedby]").forEach(el => {
+                ["name", "id", "for", "aria-describedby"].forEach(attr => {
+                    const val = el.getAttribute(attr);
+                    if (!val) return;
+                    if (s && val.includes(s)) {
+                        el.setAttribute(attr, val.split(s).join(c));
+                    } else if (attr === "name") {
+                        el.setAttribute(attr, val.replace(/\[rows\]\[[^\]]+\]/, `[rows][${c}]`));
+                    } else if (attr === "id" || attr === "for") {
+                        el.setAttribute(attr, val + "-" + c);
+                    }
+                });
+            });
+
+            // Reset inputs
+            n.querySelectorAll("input, textarea, select").forEach(inp => {
+                if (inp instanceof HTMLInputElement) {
+                    if (["checkbox", "radio"].includes(inp.type)) {
+                        inp.checked = false;
+                    } else if ("hidden" !== inp.type) {
+                        inp.value = "";
+                    } else if (inp.hasAttribute("data-wof-datetime-value") || inp.hasAttribute("data-wof-daterange-start") || inp.hasAttribute("data-wof-daterange-end")) {
+                        inp.value = "";
+                    }
+                } else if (inp instanceof HTMLSelectElement) {
+                    inp.selectedIndex = 0;
+                    inp.value = inp.options[0]?.value ?? "";
+                } else {
+                    inp.value = "";
+                }
+                inp.removeAttribute("aria-invalid");
+            });
+
+            // Clear errors / validation
+            n.querySelectorAll(".is-invalid").forEach(el => el.classList.remove("is-invalid"));
+            n.querySelectorAll("[data-wof-field-error]").forEach(el => { el.textContent = ""; });
+
+            // Sync custom controls within cloned row
+            n.querySelectorAll("[data-wof-custom-select]").forEach(cs => {
+                cs.classList.remove("is-open");
+                this.syncCustomSelect(cs);
+            });
+            n.querySelectorAll("[data-wof-color-picker]").forEach(cp => {
+                cp.classList.remove("is-open");
+                this.syncCustomColorPicker(cp);
+            });
+            n.querySelectorAll("[data-wof-custom-datetime]").forEach(dt => {
+                dt.classList.remove("is-open");
+                const valInput = dt.querySelector("[data-wof-datetime-value]");
+                if (valInput) valInput.value = "";
+                const displays = dt.querySelectorAll("[data-wof-datetime-display]");
+                displays.forEach(d => { d.textContent = d.dataset.wofPlaceholder || ""; });
+            });
+            n.querySelectorAll("[data-wof-custom-daterange]").forEach(dr => {
+                dr.classList.remove("is-open");
+                const sDisplay = dr.querySelector('[data-wof-daterange-display="start"]');
+                if (sDisplay) sDisplay.textContent = sDisplay.dataset.wofPlaceholder || "";
+                const eDisplay = dr.querySelector('[data-wof-daterange-display="end"]');
+                if (eDisplay) eDisplay.textContent = eDisplay.dataset.wofPlaceholder || "";
+            });
+            n.querySelectorAll("[data-wof-upload]").forEach(u => {
+                u.classList.remove("has-files", "is-uploading", "is-complete");
+                u.querySelectorAll("[data-wof-upload-list]").forEach(l => l.replaceChildren());
+                u.querySelectorAll("[data-wof-upload-ref]:not([data-wof-upload-template])").forEach(ref => ref.remove());
+            });
+
+            o.append(n);
+            this.renumberRows(t);
+            n.querySelector("input, select, textarea")?.focus();
+            this.announceRows(t, "Row added.");
+            this.syncQuantityStepper(t);
+            this.scheduleQuote(50);
+        }
         removeRow(e) { const t = e.closest("[data-wof-repeater]"), o = e.closest("[data-wof-row]"), r = t?.querySelectorAll("[data-wof-row]"); if (!t || !o || !r || r.length <= Number(t.dataset.min || 0))
-            return; const a = o.previousElementSibling?.querySelector("input, select, textarea") ?? t.querySelector("[data-wof-add-row]"); o.remove(), this.renumberRows(t), a?.focus(), this.announceRows(t, "Row removed."), this.scheduleQuote(50); }
+            return; const a = o.previousElementSibling?.querySelector("input, select, textarea") ?? t.querySelector("[data-wof-add-row]"); o.remove(), this.renumberRows(t), a?.focus(), this.announceRows(t, "Row removed."), this.syncQuantityStepper(t), this.scheduleQuote(50); }
         moveRow(e) { const t = e.closest("[data-wof-repeater]"), o = e.closest("[data-wof-row]"), r = e.dataset.wofMoveRow; t && o && ("up" === r && o.previousElementSibling && o.parentElement?.insertBefore(o, o.previousElementSibling), "down" === r && o.nextElementSibling && o.parentElement?.insertBefore(o.nextElementSibling, o), this.renumberRows(t), e.focus(), this.announceRows(t, "Row moved."), this.scheduleQuote(50)); }
-        renumberRows(e) { e.querySelectorAll("[data-wof-row]").forEach((e, t) => { const o = e.querySelector("legend"); o && (o.textContent = o.textContent?.replace(/#?\d+$/, String(t + 1)) ?? `Item ${t + 1}`); }); }
+        renumberRows(e) { const template = e.dataset.wofRepeatLabel || "Item {n}"; e.querySelectorAll("[data-wof-row]").forEach((e, t) => { const o = e.querySelector("[data-wof-row-title]") || e.querySelector("legend"); o && (o.textContent = template.replace("{n}", String(t + 1)).replace("{index}", String(t + 1))); }); }
+        syncQuantityStepper(e) { const qtyInput = e.closest("[data-wof-field]")?.querySelector("[data-wof-repeater-qty-input]"); qtyInput && (qtyInput.value = String(e.querySelectorAll("[data-wof-row]").length)); }
         announceRows(e, t) { const o = e.querySelector("[data-wof-repeater-live]"); o && (o.textContent = t); }
         formatBytes(e) { const t = Number(e); return Number.isFinite(t) && t > 0 ? t >= 1048576 ? `${(t / 1048576).toFixed(t >= 10485760 ? 1 : 2)} MB` : t >= 1024 ? `${(t / 1024).toFixed(1)} KB` : `${t} B` : "0 B"; }
         uploadFileIconSvg(e, t) { const o = (String(t ?? "").split(".").pop() ?? "").toLowerCase(), r = String(e ?? "").toLowerCase(); return "pdf" === o || r.includes("pdf") ? '<svg viewBox="0 0 24 24" focusable="false"><path d="M6.5 2.75h7l4 4v14.5h-11zM13.5 2.75v4h4M8.7 12.1h6.6M8.7 15.2h6.6M8.7 18.3h4.2" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>' : "csv" === o || r.includes("spreadsheet") || r.includes("excel") || r.includes("csv") ? '<svg viewBox="0 0 24 24" focusable="false"><path d="M4 4.5h16v15H4zM4 9.5h16M4 14.5h16M9.4 4.5v15M14.7 4.5v15" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>' : "txt" === o || r.startsWith("text/") ? '<svg viewBox="0 0 24 24" focusable="false"><path d="M6 3.5h8l4 4v13H6zM14 3.5v4h4M8.7 11h6.6M8.7 14.3h6.6M8.7 17.6h4.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>' : r.startsWith("audio/") ? '<svg viewBox="0 0 24 24" focusable="false"><path d="M9.5 18.2a2.7 2.7 0 1 1-2.7-2.7c1.05 0 1.9.28 2.7.82V6.2l8-1.7v11.8a2.7 2.7 0 1 1-2.7-2.7c1.05 0 1.9.28 2.7.82V8.1l-8 1.7z" fill="none" stroke="currentColor" stroke-width="1.55" stroke-linecap="round" stroke-linejoin="round"/></svg>' : r.startsWith("video/") ? '<svg viewBox="0 0 24 24" focusable="false"><rect x="3.5" y="5" width="17" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="m10 9 5 3-5 3z" fill="currentColor"/></svg>' : r.includes("zip") || r.includes("archive") || ["zip", "rar", "7z"].includes(o) ? '<svg viewBox="0 0 24 24" focusable="false"><path d="M6 3.5h8l4 4v13H6zM14 3.5v4h4M10.5 5.5h2M10.5 8h2M10.5 10.5h2M10.2 14h2.6v3.4h-2.6z" fill="none" stroke="currentColor" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '<svg viewBox="0 0 24 24" focusable="false"><path d="M6 3.5h8l4 4v13H6zM14 3.5v4h4M9 12h6M9 15h6M9 18h4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'; }

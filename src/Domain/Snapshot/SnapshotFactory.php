@@ -34,6 +34,88 @@ final class SnapshotFactory {
 			if (! $type || ! $type->accepts_customer_value() || ! array_key_exists($uuid, $values)) {
 				continue;
 			}
+			if ('repeater' === (string) ($field['type'] ?? '')) {
+				$repeatable       = ! isset($field['repeatable']) || ! empty($field['repeatable']);
+				$repeat_label_tpl = (string) ($field['repeatLabel'] ?? ($field['rowTitle'] ?? 'Item {n}'));
+				$rows             = (array) ($values[$uuid] ?? []);
+				$children         = (array) ($field['children'] ?? []);
+				$row_price_type   = (string) ($field['repeatPriceType'] ?? 'none');
+				$has_row_price    = in_array($row_price_type, ['fixed', 'percentage'], true);
+				$section_label    = trim((string) ($field['label'] ?? ''));
+
+				foreach ($rows as $r_idx => $row) {
+					$r_num     = $r_idx + 1;
+					$item_name = str_replace(['{n}', '{index}'], (string) $r_num, $repeat_label_tpl);
+					$r_values  = is_array($row['values'] ?? null) ? $row['values'] : (array) $row;
+
+					if ($repeatable && $has_row_price) {
+						$row_title = '' !== $section_label ? $section_label . ' (' . $item_name . ')' : $item_name;
+						$summary[] = [
+							'fieldUuid' => $uuid . ':row:' . $r_num,
+							'type'      => 'repeater',
+							'label'     => $row_title,
+							'value'     => $item_name,
+							'sensitive' => false,
+						];
+					}
+
+					foreach ($children as $child) {
+						$c_uuid = (string) ($child['uuid'] ?? '');
+						$c_type = $this->registry->get((string) ($child['type'] ?? ''));
+						if (! $c_type || ! $c_type->accepts_customer_value() || ! array_key_exists($c_uuid, $r_values)) {
+							continue;
+						}
+						$c_val = $r_values[$c_uuid];
+						$c_formatted = $c_type instanceof \WooOptionsFic\Domain\Definition\Type\ChoiceFieldType
+							? $c_type->format_value($c_val, $child, $context)
+							: $c_type->format_value($c_val, $child);
+
+						if ('' === $c_formatted && ! empty($c_val)) {
+							$sel_uuids = is_array($c_val) ? $c_val : [(string) $c_val];
+							$fallbacks = [];
+							foreach ((array) ($child['choices'] ?? []) as $ch) {
+								$ch_u = (string) ($ch['uuid'] ?? '');
+								if (in_array($ch_u, $sel_uuids, true)) {
+									$ch_lbl = trim((string) ($ch['label'] ?? ''));
+									if ('' === $ch_lbl) {
+										$ch_lbl = trim((string) ($ch['adminLabel'] ?? ''));
+									}
+									if ('' !== $ch_lbl && 'Choice' !== $ch_lbl) {
+										$fallbacks[] = $ch_lbl;
+									}
+								}
+							}
+							if (! empty($fallbacks)) {
+								$c_formatted = implode(', ', $fallbacks);
+							}
+						}
+
+						if ('' === $c_formatted) {
+							continue;
+						}
+
+						$c_label = trim((string) ($child['label'] ?? __('Option', 'wooptionsfic')));
+						if ($repeatable) {
+							$item_prefix   = '' !== $section_label ? $section_label . ' (' . $item_name . ')' : $item_name;
+							$display_label = $item_prefix . ' - ' . $c_label;
+							$child_field_uuid = $c_uuid . ':row:' . $r_num;
+						} else {
+							$display_label = '' !== $section_label ? $section_label . ' - ' . $c_label : $c_label;
+							$child_field_uuid = $c_uuid;
+						}
+
+						$summary[] = [
+							'fieldUuid' => $child_field_uuid,
+							'type'      => (string) ($child['type'] ?? ''),
+							'label'     => $display_label,
+							'value'     => $c_formatted,
+							'sensitive' => false,
+						];
+					}
+				}
+				continue;
+			}
+
 			$formatted = $type instanceof \WooOptionsFic\Domain\Definition\Type\ChoiceFieldType
 				? $type->format_value($values[$uuid], $field, $context)
 				: $type->format_value($values[$uuid], $field);

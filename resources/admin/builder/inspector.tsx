@@ -3705,6 +3705,307 @@ namespace WooOptionsFic.Builder {
     );
   }
 
+  function SectionRepeaterInspector(props: {
+    field: WooOptionsFic.FieldDefinition;
+    update: (patch: Partial<WooOptionsFic.FieldDefinition>) => void;
+  }): any {
+    const { field, update } = props;
+    const isAccordion = field.sectionStyle === 'accordion';
+
+    return (
+      <div className="wof-section-repeater-settings">
+        <TextControl
+          label={__('Section Title', 'wooptionsfic')}
+          value={field.label ?? ''}
+          placeholder="Section Container"
+          onChange={(label: string) => update({ label })}
+        />
+
+        <ToggleControl
+          label={__('Hide Section Title', 'wooptionsfic')}
+          checked={Boolean(field.hideSectionTitle)}
+          onChange={(hideSectionTitle: boolean) => update({ hideSectionTitle })}
+        />
+
+        {/* Style */}
+        <div className="wof-field-width-setting" style={{ marginBottom: '16px' }}>
+          <span className="wof-field-width-label">{__('Style', 'wooptionsfic')}</span>
+          <div className="wof-field-width-group" role="radiogroup" aria-label={__('Style', 'wooptionsfic')}>
+            {[
+              { label: __('Section', 'wooptionsfic'), value: 'section' },
+              { label: __('Accordion', 'wooptionsfic'), value: 'accordion' },
+              { label: __('Blank', 'wooptionsfic'), value: 'blank' },
+            ].map((st) => {
+              const isSelected = (field.sectionStyle || 'section') === st.value;
+              return (
+                <button
+                  type="button"
+                  key={st.value}
+                  role="radio"
+                  aria-checked={isSelected}
+                  className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                  onClick={() => update({ sectionStyle: st.value as 'section' | 'accordion' | 'blank' })}
+                >
+                  {st.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Initial State (under Style, only when Accordion is selected) */}
+        {isAccordion ? (
+          <div className="wof-field-width-setting" style={{ marginBottom: '16px' }}>
+            <span className="wof-field-width-label">{__('Initial State', 'wooptionsfic')}</span>
+            <div className="wof-field-width-group" role="radiogroup" aria-label={__('Initial State', 'wooptionsfic')}>
+              {[
+                { label: __('Open', 'wooptionsfic'), value: 'open' },
+                { label: __('Close', 'wooptionsfic'), value: 'close' },
+              ].map((st) => {
+                const isSelected = (field.initialState || 'open') === st.value;
+                return (
+                  <button
+                    type="button"
+                    key={st.value}
+                    role="radio"
+                    aria-checked={isSelected}
+                    className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                    onClick={() => update({ initialState: st.value as 'open' | 'close' })}
+                  >
+                    {st.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Width */}
+        <div className="wof-field-width-setting" style={{ marginBottom: '16px' }}>
+          <span className="wof-field-width-label">{__('Width', 'wooptionsfic')}</span>
+          <div className="wof-field-width-group" role="radiogroup" aria-label={__('Width', 'wooptionsfic')}>
+            {(['33%', '50%', '66%', '100%'] as const).map((w) => {
+              const isSelected = (field.width || '100%') === w;
+              return (
+                <button
+                  type="button"
+                  key={w}
+                  role="radio"
+                  aria-checked={isSelected}
+                  className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                  onClick={() => update({ width: w })}
+                >
+                  {w}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Enable Repeatable Section Toggle (No Pro badge) */}
+        <div className="wof-repeater-toggle-wrap" style={{ marginBottom: '16px' }}>
+          <ToggleControl
+            label={__('Enable Repeatable Section', 'wooptionsfic')}
+            help={__('Let customers add the same fields multiple times on the product page.', 'wooptionsfic')}
+            checked={Boolean(field.repeatable)}
+            onChange={(repeatable: boolean) => update({ repeatable })}
+          />
+        </div>
+
+        {field.repeatable ? (
+          <div className="wof-repeater-config" style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', marginBottom: '16px' }}>
+            {/* Repeat Method */}
+            <div className="wof-field-width-setting" style={{ marginBottom: '16px' }}>
+              <span className="wof-field-width-label">{__('Repeat Method', 'wooptionsfic')}</span>
+              <div className="wof-field-width-group" role="radiogroup" aria-label={__('Repeat Method', 'wooptionsfic')}>
+                {[
+                  { label: __('Add Button', 'wooptionsfic'), value: 'button' },
+                  { label: __('Quantity Selector', 'wooptionsfic'), value: 'quantity' },
+                ].map((m) => {
+                  const isSelected = (field.repeatMethod || 'button') === m.value;
+                  return (
+                    <button
+                      type="button"
+                      key={m.value}
+                      role="radio"
+                      aria-checked={isSelected}
+                      className={WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active')}
+                      onClick={() => update({ repeatMethod: m.value as 'button' | 'quantity' })}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Repeat Label */}
+            <div style={{ marginBottom: '16px' }}>
+              <TextControl
+                label={__('Repeat Label', 'wooptionsfic')}
+                value={field.repeatLabel ?? 'Item {n}'}
+                placeholder="Item {n}"
+                help={__('Use {n} for auto-numbering, like Person {n} → Person 1, Person 2.', 'wooptionsfic')}
+                onChange={(repeatLabel: string) => update({ repeatLabel })}
+              />
+            </div>
+
+            {/* Repeater Price Card (No Pro badge on Sales) */}
+            <div
+              className="wof-repeater-price-card"
+              style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '6px',
+                padding: '12px',
+                marginBottom: '16px',
+              }}
+            >
+              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '8px', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>{__('Price Type', 'wooptionsfic')}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>{__('Regular', 'wooptionsfic')}</span>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#475569' }}>{__('Sales', 'wooptionsfic')}</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: '8px' }}>
+                <select
+                  value={field.repeatPriceType ?? 'none'}
+                  style={{
+                    height: '36px',
+                    borderRadius: '4px',
+                    border: '1px solid #cbd5e1',
+                    padding: '0 8px',
+                    fontSize: '13px',
+                    background: '#fff',
+                    width: '100%',
+                  }}
+                  onChange={(e: any) => {
+                    const priceType = e.target.value as 'none' | 'fixed' | 'percentage';
+                    update({
+                      repeatPriceType: priceType,
+                      pricing: {
+                        strategy: priceType === 'percentage' ? 'percentage' : priceType === 'fixed' ? 'fixed' : 'none',
+                        amount: field.repeatRegularPrice ?? '',
+                        percent: priceType === 'percentage' ? (field.repeatRegularPrice ?? '') : '',
+                        mode: 'adjustment',
+                      },
+                    });
+                  }}
+                >
+                  <option value="none">{__('No cost', 'wooptionsfic')}</option>
+                  <option value="fixed">{__('Fixed Price', 'wooptionsfic')}</option>
+                  <option value="percentage">{__('Percentage', 'wooptionsfic')}</option>
+                </select>
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={field.repeatRegularPrice ?? ''}
+                  placeholder="0"
+                  disabled={field.repeatPriceType === 'none'}
+                  style={{
+                    height: '36px',
+                    borderRadius: '4px',
+                    border: '1px solid #cbd5e1',
+                    padding: '0 8px',
+                    fontSize: '13px',
+                    background: field.repeatPriceType === 'none' ? '#f1f5f9' : '#fff',
+                    width: '100%',
+                  }}
+                  onChange={(e: any) => {
+                    const val = e.target.value;
+                    update({
+                      repeatRegularPrice: val,
+                      pricing: {
+                        ...(field.pricing ?? { mode: 'adjustment' }),
+                        strategy: field.repeatPriceType === 'percentage' ? 'percentage' : field.repeatPriceType === 'fixed' ? 'fixed' : 'none',
+                        amount: val,
+                        percent: field.repeatPriceType === 'percentage' ? val : '',
+                      },
+                    });
+                  }}
+                />
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  value={field.repeatSalePrice ?? ''}
+                  placeholder=""
+                  disabled={field.repeatPriceType === 'none'}
+                  style={{
+                    height: '36px',
+                    borderRadius: '4px',
+                    border: '1px solid #cbd5e1',
+                    padding: '0 8px',
+                    fontSize: '13px',
+                    background: field.repeatPriceType === 'none' ? '#f1f5f9' : '#fff',
+                    width: '100%',
+                  }}
+                  onChange={(e: any) => update({ repeatSalePrice: e.target.value })}
+                />
+              </div>
+            </div>
+
+            {/* Button Label & Maximum Repeats (hidden for Quantity Selector) */}
+            {field.repeatMethod !== 'quantity' ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
+                <TextControl
+                  label={__('Button Label', 'wooptionsfic')}
+                  value={field.buttonLabel ?? 'Add Another'}
+                  placeholder="Add Another"
+                  onChange={(buttonLabel: string) => update({ buttonLabel })}
+                />
+                <TextControl
+                  label={__('Maximum Repeats', 'wooptionsfic')}
+                  type="number"
+                  min={0}
+                  value={field.maxRepeats != null ? String(field.maxRepeats) : '0'}
+                  placeholder="0"
+                  help={__('Enter 0 to allow unlimited repeats.', 'wooptionsfic')}
+                  onChange={(val: string) => update({ maxRepeats: val === '' ? 0 : Math.max(0, parseInt(val, 10) || 0) })}
+                />
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <TextareaControl
+          label={__('Help text', 'wooptionsfic')}
+          value={field.help ?? ''}
+          onChange={(help: string) => update({ help })}
+        />
+
+        <div className="wof-help-position-control">
+          <label className="wof-segmented-label">{__('HELP TEXT POSITION', 'wooptionsfic')}</label>
+          <div className="wof-segmented-group">
+            {[
+              { label: __('Below Title', 'wooptionsfic'), value: 'below_title' },
+              { label: __('Tooltip', 'wooptionsfic'), value: 'tooltip' },
+              { label: __('Below Field', 'wooptionsfic'), value: 'below_field' },
+            ].map((opt) => {
+              const isSelected = (field.helpTextPosition ?? 'below_title') === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={WooOptionsFic.Utils.classNames('wof-segmented-btn', isSelected && 'is-selected')}
+                  onClick={() => update({ helpTextPosition: opt.value as 'below_title' | 'tooltip' | 'below_field' })}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <ToggleControl
+          label={__('Required', 'wooptionsfic')}
+          checked={Boolean(field.required)}
+          onChange={(required: boolean) => update({ required })}
+        />
+      </div>
+    );
+  }
+
   export function Inspector(props: {
     field: WooOptionsFic.FieldDefinition | null;
     document: WooOptionsFic.OptionSetDefinition;
@@ -3747,7 +4048,7 @@ namespace WooOptionsFic.Builder {
     if (!props.field) return <aside className="wof-builder-inspector"><div className="wof-builder-pane__heading"><div><span className="wof-eyebrow">{__('Style', 'wooptionsfic')}</span><h2>{__('Option set styling', 'wooptionsfic')}</h2></div></div><div className="wof-inspector-body"><section className="wof-inspector-section"><StyleStudio document={props.document} onChange={props.onDocumentChange} /></section></div></aside>;
     const field = props.field;
     const update = (patch: Partial<WooOptionsFic.FieldDefinition>) => props.onFieldChange({ ...field, ...patch });
-    const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help', 'formula'];
+    const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help', 'formula', 'repeater'];
     const visibleTabs = tabs.filter(([tab]) => {
       if (tab === 'choices' && !Boolean(field.choices)) return false;
       if (tab === 'pricing' && contentFieldTypes.includes(field.type)) return false;
@@ -3794,7 +4095,9 @@ namespace WooOptionsFic.Builder {
       <div className="wof-inspector-body">
         <section className="wof-inspector-section">
           {activeTab === 'content' ? (
-            field.type === 'separator' ? (
+            field.type === 'repeater' ? (
+              <SectionRepeaterInspector field={field} update={update} />
+            ) : field.type === 'separator' ? (
               <div className="wof-spacer-settings">
                 <SpacerHeightControl
                   value={Number(field.height ?? (field.style as any)?.height ?? 1)}
