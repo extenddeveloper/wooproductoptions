@@ -18,7 +18,6 @@ namespace WooOptionsFic.Builder {
       <SelectControl label={__('Body weight', 'wooptionsfic')} value={String(document.style.typography.bodyWeight ?? 450)} options={[300, 400, 450, 500, 600, 700].map((value) => ({ label: String(value), value: String(value) }))} onChange={(value: string) => updateTypography({ bodyWeight: Number(value) })} />
       <div className="wof-style-divider" />
       <h3>{__('Layout & summary', 'wooptionsfic')}</h3>
-      <SelectControl label={__('Layout preset', 'wooptionsfic')} value={document.layout.type} options={[{ label: __('Stacked form', 'wooptionsfic'), value: 'stack' }, { label: __('Inline', 'wooptionsfic'), value: 'inline' }, { label: __('Responsive grid', 'wooptionsfic'), value: 'grid' }]} onChange={(type: WooOptionsFic.OptionSetDefinition['layout']['type']) => props.onChange({ layout: { ...document.layout, type } })} />
       <ToggleControl label={__('Show itemized price breakdown', 'wooptionsfic')} checked={document.settings.showPriceBreakdown} onChange={(value: boolean) => updateSettings({ showPriceBreakdown: value })} />
       <ToggleControl label={__('Keep configuration summary visible', 'wooptionsfic')} checked={document.settings.stickySummary} onChange={(value: boolean) => updateSettings({ stickySummary: value })} />
       <ToggleControl label={__('Allow saved configurations', 'wooptionsfic')} checked={document.settings.saveEnabled} onChange={(value: boolean) => updateSettings({ saveEnabled: value })} />

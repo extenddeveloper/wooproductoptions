@@ -223,6 +223,30 @@
                     document.body.classList.remove("wof-modal-open");
                     return;
                 }
+                const breakdownTrigger = t.closest("[data-wof-breakdown-trigger]");
+                if (breakdownTrigger) {
+                    const summary = breakdownTrigger.closest("[data-wof-summary]") || this.root;
+                    const modal = summary.querySelector("[data-wof-breakdown-modal]");
+                    if (modal) {
+                        modal.hidden = false;
+                        modal.classList.add("is-open");
+                        breakdownTrigger.setAttribute("aria-expanded", "true");
+                        document.body.classList.add("wof-modal-open");
+                    }
+                    return;
+                }
+                const breakdownClose = t.closest("[data-wof-breakdown-close]");
+                if (breakdownClose) {
+                    const modal = breakdownClose.closest("[data-wof-breakdown-modal]");
+                    if (modal) {
+                        modal.hidden = true;
+                        modal.classList.remove("is-open");
+                        document.body.classList.remove("wof-modal-open");
+                        const trigger = this.root.querySelector("[data-wof-breakdown-trigger]");
+                        if (trigger) trigger.setAttribute("aria-expanded", "false");
+                    }
+                    return;
+                }
                 const accTrigger = t.closest("[data-wof-accordion-trigger]"); if (accTrigger) { const sec = accTrigger.closest("[data-wof-accordion]"); if (sec) { const isOpen = sec.classList.contains("is-open"); sec.classList.toggle("is-open", !isOpen); const body = sec.querySelector("[data-wof-accordion-body]"); if (body) { body.hidden = isOpen; body.style.display = isOpen ? "none" : ""; } accTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const qtyInc = t.closest("[data-wof-repeater-qty-inc]"); if (qtyInc) { const wrap = qtyInc.closest("[data-wof-repeater-quantity]"); const rep = wrap?.closest("[data-wof-field]")?.querySelector("[data-wof-repeater]"); const input = wrap?.querySelector("[data-wof-repeater-qty-input]"); if (rep && input) { const max = Number(rep.dataset.max || 100); const curr = Number(input.value || 1); if (curr < max) { input.value = String(curr + 1); this.addRow(rep); } } return; } const qtyDec = t.closest("[data-wof-repeater-qty-dec]"); if (qtyDec) { const wrap = qtyDec.closest("[data-wof-repeater-quantity]"); const rep = wrap?.closest("[data-wof-field]")?.querySelector("[data-wof-repeater]"); const input = wrap?.querySelector("[data-wof-repeater-qty-input]"); if (rep && input) { const min = Math.max(1, Number(rep.dataset.min || 1)); const curr = Number(input.value || 1); if (curr > min) { input.value = String(curr - 1); const rows = rep.querySelectorAll(":scope > [data-wof-repeater-rows] > [data-wof-row], :scope [data-wof-row]"); if (rows.length > 0) { this.removeRow(rows[rows.length - 1]); } } } return; } const cpTrigger = t.closest("[data-wof-color-trigger]"); if (cpTrigger) { this.toggleCustomColorPicker(cpTrigger); return; } const csTrigger = t.closest("[data-wof-custom-select-trigger]"); if (csTrigger) { const cs = csTrigger.closest("[data-wof-custom-select]"); if (cs) { const isOpen = cs.classList.contains("is-open"); this.closeAllCustomSelects(isOpen ? null : cs); cs.classList.toggle("is-open", !isOpen); csTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false"); } return; } const csOption = t.closest(".wof-custom-select__option"); if (csOption) { if (csOption.classList.contains("is-disabled")) return; const cs = csOption.closest("[data-wof-custom-select]"); if (cs) { const val = csOption.dataset.wofOptionValue ?? ""; const nativeSelect = cs.querySelector("select"); if (nativeSelect) { nativeSelect.value = val; this.syncCustomSelect(cs, csOption); nativeSelect.dispatchEvent(new Event("change", { bubbles: true })); } cs.classList.remove("is-open"); cs.querySelector("[data-wof-custom-select-trigger]")?.setAttribute("aria-expanded", "false"); } return; } const dtTrigger = t.closest("[data-wof-datetime-trigger]"); if (dtTrigger) { this.toggleCustomDateTime(dtTrigger); return; } const drTrigger = t.closest("[data-wof-daterange-trigger]"); if (drTrigger) { this.toggleCustomDateRange(drTrigger); return; } const o = t.closest("[data-wof-upload-remove]"); if (o)
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
@@ -231,11 +255,12 @@
             document.addEventListener("keydown", e => {
                 if (e.key === "Escape") {
                     this.closeAllPhonePickers();
-                    document.querySelectorAll(".wof-modal-backdrop.is-open").forEach(modal => {
+                    document.querySelectorAll(".wof-modal-backdrop.is-open, [data-wof-breakdown-modal].is-open").forEach(modal => {
                         modal.style.display = "none";
+                        modal.hidden = true;
                         modal.setAttribute("aria-hidden", "true");
                         modal.classList.remove("is-open");
-                        const trigger = modal.closest(".wof-field--modal")?.querySelector(".wof-modal-trigger");
+                        const trigger = modal.closest(".wof-field--modal")?.querySelector(".wof-modal-trigger") || document.querySelector("[data-wof-breakdown-trigger]");
                         trigger?.setAttribute("aria-expanded", "false");
                     });
                     document.body.classList.remove("wof-modal-open");
@@ -1329,7 +1354,7 @@
         async refreshConfigurationToken() { const e = await fetch(`${o}products/${this.productId()}/configuration?variationId=${this.variationId()}&_wof=${Date.now()}`, { method: "GET", credentials: "same-origin", cache: "no-store", headers: { "Cache-Control": "no-cache" } }), t = await e.json().catch(() => ({})); if (!e.ok || !t?.token || !t?.configuration)
             return !1; const r = this.configuration?.revisionUuid ?? "", a = t.configuration.revisionUuid ?? ""; if (r && a && r !== a)
             throw new Error("Product options were updated. Refresh this page before continuing."); this.payload = { ...this.payload, ...t }, this.configuration = t.configuration, this.applyConfigurationSettings(), this.applyConfigurationStyle(); const i = this.root.querySelector('input[name="wooptionsfic_token"]'), n = this.root.querySelector('input[name="wooptionsfic_revision"]'); return i && (i.value = t.token), n && (n.value = a), !0; }
-        applyConfigurationSettings() { const e = this.configuration?.settings ?? {}, t = this.root.querySelector("[data-wof-summary]"), o = this.root.querySelector("[data-wof-summary-rows]"), r = this.root.querySelector("[data-wof-save-panel]"), a = this.root.querySelector(".wof-configurator__grid"), i = this.root.querySelector("[data-wof-fields]"), n = !1 !== e.showPriceBreakdown, s = !1 !== e.stickySummary, c = !1 !== e.saveEnabled; t?.classList.toggle("is-sticky", s), t && a && i && (s ? a.insertBefore(t, i) : a.append(t)), o && (o.hidden = !n), r && (r.hidden = !c), this.root.dataset.showPriceBreakdown = n ? "1" : "0", this.root.dataset.stickySummary = s ? "1" : "0", this.root.dataset.saveEnabled = c ? "1" : "0"; if (this.payload?.labels?.summaryTotal) { const totalSpan = t?.querySelector(".wof-summary__total span"); if (totalSpan) totalSpan.textContent = this.payload.labels.summaryTotal; } if (this.payload?.labels?.summaryNotice) { const noticeSmall = t?.querySelector("small"); if (noticeSmall) noticeSmall.textContent = this.payload.labels.summaryNotice; } }
+        applyConfigurationSettings() { const e = this.configuration?.settings ?? {}, t = this.root.querySelector("[data-wof-summary]"), o = this.root.querySelector("[data-wof-summary-rows]"), r = this.root.querySelector("[data-wof-save-panel]"), a = this.root.querySelector(".wof-configurator__grid"), i = this.root.querySelector("[data-wof-fields]"), breakdownBtn = this.root.querySelector("[data-wof-breakdown-trigger]"), saveBtn = this.root.querySelector("[data-wof-save]"), shareBtn = this.root.querySelector("[data-wof-share]"), n = !1 !== e.showPriceBreakdown, s = !1 !== e.stickySummary, c = Boolean(e.saveEnabled || e.shareEnabled); t?.classList.toggle("is-sticky", s), t && a && i && (s ? a.insertBefore(t, i) : a.append(t)), o && (o.hidden = !n), breakdownBtn && (breakdownBtn.hidden = !n), r && (r.hidden = !c), saveBtn && (saveBtn.hidden = !e.saveEnabled), shareBtn && (shareBtn.hidden = !e.shareEnabled), this.root.dataset.showPriceBreakdown = n ? "1" : "0", this.root.dataset.stickySummary = s ? "1" : "0", this.root.dataset.saveEnabled = e.saveEnabled ? "1" : "0"; if (this.payload?.labels?.summaryTotal) { const totalSpan = t?.querySelector(".wof-summary__title") || t?.querySelector(".wof-summary__total span"); if (totalSpan) totalSpan.textContent = this.payload.labels.summaryTotal; const modalTotal = t?.querySelector(".wof-breakdown-modal__total-row span"); if (modalTotal) modalTotal.textContent = this.payload.labels.summaryTotal; } if (this.payload?.labels?.summaryNotice) { const noticeEl = t?.querySelector(".wof-summary__notice") || t?.querySelector("small"); if (noticeEl) noticeEl.textContent = this.payload.labels.summaryNotice; } }
         applyConfigurationStyle() { const e = this.configuration?.style ?? {}, t = e.tokens ?? {}; Object.entries(t).forEach(([e, t]) => { if ("string" != typeof t || !/^(?:#[0-9a-f]{6}|currentColor|Canvas|transparent)$/i.test(t))
             return; const o = e.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase(); this.root.style.setProperty(`--wof-${o}`, t); }), this.root.dataset.wofPalette = String(e.palette ?? ""), this.root.style.colorScheme = "night-studio" === e.palette ? "dark" : "light"; const o = e.typography ?? {}, r = o.family ?? "inherit", a = { inherit: "inherit", "system-ui": 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', Inter: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', Manrope: '"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', Poppins: '"Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', Outfit: '"Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', "Plus Jakarta Sans": '"Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif', Roboto: '"Roboto", Arial, sans-serif' }; this.root.style.setProperty("--wof-font", a[r] ?? "inherit"), this.root.style.setProperty("--wof-label-weight", String(Math.max(400, Math.min(800, Number(o.labelWeight ?? 650))))), this.root.style.setProperty("--wof-body-weight", String(Math.max(300, Math.min(700, Number(o.bodyWeight ?? 450))))), this.root.style.setProperty("--wof-font-size", `${Math.max(16, Math.min(24, Number(o.desktopSize ?? 16)))}px`), this.root.style.setProperty("--wof-line-height", String(Math.max(1.2, Math.min(2, Number(o.lineHeight ?? 1.5))))), this.ensureTypographyFont(r); }
         ensureTypographyFont(e) { const t = { Inter: "Inter:wght@300;400;500;600;700;800", Manrope: "Manrope:wght@300;400;500;600;700;800", Poppins: "Poppins:wght@300;400;500;600;700;800", Outfit: "Outfit:wght@300;400;500;600;700;800", "Plus Jakarta Sans": "Plus+Jakarta+Sans:wght@300;400;500;600;700;800", Roboto: "Roboto:wght@300;400;500;600;700;800" }[e]; if (!t)
@@ -1398,31 +1423,73 @@
 
             if (e.price) {
                 const a = this.root.querySelector("[data-wof-total]");
+                const bTotal = this.root.querySelector("[data-wof-breakdown-total]");
                 // Show extendedTotal (unitPrice × product quantity) so the summary
                 // reflects the full order amount when product quantity > 1.
                 const displayPrice = e.price.extendedTotal ?? e.price.unitPrice;
-                if (a) a.textContent = this.money(displayPrice.decimal, displayPrice.currency);
-                const i = this.root.querySelector("[data-wof-summary-rows]"), n = !1 !== this.configuration?.settings?.showPriceBreakdown;
+                const formattedPrice = this.money(displayPrice.decimal, displayPrice.currency);
+                if (a) a.textContent = formattedPrice;
+                if (bTotal) bTotal.textContent = formattedPrice;
+
+                const i = this.root.querySelector("[data-wof-summary-rows]");
+                const modalItems = this.root.querySelector("[data-wof-breakdown-modal-items]");
+                const breakdownCount = this.root.querySelector("[data-wof-breakdown-count]");
+                const n = !1 !== this.configuration?.settings?.showPriceBreakdown;
+
                 if (i) {
-                    i.hidden = !n;
                     i.replaceChildren();
-                    if (n && e.price?.contributions) {
-                        e.price.contributions.forEach(item => {
+                }
+                if (modalItems) {
+                    modalItems.replaceChildren();
+                }
+
+                const contributions = (n && e.price?.contributions) ? e.price.contributions : [];
+                if (contributions.length > 0) {
+                    contributions.forEach(item => {
+                        const formattedItemAmount = this.money(item.rounded.decimal, item.rounded.currency);
+                        const isZero = Number(item.rounded.decimal) === 0;
+
+                        if (modalItems) {
+                            const mRow = document.createElement("div");
+                            mRow.className = "wof-breakdown-item";
+                            const mLabel = document.createElement("span");
+                            mLabel.className = "wof-breakdown-item__label";
+                            mLabel.textContent = item.label;
+                            const mAmount = document.createElement("strong");
+                            mAmount.className = "wof-breakdown-item__amount" + (isZero ? " is-zero" : "");
+                            mAmount.textContent = isZero ? "Included" : formattedItemAmount;
+                            mRow.append(mLabel, mAmount);
+                            modalItems.append(mRow);
+                        }
+
+                        if (i && n) {
                             const row = document.createElement("div");
                             const label = document.createElement("span");
                             const amount = document.createElement("strong");
                             label.textContent = item.label;
-                            amount.textContent = this.money(item.rounded.decimal, item.rounded.currency);
+                            amount.textContent = formattedItemAmount;
                             row.append(label, amount);
                             i.append(row);
-                            const calcInputs = this.root.querySelectorAll(`[data-wof-calculated="${r(item.sourceUuid)}"]`);
-                            calcInputs.forEach(calcInput => {
-                                calcInput.value = amount.textContent;
-                                calcInput.textContent = amount.textContent;
-                            });
+                        }
+
+                        const calcInputs = this.root.querySelectorAll(`[data-wof-calculated="${r(item.sourceUuid)}"]`);
+                        calcInputs.forEach(calcInput => {
+                            calcInput.value = formattedItemAmount;
+                            calcInput.textContent = formattedItemAmount;
                         });
-                    }
+                    });
+                } else if (modalItems) {
+                    const emptyP = document.createElement("p");
+                    emptyP.className = "wof-breakdown-modal__empty";
+                    emptyP.textContent = "Base product price only. No additional options selected.";
+                    modalItems.append(emptyP);
                 }
+
+                if (breakdownCount) {
+                    breakdownCount.textContent = String(contributions.length);
+                    breakdownCount.hidden = contributions.length === 0;
+                }
+
                 if (e.price?.formulas) {
                     const currency = e.price.unitPrice?.currency || window.WooOptionsFicStorefront?.currency || 'USD';
                     Object.entries(e.price.formulas).forEach(([uuid, info]) => {
@@ -2446,7 +2513,13 @@
             try {
                 await navigator.clipboard.writeText(e.value);
                 const t = this.root.querySelector("[data-wof-save-status]");
-                t && (t.textContent = "Share link copied.");
+                t && (t.textContent = "Share link copied to clipboard.");
+                const btnSpan = this.root.querySelector("[data-wof-copy-share] span");
+                if (btnSpan) {
+                    const orig = btnSpan.textContent;
+                    btnSpan.textContent = "Copied!";
+                    setTimeout(() => { btnSpan.textContent = orig; }, 2000);
+                }
             }
             catch {
                 e.focus(), e.select();
