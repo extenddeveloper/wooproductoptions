@@ -906,25 +906,30 @@ namespace WooOptionsFic.Builder {
     }
 
     if (field.type === 'formula') {
-      const mode = field.displayMode || 'number';
+      const mode = field.displayMode || 'currency';
       const decimals = Math.max(0, Math.min(6, field.decimalPlaces ?? 2));
-      const prefix = field.prefix || (mode === 'currency' ? '$' : '');
+      const adminConfig = (window as any).WooOptionsFicAdmin;
+      const currencySymbol = adminConfig?.currencySymbol || adminConfig?.currency || '$';
+      const currencyPos = adminConfig?.currencyPosition || 'left_space';
+      let prefix = field.prefix ?? '';
       const suffix = field.suffix || '';
-      const sampleVal = mode === 'text' ? 'Sample output' : (0).toFixed(decimals);
-      const exprPreview = field.expression ? field.expression : '0';
-
+      if (mode === 'text') {
+        return (
+          <span className="wof-preview-formula-value">{`${prefix}Sample output${suffix}`}</span>
+        );
+      }
+      const sampleVal = (123).toFixed(decimals);
+      let val = '';
+      if (!prefix) {
+        if (currencyPos === 'right') val = `${sampleVal}${currencySymbol}${suffix}`;
+        else if (currencyPos === 'right_space') val = `${sampleVal} ${currencySymbol}${suffix}`;
+        else if (currencyPos === 'left') val = `${currencySymbol}${sampleVal}${suffix}`;
+        else val = `${currencySymbol} ${sampleVal}${suffix}`;
+      } else {
+        val = `${prefix}${sampleVal}${suffix}`;
+      }
       return (
-        <div className="wof-preview-formula-wrap">
-          <div className="wof-preview-formula-output">
-            {prefix ? <span className="wof-preview-formula-prefix">{prefix}</span> : null}
-            <span className="wof-preview-formula-value">{sampleVal}</span>
-            {suffix ? <span className="wof-preview-formula-suffix">{suffix}</span> : null}
-          </div>
-          <div className="wof-preview-formula-badge" title={exprPreview}>
-            <span className="wof-preview-formula-fx">fx</span>
-            <span className="wof-preview-formula-expr">{exprPreview}</span>
-          </div>
-        </div>
+        <span className="wof-preview-formula-value">{val}</span>
       );
     }
 

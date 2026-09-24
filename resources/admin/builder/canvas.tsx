@@ -11,6 +11,27 @@ namespace WooOptionsFic.Builder {
     return types.includes(FIELD_TYPE_MIME) || types.includes(FIELD_INDEX_MIME) || types.includes(FIELD_UUID_MIME) || types.includes(FIELD_CHILD_INDEX_MIME);
   }
 
+  function getFormulaPreviewAmount(field: WooOptionsFic.FieldDefinition): string {
+    const mode = field.displayMode || 'currency';
+    const decimals = Math.max(0, Math.min(6, field.decimalPlaces ?? 2));
+    const adminConfig = (window as any).WooOptionsFicAdmin;
+    const currencySymbol = adminConfig?.currencySymbol || adminConfig?.currency || '$';
+    const currencyPos = adminConfig?.currencyPosition || 'left_space';
+    let prefix = field.prefix ?? '';
+    const suffix = field.suffix || '';
+    if (mode === 'text') {
+      return `${prefix}Sample output${suffix}`;
+    }
+    const sampleNum = (123).toFixed(decimals);
+    if (!prefix) {
+      if (currencyPos === 'right') return `${sampleNum}${currencySymbol}${suffix}`;
+      if (currencyPos === 'right_space') return `${sampleNum} ${currencySymbol}${suffix}`;
+      if (currencyPos === 'left') return `${currencySymbol}${sampleNum}${suffix}`;
+      return `${currencySymbol} ${sampleNum}${suffix}`;
+    }
+    return `${prefix}${sampleNum}${suffix}`;
+  }
+
   function NestedCanvasField(props: {
     parentUuid: string;
     child: WooOptionsFic.FieldDefinition;
@@ -73,6 +94,7 @@ namespace WooOptionsFic.Builder {
           props.child.disabled && 'is-disabled',
           dropEdge === 'before' && 'is-drop-before',
           dropEdge === 'after' && 'is-drop-after',
+          props.child.type === 'formula' && 'wof-canvas-field--formula',
           `wof-canvas-field--width-${width.replace('%', '')}`
         )}
         style={{
@@ -103,13 +125,28 @@ namespace WooOptionsFic.Builder {
         <div className="wof-canvas-field__copy">
           <strong className="wof-canvas-field__title">
             {props.child.label || __('Untitled field', 'wooptionsfic')}
+            {props.child.help && props.child.helpTextPosition === 'tooltip' ? (
+              <span
+                className="wof-field__tooltip-preview"
+                title={props.child.help}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /></svg>
+              </span>
+            ) : null}
           </strong>
+          {props.child.type === 'formula' ? (
+            <span className="wof-canvas-field__formula-val">
+              {getFormulaPreviewAmount(props.child)}
+            </span>
+          ) : null}
           {props.child.required ? <span className="wof-canvas-field__required">{__('REQUIRED', 'wooptionsfic')}</span> : null}
         </div>
 
-        <div className="wof-canvas-field__preview">
-          <FieldPreview field={props.child} />
-        </div>
+        {props.child.type !== 'formula' ? (
+          <div className="wof-canvas-field__preview">
+            <FieldPreview field={props.child} />
+          </div>
+        ) : null}
       </article>
     );
   }
@@ -510,6 +547,7 @@ namespace WooOptionsFic.Builder {
         dropEdge === 'before' && 'is-drop-before',
         dropEdge === 'after' && 'is-drop-after',
         isContentBlock && `wof-canvas-field--${props.field.type}`,
+        props.field.type === 'formula' && 'wof-canvas-field--formula',
         `wof-canvas-field--width-${width.replace('%', '')}`
       )}
       style={widthStyle}
@@ -545,6 +583,11 @@ namespace WooOptionsFic.Builder {
               </span>
             ) : null}
           </strong>
+          {props.field.type === 'formula' ? (
+            <span className="wof-canvas-field__formula-val">
+              {getFormulaPreviewAmount(props.field)}
+            </span>
+          ) : null}
           {priceText ? <span className="wof-canvas-field__price">{priceText}</span> : null}
           {props.field.required ? <span className="wof-canvas-field__required">{__('REQUIRED', 'wooptionsfic')}</span> : null}
           {props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) ? (
@@ -558,7 +601,9 @@ namespace WooOptionsFic.Builder {
         </div>
       ) : null}
 
-      <div className="wof-canvas-field__preview"><FieldPreview field={props.field} allFields={props.allFields} /></div>
+      {props.field.type !== 'formula' ? (
+        <div className="wof-canvas-field__preview"><FieldPreview field={props.field} allFields={props.allFields} /></div>
+      ) : null}
       {props.field.help && props.field.helpTextPosition === 'below_field' && !isContentBlock ? (
         <p className="wof-canvas-field__help-text wof-canvas-field__help-text--below-field">
           {props.field.help}

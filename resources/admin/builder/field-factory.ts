@@ -241,7 +241,7 @@ namespace WooOptionsFic.FieldFactory {
 
     if (type === 'formula') {
       field.expression = '0';
-      field.displayMode = 'number';
+      field.displayMode = 'currency';
       field.decimalPlaces = 2;
       field.prefix = '';
       field.suffix = '';

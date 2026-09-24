@@ -77,10 +77,11 @@ final class PriceEngine
 					}
 					$formulas[$uuid] = [
 						'value' => $val_str,
-						'displayMode' => (string) ($field['displayMode'] ?? 'number'),
+						'displayMode' => (string) ($field['displayMode'] ?? 'currency'),
 						'decimalPlaces' => (int) ($field['decimalPlaces'] ?? 2),
 						'prefix' => (string) ($field['prefix'] ?? ''),
 						'suffix' => (string) ($field['suffix'] ?? ''),
+						'currency' => $currency,
 						'hideWhenZero' => !empty($field['hideWhenZero']),
 					];
 
@@ -114,10 +115,11 @@ final class PriceEngine
 				} catch (\Throwable $e) {
 					$formulas[$uuid] = [
 						'value' => '0',
-						'displayMode' => (string) ($field['displayMode'] ?? 'number'),
+						'displayMode' => (string) ($field['displayMode'] ?? 'currency'),
 						'decimalPlaces' => (int) ($field['decimalPlaces'] ?? 2),
 						'prefix' => (string) ($field['prefix'] ?? ''),
 						'suffix' => (string) ($field['suffix'] ?? ''),
+						'currency' => $currency,
 						'hideWhenZero' => !empty($field['hideWhenZero']),
 						'error' => $e->getMessage(),
 					];

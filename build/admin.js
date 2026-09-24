@@ -771,7 +771,7 @@ var WooOptionsFic;
             }
             if (type === 'formula') {
                 field.expression = '0';
-                field.displayMode = 'number';
+                field.displayMode = 'currency';
                 field.decimalPlaces = 2;
                 field.prefix = '';
                 field.suffix = '';
@@ -3909,20 +3909,32 @@ var WooOptionsFic;
                         priceText ? wp.element.createElement("span", { className: "wof-preview-datetime__price" }, priceText) : null)));
             }
             if (field.type === 'formula') {
-                const mode = field.displayMode || 'number';
+                const mode = field.displayMode || 'currency';
                 const decimals = Math.max(0, Math.min(6, field.decimalPlaces ?? 2));
-                const prefix = field.prefix || (mode === 'currency' ? '$' : '');
+                const adminConfig = window.WooOptionsFicAdmin;
+                const currencySymbol = adminConfig?.currencySymbol || adminConfig?.currency || '$';
+                const currencyPos = adminConfig?.currencyPosition || 'left_space';
+                let prefix = field.prefix ?? '';
                 const suffix = field.suffix || '';
-                const sampleVal = mode === 'text' ? 'Sample output' : (0).toFixed(decimals);
-                const exprPreview = field.expression ? field.expression : '0';
-                return (wp.element.createElement("div", { className: "wof-preview-formula-wrap" },
-                    wp.element.createElement("div", { className: "wof-preview-formula-output" },
-                        prefix ? wp.element.createElement("span", { className: "wof-preview-formula-prefix" }, prefix) : null,
-                        wp.element.createElement("span", { className: "wof-preview-formula-value" }, sampleVal),
-                        suffix ? wp.element.createElement("span", { className: "wof-preview-formula-suffix" }, suffix) : null),
-                    wp.element.createElement("div", { className: "wof-preview-formula-badge", title: exprPreview },
-                        wp.element.createElement("span", { className: "wof-preview-formula-fx" }, "fx"),
-                        wp.element.createElement("span", { className: "wof-preview-formula-expr" }, exprPreview))));
+                if (mode === 'text') {
+                    return (wp.element.createElement("span", { className: "wof-preview-formula-value" }, `${prefix}Sample output${suffix}`));
+                }
+                const sampleVal = (123).toFixed(decimals);
+                let val = '';
+                if (!prefix) {
+                    if (currencyPos === 'right')
+                        val = `${sampleVal}${currencySymbol}${suffix}`;
+                    else if (currencyPos === 'right_space')
+                        val = `${sampleVal} ${currencySymbol}${suffix}`;
+                    else if (currencyPos === 'left')
+                        val = `${currencySymbol}${sampleVal}${suffix}`;
+                    else
+                        val = `${currencySymbol} ${sampleVal}${suffix}`;
+                }
+                else {
+                    val = `${prefix}${sampleVal}${suffix}`;
+                }
+                return (wp.element.createElement("span", { className: "wof-preview-formula-value" }, val));
             }
             const inputType = {
                 tel: 'tel', email: 'email', url: 'url', number: 'number', customer_defined_price: 'number',
@@ -4022,6 +4034,29 @@ var WooOptionsFic;
             const types = Array.from(event.dataTransfer?.types ?? []);
             return types.includes(FIELD_TYPE_MIME) || types.includes(FIELD_INDEX_MIME) || types.includes(FIELD_UUID_MIME) || types.includes(FIELD_CHILD_INDEX_MIME);
         }
+        function getFormulaPreviewAmount(field) {
+            const mode = field.displayMode || 'currency';
+            const decimals = Math.max(0, Math.min(6, field.decimalPlaces ?? 2));
+            const adminConfig = window.WooOptionsFicAdmin;
+            const currencySymbol = adminConfig?.currencySymbol || adminConfig?.currency || '$';
+            const currencyPos = adminConfig?.currencyPosition || 'left_space';
+            let prefix = field.prefix ?? '';
+            const suffix = field.suffix || '';
+            if (mode === 'text') {
+                return `${prefix}Sample output${suffix}`;
+            }
+            const sampleNum = (123).toFixed(decimals);
+            if (!prefix) {
+                if (currencyPos === 'right')
+                    return `${sampleNum}${currencySymbol}${suffix}`;
+                if (currencyPos === 'right_space')
+                    return `${sampleNum} ${currencySymbol}${suffix}`;
+                if (currencyPos === 'left')
+                    return `${currencySymbol}${sampleNum}${suffix}`;
+                return `${currencySymbol} ${sampleNum}${suffix}`;
+            }
+            return `${prefix}${sampleNum}${suffix}`;
+        }
         function NestedCanvasField(props) {
             const [dropEdge, setDropEdge] = useState(null);
             const dragStart = (event) => {
@@ -4065,7 +4100,7 @@ var WooOptionsFic;
             };
             const width = props.child.width || '100%';
             const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.child.type]?.label ?? props.child.type;
-            return (wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', 'wof-nested-canvas-field', props.selected && 'is-selected', props.child.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', `wof-canvas-field--width-${width.replace('%', '')}`), style: {
+            return (wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', 'wof-nested-canvas-field', props.selected && 'is-selected', props.child.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', props.child.type === 'formula' && 'wof-canvas-field--formula', `wof-canvas-field--width-${width.replace('%', '')}`), style: {
                     width: width === '33%' ? 'calc(33.333% - 8px)' : width === '50%' ? 'calc(50% - 8px)' : width === '66%' ? 'calc(66.666% - 8px)' : '100%',
                     flex: width === '33%' ? '0 0 calc(33.333% - 8px)' : width === '50%' ? '0 0 calc(50% - 8px)' : width === '66%' ? '0 0 calc(66.666% - 8px)' : '0 0 100%',
                     boxSizing: 'border-box',
@@ -4084,10 +4119,16 @@ var WooOptionsFic;
                     wp.element.createElement("button", { type: "button", className: "is-destructive", onClick: props.onDelete, "aria-label": __('Delete field', 'wooptionsfic'), title: __('Delete', 'wooptionsfic') },
                         wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "trash" }))),
                 wp.element.createElement("div", { className: "wof-canvas-field__copy" },
-                    wp.element.createElement("strong", { className: "wof-canvas-field__title" }, props.child.label || __('Untitled field', 'wooptionsfic')),
+                    wp.element.createElement("strong", { className: "wof-canvas-field__title" },
+                        props.child.label || __('Untitled field', 'wooptionsfic'),
+                        props.child.help && props.child.helpTextPosition === 'tooltip' ? (wp.element.createElement("span", { className: "wof-field__tooltip-preview", title: props.child.help },
+                            wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
+                                wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
+                                wp.element.createElement("path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" })))) : null),
+                    props.child.type === 'formula' ? (wp.element.createElement("span", { className: "wof-canvas-field__formula-val" }, getFormulaPreviewAmount(props.child))) : null,
                     props.child.required ? wp.element.createElement("span", { className: "wof-canvas-field__required" }, __('REQUIRED', 'wooptionsfic')) : null),
-                wp.element.createElement("div", { className: "wof-canvas-field__preview" },
-                    wp.element.createElement(Builder.FieldPreview, { field: props.child }))));
+                props.child.type !== 'formula' ? (wp.element.createElement("div", { className: "wof-canvas-field__preview" },
+                    wp.element.createElement(Builder.FieldPreview, { field: props.child }))) : null));
         }
         function CanvasSectionField(props) {
             const [dropEdge, setDropEdge] = useState(null);
@@ -4308,7 +4349,7 @@ var WooOptionsFic;
             const typeLabel = window.WooOptionsFicAdmin?.fieldTypes?.[props.field.type]?.label ?? props.field.type;
             const priceText = Builder.formatChoicePrice(props.field.pricing);
             const isContentBlock = ['spacer', 'separator', 'content', 'modal', 'heading', 'paragraph', 'help'].includes(props.field.type);
-            return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', isContentBlock && `wof-canvas-field--${props.field.type}`, `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
+            return wp.element.createElement("article", { className: WooOptionsFic.Utils.classNames('wof-canvas-field', props.selected && 'is-selected', props.field.disabled && 'is-disabled', dropEdge === 'before' && 'is-drop-before', dropEdge === 'after' && 'is-drop-after', isContentBlock && `wof-canvas-field--${props.field.type}`, props.field.type === 'formula' && 'wof-canvas-field--formula', `wof-canvas-field--width-${width.replace('%', '')}`), style: widthStyle, onDragOver: dragOver, onDragLeave: dragLeave, onDrop: drop, onClick: props.onSelect, "data-field-uuid": props.field.uuid },
                 props.selected ? (wp.element.createElement("span", { className: "wof-canvas-field__type-badge" }, typeLabel)) : null,
                 wp.element.createElement("div", { className: "wof-canvas-field__toolbar", onClick: (event) => event.stopPropagation() },
                     wp.element.createElement("button", { type: "button", draggable: true, className: "wof-canvas-field__drag-handle", onDragStart: dragStart, onDragEnd: () => setDropEdge(null), "aria-label": __('Drag field', 'wooptionsfic'), title: __('Drag to reorder', 'wooptionsfic') },
@@ -4327,6 +4368,7 @@ var WooOptionsFic;
                                 wp.element.createElement("circle", { cx: "12", cy: "12", r: "10" }),
                                 wp.element.createElement("path", { d: "M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" }),
                                 wp.element.createElement("line", { x1: "12", y1: "17", x2: "12.01", y2: "17" })))) : null),
+                    props.field.type === 'formula' ? (wp.element.createElement("span", { className: "wof-canvas-field__formula-val" }, getFormulaPreviewAmount(props.field))) : null,
                     priceText ? wp.element.createElement("span", { className: "wof-canvas-field__price" }, priceText) : null,
                     props.field.required ? wp.element.createElement("span", { className: "wof-canvas-field__required" }, __('REQUIRED', 'wooptionsfic')) : null,
                     props.field.help && (props.field.helpTextPosition === 'below_title' || !props.field.helpTextPosition) ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-title" }, props.field.help)) : null,
@@ -4334,8 +4376,8 @@ var WooOptionsFic;
                         props.field.choices.length,
                         " ",
                         __('Choices', 'wooptionsfic'))) : null)) : null,
-                wp.element.createElement("div", { className: "wof-canvas-field__preview" },
-                    wp.element.createElement(Builder.FieldPreview, { field: props.field, allFields: props.allFields })),
+                props.field.type !== 'formula' ? (wp.element.createElement("div", { className: "wof-canvas-field__preview" },
+                    wp.element.createElement(Builder.FieldPreview, { field: props.field, allFields: props.allFields }))) : null,
                 props.field.help && props.field.helpTextPosition === 'below_field' && !isContentBlock ? (wp.element.createElement("p", { className: "wof-canvas-field__help-text wof-canvas-field__help-text--below-field" }, props.field.help)) : null);
         }
         function Canvas(props) {
@@ -6755,11 +6797,11 @@ var WooOptionsFic;
                     wp.element.createElement("div", { className: "wof-field-width-setting", style: { marginBottom: '12px' } },
                         wp.element.createElement("span", { className: "wof-field-width-label" }, __('Output Mode', 'wooptionsfic')),
                         wp.element.createElement("div", { className: "wof-field-width-group", role: "radiogroup", "aria-label": __('Output mode', 'wooptionsfic') }, [
-                            { label: __('Number', 'wooptionsfic'), value: 'number' },
                             { label: __('Currency', 'wooptionsfic'), value: 'currency' },
+                            { label: __('Number', 'wooptionsfic'), value: 'number' },
                             { label: __('Text', 'wooptionsfic'), value: 'text' },
                         ].map((opt) => {
-                            const isSelected = (field.displayMode ?? 'number') === opt.value;
+                            const isSelected = (field.displayMode ?? 'currency') === opt.value;
                             return (wp.element.createElement("button", { key: opt.value, type: "button", role: "radio", "aria-checked": isSelected, className: WooOptionsFic.Utils.classNames('wof-width-btn', isSelected && 'is-active'), onClick: () => update({ displayMode: opt.value }) }, opt.label));
                         }))),
                     (field.displayMode ?? 'number') !== 'text' ? (wp.element.createElement(TextControl, { label: __('Decimal Places', 'wooptionsfic'), type: "number", min: 0, max: 6, value: String(field.decimalPlaces ?? 2), onChange: (val) => update({ decimalPlaces: Math.max(0, Math.min(6, parseInt(val, 10) || 0)) }) })) : null,

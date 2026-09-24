@@ -1205,42 +1205,47 @@
                             amount.textContent = this.money(item.rounded.decimal, item.rounded.currency);
                             row.append(label, amount);
                             i.append(row);
-                            const calcInput = this.root.querySelector(`[data-wof-calculated="${r(item.sourceUuid)}"]`);
-                            if (calcInput) {
+                            const calcInputs = this.root.querySelectorAll(`[data-wof-calculated="${r(item.sourceUuid)}"]`);
+                            calcInputs.forEach(calcInput => {
                                 calcInput.value = amount.textContent;
                                 calcInput.textContent = amount.textContent;
-                            }
+                            });
                         });
                     }
                 }
                 if (e.price?.formulas) {
                     const currency = e.price.unitPrice?.currency || window.WooOptionsFicStorefront?.currency || 'USD';
                     Object.entries(e.price.formulas).forEach(([uuid, info]) => {
-                        const out = this.root.querySelector(`[data-wof-calculated="${r(uuid)}"]`);
-                        if (!out) return;
+                        const outs = this.root.querySelectorAll(`[data-wof-calculated="${r(uuid)}"]`);
+                        if (!outs.length) return;
                         const numVal = parseFloat(info.value) || 0;
-                        const fieldEl = out.closest('.wof-field');
-                        if (info.hideWhenZero && Math.abs(numVal) < 1e-9) {
-                            if (fieldEl) fieldEl.style.display = 'none';
-                        } else {
-                            if (fieldEl && !fieldEl.classList.contains('is-disabled')) {
-                                fieldEl.style.display = '';
-                            }
-                        }
                         let formatted = '';
                         const prefix = info.prefix ?? '';
                         const suffix = info.suffix ?? '';
-                        if (info.displayMode === 'currency') {
-                            const dec = typeof info.decimalPlaces === 'number' ? info.decimalPlaces : 2;
-                            formatted = `${prefix}${this.money(numVal.toFixed(dec), currency)}${suffix}`;
-                        } else if (info.displayMode === 'text') {
+                        const dec = typeof info.decimalPlaces === 'number' ? info.decimalPlaces : 2;
+                        const numStr = numVal.toFixed(dec);
+                        if (info.displayMode === 'text') {
                             formatted = `${prefix}${info.value}${suffix}`;
                         } else {
-                            const dec = typeof info.decimalPlaces === 'number' ? info.decimalPlaces : 2;
-                            formatted = `${prefix}${numVal.toFixed(dec)}${suffix}`;
+                            if (prefix) {
+                                formatted = `${prefix}${numStr}${suffix}`;
+                            } else {
+                                const formattedMoney = this.money(numStr, info.currency || currency);
+                                formatted = `${formattedMoney}${suffix}`;
+                            }
                         }
-                        out.value = formatted;
-                        out.textContent = formatted;
+                        outs.forEach(out => {
+                            const fieldEl = out.closest('.wof-field');
+                            if (info.hideWhenZero && Math.abs(numVal) < 1e-9) {
+                                if (fieldEl) fieldEl.style.display = 'none';
+                            } else {
+                                if (fieldEl && !fieldEl.classList.contains('is-disabled')) {
+                                    fieldEl.style.display = '';
+                                }
+                            }
+                            out.value = formatted;
+                            out.textContent = formatted;
+                        });
                     });
                 }
             }
@@ -2173,13 +2178,20 @@
                 }
             }
         } const i = a.querySelector('input:not([type="file"]), textarea, select'); if (i && "object" != typeof o) { i.value = String(o ?? ""); const cs = a.querySelector("[data-wof-custom-select]"); if (cs) this.syncCustomSelect(cs); } }), this.updateColorOutputs(), this.updateProductImage(), this.enforceMaxChoices(); }
-        money(e, t) { const o = Number(e); if (Number.isFinite(o))
-            try {
-                return new Intl.NumberFormat(window.WooOptionsFicStorefront.locale, { style: "currency", currency: t }).format(o);
+        money(e, t) {
+            const o = Number(e);
+            if (Number.isFinite(o)) {
+                const symbol = window.WooOptionsFicStorefront?.currencySymbol || '$';
+                const pos = window.WooOptionsFicStorefront?.currencyPosition || 'left_space';
+                const dec = (String(e).split('.')[1] || '00').length;
+                const formattedNum = o.toFixed(Math.min(6, Math.max(2, dec)));
+                if (pos === 'right') return `${formattedNum}${symbol}`;
+                if (pos === 'right_space') return `${formattedNum} ${symbol}`;
+                if (pos === 'left') return `${symbol}${formattedNum}`;
+                return `${symbol} ${formattedNum}`;
             }
-            catch {
-                return `${t} ${e}`;
-            } return `${t} ${e}`; }
+            return `${e}`;
+        }
         productId() { return Number(this.root.dataset.productId ?? 0); }
         variationId() { return Number(this.form?.querySelector("input.variation_id")?.value ?? 0); }
         quantity() { return Math.max(1, Number(this.form?.querySelector("input.qty")?.value ?? 1)); }

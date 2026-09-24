@@ -3588,11 +3588,11 @@ namespace WooOptionsFic.Builder {
             <span className="wof-field-width-label">{__('Output Mode', 'wooptionsfic')}</span>
             <div className="wof-field-width-group" role="radiogroup" aria-label={__('Output mode', 'wooptionsfic')}>
               {([
-                { label: __('Number', 'wooptionsfic'), value: 'number' },
                 { label: __('Currency', 'wooptionsfic'), value: 'currency' },
+                { label: __('Number', 'wooptionsfic'), value: 'number' },
                 { label: __('Text', 'wooptionsfic'), value: 'text' },
               ] as const).map((opt) => {
-                const isSelected = (field.displayMode ?? 'number') === opt.value;
+                const isSelected = (field.displayMode ?? 'currency') === opt.value;
                 return (
                   <button
                     key={opt.value}

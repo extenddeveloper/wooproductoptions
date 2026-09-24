@@ -141,8 +141,9 @@ final class AdminPage {
 					'fontCatalog'   => is_array($font_catalog) ? $font_catalog : [],
 					'settings'      => Settings::all(),
 					'wooAvailable'  => Requirements::woocommerce_is_available(),
-					'currency'      => Requirements::woocommerce_is_available() && function_exists('get_woocommerce_currency') ? (string) get_woocommerce_currency() : 'USD',
-					'currencySymbol'=> Requirements::woocommerce_is_available() && function_exists('get_woocommerce_currency_symbol') ? html_entity_decode((string) get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8') : '$',
+					'currency'        => Requirements::woocommerce_is_available() && function_exists('get_woocommerce_currency') ? (string) get_woocommerce_currency() : 'USD',
+					'currencySymbol'  => Requirements::woocommerce_is_available() && function_exists('get_woocommerce_currency_symbol') ? html_entity_decode((string) get_woocommerce_currency_symbol(), ENT_QUOTES, 'UTF-8') : '$',
+					'currencyPosition'=> Requirements::woocommerce_is_available() && function_exists('get_option') ? (string) get_option('woocommerce_currency_pos', 'left_space') : 'left_space',
 					'currentUser'   => [
 						'id'   => get_current_user_id(),
 						'name' => wp_get_current_user()->display_name,
