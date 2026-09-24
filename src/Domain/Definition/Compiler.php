@@ -130,7 +130,7 @@ final class Compiler {
 			'preview'       => $this->normalize_preview((array) ($definition['preview'] ?? []), $seen_ids, $warnings),
 			'style'         => [
 				'palette'    => $style['palette'],
-				'overrides'  => is_array($definition['style']['overrides'] ?? null) ? $definition['style']['overrides'] : [],
+				'overrides'  => is_array($definition['style']['overrides'] ?? null) ? $definition['style']['overrides'] : (is_array($definition['style']['tokens'] ?? null) ? $definition['style']['tokens'] : []),
 				'typography' => $style['typography'],
 			],
 			'settings'      => $this->normalize_settings((array) ($definition['settings'] ?? [])),

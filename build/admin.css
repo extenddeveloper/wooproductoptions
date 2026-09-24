@@ -3852,6 +3852,165 @@
 	visibility: visible;
 }
 
+/* ── Customize Colors section under palette picker ── */
+
+.wof-customize-colors-section {
+	margin-top: 16px;
+}
+
+.wof-customize-colors-header {
+	align-items: center;
+	background: transparent;
+	border: 0;
+	cursor: pointer;
+	display: flex;
+	gap: 6px;
+	margin: 0 0 10px;
+	padding: 4px 0;
+	text-align: left;
+	width: 100%;
+}
+
+.wof-customize-colors-header h4 {
+	color: var(--wof-admin-ink);
+	font-size: 13px;
+	font-weight: 600;
+	line-height: 1.2;
+	margin: 0;
+}
+
+.wof-customize-colors-chevron {
+	align-items: center;
+	color: var(--wof-admin-muted);
+	display: inline-flex;
+	justify-content: center;
+	transition: transform .18s ease;
+}
+
+.wof-customize-colors-chevron.is-open {
+	transform: rotate(0deg);
+}
+
+.wof-customize-colors-chevron:not(.is-open) {
+	transform: rotate(180deg);
+}
+
+.wof-customize-colors-grid {
+	display: grid;
+	gap: 12px 10px;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	margin-bottom: 6px;
+}
+
+@media (max-width: 380px) {
+	.wof-customize-colors-grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+.wof-color-field-item {
+	display: flex;
+	flex-direction: column;
+	gap: 5px;
+	min-width: 0;
+}
+
+.wof-color-field-label {
+	color: var(--wof-admin-ink);
+	display: block;
+	font-size: 11.5px;
+	font-weight: 500;
+	line-height: 1.2;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.wof-color-field-control {
+	align-items: center;
+	display: flex;
+	gap: 6px;
+}
+
+.wof-color-swatch-box {
+	align-items: center;
+	background: #fff;
+	border: 1px solid #cbd5e1;
+	border-radius: 3px;
+	box-sizing: border-box;
+	cursor: pointer;
+	display: flex;
+	flex-shrink: 0;
+	height: 32px;
+	justify-content: center;
+	min-width: 32px;
+	position: relative;
+	transition: border-color .15s ease, box-shadow .15s ease;
+	width: 32px;
+}
+
+.wof-color-swatch-box:hover,
+.wof-color-swatch-box:focus-within,
+.wof-color-field-control.is-focused .wof-color-swatch-box {
+	border-color: #2271b1;
+}
+
+.wof-color-circle {
+	border-radius: 50%;
+	box-sizing: border-box;
+	display: block;
+	height: 18px;
+	pointer-events: none;
+	width: 18px;
+}
+
+.wof-color-circle.has-border {
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .18);
+}
+
+.wof-color-native-picker {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	height: 100% !important;
+	inset: 0;
+	margin: 0;
+	opacity: 0;
+	padding: 0;
+	position: absolute;
+	width: 100% !important;
+}
+
+.wof-color-text-input {
+	background: #fff !important;
+	border: 1px solid #cbd5e1 !important;
+	border-radius: 3px !important;
+	box-sizing: border-box;
+	color: var(--wof-admin-ink) !important;
+	font-family: monospace, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+	font-size: 11px !important;
+	height: 32px;
+	min-width: 0;
+	padding: 0 6px !important;
+	text-transform: uppercase;
+	transition: border-color .15s ease, box-shadow .15s ease;
+	width: 100%;
+}
+
+.wof-color-text-input:focus {
+	border-color: #2271b1 !important;
+	box-shadow: 0 0 0 1px #2271b1 !important;
+	outline: none !important;
+}
+
+.wof-canvas-field__required {
+	color: var(--wof-preview-danger, #e11d48);
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+}
+
 .wof-style-divider {
 	background: var(--wof-admin-line);
 	height: 1px;

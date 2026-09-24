@@ -4403,6 +4403,8 @@ var WooOptionsFic;
                 '--wof-preview-text': tokens.text ?? '#172033',
                 '--wof-preview-muted': tokens.muted ?? '#5E6A7D',
                 '--wof-preview-border': tokens.border ?? '#D8DEEA',
+                '--wof-preview-danger': tokens.danger ?? '#C7353A',
+                '--wof-preview-on-primary': tokens.onPrimary ?? '#FFFFFF',
                 '--wof-preview-font': fontStack[typography.family] ?? typography.family ?? 'inherit',
                 '--wof-preview-label-weight': String(typography.labelWeight ?? 650),
                 zoom: zoom / 100,
@@ -4504,20 +4506,128 @@ var WooOptionsFic;
     (function (Builder) {
         const { SelectControl, ToggleControl } = wp.components;
         const { __ } = wp.i18n;
+        const { useState, useEffect } = wp.element;
+        const COLOR_FIELDS = [
+            { key: 'text', label: __('Text Color', 'wooptionsfic'), defaultColor: '#1A1A1A' },
+            { key: 'primary', label: __('Primary', 'wooptionsfic'), defaultColor: '#1A1A1A' },
+            { key: 'border', label: __('Field Border', 'wooptionsfic'), defaultColor: '#8A8A8A' },
+            { key: 'surface', label: __('Field Fill', 'wooptionsfic'), defaultColor: '#FFFFFF' },
+            { key: 'onPrimary', label: __('Over Primary Color', 'wooptionsfic'), defaultColor: '#FFFFFF' },
+            { key: 'danger', label: __('Required / Error Color', 'wooptionsfic'), defaultColor: '#DF1C41' },
+        ];
+        function ColorFieldItem(props) {
+            const [localHex, setLocalHex] = useState(props.value);
+            const [isFocused, setIsFocused] = useState(false);
+            useEffect(() => {
+                setLocalHex(props.value);
+            }, [props.value]);
+            const handleInputChange = (e) => {
+                const raw = e.target.value;
+                setLocalHex(raw);
+                let val = raw.trim();
+                if (!val.startsWith('#') && val.length > 0) {
+                    val = '#' + val;
+                }
+                if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                    props.onChange(val.toUpperCase());
+                }
+            };
+            const handleBlur = () => {
+                setIsFocused(false);
+                let val = localHex.trim();
+                if (!val.startsWith('#') && val.length > 0) {
+                    val = '#' + val;
+                }
+                if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+                    const formatted = val.toUpperCase();
+                    setLocalHex(formatted);
+                    props.onChange(formatted);
+                }
+                else {
+                    setLocalHex(props.value);
+                }
+            };
+            const handlePickerChange = (e) => {
+                const val = e.target.value.toUpperCase();
+                setLocalHex(val);
+                props.onChange(val);
+            };
+            const isLightColor = (hex) => {
+                const clean = hex.replace('#', '');
+                if (clean.length !== 6)
+                    return false;
+                const r = parseInt(clean.substring(0, 2), 16);
+                const g = parseInt(clean.substring(2, 4), 16);
+                const b = parseInt(clean.substring(4, 6), 16);
+                return (r * 299 + g * 587 + b * 114) / 1000 > 215;
+            };
+            const safeHex = /^#[0-9A-Fa-f]{6}$/.test(props.value) ? props.value : '#000000';
+            return (wp.element.createElement("div", { className: "wof-color-field-item" },
+                wp.element.createElement("label", { className: "wof-color-field-label", title: props.label }, props.label),
+                wp.element.createElement("div", { className: `wof-color-field-control ${isFocused ? 'is-focused' : ''}` },
+                    wp.element.createElement("div", { className: "wof-color-swatch-box", title: __('Choose color', 'wooptionsfic') },
+                        wp.element.createElement("span", { className: `wof-color-circle ${isLightColor(safeHex) ? 'has-border' : ''}`, style: { backgroundColor: safeHex } }),
+                        wp.element.createElement("input", { type: "color", className: "wof-color-native-picker", value: safeHex, onChange: handlePickerChange, onFocus: () => setIsFocused(true), onBlur: () => setIsFocused(false), "aria-label": props.label })),
+                    wp.element.createElement("input", { type: "text", className: "wof-color-text-input", value: localHex, onChange: handleInputChange, onFocus: () => setIsFocused(true), onBlur: handleBlur, maxLength: 7, spellCheck: false, "aria-label": `${props.label} Hex Code` }))));
+        }
         function StyleStudio(props) {
             const document = props.document;
+            const [isCustomizeOpen, setIsCustomizeOpen] = useState(true);
             const updateStyle = (patch) => props.onChange({ style: { ...document.style, ...patch } });
             const updateTypography = (patch) => updateStyle({ typography: { ...document.style.typography, ...patch } });
             const updateSettings = (patch) => props.onChange({ settings: { ...document.settings, ...patch } });
             const fonts = ['inherit', 'system-ui', 'Inter', 'Manrope', 'Poppins', 'Outfit', 'Plus Jakarta Sans', 'Roboto'];
+            const handleSelectPalette = (key) => {
+                const preset = window.WooOptionsFicAdmin.palettes[key];
+                const newOverrides = preset?.tokens ? { ...preset.tokens } : {};
+                updateStyle({
+                    palette: key,
+                    overrides: newOverrides,
+                });
+            };
+            const handleColorChange = (tokenKey, hex) => {
+                const presetTokens = window.WooOptionsFicAdmin.palettes[document.style.palette]?.tokens ?? {};
+                const currentOverrides = document.style.overrides ?? {};
+                const updated = {
+                    ...presetTokens,
+                    ...currentOverrides,
+                    [tokenKey]: hex.toUpperCase(),
+                };
+                updateStyle({
+                    overrides: updated,
+                });
+            };
+            const getFieldColor = (tokenKey, fallback) => {
+                let color = '';
+                if (document.style?.overrides && document.style.overrides[tokenKey]) {
+                    color = document.style.overrides[tokenKey];
+                }
+                else {
+                    const preset = window.WooOptionsFicAdmin.palettes?.[document.style?.palette];
+                    if (preset?.tokens && preset.tokens[tokenKey]) {
+                        color = preset.tokens[tokenKey];
+                    }
+                }
+                if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                    return color.toUpperCase();
+                }
+                return fallback;
+            };
             return wp.element.createElement("div", { className: "wof-style-studio" },
                 wp.element.createElement("h3", null, __('Color palette', 'wooptionsfic')),
-                wp.element.createElement("div", { className: "wof-palette-picker" }, Object.entries(window.WooOptionsFicAdmin.palettes).map(([key, palette]) => wp.element.createElement("button", { type: "button", key: key, className: document.style.palette === key ? 'is-selected' : '', onClick: () => updateStyle({ palette: key }) },
-                    wp.element.createElement("span", { className: "wof-palette-dots" }, ['primary', 'accent', 'background', 'surface'].map((token) => wp.element.createElement("i", { key: token, style: { background: palette.tokens[token] } }))),
+                wp.element.createElement("div", { className: "wof-palette-picker" }, Object.entries(window.WooOptionsFicAdmin.palettes).map(([key, palette]) => (wp.element.createElement("button", { type: "button", key: key, className: document.style.palette === key ? 'is-selected' : '', onClick: () => handleSelectPalette(key) },
+                    wp.element.createElement("span", { className: "wof-palette-dots" }, ['primary', 'accent', 'background', 'surface'].map((token) => (wp.element.createElement("i", { key: token, style: { background: palette.tokens[token] } })))),
                     wp.element.createElement("span", null,
                         wp.element.createElement("strong", null, palette.name),
                         wp.element.createElement("small", null, key)),
-                    wp.element.createElement("b", null, "\u2713")))),
+                    wp.element.createElement("b", null, "\u2713"))))),
+                wp.element.createElement("div", { className: "wof-customize-colors-section" },
+                    wp.element.createElement("button", { type: "button", className: "wof-customize-colors-header", onClick: () => setIsCustomizeOpen(!isCustomizeOpen), "aria-expanded": isCustomizeOpen },
+                        wp.element.createElement("h4", null, __('Customize Colors', 'wooptionsfic')),
+                        wp.element.createElement("span", { className: `wof-customize-colors-chevron ${isCustomizeOpen ? 'is-open' : ''}` },
+                            wp.element.createElement("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" },
+                                wp.element.createElement("polyline", { points: "18 15 12 9 6 15" })))),
+                    isCustomizeOpen && (wp.element.createElement("div", { className: "wof-customize-colors-grid" }, COLOR_FIELDS.map((field) => (wp.element.createElement(ColorFieldItem, { key: field.key, label: field.label, tokenKey: field.key, value: getFieldColor(field.key, field.defaultColor), onChange: (hex) => handleColorChange(field.key, hex) })))))),
                 wp.element.createElement("div", { className: "wof-style-divider" }),
                 wp.element.createElement("h3", null, __('Typography', 'wooptionsfic')),
                 wp.element.createElement(SelectControl, { label: __('Font family', 'wooptionsfic'), value: document.style.typography.family ?? 'inherit', options: fonts.map((font) => ({ label: font === 'inherit' ? __('Inherit from theme', 'wooptionsfic') : font === 'system-ui' ? __('System UI', 'wooptionsfic') : font, value: font })), onChange: (family) => updateTypography({ family }) }),

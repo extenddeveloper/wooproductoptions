@@ -647,6 +647,8 @@ namespace WooOptionsFic.Builder {
       '--wof-preview-text': tokens.text ?? '#172033',
       '--wof-preview-muted': tokens.muted ?? '#5E6A7D',
       '--wof-preview-border': tokens.border ?? '#D8DEEA',
+      '--wof-preview-danger': tokens.danger ?? '#C7353A',
+      '--wof-preview-on-primary': tokens.onPrimary ?? '#FFFFFF',
       '--wof-preview-font': fontStack[typography.family] ?? typography.family ?? 'inherit',
       '--wof-preview-label-weight': String(typography.labelWeight ?? 650),
       zoom: zoom / 100,

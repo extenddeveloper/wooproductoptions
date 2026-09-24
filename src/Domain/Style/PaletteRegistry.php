@@ -46,8 +46,9 @@ final class PaletteRegistry {
 			$palette_key = 'iris-studio';
 		}
 		$tokens    = (array) ($this->palettes[$palette_key]['tokens'] ?? []);
-		$overrides = is_array($style['overrides'] ?? null) ? $style['overrides'] : [];
+		$overrides = is_array($style['overrides'] ?? null) ? $style['overrides'] : (is_array($style['tokens'] ?? null) ? $style['tokens'] : []);
 		$errors    = [];
+		$warnings  = [];
 
 		foreach ($overrides as $key => $value) {
 			if (! array_key_exists($key, $tokens) || ! is_string($value)) {
@@ -71,7 +72,7 @@ final class PaletteRegistry {
 			] as [$foreground, $background, $minimum]) {
 				$ratio = $this->contrast->ratio((string) ($tokens[$foreground] ?? ''), (string) ($tokens[$background] ?? ''));
 				if (null === $ratio || $ratio < $minimum) {
-					$errors[] = [
+					$warnings[] = [
 						'code'       => 'insufficient_contrast',
 						'foreground' => $foreground,
 						'background' => $background,
@@ -90,7 +91,7 @@ final class PaletteRegistry {
 			'tokens'     => array_map('strval', $tokens),
 			'typography' => $typography,
 			'errors'     => $errors,
-			'warnings'   => [],
+			'warnings'   => $warnings,
 		];
 	}
 

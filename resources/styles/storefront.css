@@ -1111,7 +1111,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 
 .wof-summary__total-val {
 	font-size: 1.6rem;
-	font-weight: 800;
+	font-weight: 700;
 	color: var(--wof-text, #0f172a);
 	letter-spacing: -0.03em;
 	line-height: 1;
@@ -1283,8 +1283,13 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 }
 
 @keyframes wofFadeIn {
-	from { opacity: 0; }
-	to { opacity: 1; }
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
 }
 
 @keyframes wofModalPop {
@@ -1292,6 +1297,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 		opacity: 0;
 		transform: scale(0.96) translateY(8px);
 	}
+
 	to {
 		opacity: 1;
 		transform: scale(1) translateY(0);
@@ -2918,6 +2924,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 }
 
 @media (max-width: 480px) {
+
 	.wof-radio-list--cols-2,
 	.wof-radio-list[data-columns="2"],
 	.wof-checkbox-list--cols-2,
@@ -3574,6 +3581,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 		opacity: 0;
 		transform: translateY(-4px);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0);
@@ -4455,6 +4463,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	from {
 		transform: scaleX(1);
 	}
+
 	to {
 		transform: scaleX(0);
 	}
@@ -4506,6 +4515,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 		opacity: 0;
 		transform: translateY(-16px) scale(0.96);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0) scale(1);
@@ -4517,6 +4527,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 		opacity: 1;
 		transform: translateY(0) scale(1);
 	}
+
 	to {
 		opacity: 0;
 		transform: translateY(-12px) scale(0.96);
@@ -4548,7 +4559,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	width: 100%;
 }
 
-.wof-product-choice-tile > input {
+.wof-product-choice-tile>input {
 	position: absolute;
 	width: 1px;
 	height: 1px;
@@ -4576,7 +4587,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	border-bottom: none;
 }
 
-.wof-product-choice-tile__img > img {
+.wof-product-choice-tile__img>img {
 	width: 100%;
 	height: 100%;
 	object-fit: cover;
@@ -4626,7 +4637,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	border-color: color-mix(in srgb, var(--wof-primary) 54%, var(--wof-border, #d8deea));
 }
 
-.wof-product-choice-tile .wof-choice__body > strong {
+.wof-product-choice-tile .wof-choice__body>strong {
 	display: -webkit-box;
 	-webkit-line-clamp: 2;
 	-webkit-box-orient: vertical;
@@ -4726,7 +4737,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	border-bottom-color: color-mix(in srgb, var(--wof-primary) 54%, var(--wof-border, #d8deea));
 }
 
-.wof-image-style--overlay .wof-choice__body > strong,
+.wof-image-style--overlay .wof-choice__body>strong,
 .wof-image-style--overlay .wof-choice__body .wof-choice__price,
 .wof-image-style--overlay .wof-swatch-item__label,
 .wof-image-style--overlay .wof-swatch-item__price,
@@ -4735,7 +4746,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	color: #fff !important;
 }
 
-.wof-image-style--overlay .wof-choice__body > strong,
+.wof-image-style--overlay .wof-choice__body>strong,
 .wof-image-style--overlay .wof-swatch-item__label,
 .wof-image-style--overlay .wof-image-swatch-item__label {
 	display: -webkit-box;
@@ -4763,7 +4774,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 
 .wof-image-style--overlay .wof-product-choice-tile .wof-choice__body {
 	position: relative;
-	background: linear-gradient(to top, rgba(0,0,0,.75) 0%, rgba(0,0,0,.4) 65%, transparent 100%);
+	background: linear-gradient(to top, rgba(0, 0, 0, .75) 0%, rgba(0, 0, 0, .4) 65%, transparent 100%);
 	margin-top: -52px;
 	border: none;
 	border-radius: 0 0 7px 7px;
@@ -4965,8 +4976,13 @@ body.wof-modal-open {
 }
 
 @keyframes wofModalFadeIn {
-	from { opacity: 0; }
-	to { opacity: 1; }
+	from {
+		opacity: 0;
+	}
+
+	to {
+		opacity: 1;
+	}
 }
 
 @keyframes wofModalScaleIn {
@@ -4974,6 +4990,7 @@ body.wof-modal-open {
 		opacity: 0;
 		transform: scale(0.95) translateY(10px);
 	}
+
 	to {
 		opacity: 1;
 		transform: scale(1) translateY(0);
@@ -5401,6 +5418,3 @@ body.wof-modal-open {
 .wof-repeater__add-btn:hover {
 	background: #1e293b !important;
 }
-
-
-
