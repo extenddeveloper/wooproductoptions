@@ -4045,7 +4045,7 @@ namespace WooOptionsFic.Builder {
       };
     }, [props.field]);
 
-    if (!props.field) return <aside className="wof-builder-inspector"><div className="wof-builder-pane__heading"><div><span className="wof-eyebrow">{__('Style', 'wooptionsfic')}</span><h2>{__('Option set styling', 'wooptionsfic')}</h2></div></div><div className="wof-inspector-body"><section className="wof-inspector-section"><StyleStudio document={props.document} onChange={props.onDocumentChange} /></section></div></aside>;
+    if (!props.field) return <aside className="wof-builder-inspector"><div className="wof-builder-pane__heading"><div><h2>{__('Option set styling', 'wooptionsfic')}</h2></div></div><div className="wof-inspector-body"><section className="wof-inspector-section"><StyleStudio document={props.document} onChange={props.onDocumentChange} /></section></div></aside>;
     const field = props.field;
     const update = (patch: Partial<WooOptionsFic.FieldDefinition>) => props.onFieldChange({ ...field, ...patch });
     const contentFieldTypes = ['content', 'modal', 'spacer', 'separator', 'heading', 'paragraph', 'help', 'formula', 'repeater'];
@@ -4059,7 +4059,6 @@ namespace WooOptionsFic.Builder {
     return <aside className="wof-builder-inspector">
       <div className="wof-builder-pane__heading">
         <div>
-          <span className="wof-eyebrow">{window.WooOptionsFicAdmin.fieldTypes[field.type]?.label ?? field.type}</span>
           <h2>{field.type === 'spacer' ? __('Spacer', 'wooptionsfic') : field.type === 'separator' ? __('Separator', 'wooptionsfic') : field.label}</h2>
         </div>
         <div className="wof-inspector-heading-actions">

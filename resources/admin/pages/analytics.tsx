@@ -303,10 +303,6 @@ namespace WooOptionsFic.Pages {
         {/* Modern Command Center Header */}
         <div className="wof-analytics-hero">
           <div className="wof-analytics-hero__info">
-            <span className="wof-analytics-hero__badge">
-              <span className="wof-pulse-dot" />
-              {__('Storefront Telemetry', 'wooptionsfic')}
-            </span>
             <h1 className="wof-analytics-hero__title">{__('Performance & Conversions', 'wooptionsfic')}</h1>
             <p className="wof-analytics-hero__desc">
               {__('Track user choices, validation impact, and addon revenue contribution in real-time.', 'wooptionsfic')}

@@ -1,7 +1,7 @@
 namespace WooOptionsFic.Builder {
-  const { SelectControl, ToggleControl } = wp.components;
+  const { ColorPicker, SelectControl, ToggleControl } = wp.components;
   const { __ } = wp.i18n;
-  const { useState, useEffect } = wp.element;
+  const { useState, useEffect, useRef } = wp.element;
 
   interface ColorFieldConfig {
     key: string;
@@ -22,14 +22,38 @@ namespace WooOptionsFic.Builder {
     label: string;
     tokenKey: string;
     value: string;
+    columnIndex: number;
+    openUpward?: boolean;
     onChange: (hex: string) => void;
   }) {
     const [localHex, setLocalHex] = useState(props.value);
     const [isFocused, setIsFocused] = useState(false);
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const containerRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
       setLocalHex(props.value);
     }, [props.value]);
+
+    useEffect(() => {
+      if (!pickerOpen) return;
+      const handleDown = (e: MouseEvent) => {
+        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+          setPickerOpen(false);
+        }
+      };
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          setPickerOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleDown);
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('mousedown', handleDown);
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }, [pickerOpen]);
 
     const handleInputChange = (e: any) => {
       const raw = e.target.value;
@@ -58,10 +82,13 @@ namespace WooOptionsFic.Builder {
       }
     };
 
-    const handlePickerChange = (e: any) => {
-      const val = e.target.value.toUpperCase();
-      setLocalHex(val);
-      props.onChange(val);
+    const handleColorPickerChange = (next: any) => {
+      const hex = typeof next === 'string' ? next : (next?.hex || safeHex);
+      const cleanHex = String(hex || '').trim().toUpperCase();
+      if (/^#[0-9A-F]{6}$/.test(cleanHex)) {
+        setLocalHex(cleanHex);
+        props.onChange(cleanHex);
+      }
     };
 
     const isLightColor = (hex: string) => {
@@ -76,24 +103,21 @@ namespace WooOptionsFic.Builder {
     const safeHex = /^#[0-9A-Fa-f]{6}$/.test(props.value) ? props.value : '#000000';
 
     return (
-      <div className="wof-color-field-item">
+      <div className="wof-color-field-item" ref={containerRef}>
         <label className="wof-color-field-label" title={props.label}>{props.label}</label>
-        <div className={`wof-color-field-control ${isFocused ? 'is-focused' : ''}`}>
-          <div className="wof-color-swatch-box" title={__('Choose color', 'wooptionsfic')}>
+        <div className={`wof-color-field-control ${isFocused ? 'is-focused' : ''} ${pickerOpen ? 'is-picker-open' : ''}`}>
+          <button
+            type="button"
+            className="wof-color-swatch-box"
+            onClick={() => setPickerOpen(!pickerOpen)}
+            title={__('Pick color', 'wooptionsfic')}
+            aria-expanded={pickerOpen}
+          >
             <span
               className={`wof-color-circle ${isLightColor(safeHex) ? 'has-border' : ''}`}
               style={{ backgroundColor: safeHex }}
             />
-            <input
-              type="color"
-              className="wof-color-native-picker"
-              value={safeHex}
-              onChange={handlePickerChange}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              aria-label={props.label}
-            />
-          </div>
+          </button>
           <input
             type="text"
             className="wof-color-text-input"
@@ -105,6 +129,30 @@ namespace WooOptionsFic.Builder {
             spellCheck={false}
             aria-label={`${props.label} Hex Code`}
           />
+
+          {pickerOpen && (
+            <div className={`wof-color-popover ${props.columnIndex === 1 ? 'is-right' : 'is-left'} ${props.openUpward ? 'is-upward' : ''}`}>
+              <div className="wof-color-popover__header">
+                <strong>{props.label}</strong>
+                <button
+                  type="button"
+                  className="wof-color-popover__close"
+                  onClick={() => setPickerOpen(false)}
+                  aria-label={__('Close color picker', 'wooptionsfic')}
+                >
+                  ×
+                </button>
+              </div>
+              <div className="wof-color-popover__body">
+                <ColorPicker
+                  color={safeHex}
+                  enableAlpha={false}
+                  onChange={handleColorPickerChange}
+                  onChangeComplete={handleColorPickerChange}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -198,11 +246,13 @@ namespace WooOptionsFic.Builder {
 
         {isCustomizeOpen && (
           <div className="wof-customize-colors-grid">
-            {COLOR_FIELDS.map((field) => (
+            {COLOR_FIELDS.map((field, idx) => (
               <ColorFieldItem
                 key={field.key}
                 label={field.label}
                 tokenKey={field.key}
+                columnIndex={idx % 2}
+                openUpward={idx >= 4}
                 value={getFieldColor(field.key, field.defaultColor)}
                 onChange={(hex) => handleColorChange(field.key, hex)}
               />

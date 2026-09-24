@@ -40,7 +40,6 @@ namespace WooOptionsFic.Components {
     return (
       <header className="wof-page-header">
         <div>
-          {props.eyebrow ? <span className="wof-eyebrow">{props.eyebrow}</span> : null}
           <h1>{props.title}</h1>
           {props.description ? <p>{props.description}</p> : null}
         </div>

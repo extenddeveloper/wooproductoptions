@@ -948,7 +948,6 @@ var WooOptionsFic;
         function PageHeader(props) {
             return (wp.element.createElement("header", { className: "wof-page-header" },
                 wp.element.createElement("div", null,
-                    props.eyebrow ? wp.element.createElement("span", { className: "wof-eyebrow" }, props.eyebrow) : null,
                     wp.element.createElement("h1", null, props.title),
                     props.description ? wp.element.createElement("p", null, props.description) : null),
                 props.actions ? wp.element.createElement("div", { className: "wof-page-header__actions" }, props.actions) : null));
@@ -1449,7 +1448,6 @@ var WooOptionsFic;
                 wp.element.createElement(WooOptionsFic.Components.PageHeader, { eyebrow: __('Your product experience studio', 'wooptionsfic'), title: sprintf(__('Good to see you, %s.', 'wooptionsfic'), window.WooOptionsFicAdmin.currentUser.name.split(' ')[0] ?? window.WooOptionsFicAdmin.currentUser.name), description: __('Build thoughtful product choices, price them safely, and publish without touching theme code.', 'wooptionsfic'), actions: wp.element.createElement(Button, { variant: "primary", onClick: () => props.navigate('option-sets') }, __('Create an option set', 'wooptionsfic')) }),
                 wp.element.createElement("section", { className: "wof-hero-card" },
                     wp.element.createElement("div", { className: "wof-hero-card__copy" },
-                        wp.element.createElement("span", { className: "wof-eyebrow" }, __('Start with confidence', 'wooptionsfic')),
                         wp.element.createElement("h2", null, __('A polished configurator in three moves', 'wooptionsfic')),
                         wp.element.createElement("div", { className: "wof-steps" },
                             wp.element.createElement("div", null,
@@ -2452,9 +2450,6 @@ var WooOptionsFic;
             return (wp.element.createElement("div", { className: "wof-page wof-analytics-page wof-analytics-bespoke" },
                 wp.element.createElement("div", { className: "wof-analytics-hero" },
                     wp.element.createElement("div", { className: "wof-analytics-hero__info" },
-                        wp.element.createElement("span", { className: "wof-analytics-hero__badge" },
-                            wp.element.createElement("span", { className: "wof-pulse-dot" }),
-                            __('Storefront Telemetry', 'wooptionsfic')),
                         wp.element.createElement("h1", { className: "wof-analytics-hero__title" }, __('Performance & Conversions', 'wooptionsfic')),
                         wp.element.createElement("p", { className: "wof-analytics-hero__desc" }, __('Track user choices, validation impact, and addon revenue contribution in real-time.', 'wooptionsfic'))),
                     wp.element.createElement("div", { className: "wof-analytics-hero__actions" },
@@ -4504,9 +4499,9 @@ var WooOptionsFic;
 (function (WooOptionsFic) {
     var Builder;
     (function (Builder) {
-        const { SelectControl, ToggleControl } = wp.components;
+        const { ColorPicker, SelectControl, ToggleControl } = wp.components;
         const { __ } = wp.i18n;
-        const { useState, useEffect } = wp.element;
+        const { useState, useEffect, useRef } = wp.element;
         const COLOR_FIELDS = [
             { key: 'text', label: __('Text Color', 'wooptionsfic'), defaultColor: '#1A1A1A' },
             { key: 'primary', label: __('Primary', 'wooptionsfic'), defaultColor: '#1A1A1A' },
@@ -4518,9 +4513,31 @@ var WooOptionsFic;
         function ColorFieldItem(props) {
             const [localHex, setLocalHex] = useState(props.value);
             const [isFocused, setIsFocused] = useState(false);
+            const [pickerOpen, setPickerOpen] = useState(false);
+            const containerRef = useRef(null);
             useEffect(() => {
                 setLocalHex(props.value);
             }, [props.value]);
+            useEffect(() => {
+                if (!pickerOpen)
+                    return;
+                const handleDown = (e) => {
+                    if (containerRef.current && !containerRef.current.contains(e.target)) {
+                        setPickerOpen(false);
+                    }
+                };
+                const handleKeyDown = (e) => {
+                    if (e.key === 'Escape') {
+                        setPickerOpen(false);
+                    }
+                };
+                document.addEventListener('mousedown', handleDown);
+                document.addEventListener('keydown', handleKeyDown);
+                return () => {
+                    document.removeEventListener('mousedown', handleDown);
+                    document.removeEventListener('keydown', handleKeyDown);
+                };
+            }, [pickerOpen]);
             const handleInputChange = (e) => {
                 const raw = e.target.value;
                 setLocalHex(raw);
@@ -4547,10 +4564,13 @@ var WooOptionsFic;
                     setLocalHex(props.value);
                 }
             };
-            const handlePickerChange = (e) => {
-                const val = e.target.value.toUpperCase();
-                setLocalHex(val);
-                props.onChange(val);
+            const handleColorPickerChange = (next) => {
+                const hex = typeof next === 'string' ? next : (next?.hex || safeHex);
+                const cleanHex = String(hex || '').trim().toUpperCase();
+                if (/^#[0-9A-F]{6}$/.test(cleanHex)) {
+                    setLocalHex(cleanHex);
+                    props.onChange(cleanHex);
+                }
             };
             const isLightColor = (hex) => {
                 const clean = hex.replace('#', '');
@@ -4562,13 +4582,18 @@ var WooOptionsFic;
                 return (r * 299 + g * 587 + b * 114) / 1000 > 215;
             };
             const safeHex = /^#[0-9A-Fa-f]{6}$/.test(props.value) ? props.value : '#000000';
-            return (wp.element.createElement("div", { className: "wof-color-field-item" },
+            return (wp.element.createElement("div", { className: "wof-color-field-item", ref: containerRef },
                 wp.element.createElement("label", { className: "wof-color-field-label", title: props.label }, props.label),
-                wp.element.createElement("div", { className: `wof-color-field-control ${isFocused ? 'is-focused' : ''}` },
-                    wp.element.createElement("div", { className: "wof-color-swatch-box", title: __('Choose color', 'wooptionsfic') },
-                        wp.element.createElement("span", { className: `wof-color-circle ${isLightColor(safeHex) ? 'has-border' : ''}`, style: { backgroundColor: safeHex } }),
-                        wp.element.createElement("input", { type: "color", className: "wof-color-native-picker", value: safeHex, onChange: handlePickerChange, onFocus: () => setIsFocused(true), onBlur: () => setIsFocused(false), "aria-label": props.label })),
-                    wp.element.createElement("input", { type: "text", className: "wof-color-text-input", value: localHex, onChange: handleInputChange, onFocus: () => setIsFocused(true), onBlur: handleBlur, maxLength: 7, spellCheck: false, "aria-label": `${props.label} Hex Code` }))));
+                wp.element.createElement("div", { className: `wof-color-field-control ${isFocused ? 'is-focused' : ''} ${pickerOpen ? 'is-picker-open' : ''}` },
+                    wp.element.createElement("button", { type: "button", className: "wof-color-swatch-box", onClick: () => setPickerOpen(!pickerOpen), title: __('Pick color', 'wooptionsfic'), "aria-expanded": pickerOpen },
+                        wp.element.createElement("span", { className: `wof-color-circle ${isLightColor(safeHex) ? 'has-border' : ''}`, style: { backgroundColor: safeHex } })),
+                    wp.element.createElement("input", { type: "text", className: "wof-color-text-input", value: localHex, onChange: handleInputChange, onFocus: () => setIsFocused(true), onBlur: handleBlur, maxLength: 7, spellCheck: false, "aria-label": `${props.label} Hex Code` }),
+                    pickerOpen && (wp.element.createElement("div", { className: `wof-color-popover ${props.columnIndex === 1 ? 'is-right' : 'is-left'} ${props.openUpward ? 'is-upward' : ''}` },
+                        wp.element.createElement("div", { className: "wof-color-popover__header" },
+                            wp.element.createElement("strong", null, props.label),
+                            wp.element.createElement("button", { type: "button", className: "wof-color-popover__close", onClick: () => setPickerOpen(false), "aria-label": __('Close color picker', 'wooptionsfic') }, "\u00D7")),
+                        wp.element.createElement("div", { className: "wof-color-popover__body" },
+                            wp.element.createElement(ColorPicker, { color: safeHex, enableAlpha: false, onChange: handleColorPickerChange, onChangeComplete: handleColorPickerChange })))))));
         }
         function StyleStudio(props) {
             const document = props.document;
@@ -4627,7 +4652,7 @@ var WooOptionsFic;
                         wp.element.createElement("span", { className: `wof-customize-colors-chevron ${isCustomizeOpen ? 'is-open' : ''}` },
                             wp.element.createElement("svg", { width: "12", height: "12", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.5", strokeLinecap: "round", strokeLinejoin: "round" },
                                 wp.element.createElement("polyline", { points: "18 15 12 9 6 15" })))),
-                    isCustomizeOpen && (wp.element.createElement("div", { className: "wof-customize-colors-grid" }, COLOR_FIELDS.map((field) => (wp.element.createElement(ColorFieldItem, { key: field.key, label: field.label, tokenKey: field.key, value: getFieldColor(field.key, field.defaultColor), onChange: (hex) => handleColorChange(field.key, hex) })))))),
+                    isCustomizeOpen && (wp.element.createElement("div", { className: "wof-customize-colors-grid" }, COLOR_FIELDS.map((field, idx) => (wp.element.createElement(ColorFieldItem, { key: field.key, label: field.label, tokenKey: field.key, columnIndex: idx % 2, openUpward: idx >= 4, value: getFieldColor(field.key, field.defaultColor), onChange: (hex) => handleColorChange(field.key, hex) })))))),
                 wp.element.createElement("div", { className: "wof-style-divider" }),
                 wp.element.createElement("h3", null, __('Typography', 'wooptionsfic')),
                 wp.element.createElement(SelectControl, { label: __('Font family', 'wooptionsfic'), value: document.style.typography.family ?? 'inherit', options: fonts.map((font) => ({ label: font === 'inherit' ? __('Inherit from theme', 'wooptionsfic') : font === 'system-ui' ? __('System UI', 'wooptionsfic') : font, value: font })), onChange: (family) => updateTypography({ family }) }),
@@ -7104,7 +7129,6 @@ var WooOptionsFic;
                 return wp.element.createElement("aside", { className: "wof-builder-inspector" },
                     wp.element.createElement("div", { className: "wof-builder-pane__heading" },
                         wp.element.createElement("div", null,
-                            wp.element.createElement("span", { className: "wof-eyebrow" }, __('Style', 'wooptionsfic')),
                             wp.element.createElement("h2", null, __('Option set styling', 'wooptionsfic')))),
                     wp.element.createElement("div", { className: "wof-inspector-body" },
                         wp.element.createElement("section", { className: "wof-inspector-section" },
@@ -7123,7 +7147,6 @@ var WooOptionsFic;
             return wp.element.createElement("aside", { className: "wof-builder-inspector" },
                 wp.element.createElement("div", { className: "wof-builder-pane__heading" },
                     wp.element.createElement("div", null,
-                        wp.element.createElement("span", { className: "wof-eyebrow" }, window.WooOptionsFicAdmin.fieldTypes[field.type]?.label ?? field.type),
                         wp.element.createElement("h2", null, field.type === 'spacer' ? __('Spacer', 'wooptionsfic') : field.type === 'separator' ? __('Separator', 'wooptionsfic') : field.label)),
                     wp.element.createElement("div", { className: "wof-inspector-heading-actions" },
                         wp.element.createElement("button", { type: "button", onClick: props.onDuplicate, "aria-label": __('Duplicate field', 'wooptionsfic'), title: __('Duplicate', 'wooptionsfic') },

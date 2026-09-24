@@ -22,7 +22,6 @@ namespace WooOptionsFic.Pages {
         />
         <section className="wof-hero-card">
           <div className="wof-hero-card__copy">
-            <span className="wof-eyebrow">{__('Start with confidence', 'wooptionsfic')}</span>
             <h2>{__('A polished configurator in three moves', 'wooptionsfic')}</h2>
             <div className="wof-steps">
               <div><b>1</b><span><strong>{__('Shape', 'wooptionsfic')}</strong><small>{__('Add fields and choices', 'wooptionsfic')}</small></span></div>
