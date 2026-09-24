@@ -307,7 +307,7 @@ final class PublicController {
 			if (! $config) {
 				throw new NotFoundException('wooptionsfic_configuration_not_found');
 			}
-			if (empty($config['settings']['saveEnabled'])) {
+			if (empty($config['settings']['saveEnabled']) && empty($config['settings']['shareEnabled'])) {
 				throw new ValidationException('wooptionsfic_saved_config_disabled', [['code' => 'saved_config_disabled']]);
 			}
 			$this->assert_token((string) ($body['token'] ?? ''), $product_id, (string) $config['revisionUuid']);

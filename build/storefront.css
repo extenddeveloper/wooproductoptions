@@ -1048,17 +1048,16 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	height: 1rem;
 }
 
-/* --- Redesigned Total Calculation & Summary --- */
+/* --- Redesigned Minimal Total Calculation & Summary --- */
 .wof-summary {
-	background: var(--wof-surface, #ffffff);
-	border: 1px solid var(--wof-border, #e2e8f0);
-	border-radius: 14px;
-	box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-	padding: 16px 20px;
-	position: relative;
+	background: transparent;
+	border: none;
+	border-radius: 0;
+	box-shadow: none;
+	padding: 0;
 	margin-top: 1.25rem;
 	margin-bottom: 0.75rem;
-	transition: box-shadow 0.2s ease, border-color 0.2s ease;
+	position: relative;
 	box-sizing: border-box;
 }
 
@@ -1066,18 +1065,71 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	position: sticky;
 	top: 1.25rem;
 	z-index: 100;
+	align-self: start;
+	background: color-mix(in srgb, var(--wof-surface, #ffffff) 96%, transparent);
+	border: 1px solid var(--wof-border, #e2e8f0);
+	border-radius: 12px;
+	padding: 14px 18px;
+	box-shadow: 0 10px 28px -4px rgba(15, 23, 42, 0.1), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
 	backdrop-filter: blur(14px);
 	-webkit-backdrop-filter: blur(14px);
-	background: color-mix(in srgb, var(--wof-surface, #ffffff) 94%, transparent);
-	border-color: color-mix(in srgb, var(--wof-primary, #5B4FF5) 28%, var(--wof-border, #e2e8f0));
-	box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.12), 0 4px 12px -2px rgba(15, 23, 42, 0.06);
 }
 
-.wof-summary__header {
+.wof-summary__main {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 16px;
+	flex-wrap: wrap;
+}
+
+.wof-summary__info {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.wof-summary__title {
+	font-size: 1.15rem;
+	font-weight: 750;
+	color: var(--wof-text, #0f172a);
+	letter-spacing: -0.015em;
+	line-height: 1.2;
+}
+
+.wof-summary__notice {
+	font-size: 0.78rem;
+	color: var(--wof-muted, #64748b);
+	margin: 2px 0 0;
+	line-height: 1.35;
+}
+
+.wof-summary__price-wrap {
+	display: flex;
+	align-items: baseline;
+}
+
+.wof-summary__total-val {
+	font-size: 1.6rem;
+	font-weight: 800;
+	color: var(--wof-text, #0f172a);
+	letter-spacing: -0.03em;
+	line-height: 1;
+	white-space: nowrap;
+}
+
+.wof-configurator.is-quoting .wof-summary__total-val {
+	opacity: 0.55;
+}
+
+/* Horizontal Meta & Action Bar */
+.wof-summary__meta {
 	display: flex;
 	align-items: center;
-	justify-content: flex-start;
-	margin-bottom: 10px;
+	justify-content: space-between;
+	gap: 12px;
+	margin-top: 10px;
+	flex-wrap: wrap;
 }
 
 .wof-summary__status-badge {
@@ -1086,7 +1138,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	gap: 6px;
 	font-size: 11px;
 	font-weight: 600;
-	padding: 3px 10px;
+	padding: 3px 9px;
 	border-radius: 9999px;
 	background: color-mix(in srgb, var(--wof-text, #1e293b) 6%, transparent);
 	color: var(--wof-muted, #64748b);
@@ -1129,33 +1181,18 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	}
 }
 
-.wof-summary__main {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	gap: 16px;
-	flex-wrap: wrap;
-}
-
-.wof-summary__title-wrap {
+.wof-summary__actions {
 	display: inline-flex;
 	align-items: center;
-	gap: 10px;
+	gap: 8px;
 	flex-wrap: wrap;
 }
 
-.wof-summary__title {
-	font-size: 1.05rem;
-	font-weight: 700;
-	color: var(--wof-text, #0f172a);
-	letter-spacing: -0.015em;
-}
-
-.wof-breakdown-btn {
+.wof-action-pill {
 	display: inline-flex;
 	align-items: center;
 	gap: 6px;
-	padding: 5px 11px;
+	padding: 5px 12px;
 	font-size: 12px;
 	font-weight: 600;
 	border-radius: 8px;
@@ -1165,17 +1202,17 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	cursor: pointer;
 	transition: all 0.15s ease;
 	line-height: 1.2;
-	box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
 }
 
-.wof-breakdown-btn:hover {
+.wof-action-pill:hover {
 	border-color: var(--wof-primary, #5B4FF5);
 	color: var(--wof-primary, #5B4FF5);
 	background: color-mix(in srgb, var(--wof-primary, #5B4FF5) 7%, var(--wof-surface, #fff));
 	transform: translateY(-0.5px);
 }
 
-.wof-breakdown-btn svg {
+.wof-action-pill svg {
 	flex-shrink: 0;
 	color: inherit;
 }
@@ -1194,33 +1231,14 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	color: #ffffff;
 }
 
-.wof-summary__total-val {
-	font-size: 1.48rem;
-	font-weight: 800;
-	color: var(--wof-text, #0f172a);
-	letter-spacing: -0.03em;
-	line-height: 1;
-	white-space: nowrap;
-}
-
-.wof-configurator.is-quoting .wof-summary__total-val {
-	opacity: 0.55;
-}
-
-.wof-summary__notice {
-	font-size: 0.78rem;
-	color: var(--wof-muted, #64748b);
-	margin: 8px 0 0;
-	line-height: 1.4;
-}
-
 /* Hidden legacy rows container */
 .wof-summary__rows {
 	display: none !important;
 }
 
-/* --- Minimal Itemized Price Breakdown Modal --- */
-.wof-breakdown-modal {
+/* --- Shared Minimal Modals (Breakdown & Save/Share) --- */
+.wof-breakdown-modal,
+.wof-save-modal {
 	position: fixed;
 	inset: 0;
 	z-index: 100000;
@@ -1231,11 +1249,13 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	box-sizing: border-box;
 }
 
-.wof-breakdown-modal[hidden] {
+.wof-breakdown-modal[hidden],
+.wof-save-modal[hidden] {
 	display: none !important;
 }
 
-.wof-breakdown-modal__backdrop {
+.wof-breakdown-modal__backdrop,
+.wof-save-modal__backdrop {
 	position: absolute;
 	inset: 0;
 	background: rgba(15, 23, 42, 0.48);
@@ -1244,11 +1264,12 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	animation: wofFadeIn 0.2s ease-out;
 }
 
-.wof-breakdown-modal__dialog {
+.wof-breakdown-modal__dialog,
+.wof-save-modal__dialog {
 	position: relative;
 	z-index: 1;
 	width: 100%;
-	max-width: 480px;
+	max-width: 460px;
 	max-height: calc(100vh - 32px);
 	display: flex;
 	flex-direction: column;
@@ -1277,23 +1298,26 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	}
 }
 
-.wof-breakdown-modal__header {
+.wof-breakdown-modal__header,
+.wof-save-modal__header {
 	display: flex;
 	align-items: flex-start;
 	justify-content: space-between;
 	gap: 12px;
-	padding: 18px 22px 14px;
+	padding: 16px 20px 14px;
 	border-bottom: 1px solid var(--wof-border, #e2e8f0);
 	background: color-mix(in srgb, var(--wof-surface, #ffffff) 97%, var(--wof-text, #000));
 }
 
-.wof-breakdown-modal__title-area {
+.wof-breakdown-modal__title-area,
+.wof-save-modal__title-area {
 	display: flex;
 	align-items: center;
 	gap: 12px;
 }
 
-.wof-breakdown-modal__icon {
+.wof-breakdown-modal__icon,
+.wof-save-modal__icon {
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1305,7 +1329,8 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	flex-shrink: 0;
 }
 
-.wof-breakdown-modal__title {
+.wof-breakdown-modal__title,
+.wof-save-modal__title {
 	margin: 0;
 	font-size: 1.05rem;
 	font-weight: 700;
@@ -1313,14 +1338,16 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	letter-spacing: -0.015em;
 }
 
-.wof-breakdown-modal__subtitle {
+.wof-breakdown-modal__subtitle,
+.wof-save-modal__subtitle {
 	margin: 2px 0 0;
 	font-size: 0.78rem;
 	color: var(--wof-muted, #64748b);
 	line-height: 1.3;
 }
 
-.wof-breakdown-modal__close {
+.wof-breakdown-modal__close,
+.wof-save-modal__close {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -1336,15 +1363,17 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	margin: -2px -4px 0 0;
 }
 
-.wof-breakdown-modal__close:hover {
+.wof-breakdown-modal__close:hover,
+.wof-save-modal__close:hover {
 	background: color-mix(in srgb, var(--wof-text, #000) 8%, transparent);
 	color: var(--wof-text, #0f172a);
 }
 
-.wof-breakdown-modal__body {
-	padding: 12px 22px;
+.wof-breakdown-modal__body,
+.wof-save-modal__body {
+	padding: 16px 20px;
 	overflow-y: auto;
-	max-height: 340px;
+	max-height: 350px;
 	overscroll-behavior: contain;
 }
 
@@ -1393,14 +1422,19 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	margin: 0;
 }
 
-.wof-breakdown-modal__footer {
-	padding: 14px 22px 18px;
+.wof-breakdown-modal__footer,
+.wof-save-modal__footer {
+	padding: 14px 20px;
 	border-top: 1px solid var(--wof-border, #e2e8f0);
 	background: color-mix(in srgb, var(--wof-surface, #ffffff) 97%, var(--wof-text, #000));
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	gap: 16px;
+}
+
+.wof-save-modal__footer {
+	justify-content: flex-end;
 }
 
 .wof-breakdown-modal__total-row {
@@ -1410,7 +1444,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 }
 
 .wof-breakdown-modal__total-row span {
-	font-size: 0.76rem;
+	font-size: 0.74rem;
 	font-weight: 600;
 	color: var(--wof-muted, #64748b);
 	text-transform: uppercase;
@@ -1425,7 +1459,8 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	line-height: 1.1;
 }
 
-.wof-breakdown-modal__done {
+.wof-breakdown-modal__done,
+.wof-save-modal__done {
 	padding: 8px 20px !important;
 	font-size: 0.88rem !important;
 	border-radius: 8px !important;
@@ -1437,89 +1472,48 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	transition: background-color 0.15s ease !important;
 }
 
-.wof-breakdown-modal__done:hover {
+.wof-breakdown-modal__done:hover,
+.wof-save-modal__done:hover {
 	background: color-mix(in srgb, var(--wof-primary, #5B4FF5) 88%, #000) !important;
 }
 
-/* --- Redesigned Save & Share Configuration --- */
-.wof-customer-actions {
-	margin-top: 1rem;
-	border: 1px solid var(--wof-border, #e2e8f0);
-	border-radius: 12px;
-	background: var(--wof-surface, #ffffff);
-	overflow: hidden;
-	transition: border-color 0.2s ease, box-shadow 0.2s ease;
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-}
-
-.wof-customer-actions[open] {
-	box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06);
-	border-color: color-mix(in srgb, var(--wof-primary, #5B4FF5) 35%, var(--wof-border, #e2e8f0));
-}
-
-.wof-customer-actions__summary {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	padding: 12px 16px;
-	cursor: pointer;
-	font-size: 0.88rem;
-	font-weight: 600;
-	color: var(--wof-text, #1e293b);
-	user-select: none;
-	list-style: none;
-	transition: background 0.15s ease;
-}
-
-.wof-customer-actions__summary::-webkit-details-marker {
-	display: none;
-}
-
-.wof-customer-actions__summary:hover {
-	background: color-mix(in srgb, var(--wof-surface, #ffffff) 96%, var(--wof-text, #000));
-}
-
-.wof-customer-actions__summary-icon {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	border-radius: 6px;
-	background: color-mix(in srgb, var(--wof-primary, #5B4FF5) 10%, transparent);
-	color: var(--wof-primary, #5B4FF5);
-	flex-shrink: 0;
-}
-
-.wof-customer-actions__summary-title {
-	flex: 1;
-}
-
-.wof-customer-actions__chevron {
-	color: var(--wof-muted, #94a3b8);
-	transition: transform 0.2s ease;
-	flex-shrink: 0;
-}
-
-.wof-customer-actions[open] .wof-customer-actions__chevron {
-	transform: rotate(180deg);
-}
-
-.wof-customer-actions__body {
-	padding: 8px 16px 16px;
-	border-top: 1px solid var(--wof-border, #f1f5f9);
+/* --- Save & Share Modal Specific Content Styles --- */
+.wof-save-modal__body {
 	display: flex;
 	flex-direction: column;
-	gap: 10px;
+	gap: 14px;
 }
 
-.wof-save-field-group {
+.wof-save-modal__section {
 	display: flex;
 	flex-direction: column;
 	gap: 6px;
 }
 
-.wof-save-label {
+.wof-save-modal__section[hidden] {
+	display: none !important;
+}
+
+.wof-save-modal__share-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: 10px;
+	background: color-mix(in srgb, var(--wof-surface, #ffffff) 96%, var(--wof-text, #000));
+	border: 1px solid var(--wof-border, #e2e8f0);
+}
+
+.wof-save-modal__hint {
+	margin: 2px 0 0;
+	font-size: 0.76rem;
+	color: var(--wof-muted, #64748b);
+	line-height: 1.3;
+}
+
+.wof-save-label,
+.wof-save-modal__label {
 	font-size: 0.78rem;
 	font-weight: 600;
 	color: var(--wof-muted, #64748b);
@@ -1598,7 +1592,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 }
 
 .wof-save-status:not(:empty) {
-	padding: 4px 10px;
+	padding: 5px 12px;
 	border-radius: 6px;
 	background: color-mix(in srgb, var(--wof-primary, #5B4FF5) 8%, transparent);
 	color: var(--wof-primary, #5B4FF5);
@@ -1608,7 +1602,7 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 .wof-share-link {
 	display: flex;
 	gap: 8px;
-	margin-top: 4px;
+	margin-top: 6px;
 }
 
 .wof-share-input {
@@ -2376,9 +2370,17 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	color: var(--wof-on-primary) !important;
 }
 
-.wof-configurator :where(.wof-summary, .wof-customer-actions) {
+.wof-configurator :where(.wof-summary.is-sticky, .wof-breakdown-modal__dialog, .wof-save-modal__dialog) {
 	background-color: var(--wof-surface) !important;
 	border-color: var(--wof-border) !important;
+	color: var(--wof-text) !important;
+	font-family: var(--wof-font) !important;
+}
+
+.wof-configurator .wof-summary:not(.is-sticky) {
+	background: transparent !important;
+	border: none !important;
+	box-shadow: none !important;
 	color: var(--wof-text) !important;
 	font-family: var(--wof-font) !important;
 }

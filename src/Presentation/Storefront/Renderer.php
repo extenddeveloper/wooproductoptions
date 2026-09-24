@@ -118,7 +118,7 @@ final class Renderer {
 		echo ' style="' . esc_attr($style) . '">';
 		echo '<div class="wof-configurator__grid">';
 		if ($sticky_summary) {
-			$this->render_summary($show_price_breakdown, true);
+			$this->render_summary($show_price_breakdown, true, $save_enabled, $share_enabled);
 		}
 		echo '<div class="wof-fields" data-wof-fields aria-live="off">';
 		foreach ((array) $config['fields'] as $field) {
@@ -128,44 +128,10 @@ final class Renderer {
 		}
 		echo '</div>';
 		if (! $sticky_summary) {
-			$this->render_summary($show_price_breakdown, false);
+			$this->render_summary($show_price_breakdown, false, $save_enabled, $share_enabled);
 		}
 		echo '</div>';
 		echo '<div class="wof-errors" data-wof-errors role="alert" tabindex="-1" hidden></div>';
-		echo '<details class="wof-customer-actions" data-wof-save-panel' . ($customer_actions_enabled ? '' : ' hidden') . '>';
-		echo '<summary class="wof-customer-actions__summary">';
-		echo '<span class="wof-customer-actions__summary-icon" aria-hidden="true"><svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg></span>';
-		echo '<span class="wof-customer-actions__summary-title">' . esc_html($action_title) . '</span>';
-		echo '<svg class="wof-customer-actions__chevron" viewBox="0 0 20 20" width="14" height="14" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>';
-		echo '</summary>';
-		echo '<div class="wof-customer-actions__body">';
-		echo '<div class="wof-save-field-group">';
-		echo '<label class="wof-save-label" for="wof-save-name-input">' . esc_html__('Configuration name', 'wooptionsfic') . '</label>';
-		echo '<div class="wof-save-input-row">';
-		echo '<input id="wof-save-name-input" type="text" maxlength="191" value="' . esc_attr__('My configuration', 'wooptionsfic') . '" class="wof-save-input" data-wof-save-name placeholder="' . esc_attr__('e.g. My Custom Build', 'wooptionsfic') . '">';
-		if ($save_enabled) {
-			echo '<button type="button" class="wof-button wof-button--save" data-wof-save>';
-			echo '<svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
-			echo '<span>' . esc_html__('Save', 'wooptionsfic') . '</span>';
-			echo '</button>';
-		}
-		if ($share_enabled) {
-			echo '<button type="button" class="wof-button wof-button--share" data-wof-share>';
-			echo '<svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>';
-			echo '<span>' . esc_html__('Share link', 'wooptionsfic') . '</span>';
-			echo '</button>';
-		}
-		echo '</div>';
-		echo '</div>';
-		echo '<p class="wof-save-status" data-wof-save-status aria-live="polite"></p>';
-		echo '<div class="wof-share-link" data-wof-share-link hidden>';
-		echo '<input type="url" readonly aria-label="' . esc_attr__('Share link', 'wooptionsfic') . '" class="wof-share-input">';
-		echo '<button type="button" class="wof-button wof-button--copy" data-wof-copy-share>';
-		echo '<svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>';
-		echo '<span>' . esc_html__('Copy', 'wooptionsfic') . '</span>';
-		echo '</button>';
-		echo '</div>';
-		echo '</div></details>';
 		echo '<input type="hidden" name="wooptionsfic_token" value="' . esc_attr($token) . '">';
 		echo '<input type="hidden" name="wooptionsfic_revision" value="' . esc_attr((string) $config['revisionUuid']) . '">';
 		echo '<input type="hidden" name="wooptionsfic_selection_json" value="" data-wof-selection-json>';
@@ -184,34 +150,36 @@ final class Renderer {
 		);
 	}
 
-	private function render_summary(bool $show_price_breakdown, bool $sticky): void {
-		$summary_class = $sticky ? 'wof-summary is-sticky' : 'wof-summary';
-		$total_text    = ! empty(Settings::get('enable_addons_total_text'))
+	private function render_summary(bool $show_price_breakdown, bool $sticky, bool $save_enabled = false, bool $share_enabled = false): void {
+		$summary_class            = $sticky ? 'wof-summary is-sticky' : 'wof-summary';
+		$customer_actions_enabled = $save_enabled || $share_enabled;
+		$action_pill_text         = ($save_enabled && $share_enabled)
+			? __('Save / Share', 'wooptionsfic')
+			: ($share_enabled ? __('Share link', 'wooptionsfic') : __('Save', 'wooptionsfic'));
+		$action_pill_title        = ($save_enabled && $share_enabled)
+			? __('Save or share configuration', 'wooptionsfic')
+			: ($share_enabled ? __('Share configuration link', 'wooptionsfic') : __('Save configuration', 'wooptionsfic'));
+		$modal_title              = ($save_enabled && $share_enabled)
+			? __('Save or share configuration', 'wooptionsfic')
+			: ($share_enabled ? __('Share configuration', 'wooptionsfic') : __('Save configuration', 'wooptionsfic'));
+
+		$total_text  = ! empty(Settings::get('enable_addons_total_text'))
 			? (string) Settings::get('addons_total_text', 'Total Price')
 			: __('Total Price', 'wooptionsfic');
-		$status_text   = ! empty(Settings::get('enable_summary_status_text'))
+		$status_text = ! empty(Settings::get('enable_summary_status_text'))
 			? (string) Settings::get('summary_status_text', 'Price confirmed')
 			: __('Price confirmed', 'wooptionsfic');
-		$notice_text   = ! empty(Settings::get('enable_summary_notice_text'))
+		$notice_text = ! empty(Settings::get('enable_summary_notice_text'))
 			? (string) Settings::get('summary_notice_text', 'Server-confirmed total, before shipping.')
 			: __('Server-confirmed total, before shipping.', 'wooptionsfic');
 
 		echo '<aside class="' . esc_attr($summary_class) . '" data-wof-summary aria-live="polite">';
-		echo '<div class="wof-summary__header">';
-		echo '<div class="wof-summary__status-badge" data-wof-status>';
-		echo '<span class="wof-status-dot" aria-hidden="true"></span>';
-		echo '<span data-wof-status-text>' . esc_html($status_text) . '</span>';
-		echo '</div>';
-		echo '</div>';
-
 		echo '<div class="wof-summary__main">';
-		echo '<div class="wof-summary__title-wrap">';
+		echo '<div class="wof-summary__info">';
 		echo '<span class="wof-summary__title">' . esc_html($total_text) . '</span>';
-		echo '<button type="button" class="wof-breakdown-btn" data-wof-breakdown-trigger aria-haspopup="dialog" aria-expanded="false"' . ($show_price_breakdown ? '' : ' hidden') . ' title="' . esc_attr__('View price breakdown', 'wooptionsfic') . '">';
-		echo '<svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h7a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>';
-		echo '<span>' . esc_html__('Breakdown', 'wooptionsfic') . '</span>';
-		echo '<span class="wof-breakdown-badge" data-wof-breakdown-count hidden>0</span>';
-		echo '</button>';
+		if ('' !== $notice_text) {
+			echo '<p class="wof-summary__notice">' . esc_html($notice_text) . '</p>';
+		}
 		echo '</div>';
 
 		echo '<div class="wof-summary__price-wrap">';
@@ -219,9 +187,25 @@ final class Renderer {
 		echo '</div>';
 		echo '</div>';
 
-		if ('' !== $notice_text) {
-			echo '<p class="wof-summary__notice">' . esc_html($notice_text) . '</p>';
-		}
+		echo '<div class="wof-summary__meta">';
+		echo '<div class="wof-summary__status-badge" data-wof-status>';
+		echo '<span class="wof-status-dot" aria-hidden="true"></span>';
+		echo '<span data-wof-status-text>' . esc_html($status_text) . '</span>';
+		echo '</div>';
+
+		echo '<div class="wof-summary__actions">';
+		echo '<button type="button" class="wof-action-pill" data-wof-breakdown-trigger aria-haspopup="dialog" aria-expanded="false"' . ($show_price_breakdown ? '' : ' hidden') . ' title="' . esc_attr__('View price breakdown', 'wooptionsfic') . '">';
+		echo '<svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h7a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/></svg>';
+		echo '<span>' . esc_html__('Breakdown', 'wooptionsfic') . '</span>';
+		echo '<span class="wof-breakdown-badge" data-wof-breakdown-count hidden>0</span>';
+		echo '</button>';
+
+		echo '<button type="button" class="wof-action-pill" data-wof-save-modal-trigger aria-haspopup="dialog" aria-expanded="false" title="' . esc_attr($action_pill_title) . '"' . ($customer_actions_enabled ? '' : ' hidden') . '>';
+		echo '<svg viewBox="0 0 20 20" width="13" height="13" fill="currentColor" aria-hidden="true"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg>';
+		echo '<span data-wof-save-btn-text>' . esc_html($action_pill_text) . '</span>';
+		echo '</button>';
+		echo '</div>';
+		echo '</div>';
 
 		// Keep hidden rows container for backward compatibility/screen readers
 		echo '<div class="wof-summary__rows" data-wof-summary-rows hidden></div>';
@@ -249,6 +233,60 @@ final class Renderer {
 		echo '<strong data-wof-breakdown-total>—</strong>';
 		echo '</div>';
 		echo '<button type="button" class="wof-button wof-breakdown-modal__done" data-wof-breakdown-close>' . esc_html__('Done', 'wooptionsfic') . '</button>';
+		echo '</div>';
+		echo '</div>';
+		echo '</div>';
+
+		// Save & Share Modal Dialog
+		echo '<div class="wof-save-modal" data-wof-save-modal data-wof-save-panel role="dialog" aria-modal="true" aria-label="' . esc_attr($modal_title) . '" hidden>';
+		echo '<div class="wof-save-modal__backdrop" data-wof-save-modal-close></div>';
+		echo '<div class="wof-save-modal__dialog">';
+		echo '<div class="wof-save-modal__header">';
+		echo '<div class="wof-save-modal__title-area">';
+		echo '<div class="wof-save-modal__icon" aria-hidden="true"><svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor"><path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z"/></svg></div>';
+		echo '<div><h3 class="wof-save-modal__title">' . esc_html($modal_title) . '</h3>';
+		echo '<p class="wof-save-modal__subtitle">' . esc_html__('Save your custom options or create a shareable link', 'wooptionsfic') . '</p></div>';
+		echo '</div>';
+		echo '<button type="button" class="wof-save-modal__close" data-wof-save-modal-close aria-label="' . esc_attr__('Close dialog', 'wooptionsfic') . '">';
+		echo '<svg viewBox="0 0 20 20" width="16" height="16" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>';
+		echo '</button>';
+		echo '</div>';
+
+		echo '<div class="wof-save-modal__body">';
+		echo '<div class="wof-save-modal__section" data-wof-save-section' . ($save_enabled ? '' : ' hidden') . '>';
+		echo '<label class="wof-save-label" for="wof-save-name-input">' . esc_html__('Configuration name', 'wooptionsfic') . '</label>';
+		echo '<div class="wof-save-input-row">';
+		echo '<input id="wof-save-name-input" type="text" maxlength="191" value="' . esc_attr__('My configuration', 'wooptionsfic') . '" class="wof-save-input" data-wof-save-name placeholder="' . esc_attr__('e.g. My Custom Build', 'wooptionsfic') . '">';
+		echo '<button type="button" class="wof-button wof-button--save" data-wof-save' . ($save_enabled ? '' : ' hidden') . '>';
+		echo '<svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>';
+		echo '<span>' . esc_html__('Save', 'wooptionsfic') . '</span>';
+		echo '</button>';
+		echo '</div>';
+		echo '</div>';
+
+		echo '<div class="wof-save-modal__section" data-wof-share-section' . ($share_enabled ? '' : ' hidden') . '>';
+		echo '<div class="wof-save-modal__share-row">';
+		echo '<div><strong class="wof-save-modal__label">' . esc_html__('Shareable Link', 'wooptionsfic') . '</strong>';
+		echo '<p class="wof-save-modal__hint">' . esc_html__('Create a link with your selections to share or bookmark.', 'wooptionsfic') . '</p></div>';
+		echo '<button type="button" class="wof-button wof-button--share" data-wof-share' . ($share_enabled ? '' : ' hidden') . '>';
+		echo '<svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z"/></svg>';
+		echo '<span>' . esc_html__('Create link', 'wooptionsfic') . '</span>';
+		echo '</button>';
+		echo '</div>';
+		echo '<div class="wof-share-link" data-wof-share-link hidden>';
+		echo '<input type="url" readonly aria-label="' . esc_attr__('Share link', 'wooptionsfic') . '" class="wof-share-input">';
+		echo '<button type="button" class="wof-button wof-button--copy" data-wof-copy-share>';
+		echo '<svg viewBox="0 0 20 20" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"/><path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"/></svg>';
+		echo '<span>' . esc_html__('Copy', 'wooptionsfic') . '</span>';
+		echo '</button>';
+		echo '</div>';
+		echo '</div>';
+
+		echo '<p class="wof-save-status" data-wof-save-status aria-live="polite"></p>';
+		echo '</div>';
+
+		echo '<div class="wof-save-modal__footer">';
+		echo '<button type="button" class="wof-button wof-save-modal__done" data-wof-save-modal-close>' . esc_html__('Done', 'wooptionsfic') . '</button>';
 		echo '</div>';
 		echo '</div>';
 		echo '</div>';
