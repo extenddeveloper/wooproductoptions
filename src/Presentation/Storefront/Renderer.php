@@ -497,13 +497,7 @@ final class Renderer {
 			}
 
 			if ($is_font_type) {
-				echo '<div class="wof-font-option-row">';
 				echo '<span class="wof-custom-select__option-label" style="font-family:' . esc_attr($choice_font) . '; font-size:15px;">' . esc_html((string) $choice['label']) . '</span>';
-				if (! empty($choice['fontCategory'])) {
-					echo '<span class="wof-font-option-badge">' . esc_html((string) $choice['fontCategory']) . '</span>';
-				}
-				echo '<span class="wof-font-option-sample" style="font-family:' . esc_attr($choice_font) . ';" aria-hidden="true">Aa Bb Gg 123</span>';
-				echo '</div>';
 			} else {
 				echo '<span class="wof-custom-select__option-label">' . esc_html((string) $choice['label']) . '</span>';
 			}
