@@ -19,6 +19,8 @@ namespace WooOptionsFic {
     wooAvailable: boolean;
     currentUser: { id: number; name: string };
     urls: { products: string; siteHealth: string };
+    pluginUrl?: string;
+    assetsUrl?: string;
   }
 
   export interface FontCatalogItem {

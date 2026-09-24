@@ -152,6 +152,8 @@ final class AdminPage {
 						'products' => admin_url('edit.php?post_type=product'),
 						'siteHealth'=> admin_url('site-health.php'),
 					],
+					'pluginUrl'     => WOOPTIONSFIC_URL,
+					'assetsUrl'     => WOOPTIONSFIC_URL . 'assets/',
 				],
 				JSON_UNESCAPED_SLASHES
 			) . ';',
