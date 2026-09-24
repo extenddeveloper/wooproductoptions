@@ -12,6 +12,7 @@ namespace WooOptionsFic\Presentation\Storefront;
 use WooOptionsFic\Application\AnalyticsService;
 use WooOptionsFic\Application\QuoteService;
 use WooOptionsFic\Bootstrap\Settings;
+use WooOptionsFic\Domain\Definition\Type\ScalarFieldType;
 use WooOptionsFic\Domain\Font\CustomFontService;
 use WooOptionsFic\Domain\Support\Uuid;
 use WooOptionsFic\Infrastructure\WooCommerce\ProductContext;
@@ -1118,21 +1119,41 @@ final class Renderer {
 
 				echo '<div class="wof-phone-field-wrap" data-wof-phone-wrap>';
 				echo '<div class="wof-phone-picker" data-wof-phone-picker>';
-				echo '<span class="wof-phone-picker__display" data-wof-phone-display>';
+				echo '<button type="button" class="wof-phone-picker__trigger" data-wof-phone-trigger aria-haspopup="listbox" aria-expanded="false" aria-label="' . esc_attr__('Select country', 'wooptionsfic') . '">';
 				echo '<span class="wof-phone-picker__flag" data-wof-flag-slot>' . $flag_svg . '</span>';
 				echo '<span class="wof-phone-picker__code" data-wof-country-slot>' . esc_html($default_country) . '</span>';
 				if ('number_flag_dialcode' === $flag_style) {
 					echo '<span class="wof-phone-picker__dial" data-wof-dial-slot>' . esc_html($dial_code) . '</span>';
 				}
 				echo '<svg class="wof-phone-picker__chevron" viewBox="0 0 20 20" width="12" height="12" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>';
-				echo '</span>';
-				echo '<select class="wof-phone-country-select" name="' . esc_attr($name . '[country]') . '" aria-label="' . esc_attr__('Select country', 'wooptionsfic') . '" data-wof-phone-select>';
+				echo '</button>';
+
+				echo '<select class="wof-phone-country-select" name="' . esc_attr($name . '[country]') . '" aria-label="' . esc_attr__('Select country', 'wooptionsfic') . '" data-wof-phone-select tabindex="-1" style="display:none;" aria-hidden="true">';
 				foreach ($countries as $code => $info) {
 					echo '<option value="' . esc_attr($code) . '" data-dial="' . esc_attr($info['dial']) . '"' . selected($code, $default_country, false) . '>';
 					echo esc_html($info['name'] . ' (' . $info['dial'] . ')');
 					echo '</option>';
 				}
 				echo '</select>';
+
+				echo '<div class="wof-phone-picker__dropdown" data-wof-phone-dropdown role="listbox" tabindex="-1">';
+				echo '<div class="wof-phone-picker__search-wrap">';
+				echo '<svg class="wof-phone-picker__search-icon" viewBox="0 0 20 20" width="13" height="13" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/></svg>';
+				echo '<input type="text" class="wof-phone-picker__search" placeholder="' . esc_attr__('Search country…', 'wooptionsfic') . '" data-wof-phone-search autocomplete="off" spellcheck="false">';
+				echo '</div>';
+				echo '<div class="wof-phone-picker__list" data-wof-phone-list>';
+				foreach ($countries as $code => $info) {
+					$opt_flag_svg = $this->country_flag_svg($code);
+					$is_curr      = ($code === $default_country);
+					$opt_cls      = 'wof-phone-picker__option' . ($is_curr ? ' is-selected' : '');
+					echo '<div class="' . esc_attr($opt_cls) . '" data-wof-phone-option data-code="' . esc_attr($code) . '" data-dial="' . esc_attr($info['dial']) . '" data-name="' . esc_attr($info['name']) . '" role="option" aria-selected="' . ($is_curr ? 'true' : 'false') . '">';
+					echo '<span class="wof-phone-picker__option-flag">' . $opt_flag_svg . '</span>';
+					echo '<span class="wof-phone-picker__option-name">' . esc_html($info['name']) . '</span>';
+					echo '<span class="wof-phone-picker__option-dial">' . esc_html($info['dial']) . '</span>';
+					echo '</div>';
+				}
+				echo '</div>';
+				echo '</div>';
 				echo '</div>';
 				echo '<input id="' . esc_attr($id) . '" type="tel" name="' . esc_attr($name . '[number]') . '" value="' . esc_attr((string) ($field['default'] ?? '')) . '" class="wof-phone-number-input"';
 				echo ' placeholder="' . esc_attr((string) ($field['placeholder'] ?? __('Enter phone number…', 'wooptionsfic'))) . '"';
@@ -1316,53 +1337,7 @@ final class Renderer {
 	}
 
 	public function country_definitions(): array {
-		return [
-			'US' => ['name' => 'United States', 'dial' => '+1'],
-			'GB' => ['name' => 'United Kingdom', 'dial' => '+44'],
-			'CA' => ['name' => 'Canada', 'dial' => '+1'],
-			'AU' => ['name' => 'Australia', 'dial' => '+61'],
-			'DE' => ['name' => 'Germany', 'dial' => '+49'],
-			'FR' => ['name' => 'France', 'dial' => '+33'],
-			'IT' => ['name' => 'Italy', 'dial' => '+39'],
-			'ES' => ['name' => 'Spain', 'dial' => '+34'],
-			'NL' => ['name' => 'Netherlands', 'dial' => '+31'],
-			'BR' => ['name' => 'Brazil', 'dial' => '+55'],
-			'IN' => ['name' => 'India', 'dial' => '+91'],
-			'CN' => ['name' => 'China', 'dial' => '+86'],
-			'JP' => ['name' => 'Japan', 'dial' => '+81'],
-			'KR' => ['name' => 'South Korea', 'dial' => '+82'],
-			'MX' => ['name' => 'Mexico', 'dial' => '+52'],
-			'AE' => ['name' => 'United Arab Emirates', 'dial' => '+971'],
-			'SA' => ['name' => 'Saudi Arabia', 'dial' => '+966'],
-			'SG' => ['name' => 'Singapore', 'dial' => '+65'],
-			'BD' => ['name' => 'Bangladesh', 'dial' => '+880'],
-			'PK' => ['name' => 'Pakistan', 'dial' => '+92'],
-			'ZA' => ['name' => 'South Africa', 'dial' => '+27'],
-			'TR' => ['name' => 'Turkey', 'dial' => '+90'],
-			'SE' => ['name' => 'Sweden', 'dial' => '+46'],
-			'CH' => ['name' => 'Switzerland', 'dial' => '+41'],
-			'PL' => ['name' => 'Poland', 'dial' => '+48'],
-			'AR' => ['name' => 'Argentina', 'dial' => '+54'],
-			'BE' => ['name' => 'Belgium', 'dial' => '+32'],
-			'AT' => ['name' => 'Austria', 'dial' => '+43'],
-			'NO' => ['name' => 'Norway', 'dial' => '+47'],
-			'DK' => ['name' => 'Denmark', 'dial' => '+45'],
-			'FI' => ['name' => 'Finland', 'dial' => '+358'],
-			'IE' => ['name' => 'Ireland', 'dial' => '+353'],
-			'NZ' => ['name' => 'New Zealand', 'dial' => '+64'],
-			'PT' => ['name' => 'Portugal', 'dial' => '+351'],
-			'GR' => ['name' => 'Greece', 'dial' => '+30'],
-			'IL' => ['name' => 'Israel', 'dial' => '+972'],
-			'HK' => ['name' => 'Hong Kong', 'dial' => '+852'],
-			'MY' => ['name' => 'Malaysia', 'dial' => '+60'],
-			'PH' => ['name' => 'Philippines', 'dial' => '+63'],
-			'ID' => ['name' => 'Indonesia', 'dial' => '+62'],
-			'TH' => ['name' => 'Thailand', 'dial' => '+66'],
-			'VN' => ['name' => 'Vietnam', 'dial' => '+84'],
-			'EG' => ['name' => 'Egypt', 'dial' => '+20'],
-			'NG' => ['name' => 'Nigeria', 'dial' => '+234'],
-			'KE' => ['name' => 'Kenya', 'dial' => '+254'],
-		];
+		return ScalarFieldType::country_definitions();
 	}
 
 	public function country_flag_svg(string $country): string {

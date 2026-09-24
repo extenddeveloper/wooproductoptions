@@ -3049,11 +3049,12 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	border: 1.5px solid var(--wof-border, #d8deea) !important;
 	height: 44px !important;
 	min-height: 44px !important;
-	overflow: hidden !important;
+	overflow: visible !important;
 	box-shadow: none !important;
 	transition: border-color 0.15s ease !important;
 	box-sizing: border-box !important;
 	position: relative !important;
+	border-radius: 0 !important;
 }
 
 .wof-phone-field-wrap:focus-within {
@@ -3064,27 +3065,41 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 .wof-phone-picker {
 	position: relative !important;
 	display: inline-flex !important;
-	align-items: center !important;
+	align-items: stretch !important;
 	background: color-mix(in srgb, var(--wof-surface, #ffffff) 94%, var(--wof-text, #000)) !important;
 	border-right: 1.5px solid var(--wof-border, #d8deea) !important;
-	cursor: pointer !important;
-	padding: 0 10px !important;
+	padding: 0 !important;
 	flex-shrink: 0 !important;
 	user-select: none !important;
+	border-radius: 0 !important;
 }
 
 .wof-phone-picker:hover {
 	background: color-mix(in srgb, var(--wof-surface, #ffffff) 90%, var(--wof-text, #000)) !important;
 }
 
-.wof-phone-picker__display {
+.wof-phone-picker__trigger {
 	display: inline-flex !important;
 	align-items: center !important;
 	gap: 6px !important;
 	font-size: 0.88rem !important;
 	font-weight: 600 !important;
 	color: var(--wof-text, #172033) !important;
-	pointer-events: none !important;
+	background: none !important;
+	border: none !important;
+	padding: 0 10px !important;
+	height: 100% !important;
+	cursor: pointer !important;
+	box-shadow: none !important;
+	outline: none !important;
+	margin: 0 !important;
+	font-family: inherit !important;
+}
+
+.wof-phone-picker__flag {
+	display: flex !important;
+	align-items: center !important;
+	flex-shrink: 0 !important;
 }
 
 .wof-flag-svg {
@@ -3104,19 +3119,162 @@ input[type="range"].wof-range-slider::-moz-range-thumb {
 	color: var(--wof-muted, #64748b) !important;
 	flex-shrink: 0 !important;
 	display: block !important;
+	transition: transform 0.15s ease !important;
+}
+
+.wof-phone-picker.is-open .wof-phone-picker__chevron {
+	transform: rotate(180deg) !important;
+}
+
+/* Custom Dropdown Menu with Flags */
+.wof-phone-picker__dropdown {
+	display: none !important;
+	position: absolute !important;
+	top: calc(100% + 4px) !important;
+	left: 0 !important;
+	z-index: 9999 !important;
+	min-width: 290px !important;
+	max-width: 330px !important;
+	background: var(--wof-surface, #ffffff) !important;
+	border: 1px solid var(--wof-border, #d8deea) !important;
+	border-radius: 8px !important;
+	box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08) !important;
+	flex-direction: column !important;
+	overflow: hidden !important;
+	animation: wofPhoneFadeIn 0.15s ease-out !important;
+}
+
+.wof-phone-picker.is-open .wof-phone-picker__dropdown {
+	display: flex !important;
+}
+
+@keyframes wofPhoneFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.wof-phone-picker__search-wrap {
+	position: relative !important;
+	padding: 8px 10px !important;
+	border-bottom: 1px solid var(--wof-border, #e2e8f0) !important;
+	background: color-mix(in srgb, var(--wof-surface, #ffffff) 97%, var(--wof-text, #000)) !important;
+}
+
+.wof-phone-picker__search-icon {
+	position: absolute !important;
+	left: 18px !important;
+	top: 50% !important;
+	transform: translateY(-50%) !important;
+	color: var(--wof-muted, #94a3b8) !important;
+	pointer-events: none !important;
+}
+
+.wof-phone-picker__search {
+	width: 100% !important;
+	height: 32px !important;
+	padding: 4px 8px 4px 28px !important;
+	font-size: 13px !important;
+	border: 1px solid var(--wof-border, #cbd5e1) !important;
+	border-radius: 6px !important;
+	outline: none !important;
+	background: var(--wof-surface, #ffffff) !important;
+	color: var(--wof-text, #172033) !important;
+	box-sizing: border-box !important;
+	box-shadow: none !important;
+}
+
+.wof-phone-picker__search:focus {
+	border-color: var(--wof-primary, #5B4FF5) !important;
+}
+
+.wof-phone-picker__list {
+	max-height: 240px !important;
+	overflow-y: auto !important;
+	overflow-x: hidden !important;
+	padding: 4px 0 !important;
+	list-style: none !important;
+	margin: 0 !important;
+}
+
+.wof-phone-picker__list::-webkit-scrollbar {
+	width: 6px !important;
+}
+
+.wof-phone-picker__list::-webkit-scrollbar-thumb {
+	background: var(--wof-border, #cbd5e1) !important;
+	border-radius: 3px !important;
+}
+
+.wof-phone-picker__option {
+	display: flex !important;
+	align-items: center !important;
+	gap: 10px !important;
+	padding: 8px 12px !important;
+	cursor: pointer !important;
+	font-size: 13px !important;
+	color: var(--wof-text, #172033) !important;
+	transition: background 0.12s ease !important;
+}
+
+.wof-phone-picker__option.is-hidden,
+.wof-phone-picker__option[hidden] {
+	display: none !important;
+}
+
+.wof-phone-picker__option:hover,
+.wof-phone-picker__option.is-active {
+	background: color-mix(in srgb, var(--wof-surface, #ffffff) 92%, var(--wof-text, #000)) !important;
+}
+
+.wof-phone-picker__option.is-selected {
+	background: color-mix(in srgb, var(--wof-primary, #5B4FF5) 12%, transparent) !important;
+	color: var(--wof-primary, #5B4FF5) !important;
+	font-weight: 600 !important;
+}
+
+.wof-phone-picker__option-flag {
+	display: flex !important;
+	align-items: center !important;
+	flex-shrink: 0 !important;
+	width: 20px !important;
+	height: 14px !important;
+}
+
+.wof-phone-picker__option-name {
+	flex: 1 !important;
+	overflow: hidden !important;
+	text-overflow: ellipsis !important;
+	white-space: nowrap !important;
+	text-align: left !important;
+}
+
+.wof-phone-picker__option-dial {
+	color: var(--wof-muted, #64748b) !important;
+	font-size: 12px !important;
+	font-weight: 500 !important;
+	flex-shrink: 0 !important;
+}
+
+.wof-phone-picker__option.is-selected .wof-phone-picker__option-dial {
+	color: var(--wof-primary, #5B4FF5) !important;
 }
 
 .wof-phone-country-select {
 	position: absolute !important;
-	inset: 0 !important;
-	width: 100% !important;
-	height: 100% !important;
-	opacity: 0 !important;
-	cursor: pointer !important;
-	z-index: 5 !important;
-	margin: 0 !important;
+	width: 1px !important;
+	height: 1px !important;
+	margin: -1px !important;
 	padding: 0 !important;
-	border: none !important;
+	overflow: hidden !important;
+	clip: rect(0, 0, 0, 0) !important;
+	border: 0 !important;
+	pointer-events: none !important;
 }
 
 .wof-phone-number-input {

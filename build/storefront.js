@@ -37,7 +37,89 @@
         bind() {
             this.root.addEventListener("input", e => {
                 const t = e.target;
+                if (t.matches("[data-wof-phone-search]")) {
+                    const q = (t.value || "").toLowerCase().trim();
+                    const qClean = q.replace(/^\+/, "");
+                    const picker = t.closest("[data-wof-phone-picker]");
+                    if (picker) {
+                        picker.querySelectorAll("[data-wof-phone-option]").forEach(opt => {
+                            const name = (opt.dataset.name || "").toLowerCase();
+                            const code = (opt.dataset.code || "").toLowerCase();
+                            const dial = (opt.dataset.dial || "").toLowerCase();
+                            const dialClean = dial.replace(/^\+/, "");
+                            const match = !q || name.includes(q) || code.includes(q) || dial.includes(q) || (qClean.length > 0 && dialClean.includes(qClean));
+                            opt.classList.toggle("is-hidden", !match);
+                            opt.hidden = !match;
+                            if (match) {
+                                opt.style.removeProperty("display");
+                            } else {
+                                opt.style.setProperty("display", "none", "important");
+                            }
+                            opt.classList.remove("is-active");
+                        });
+                        const firstMatch = picker.querySelector("[data-wof-phone-option]:not(.is-hidden):not([hidden])");
+                        if (firstMatch) {
+                            firstMatch.classList.add("is-active");
+                        }
+                    }
+                    return;
+                }
                 t.matches("[data-wof-save-name]") || (this.updateRangeOutputs(), this.selectionChanged(t));
+            });
+            this.root.addEventListener("keydown", e => {
+                const t = e.target;
+                if (t.matches("[data-wof-phone-search]")) {
+                    const picker = t.closest("[data-wof-phone-picker]");
+                    if (!picker) return;
+
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const visibleOpts = Array.from(picker.querySelectorAll("[data-wof-phone-option]")).filter(opt => !opt.classList.contains("is-hidden") && !opt.hidden && opt.style.display !== "none");
+                        const targetOpt = visibleOpts.find(opt => opt.classList.contains("is-active")) || visibleOpts[0];
+                        if (targetOpt) {
+                            const code = targetOpt.dataset.code || "";
+                            const select = picker.querySelector("[data-wof-phone-select]");
+                            if (select) {
+                                select.value = code;
+                                this.updatePhoneCountry(select);
+                                select.dispatchEvent(new Event("change", { bubbles: true }));
+                            }
+                            this.closeAllPhonePickers();
+                            const numInput = picker.closest("[data-wof-phone-wrap]")?.querySelector(".wof-phone-number-input");
+                            if (numInput) {
+                                numInput.focus();
+                            }
+                        }
+                        return;
+                    }
+                    if (e.key === "Escape") {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        this.closeAllPhonePickers();
+                        const trigger = picker.querySelector("[data-wof-phone-trigger]");
+                        if (trigger) trigger.focus();
+                        return;
+                    }
+                    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                        e.preventDefault();
+                        const visibleOpts = Array.from(picker.querySelectorAll("[data-wof-phone-option]")).filter(opt => !opt.classList.contains("is-hidden") && !opt.hidden && opt.style.display !== "none");
+                        if (!visibleOpts.length) return;
+                        let activeIdx = visibleOpts.findIndex(opt => opt.classList.contains("is-active"));
+                        if (e.key === "ArrowDown") {
+                            activeIdx = activeIdx < visibleOpts.length - 1 ? activeIdx + 1 : 0;
+                        } else {
+                            activeIdx = activeIdx > 0 ? activeIdx - 1 : visibleOpts.length - 1;
+                        }
+                        visibleOpts.forEach((opt, idx) => {
+                            opt.classList.toggle("is-active", idx === activeIdx);
+                            if (idx === activeIdx) {
+                                opt.scrollIntoView({ block: "nearest" });
+                            }
+                        });
+                        return;
+                    }
+                }
             });
             this.root.addEventListener("focusout", e => {
                 const t = e.target;
@@ -45,10 +127,10 @@
                 const fieldEl = t.closest("[data-wof-field]");
                 if (!fieldEl) return;
                 const type = fieldEl.dataset.wofType || t.type || "";
-                if (type === "email" || type === "url" || t.type === "email" || t.type === "url") {
+                if (type === "email" || type === "url" || type === "tel" || t.type === "email" || t.type === "url" || t.type === "tel" || t.classList?.contains("wof-phone-number-input")) {
                     const err = this.validateSingleField(fieldEl);
                     if (err) {
-                        this.setFieldError(fieldEl, this.errorText(err.code, err.label));
+                        this.setFieldError(fieldEl, this.errorText(err.code, err.label, err.params));
                     } else {
                         this.clearFieldError(fieldEl);
                     }
@@ -56,6 +138,56 @@
             });
             this.root.addEventListener("change", e => { const t = e.target; if (t.matches("[data-wof-phone-select]")) { this.updatePhoneCountry(t); this.selectionChanged(t); } else if (t.matches("[data-wof-upload-input]")) { this.upload(t); } else { const cs = t.closest("[data-wof-custom-select]"); if (cs) { this.syncCustomSelect(cs); } if (t.matches(".wof-product-variation-select")) { this.updateChoiceVariationPrice(t); if (t.value) { const tile = t.closest(".wof-product-choice-tile"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } } if (t.matches(".wof-choice-qty-input") && t.value) { const tile = t.closest(".wof-product-choice-tile, .wof-choice"); if (tile) { const inp = tile.querySelector('input[type="radio"], input[type="checkbox"]'); if (inp && !inp.checked) { inp.checked = true; inp.dispatchEvent(new Event("change", { bubbles: true })); } } } this.selectionChanged(t); } });
             this.root.addEventListener("click", e => { const t = e.target;
+                if (t.closest("[data-wof-phone-search]")) {
+                    return;
+                }
+                const phoneTrigger = t.closest("[data-wof-phone-trigger]");
+                if (phoneTrigger) {
+                    const picker = phoneTrigger.closest("[data-wof-phone-picker]");
+                    if (picker) {
+                        const isOpen = picker.classList.contains("is-open");
+                        this.closeAllPhonePickers(isOpen ? null : picker);
+                        this.closeAllCustomSelects();
+                        this.closeAllCustomColorPickers();
+                        this.closeAllCustomDateTimes();
+                        this.closeAllCustomDateRanges();
+                        picker.classList.toggle("is-open", !isOpen);
+                        phoneTrigger.setAttribute("aria-expanded", !isOpen ? "true" : "false");
+                        if (!isOpen) {
+                            const search = picker.querySelector("[data-wof-phone-search]");
+                            if (search) {
+                                search.value = "";
+                                picker.querySelectorAll("[data-wof-phone-option]").forEach(opt => {
+                                    opt.classList.remove("is-hidden");
+                                    opt.classList.remove("is-active");
+                                    opt.hidden = false;
+                                    opt.style.removeProperty("display");
+                                });
+                                setTimeout(() => search.focus(), 60);
+                            }
+                        }
+                    }
+                    return;
+                }
+                const phoneOption = t.closest("[data-wof-phone-option]");
+                if (phoneOption) {
+                    const picker = phoneOption.closest("[data-wof-phone-picker]");
+                    if (picker) {
+                        const code = phoneOption.dataset.code || "";
+                        const select = picker.querySelector("[data-wof-phone-select]");
+                        if (select) {
+                            select.value = code;
+                            this.updatePhoneCountry(select);
+                            select.dispatchEvent(new Event("change", { bubbles: true }));
+                        }
+                        this.closeAllPhonePickers();
+                        const numInput = picker.closest("[data-wof-phone-wrap]")?.querySelector(".wof-phone-number-input");
+                        if (numInput) {
+                            numInput.focus();
+                        }
+                    }
+                    return;
+                }
                 const modalTrigger = t.closest(".wof-modal-trigger");
                 if (modalTrigger) {
                     const targetId = modalTrigger.dataset.wofModalTarget;
@@ -95,9 +227,10 @@
             return void this.removeUpload(o); const r = t.closest("[data-wof-add-row]"); if (r)
             return void this.addRow(r); const a = t.closest("[data-wof-remove-row]"); if (a)
             return void this.removeRow(a); const i = t.closest("[data-wof-move-row]"); i ? this.moveRow(i) : t.closest("[data-wof-save]") ? this.saveConfiguration() : t.closest("[data-wof-share]") ? this.shareConfiguration() : t.closest("[data-wof-copy-share]") && this.copyShareLink(); });
-            document.addEventListener("click", e => { if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } if (!e.target.closest("[data-wof-color-picker]")) { this.closeAllCustomColorPickers(); } });
+            document.addEventListener("click", e => { if (!e.target.closest("[data-wof-phone-picker]")) { this.closeAllPhonePickers(); } if (!e.target.closest("[data-wof-custom-select]")) { this.closeAllCustomSelects(); } if (!e.target.closest("[data-wof-custom-datetime]")) { this.closeAllCustomDateTimes(); } if (!e.target.closest("[data-wof-custom-daterange]")) { this.closeAllCustomDateRanges(); } if (!e.target.closest("[data-wof-color-picker]")) { this.closeAllCustomColorPickers(); } });
             document.addEventListener("keydown", e => {
                 if (e.key === "Escape") {
+                    this.closeAllPhonePickers();
                     document.querySelectorAll(".wof-modal-backdrop.is-open").forEach(modal => {
                         modal.style.display = "none";
                         modal.setAttribute("aria-hidden", "true");
@@ -209,6 +342,81 @@
             if (dialSlot) dialSlot.textContent = dial;
             const flagSlot = wrap.querySelector("[data-wof-flag-slot]");
             if (flagSlot) flagSlot.innerHTML = this.countryFlagSvg(code);
+
+            wrap.querySelectorAll("[data-wof-phone-option]").forEach(opt => {
+                const isSelected = opt.dataset.code === code;
+                opt.classList.toggle("is-selected", isSelected);
+                opt.setAttribute("aria-selected", isSelected ? "true" : "false");
+            });
+        }
+        closeAllPhonePickers(except = null) {
+            document.querySelectorAll("[data-wof-phone-picker].is-open").forEach(elem => {
+                if (elem !== except) {
+                    elem.classList.remove("is-open");
+                    elem.querySelector("[data-wof-phone-trigger]")?.setAttribute("aria-expanded", "false");
+                    const search = elem.querySelector("[data-wof-phone-search]");
+                    if (search) search.value = "";
+                    elem.querySelectorAll("[data-wof-phone-option]").forEach(opt => {
+                        opt.classList.remove("is-hidden");
+                        opt.classList.remove("is-active");
+                        opt.hidden = false;
+                        opt.style.removeProperty("display");
+                    });
+                }
+            });
+        }
+        countryRules() {
+            return {
+                US: { name: "United States", dial: "+1", min: 10, max: 10 },
+                GB: { name: "United Kingdom", dial: "+44", min: 10, max: 11 },
+                CA: { name: "Canada", dial: "+1", min: 10, max: 10 },
+                AU: { name: "Australia", dial: "+61", min: 9, max: 10 },
+                DE: { name: "Germany", dial: "+49", min: 10, max: 11 },
+                FR: { name: "France", dial: "+33", min: 9, max: 10 },
+                IT: { name: "Italy", dial: "+39", min: 9, max: 10 },
+                ES: { name: "Spain", dial: "+34", min: 9, max: 9 },
+                NL: { name: "Netherlands", dial: "+31", min: 9, max: 10 },
+                BR: { name: "Brazil", dial: "+55", min: 10, max: 11 },
+                IN: { name: "India", dial: "+91", min: 10, max: 10 },
+                CN: { name: "China", dial: "+86", min: 11, max: 11 },
+                JP: { name: "Japan", dial: "+81", min: 10, max: 11 },
+                KR: { name: "South Korea", dial: "+82", min: 9, max: 11 },
+                MX: { name: "Mexico", dial: "+52", min: 10, max: 10 },
+                AE: { name: "United Arab Emirates", dial: "+971", min: 9, max: 9 },
+                SA: { name: "Saudi Arabia", dial: "+966", min: 9, max: 9 },
+                SG: { name: "Singapore", dial: "+65", min: 8, max: 8 },
+                BD: { name: "Bangladesh", dial: "+880", min: 10, max: 11 },
+                PK: { name: "Pakistan", dial: "+92", min: 10, max: 11 },
+                ZA: { name: "South Africa", dial: "+27", min: 9, max: 10 },
+                TR: { name: "Turkey", dial: "+90", min: 10, max: 10 },
+                SE: { name: "Sweden", dial: "+46", min: 9, max: 10 },
+                CH: { name: "Switzerland", dial: "+41", min: 9, max: 9 },
+                PL: { name: "Poland", dial: "+48", min: 9, max: 9 },
+                AR: { name: "Argentina", dial: "+54", min: 10, max: 10 },
+                BE: { name: "Belgium", dial: "+32", min: 9, max: 9 },
+                AT: { name: "Austria", dial: "+43", min: 10, max: 11 },
+                NO: { name: "Norway", dial: "+47", min: 8, max: 8 },
+                DK: { name: "Denmark", dial: "+45", min: 8, max: 8 },
+                FI: { name: "Finland", dial: "+358", min: 9, max: 10 },
+                IE: { name: "Ireland", dial: "+353", min: 9, max: 9 },
+                NZ: { name: "New Zealand", dial: "+64", min: 8, max: 10 },
+                PT: { name: "Portugal", dial: "+351", min: 9, max: 9 },
+                GR: { name: "Greece", dial: "+30", min: 10, max: 10 },
+                IL: { name: "Israel", dial: "+972", min: 9, max: 10 },
+                HK: { name: "Hong Kong", dial: "+852", min: 8, max: 8 },
+                MY: { name: "Malaysia", dial: "+60", min: 9, max: 10 },
+                PH: { name: "Philippines", dial: "+63", min: 10, max: 10 },
+                ID: { name: "Indonesia", dial: "+62", min: 10, max: 12 },
+                TH: { name: "Thailand", dial: "+66", min: 9, max: 10 },
+                VN: { name: "Vietnam", dial: "+84", min: 9, max: 10 },
+                EG: { name: "Egypt", dial: "+20", min: 10, max: 10 },
+                NG: { name: "Nigeria", dial: "+234", min: 10, max: 11 },
+                KE: { name: "Kenya", dial: "+254", min: 9, max: 10 }
+            };
+        }
+        getPhoneCountryRule(code) {
+            const rules = this.countryRules();
+            return rules[String(code || "US").toUpperCase()] || { name: "International", dial: "", min: 7, max: 15 };
         }
         initCustomSelects() {
             this.root.querySelectorAll("[data-wof-custom-select]").forEach(cs => {
@@ -989,10 +1197,12 @@
             const fieldEl = e.closest("[data-wof-field]");
             if (fieldEl) {
                 const type = fieldEl.dataset.wofType || e.type || "";
-                if (type === "email" || type === "url" || e.type === "email" || e.type === "url") {
+                if (type === "email" || type === "url" || type === "tel" || e.type === "email" || e.type === "url" || e.type === "tel" || e.classList?.contains("wof-phone-number-input") || e.matches?.("[data-wof-phone-select]")) {
                     const err = this.validateSingleField(fieldEl);
                     if (!err) {
                         this.clearFieldError(fieldEl);
+                    } else if (this.hasSubmitted) {
+                        this.setFieldError(fieldEl, this.errorText(err.code, err.label, err.params));
                     }
                 } else {
                     this.clearFieldError(fieldEl);
@@ -1352,6 +1562,24 @@
             if (urlErr) {
                 return `Please enter a valid website URL for "${urlErr.label}".`;
             }
+            const phoneDigitsErr = errs.find(e => String(e.code || "").includes("invalid_phone_digits"));
+            if (phoneDigitsErr) {
+                const pMin = phoneDigitsErr.params?.min || phoneDigitsErr.min;
+                const pMax = phoneDigitsErr.params?.max || phoneDigitsErr.max;
+                const cName = phoneDigitsErr.params?.countryName || phoneDigitsErr.countryName || "";
+                const suffix = cName ? ` (${cName})` : "";
+                if (pMin && pMax && pMin === pMax) {
+                    return `Please enter a valid ${pMin}-digit phone number for "${phoneDigitsErr.label}"${suffix}.`;
+                }
+                if (pMin && pMax) {
+                    return `Please enter a valid ${pMin} to ${pMax}-digit phone number for "${phoneDigitsErr.label}"${suffix}.`;
+                }
+                return `Please enter a valid phone number for "${phoneDigitsErr.label}"${suffix}.`;
+            }
+            const phoneErr = errs.find(e => String(e.code || "").includes("invalid_phone"));
+            if (phoneErr) {
+                return `Please enter a valid phone number for "${phoneErr.label}".`;
+            }
 
             const requiredErrors = errs.filter(e => {
                 const code = String(e.code || "");
@@ -1491,6 +1719,22 @@
             if (code === "field_invalid_url" || code === "invalid_url") {
                 return `Please enter a valid website URL for ${name}.`;
             }
+            if (code === "field_invalid_phone_digits" || code === "invalid_phone_digits") {
+                const pMin = params?.min;
+                const pMax = params?.max;
+                const cName = params?.countryName || "";
+                const suffix = cName ? ` (${cName})` : "";
+                if (pMin && pMax && pMin === pMax) {
+                    return `Please enter a valid ${pMin}-digit phone number for ${name}${suffix}.`;
+                }
+                if (pMin && pMax) {
+                    return `Please enter a valid ${pMin} to ${pMax}-digit phone number for ${name}${suffix}.`;
+                }
+                return `Please enter a valid phone number for ${name}${suffix}.`;
+            }
+            if (code === "field_invalid_phone" || code === "invalid_phone") {
+                return `Please enter a valid phone number for ${name}.`;
+            }
             if (code === "field_invalid_color" || code === "invalid_color") {
                 return `Please select a valid color for ${name}.`;
             }
@@ -1609,6 +1853,57 @@
             const fieldDef = this.getFieldDef(uuid);
             const label = fieldDef?.label || fieldEl.querySelector(".wof-field__label")?.textContent?.replace(/\*.*$/, "")?.trim() || "This option";
             const isRequired = Boolean(fieldDef?.required || fieldEl.querySelector(".wof-required") || fieldEl.querySelector('[aria-required="true"]'));
+
+            const phoneWrap = fieldEl.querySelector("[data-wof-phone-wrap]");
+            if (type === "tel" || phoneWrap) {
+                const phoneInput = phoneWrap?.querySelector(".wof-phone-number-input") || fieldEl.querySelector('input[type="tel"]');
+                const phoneVal = (phoneInput ? phoneInput.value : "").trim();
+
+                if (isRequired && !phoneVal) {
+                    return {
+                        code: "field_required",
+                        fieldUuid: uuid,
+                        label,
+                        element: fieldEl
+                    };
+                }
+
+                if (phoneVal) {
+                    // Check for invalid characters
+                    if (!/^\+?[\d\s().\-]+$/.test(phoneVal)) {
+                        return {
+                            code: "field_invalid_phone",
+                            fieldUuid: uuid,
+                            label,
+                            element: fieldEl
+                        };
+                    }
+
+                    // Check country digit constraints
+                    const select = phoneWrap?.querySelector("[data-wof-phone-select]");
+                    const country = (select?.value || fieldDef?.defaultCountry || "US").toUpperCase();
+                    const rule = this.getPhoneCountryRule(country);
+                    const digits = phoneVal.replace(/\D/g, "");
+
+                    if (digits.length < rule.min || digits.length > rule.max) {
+                        return {
+                            code: "field_invalid_phone_digits",
+                            fieldUuid: uuid,
+                            label,
+                            element: fieldEl,
+                            params: {
+                                min: rule.min,
+                                max: rule.max,
+                                country,
+                                countryName: rule.name,
+                                actual: digits.length
+                            }
+                        };
+                    }
+                }
+
+                return null;
+            }
 
             const input = fieldEl.querySelector('input:not([type="hidden"]), select, textarea');
             const value = input ? input.value : "";
@@ -2043,6 +2338,18 @@
                 u.classList.remove("has-files", "is-uploading", "is-complete");
                 u.querySelectorAll("[data-wof-upload-list]").forEach(l => l.replaceChildren());
                 u.querySelectorAll("[data-wof-upload-ref]:not([data-wof-upload-template])").forEach(ref => ref.remove());
+            });
+            n.querySelectorAll("[data-wof-phone-picker]").forEach(p => {
+                p.classList.remove("is-open");
+                p.querySelector("[data-wof-phone-trigger]")?.setAttribute("aria-expanded", "false");
+                const search = p.querySelector("[data-wof-phone-search]");
+                if (search) search.value = "";
+                p.querySelectorAll("[data-wof-phone-option]").forEach(opt => {
+                    opt.classList.remove("is-hidden");
+                    opt.classList.remove("is-active");
+                    opt.hidden = false;
+                    opt.style.removeProperty("display");
+                });
             });
 
             o.append(n);

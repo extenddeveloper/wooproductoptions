@@ -92,10 +92,20 @@ final class ScalarFieldType extends AbstractFieldType {
 
 	public function normalize_value(mixed $value, array $definition): mixed {
 		if (is_array($value) && 'date_range' !== $this->value_kind) {
-			if ('tel' === $this->value_kind && isset($value['number'])) {
-				$dial = ! empty($value['dial']) ? (string) $value['dial'] : '';
-				$num  = (string) $value['number'];
-				return preg_replace('/[^\d+().\-\s]/u', '', trim($dial . ' ' . $num)) ?? '';
+			if ('tel' === $this->value_kind) {
+				$num = (string) ($value['number'] ?? '');
+				if ('' === trim($num)) {
+					return '';
+				}
+				$dial = (string) ($value['dial'] ?? '');
+				$country = strtoupper(trim((string) ($value['country'] ?? '')));
+				if ('' === $dial && '' !== $country) {
+					$definitions = self::country_definitions();
+					$dial = $definitions[$country]['dial'] ?? '';
+				}
+				$clean_dial = preg_replace('/[^\d+]/', '', $dial) ?? '';
+				$clean_num  = preg_replace('/[^\d().\-\s]/', '', $num) ?? '';
+				return trim($clean_dial . ' ' . $clean_num);
 			}
 			return '';
 		}
@@ -131,6 +141,7 @@ final class ScalarFieldType extends AbstractFieldType {
 			'url'        => $this->validate_url((string) $value),
 			'integer'    => $this->validate_number((string) $value, $definition, true),
 			'decimal'    => $this->validate_number((string) $value, $definition, false),
+			'tel'        => $this->validate_phone($value, $definition),
 			'date'       => $this->validate_datetime_field((string) $value, $definition),
 			'time'       => $this->validate_datetime_field((string) $value, $definition),
 			'datetime'   => $this->validate_datetime_field((string) $value, $definition),
@@ -338,5 +349,128 @@ final class ScalarFieldType extends AbstractFieldType {
 			$errors[] = ['code' => 'too_long', 'params' => ['maximum' => $max]];
 		}
 		return $errors;
+	}
+
+	/**
+	 * Supported countries with dial codes and national significant number digit constraints.
+	 *
+	 * @return array<string,array{name:string,dial:string,min:int,max:int}>
+	 */
+	public static function country_definitions(): array {
+		return [
+			'US' => ['name' => 'United States', 'dial' => '+1', 'min' => 10, 'max' => 10],
+			'GB' => ['name' => 'United Kingdom', 'dial' => '+44', 'min' => 10, 'max' => 11],
+			'CA' => ['name' => 'Canada', 'dial' => '+1', 'min' => 10, 'max' => 10],
+			'AU' => ['name' => 'Australia', 'dial' => '+61', 'min' => 9, 'max' => 10],
+			'DE' => ['name' => 'Germany', 'dial' => '+49', 'min' => 10, 'max' => 11],
+			'FR' => ['name' => 'France', 'dial' => '+33', 'min' => 9, 'max' => 10],
+			'IT' => ['name' => 'Italy', 'dial' => '+39', 'min' => 9, 'max' => 10],
+			'ES' => ['name' => 'Spain', 'dial' => '+34', 'min' => 9, 'max' => 9],
+			'NL' => ['name' => 'Netherlands', 'dial' => '+31', 'min' => 9, 'max' => 10],
+			'BR' => ['name' => 'Brazil', 'dial' => '+55', 'min' => 10, 'max' => 11],
+			'IN' => ['name' => 'India', 'dial' => '+91', 'min' => 10, 'max' => 10],
+			'CN' => ['name' => 'China', 'dial' => '+86', 'min' => 11, 'max' => 11],
+			'JP' => ['name' => 'Japan', 'dial' => '+81', 'min' => 10, 'max' => 11],
+			'KR' => ['name' => 'South Korea', 'dial' => '+82', 'min' => 9, 'max' => 11],
+			'MX' => ['name' => 'Mexico', 'dial' => '+52', 'min' => 10, 'max' => 10],
+			'AE' => ['name' => 'United Arab Emirates', 'dial' => '+971', 'min' => 9, 'max' => 9],
+			'SA' => ['name' => 'Saudi Arabia', 'dial' => '+966', 'min' => 9, 'max' => 9],
+			'SG' => ['name' => 'Singapore', 'dial' => '+65', 'min' => 8, 'max' => 8],
+			'BD' => ['name' => 'Bangladesh', 'dial' => '+880', 'min' => 10, 'max' => 11],
+			'PK' => ['name' => 'Pakistan', 'dial' => '+92', 'min' => 10, 'max' => 11],
+			'ZA' => ['name' => 'South Africa', 'dial' => '+27', 'min' => 9, 'max' => 10],
+			'TR' => ['name' => 'Turkey', 'dial' => '+90', 'min' => 10, 'max' => 10],
+			'SE' => ['name' => 'Sweden', 'dial' => '+46', 'min' => 9, 'max' => 10],
+			'CH' => ['name' => 'Switzerland', 'dial' => '+41', 'min' => 9, 'max' => 9],
+			'PL' => ['name' => 'Poland', 'dial' => '+48', 'min' => 9, 'max' => 9],
+			'AR' => ['name' => 'Argentina', 'dial' => '+54', 'min' => 10, 'max' => 10],
+			'BE' => ['name' => 'Belgium', 'dial' => '+32', 'min' => 9, 'max' => 9],
+			'AT' => ['name' => 'Austria', 'dial' => '+43', 'min' => 10, 'max' => 11],
+			'NO' => ['name' => 'Norway', 'dial' => '+47', 'min' => 8, 'max' => 8],
+			'DK' => ['name' => 'Denmark', 'dial' => '+45', 'min' => 8, 'max' => 8],
+			'FI' => ['name' => 'Finland', 'dial' => '+358', 'min' => 9, 'max' => 10],
+			'IE' => ['name' => 'Ireland', 'dial' => '+353', 'min' => 9, 'max' => 9],
+			'NZ' => ['name' => 'New Zealand', 'dial' => '+64', 'min' => 8, 'max' => 10],
+			'PT' => ['name' => 'Portugal', 'dial' => '+351', 'min' => 9, 'max' => 9],
+			'GR' => ['name' => 'Greece', 'dial' => '+30', 'min' => 10, 'max' => 10],
+			'IL' => ['name' => 'Israel', 'dial' => '+972', 'min' => 9, 'max' => 10],
+			'HK' => ['name' => 'Hong Kong', 'dial' => '+852', 'min' => 8, 'max' => 8],
+			'MY' => ['name' => 'Malaysia', 'dial' => '+60', 'min' => 9, 'max' => 10],
+			'PH' => ['name' => 'Philippines', 'dial' => '+63', 'min' => 10, 'max' => 10],
+			'ID' => ['name' => 'Indonesia', 'dial' => '+62', 'min' => 10, 'max' => 12],
+			'TH' => ['name' => 'Thailand', 'dial' => '+66', 'min' => 9, 'max' => 10],
+			'VN' => ['name' => 'Vietnam', 'dial' => '+84', 'min' => 9, 'max' => 10],
+			'EG' => ['name' => 'Egypt', 'dial' => '+20', 'min' => 10, 'max' => 10],
+			'NG' => ['name' => 'Nigeria', 'dial' => '+234', 'min' => 10, 'max' => 11],
+			'KE' => ['name' => 'Kenya', 'dial' => '+254', 'min' => 9, 'max' => 10],
+		];
+	}
+
+	/**
+	 * @param mixed $value
+	 * @param array<string,mixed> $definition
+	 * @return list<array{code:string,params:array<string,mixed>}>
+	 */
+	private function validate_phone(mixed $value, array $definition): array {
+		$str = trim((string) $value);
+		if ('' === $str) {
+			return [];
+		}
+
+		// Must contain only digits, spaces, parentheses, hyphens, dots, and optional leading +.
+		if (! preg_match('/^\+?[\d\s().\-]+$/u', $str)) {
+			return [['code' => 'invalid_phone', 'params' => []]];
+		}
+
+		$definitions = self::country_definitions();
+		$country     = null;
+		$national    = $str;
+
+		if (str_starts_with($str, '+')) {
+			$matched_dial = '';
+			foreach ($definitions as $code => $info) {
+				$dial = $info['dial'];
+				if (str_starts_with($str, $dial) && strlen($dial) > strlen($matched_dial)) {
+					$matched_dial = $dial;
+					$country      = $code;
+				}
+			}
+			if ('' !== $matched_dial) {
+				$national = substr($str, strlen($matched_dial));
+			}
+		}
+
+		if (null === $country) {
+			$country = strtoupper((string) ($definition['defaultCountry'] ?? 'US'));
+		}
+
+		$digits = preg_replace('/\D/', '', $national) ?? '';
+		$len    = strlen($digits);
+
+		$rule = $definitions[$country] ?? ['min' => 7, 'max' => 15, 'name' => 'International'];
+		if ($len < $rule['min'] || $len > $rule['max']) {
+			return [
+				[
+					'code'   => 'invalid_phone_digits',
+					'params' => [
+						'country'     => $country,
+						'countryName' => $rule['name'],
+						'min'         => $rule['min'],
+						'max'         => $rule['max'],
+						'actual'      => $len,
+					],
+				],
+			];
+		}
+
+		if (! empty($definition['minLength']) && $len < (int) $definition['minLength']) {
+			return [['code' => 'too_short', 'params' => ['minimum' => (int) $definition['minLength']]]];
+		}
+
+		if (! empty($definition['maxLength']) && $len > (int) $definition['maxLength']) {
+			return [['code' => 'too_long', 'params' => ['maximum' => (int) $definition['maxLength']]]];
+		}
+
+		return [];
 	}
 }
