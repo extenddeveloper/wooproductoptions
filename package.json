@@ -1,6 +1,6 @@
 {
   "name": "wooptionsfic",
-  "version": "0.9.0-beta.30",
+  "version": "1.0.0",
   "private": true,
   "description": "WooOptionsFic React + TypeScript development source",
   "type": "module",
