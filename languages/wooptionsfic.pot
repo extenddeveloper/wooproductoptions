@@ -1,0 +1,434 @@
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: WooOptionsFic — Product Options for WooCommerce\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-27 07:56+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: \n"
+"Language: \n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"X-Loco-Version: 2.8.8; wp-7.1.2; php-8.3.11\n"
+"X-Domain: wooptionsfic"
+
+#: src/Presentation/Rest/AdminController.php:445
+msgid "%d product"
+msgid_plural "%d products"
+msgstr[0] ""
+msgstr[1] ""
+
+#: src/Infrastructure/WooCommerce/CartIntegration.php:636
+msgid ""
+"A configured product could not be revalidated. Remove it and add it again."
+msgstr ""
+
+#. Description of the plugin
+msgid ""
+"Accessible product options, conditional logic, formula pricing, repeaters, "
+"uploads, and visual configuration for WooCommerce."
+msgstr ""
+
+#: src/Presentation/Storefront/Assets.php:44
+msgid "Add another"
+msgstr ""
+
+#: src/Presentation/Admin/AdminPage.php:34
+msgid "Analytics"
+msgstr ""
+
+#: src/Presentation/Rest/AdminController.php:365
+msgid "Autosaved draft"
+msgstr ""
+
+#: blocks/product-options/block.json:1
+msgctxt "block description"
+msgid ""
+"Displays the effective product options for the current WooCommerce product."
+msgstr ""
+
+#: blocks/product-options/block.json:1
+msgctxt "block title"
+msgid "WooOptionsFic Product Options"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:110
+msgid ""
+"Built-in policy scanner; external antivirus can replace it with the "
+"documented filter."
+msgstr ""
+
+#: src/Presentation/Storefront/Assets.php:39
+msgid "Checking your configuration…"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:56
+msgid "Cleanup is not currently scheduled."
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:66
+msgid "Compiled admin and storefront assets are present."
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:67
+msgid "Compiled assets are missing from this installation."
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/CartIntegration.php:618
+msgid "configured product"
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/OrderIntegration.php:197
+msgid "Customer upload"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:55
+msgid "Daily cleanup is scheduled."
+msgstr ""
+
+#: src/Presentation/Admin/AdminPage.php:31
+msgid "Dashboard"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:32
+#, php-format
+msgid "Database table: %s"
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:67
+msgid "Database version"
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:49
+msgid "Database, assets, and private storage passed the runtime checks."
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:104
+msgid "Extension data is registered when the supported Store API is present."
+msgstr ""
+
+#: src/Application/TemplateService.php:51
+msgid "field"
+msgstr ""
+
+#: src/Application/TemplateService.php:51
+msgid "fields"
+msgstr ""
+
+#: src/Presentation/Rest/AdminController.php:509
+msgid "ID: %d"
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/StoreApiIntegration.php:76
+msgid "Immutable definition revision identifier."
+msgstr ""
+
+#: src/Presentation/Rest/AdminController.php:506
+msgid "Item #%d"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:36
+msgid "Missing; deactivate and reactivate the plugin to retry migrations."
+msgstr ""
+
+#: src/Application/SavedConfigurationService.php:168
+msgid "My configuration"
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:68
+msgid "Not active"
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:50
+msgid "One or more required WooOptionsFic services are unavailable."
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:52
+msgid "Open WooOptionsFic"
+msgstr ""
+
+#: src/Presentation/Admin/AdminPage.php:170
+msgid "Opening your option workshop…"
+msgstr ""
+
+#: src/Domain/Snapshot/SnapshotFactory.php:97
+#: src/Infrastructure/WooCommerce/CartIntegration.php:401
+#: src/Infrastructure/WooCommerce/CartIntegration.php:438
+#: src/Infrastructure/WooCommerce/OrderIntegration.php:94
+msgid "Option"
+msgstr ""
+
+#: src/Presentation/Admin/AdminPage.php:32
+msgid "Option Sets"
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/CartIntegration.php:452
+#: src/Infrastructure/WooCommerce/CartIntegration.php:453
+msgid "Part of configuration"
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/CartIntegration.php:815
+msgid "Please check your product options."
+msgstr ""
+
+#. %s: option label.
+#: src/Infrastructure/WooCommerce/CartIntegration.php:812
+#, php-format
+msgid "Please check “%s”."
+msgstr ""
+
+#. %s: product name.
+#: src/Infrastructure/WooCommerce/CartIntegration.php:617
+#, php-format
+msgid "Please review the configuration for “%s” before checking out."
+msgstr ""
+
+#: src/Bootstrap/Requirements.php:103 src/Bootstrap/Requirements.php:117
+msgid "Plugin activation failed"
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:66
+msgid "Plugin version"
+msgstr ""
+
+#: src/Presentation/Storefront/Assets.php:40
+msgid "Price confirmed"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:43
+msgid "Private upload vault"
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/OrderIntegration.php:203
+msgid "Private uploads:"
+msgstr ""
+
+#: src/Domain/Pricing/PriceEngine.php:304
+msgid "Product"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:63
+msgid "Production assets"
+msgstr ""
+
+#: src/Presentation/Rest/AdminController.php:383
+msgid "Published from the builder"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:35
+msgid "Ready"
+msgstr ""
+
+#: src/Presentation/Storefront/Assets.php:45
+msgid "Remove"
+msgstr ""
+
+#: src/Presentation/Rest/AdminController.php:331
+msgid "Renamed option set"
+msgstr ""
+
+#: src/Application/TemplateService.php:52
+msgid "rule"
+msgstr ""
+
+#: src/Application/TemplateService.php:52
+msgid "rules"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:98
+msgid ""
+"Runtime hooks and server-authoritative cart/order snapshots are installed."
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/StoreApiIntegration.php:74
+msgid "Sanitized option summary."
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:52
+msgid "Scheduled cleanup"
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/StoreApiIntegration.php:75
+msgid "Server-calculated price breakdown."
+msgstr ""
+
+#: wooptionsfic.php:77 src/Presentation/Admin/AdminPage.php:35
+msgid "Settings"
+msgstr ""
+
+#: src/Presentation/Rest/AdminController.php:509
+#, php-format
+msgid "SKU: %s"
+msgstr ""
+
+#: src/Presentation/Admin/AdminPage.php:33
+msgid "Templates"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:47
+msgid "The private upload vault is unavailable or not writable."
+msgstr ""
+
+#: src/Presentation/Rest/Responder.php:33
+msgid "The request contains invalid configuration data."
+msgstr ""
+
+#: src/Presentation/Rest/Responder.php:29
+msgid "The requested WooOptionsFic resource was not found."
+msgstr ""
+
+#: src/Presentation/Rest/Responder.php:31
+msgid "This item changed in another session. Reload it before saving again."
+msgstr ""
+
+#. %s: current PHP version.
+#: src/Bootstrap/Requirements.php:53
+#, php-format
+msgid "This site is running PHP %s."
+msgstr ""
+
+#. %s: current WordPress version.
+#: src/Bootstrap/Requirements.php:59
+#, php-format
+msgid "This site is running WordPress %s."
+msgstr ""
+
+#: src/Presentation/Rest/AdminController.php:445
+#, php-format
+msgid "Under %s"
+msgstr ""
+
+#: src/Application/OptionSetService.php:447
+msgid "Untitled option set"
+msgstr ""
+
+#: src/Presentation/Storefront/Assets.php:43
+msgid "Upload ready"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:108
+msgid "Upload scanner adapter"
+msgstr ""
+
+#: src/Presentation/Storefront/Assets.php:42
+msgid "Uploading securely…"
+msgstr ""
+
+#: src/Presentation/Storefront/Assets.php:41
+msgid ""
+"We could not confirm this configuration. Check the highlighted options and "
+"try again."
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/CartIntegration.php:171
+msgid ""
+"We could not validate these product options. Please refresh and try again."
+msgstr ""
+
+#: src/Infrastructure/WooCommerce/StoreApiIntegration.php:73
+msgid "Whether this cart line has a WooOptionsFic configuration."
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:96
+msgid "WooCommerce classic product and checkout"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:102
+msgid "WooCommerce Store API cart items"
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:68
+msgid "WooCommerce version"
+msgstr ""
+
+#. Author of the plugin
+#: src/Infrastructure/WordPress/SiteHealth.php:46
+#: src/Infrastructure/WordPress/SiteHealth.php:64
+#: src/Presentation/Admin/AdminPage.php:21
+#: src/Presentation/Admin/AdminPage.php:22
+msgid "WooOptionsFic"
+msgstr ""
+
+#: src/Presentation/Rest/Responder.php:35
+msgid "WooOptionsFic could not complete the request."
+msgstr ""
+
+#: src/Presentation/Rest/Responder.php:40
+msgid "WooOptionsFic encountered an unexpected error."
+msgstr ""
+
+#. %s: plugin admin URL.
+#: src/Presentation/Admin/AdminPage.php:195
+#, php-format
+msgid ""
+"WooOptionsFic is ready. <a href=\"%s\">Open the Precision Workshop</a> to "
+"import a template or build your first option set."
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:44
+msgid "WooOptionsFic needs attention"
+msgstr ""
+
+#: src/Bootstrap/Requirements.php:84
+msgid ""
+"WooOptionsFic needs WooCommerce to render options and process configured "
+"products. Install and activate WooCommerce to enable commerce features."
+msgstr ""
+
+#. 1: PHP version, 2: WordPress version.
+#: src/Bootstrap/Requirements.php:45
+#, php-format
+msgid ""
+"WooOptionsFic requires PHP %1$s or newer and WordPress %2$s or newer. The "
+"plugin has not loaded."
+msgstr ""
+
+#. %s: minimum PHP version.
+#: src/Bootstrap/Requirements.php:99
+#, php-format
+msgid "WooOptionsFic requires PHP %s or newer."
+msgstr ""
+
+#. 1: required WooCommerce version, 2: detected version.
+#: src/Bootstrap/Requirements.php:80
+#, php-format
+msgid ""
+"WooOptionsFic requires WooCommerce %1$s or newer. Version %2$s is active, so "
+"commerce features are paused."
+msgstr ""
+
+#. %s: minimum WordPress version.
+#: src/Bootstrap/Requirements.php:113
+#, php-format
+msgid "WooOptionsFic requires WordPress %s or newer."
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:29
+msgid "WooOptionsFic runtime"
+msgstr ""
+
+#. Name of the plugin
+msgid "WooOptionsFic — Product Options for WooCommerce"
+msgstr ""
+
+#: src/Presentation/Admin/AdminPage.php:182
+msgid ""
+"WooOptionsFic’s administration builder requires JavaScript. Storefront basic "
+"fields still have a server-rendered fallback."
+msgstr ""
+
+#: src/Infrastructure/WordPress/SiteHealth.php:43
+msgid "WooOptionsFic’s required services are ready"
+msgstr ""
+
+#: src/Application/DiagnosticsService.php:46
+msgid "Writable and protected by server fallback files."
+msgstr ""
+
+#: src/Presentation/Admin/AdminPage.php:166
+msgid "You do not have permission to manage WooOptionsFic."
+msgstr ""
