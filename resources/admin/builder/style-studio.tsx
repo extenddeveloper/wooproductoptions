@@ -224,7 +224,11 @@ namespace WooOptionsFic.Builder {
               <strong>{palette.name}</strong>
               <small>{key}</small>
             </span>
-            <b>✓</b>
+            <span className="wof-palette-check" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="2.5,8.5 6.5,12.5 13.5,3.5" />
+              </svg>
+            </span>
           </button>
         ))}
       </div>

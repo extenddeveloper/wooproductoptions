@@ -4737,7 +4737,9 @@ var WooOptionsFic;
                     wp.element.createElement("span", null,
                         wp.element.createElement("strong", null, palette.name),
                         wp.element.createElement("small", null, key)),
-                    wp.element.createElement("b", null, "\u2713"))))),
+                    wp.element.createElement("span", { className: "wof-palette-check", "aria-hidden": "true" },
+                        wp.element.createElement("svg", { width: "14", height: "14", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" },
+                            wp.element.createElement("polyline", { points: "2.5,8.5 6.5,12.5 13.5,3.5" }))))))),
                 wp.element.createElement("div", { className: "wof-customize-colors-section" },
                     wp.element.createElement("button", { type: "button", className: "wof-customize-colors-header", onClick: () => setIsCustomizeOpen(!isCustomizeOpen), "aria-expanded": isCustomizeOpen },
                         wp.element.createElement("h4", null, __('Customize Colors', 'wooptionsfic')),
@@ -7859,7 +7861,6 @@ var WooOptionsFic;
             const [assignments, setAssignments] = useState([]);
             const [modalBusy, setModalBusy] = useState(false);
             const [deleteUuid, setDeleteUuid] = useState(null);
-            const [diagnosticsOpen, setDiagnosticsOpen] = useState(false);
             const [publishBusy, setPublishBusy] = useState(false);
             const savePromise = useRef(null);
             useEffect(() => {
@@ -7913,8 +7914,10 @@ var WooOptionsFic;
                 return () => window.clearTimeout(timeout);
             }, [state.document, state.optionSet]);
             const publish = async () => {
-                if (!state.optionSet || !state.document || state.errors.length) {
-                    setDiagnosticsOpen(true);
+                if (!state.optionSet || !state.document)
+                    return;
+                if (state.errors.length) {
+                    WooOptionsFic.Toast.error(__('Please resolve configuration errors before publishing.', 'wooptionsfic'));
                     return;
                 }
                 setPublishBusy(true);
@@ -7984,7 +7987,10 @@ var WooOptionsFic;
                             wp.element.createElement("span", null, "/"),
                             wp.element.createElement("div", { className: "wof-builder-title-editor" },
                                 wp.element.createElement(TextControl, { label: __('Option set title', 'wooptionsfic'), hideLabelFromVision: true, value: state.document.title, onChange: (title) => actions.updateDocument({ title }) }),
-                                wp.element.createElement(WooOptionsFic.Components.Dashicon, { name: "edit" })))),
+                                wp.element.createElement("span", { className: "wof-builder-title-icon", "aria-hidden": "true" },
+                                    wp.element.createElement("svg", { width: "13", height: "13", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
+                                        wp.element.createElement("path", { d: "M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" }),
+                                        wp.element.createElement("path", { d: "m15 5 4 4" })))))),
                     wp.element.createElement("div", { className: "wof-builder-tools" },
                         wp.element.createElement("div", { className: "wof-tool-group wof-history-tools" },
                             wp.element.createElement("button", { type: "button", disabled: !state.history.length, onClick: actions.undo },
@@ -8009,78 +8015,6 @@ var WooOptionsFic;
                     wp.element.createElement(Builder.ElementsPanel, { onAdd: addField, onOpenStyle: () => { actions.selectField(null); actions.setInspectorTab('style'); } }),
                     wp.element.createElement(Builder.Canvas, { document: state.document, selectedUuid: state.selectedUuid, device: state.device, onSelect: (uuid) => { actions.selectField(uuid); actions.setInspectorTab('content'); }, onAdd: addField, onAddChild: (parentUuid, field, index) => addField(field, index, parentUuid), onMove: actions.moveField, onMoveChild: actions.moveChildField, onMoveToParent: actions.moveFieldToParent, onDuplicate: (field) => addField(WooOptionsFic.FieldFactory.duplicate(field)), onDelete: setDeleteUuid }),
                     wp.element.createElement(Builder.Inspector, { field: selectedField, document: state.document, tab: state.inspectorTab, onTabChange: actions.setInspectorTab, onFieldChange: (field) => actions.replaceField(field.uuid, field), onDocumentChange: actions.updateDocument, onDuplicate: duplicateSelected, onDelete: () => selectedField && setDeleteUuid(selectedField.uuid) })),
-                wp.element.createElement("div", { className: WooOptionsFic.Utils.classNames('wof-diagnostics-drawer', diagnosticsOpen && 'is-open') },
-                    wp.element.createElement("button", { type: "button", className: "wof-diagnostics-toggle", onClick: () => setDiagnosticsOpen(!diagnosticsOpen) },
-                        wp.element.createElement("span", { className: state.errors.length ? 'is-error' : state.warnings.length ? 'is-warn' : 'is-good', "aria-hidden": "true" }, state.errors.length ? (wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round" },
-                            wp.element.createElement("line", { x1: "3", y1: "3", x2: "13", y2: "13" }),
-                            wp.element.createElement("line", { x1: "13", y1: "3", x2: "3", y2: "13" }))) : state.warnings.length ? (wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
-                            wp.element.createElement("path", { d: "M8 2L14.5 13H1.5L8 2z" }),
-                            wp.element.createElement("line", { x1: "8", y1: "7", x2: "8", y2: "10" }),
-                            wp.element.createElement("circle", { cx: "8", cy: "12", r: ".6", fill: "currentColor", stroke: "none" }))) : (wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
-                            wp.element.createElement("polyline", { points: "2,8 6.5,12.5 14,4" })))),
-                        wp.element.createElement("strong", null, __('Preflight diagnostics', 'wooptionsfic')),
-                        wp.element.createElement("small", null,
-                            state.errors.length ? `${state.errors.length} ${__('errors', 'wooptionsfic')}` : __('Ready to publish', 'wooptionsfic'),
-                            state.warnings.length ? ` · ${state.warnings.length} ${__('warnings', 'wooptionsfic')}` : ''),
-                        wp.element.createElement("b", { className: "wof-diagnostics-chevron", "aria-hidden": "true" }, diagnosticsOpen ? (wp.element.createElement("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" },
-                            wp.element.createElement("polyline", { points: "3,10 8,5 13,10" }))) : (wp.element.createElement("svg", { width: "10", height: "10", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round" },
-                            wp.element.createElement("polyline", { points: "3,6 8,11 13,6" }))))),
-                    diagnosticsOpen ? wp.element.createElement("div", { className: "wof-diagnostics-content" },
-                        wp.element.createElement("div", { className: "wof-diagnostics-section" },
-                            wp.element.createElement("h3", null,
-                                wp.element.createElement("span", { className: "wof-diag-section-icon wof-diag-icon-error", "aria-hidden": "true" },
-                                    wp.element.createElement("svg", { width: "9", height: "9", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round" },
-                                        wp.element.createElement("line", { x1: "3", y1: "3", x2: "13", y2: "13" }),
-                                        wp.element.createElement("line", { x1: "13", y1: "3", x2: "3", y2: "13" }))),
-                                __('Errors', 'wooptionsfic'),
-                                state.errors.length ? wp.element.createElement("em", { className: "wof-diag-count" }, state.errors.length) : null),
-                            state.errors.length ? wp.element.createElement("ul", null, state.errors.map((issue, index) => wp.element.createElement("li", { key: `${issue.code}-${index}` },
-                                wp.element.createElement("span", { className: "wof-issue-icon is-error", "aria-label": "error" },
-                                    wp.element.createElement("svg", { width: "9", height: "9", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", "aria-hidden": "true" },
-                                        wp.element.createElement("line", { x1: "3", y1: "3", x2: "13", y2: "13" }),
-                                        wp.element.createElement("line", { x1: "13", y1: "3", x2: "3", y2: "13" }))),
-                                wp.element.createElement("code", null, issue.code),
-                                wp.element.createElement("small", null, issue.path ?? issue.fieldUuid ?? '')))) : wp.element.createElement("p", { className: "wof-diag-ok" },
-                                wp.element.createElement("span", { "aria-hidden": "true" },
-                                    wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
-                                        wp.element.createElement("polyline", { points: "2,8 6.5,12.5 14,4" }))),
-                                __('No blocking errors.', 'wooptionsfic'))),
-                        wp.element.createElement("div", { className: "wof-diagnostics-section" },
-                            wp.element.createElement("h3", null,
-                                wp.element.createElement("span", { className: "wof-diag-section-icon wof-diag-icon-warn", "aria-hidden": "true" },
-                                    wp.element.createElement("svg", { width: "9", height: "9", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
-                                        wp.element.createElement("path", { d: "M8 2L14.5 13H1.5L8 2z" }),
-                                        wp.element.createElement("line", { x1: "8", y1: "7", x2: "8", y2: "10" }),
-                                        wp.element.createElement("circle", { cx: "8", cy: "12", r: ".6", fill: "currentColor", stroke: "none" }))),
-                                __('Warnings', 'wooptionsfic'),
-                                state.warnings.length ? wp.element.createElement("em", { className: "wof-diag-count is-warn" }, state.warnings.length) : null),
-                            state.warnings.length ? wp.element.createElement("ul", null, state.warnings.map((issue, index) => wp.element.createElement("li", { key: `${issue.code}-${index}` },
-                                wp.element.createElement("span", { className: "wof-issue-icon is-warn", "aria-label": "warning" },
-                                    wp.element.createElement("svg", { width: "9", height: "9", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" },
-                                        wp.element.createElement("path", { d: "M8 2L14.5 13H1.5L8 2z" }),
-                                        wp.element.createElement("line", { x1: "8", y1: "7", x2: "8", y2: "10" }),
-                                        wp.element.createElement("circle", { cx: "8", cy: "12", r: ".6", fill: "currentColor", stroke: "none" }))),
-                                wp.element.createElement("code", null, issue.code),
-                                wp.element.createElement("small", null, issue.path ?? issue.fieldUuid ?? '')))) : wp.element.createElement("p", { className: "wof-diag-ok" },
-                                wp.element.createElement("span", { "aria-hidden": "true" },
-                                    wp.element.createElement("svg", { width: "11", height: "11", viewBox: "0 0 16 16", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round" },
-                                        wp.element.createElement("polyline", { points: "2,8 6.5,12.5 14,4" }))),
-                                __('No warnings.', 'wooptionsfic'))),
-                        wp.element.createElement("div", { className: "wof-config-size" },
-                            wp.element.createElement("span", { className: "wof-config-size-icon", "aria-hidden": "true" },
-                                wp.element.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round" },
-                                    wp.element.createElement("ellipse", { cx: "12", cy: "5", rx: "9", ry: "3" }),
-                                    wp.element.createElement("path", { d: "M3 5v4c0 1.66 4.03 3 9 3s9-1.34 9-3V5" }),
-                                    wp.element.createElement("path", { d: "M3 9v4c0 1.66 4.03 3 9 3s9-1.34 9-3V9" }),
-                                    wp.element.createElement("path", { d: "M3 13v4c0 1.66 4.03 3 9 3s9-1.34 9-3v-4" }))),
-                            wp.element.createElement("h3", null, __('Config size', 'wooptionsfic')),
-                            wp.element.createElement("strong", null,
-                                new Blob([JSON.stringify(state.document)]).size.toLocaleString(),
-                                " B"),
-                            wp.element.createElement("small", null,
-                                state.document.fields.length,
-                                " ",
-                                __('top-level fields', 'wooptionsfic')))) : null),
                 historyOpen ? wp.element.createElement(Builder.HistoryModal, { revisions: revisions, busy: modalBusy, onClose: () => setHistoryOpen(false), onRollback: async (revisionUuid) => { setModalBusy(true); try {
                         const result = await WooOptionsFic.Api.rollback(state.optionSet.uuid, revisionUuid);
                         actions.loadSet(result);
