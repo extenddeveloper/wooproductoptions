@@ -1,0 +1,194 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {
+    "slug": "gourmet-burger",
+    "version": 1
+  },
+  "optionSet": {
+    "title": "Gourmet burger builder",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "b0000000-0000-4000-8000-000000000001",
+      "revisionUuid": "b0000000-0000-4000-8000-000000000002",
+      "title": "Build your dream burger",
+      "layout": {
+        "type": "grid",
+        "settings": {}
+      },
+      "fields": [
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000010",
+          "type": "segmented",
+          "label": "Burger size & stack",
+          "required": true,
+          "choices": [
+            { "uuid": "b0000000-0000-4000-8000-000000000011", "label": "Single Patty", "default": true },
+            { "uuid": "b0000000-0000-4000-8000-000000000012", "label": "Double Stack", "pricing": { "strategy": "fixed", "amount": "3.50" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000013", "label": "Triple Beast", "pricing": { "strategy": "fixed", "amount": "6.00" } }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000020",
+          "type": "segmented",
+          "label": "Artisan bun selection",
+          "required": true,
+          "choices": [
+            { "uuid": "b0000000-0000-4000-8000-000000000021", "label": "Toasted Brioche Bun", "default": true },
+            { "uuid": "b0000000-0000-4000-8000-000000000022", "label": "Classic Sesame Seed" },
+            { "uuid": "b0000000-0000-4000-8000-000000000023", "label": "Whole Wheat Grain" },
+            { "uuid": "b0000000-0000-4000-8000-000000000024", "label": "Gluten-Free Crisp Lettuce Wrap" }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000030",
+          "type": "radio",
+          "label": "Patty protein choice",
+          "required": true,
+          "choices": [
+            { "uuid": "b0000000-0000-4000-8000-000000000031", "label": "100% Angus Beef (6oz)", "default": true },
+            { "uuid": "b0000000-0000-4000-8000-000000000032", "label": "Marinated Grilled Chicken Breast", "pricing": { "strategy": "fixed", "amount": "1.00" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000033", "label": "Prime Wagyu Beef Patty", "pricing": { "strategy": "fixed", "amount": "4.50" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000034", "label": "Plant-Based Beyond Meat Patty", "pricing": { "strategy": "fixed", "amount": "2.50" } }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000040",
+          "type": "segmented",
+          "label": "Cook temperature",
+          "choices": [
+            { "uuid": "b0000000-0000-4000-8000-000000000041", "label": "Medium" },
+            { "uuid": "b0000000-0000-4000-8000-000000000042", "label": "Medium-Well", "default": true },
+            { "uuid": "b0000000-0000-4000-8000-000000000043", "label": "Well-Done" }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000050",
+          "type": "radio",
+          "label": "Melted cheese slice",
+          "required": true,
+          "choices": [
+            { "uuid": "b0000000-0000-4000-8000-000000000051", "label": "Aged Sharp Cheddar", "default": true },
+            { "uuid": "b0000000-0000-4000-8000-000000000052", "label": "Swiss Emmental", "pricing": { "strategy": "fixed", "amount": "1.50" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000053", "label": "Smoked Gouda", "pricing": { "strategy": "fixed", "amount": "2.00" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000054", "label": "Plant-Based Dairy-Free Cheese", "pricing": { "strategy": "fixed", "amount": "1.50" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000055", "label": "No Cheese" }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000060",
+          "type": "checkbox_group",
+          "label": "Signature sauces",
+          "description": "Select all the dressings you'd like spread across your buns.",
+          "choices": [
+            { "uuid": "b0000000-0000-4000-8000-000000000061", "label": "House Secret Burger Sauce", "default": true },
+            { "uuid": "b0000000-0000-4000-8000-000000000062", "label": "Garlic Truffle Aioli", "pricing": { "strategy": "fixed", "amount": "1.25" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000063", "label": "Smokey Hickory BBQ", "pricing": { "strategy": "fixed", "amount": "0.75" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000064", "label": "Spicy Sriracha Mayo", "pricing": { "strategy": "fixed", "amount": "0.75" } }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000070",
+          "type": "checkbox_group",
+          "label": "Fresh greens & crisp toppings",
+          "choices": [
+            { "uuid": "b0000000-0000-4000-8000-000000000071", "label": "Crisp Iceberg Lettuce", "default": true },
+            { "uuid": "b0000000-0000-4000-8000-000000000072", "label": "Ripe Heirloom Tomato", "default": true },
+            { "uuid": "b0000000-0000-4000-8000-000000000073", "label": "Caramelized Sweet Onions", "pricing": { "strategy": "fixed", "amount": "1.00" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000074", "label": "Crinkled Dill Pickles" },
+            { "uuid": "b0000000-0000-4000-8000-000000000075", "label": "Spicy Pickled Jalapeños" }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000080",
+          "type": "checkbox_group",
+          "label": "Gourmet booster upgrades",
+          "choices": [
+            { "uuid": "b0000000-0000-4000-8000-000000000081", "label": "Thick-Cut Smoked Bacon (2 Strips)", "pricing": { "strategy": "fixed", "amount": "2.25" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000082", "label": "Sunny-Side Fried Farm Egg", "pricing": { "strategy": "fixed", "amount": "1.50" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000083", "label": "Fresh Hass Avocado Slices", "pricing": { "strategy": "fixed", "amount": "2.00" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000084", "label": "Sautéed Herb Mushrooms", "pricing": { "strategy": "fixed", "amount": "1.75" } }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000090",
+          "type": "select",
+          "label": "Side pairing & fries",
+          "choices": [
+            { "uuid": "b0000000-0000-4000-8000-000000000091", "label": "No side (Burger only)", "default": true },
+            { "uuid": "b0000000-0000-4000-8000-000000000092", "label": "Hand-Cut Sea Salt French Fries", "pricing": { "strategy": "fixed", "amount": "3.99" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000093", "label": "Parmesan Truffle Fries", "pricing": { "strategy": "fixed", "amount": "5.99" } },
+            { "uuid": "b0000000-0000-4000-8000-000000000094", "label": "Golden Beer-Battered Onion Rings", "pricing": { "strategy": "fixed", "amount": "4.99" } }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-0000000000a0",
+          "type": "textarea",
+          "label": "Kitchen special instructions",
+          "placeholder": "e.g. sauce on side, extra crispy fries, please cut in half...",
+          "maxLength": 180
+        }
+      ],
+      "rules": [
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000101",
+          "name": "Vegetarian griddle notice for Beyond Meat",
+          "condition": {
+            "field": "b0000000-0000-4000-8000-000000000030",
+            "operator": "equals",
+            "value": "b0000000-0000-4000-8000-000000000034"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "b0000000-0000-4000-8000-0000000000a0",
+              "value": "Beyond Meat patty will be seared on our designated plant-only grill."
+            }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000102",
+          "name": "Gluten free wrap notice",
+          "condition": {
+            "field": "b0000000-0000-4000-8000-000000000020",
+            "operator": "equals",
+            "value": "b0000000-0000-4000-8000-000000000024"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "b0000000-0000-4000-8000-000000000020",
+              "value": "Wrapped in fresh chilled romaine iceberg leaves."
+            }
+          ]
+        },
+        {
+          "uuid": "b0000000-0000-4000-8000-000000000103",
+          "name": "Notice for triple stack",
+          "condition": {
+            "field": "b0000000-0000-4000-8000-000000000010",
+            "operator": "equals",
+            "value": "b0000000-0000-4000-8000-000000000013"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "b0000000-0000-4000-8000-000000000010",
+              "value": "Triple stack burgers are pinned with wooden skewers for structural support."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "ember-craft",
+        "overrides": {},
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
+    }
+  }
+}

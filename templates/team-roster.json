@@ -1,6 +1,9 @@
 {
   "exportSchemaVersion": 1,
-  "template": {"slug": "team-roster", "version": 1},
+  "template": {
+    "slug": "team-roster",
+    "version": 1
+  },
   "optionSet": {
     "title": "Team roster",
     "definition": {
@@ -8,23 +11,119 @@
       "setUuid": "a0000000-0000-4000-8000-000000000001",
       "revisionUuid": "a0000000-0000-4000-8000-000000000002",
       "title": "Build your team roster",
-      "layout": {"type": "stack", "settings": {}},
+      "layout": {
+        "type": "stack",
+        "settings": {}
+      },
       "fields": [
-        {"uuid": "a0000000-0000-4000-8000-000000000010", "type": "repeater", "label": "Players", "description": "Add one row for every personalized jersey.", "required": true, "minRows": 1, "defaultRows": 1, "maxRows": 25, "rowTitle": "Player {index}", "children": [
-          {"uuid": "a0000000-0000-4000-8000-000000000020", "type": "text", "label": "Player name", "required": true, "maxLength": 24, "pricing": {"strategy": "fixed", "amount": "8"}},
-          {"uuid": "a0000000-0000-4000-8000-000000000030", "type": "select", "label": "Jersey size", "required": true, "choices": [
-            {"uuid": "a0000000-0000-4000-8000-000000000031", "label": "Small"},
-            {"uuid": "a0000000-0000-4000-8000-000000000032", "label": "Medium", "default": true},
-            {"uuid": "a0000000-0000-4000-8000-000000000033", "label": "Large"},
-            {"uuid": "a0000000-0000-4000-8000-000000000034", "label": "Extra large"}
-          ]},
-          {"uuid": "a0000000-0000-4000-8000-000000000040", "type": "number", "label": "Jersey number", "required": true, "min": "0", "max": "99", "step": "1"}
-        ]}
+        {
+          "uuid": "a0000000-0000-4000-8000-000000000010",
+          "type": "text",
+          "label": "Club / Team name",
+          "required": true,
+          "maxLength": 60,
+          "placeholder": "e.g. Westside Strikers FC"
+        },
+        {
+          "uuid": "a0000000-0000-4000-8000-000000000020",
+          "type": "color_swatch",
+          "label": "Uniform colorway",
+          "required": true,
+          "choices": [
+            { "uuid": "a0000000-0000-4000-8000-000000000021", "label": "Royal Blue", "color": "#1D4ED8", "default": true },
+            { "uuid": "a0000000-0000-4000-8000-000000000022", "label": "Scarlet Red", "color": "#DC2626" },
+            { "uuid": "a0000000-0000-4000-8000-000000000023", "label": "Forest Green", "color": "#15803D" },
+            { "uuid": "a0000000-0000-4000-8000-000000000024", "label": "Jet Black", "color": "#09090B" }
+          ]
+        },
+        {
+          "uuid": "a0000000-0000-4000-8000-000000000030",
+          "type": "repeater",
+          "label": "Player roster line-up",
+          "description": "Add one row for each player on your squad.",
+          "required": true,
+          "minRows": 1,
+          "defaultRows": 1,
+          "maxRows": 25,
+          "rowTitle": "Player {index}",
+          "children": [
+            {
+              "uuid": "a0000000-0000-4000-8000-000000000031",
+              "type": "text",
+              "label": "Player surname",
+              "required": true,
+              "maxLength": 24,
+              "pricing": { "strategy": "fixed", "amount": "8.00" }
+            },
+            {
+              "uuid": "a0000000-0000-4000-8000-000000000032",
+              "type": "select",
+              "label": "Uniform size",
+              "required": true,
+              "choices": [
+                { "uuid": "a0000000-0000-4000-8000-000000000033", "label": "Youth Large" },
+                { "uuid": "a0000000-0000-4000-8000-000000000034", "label": "Adult Small" },
+                { "uuid": "a0000000-0000-4000-8000-000000000035", "label": "Adult Medium", "default": true },
+                { "uuid": "a0000000-0000-4000-8000-000000000036", "label": "Adult Large" },
+                { "uuid": "a0000000-0000-4000-8000-000000000037", "label": "Adult XL" }
+              ]
+            },
+            {
+              "uuid": "a0000000-0000-4000-8000-000000000038",
+              "type": "number",
+              "label": "Jersey number",
+              "required": true,
+              "min": "0",
+              "max": "99",
+              "step": "1",
+              "default": "10"
+            }
+          ]
+        },
+        {
+          "uuid": "a0000000-0000-4000-8000-000000000040",
+          "type": "file",
+          "label": "Team crest or sponsor vector logo",
+          "allowedExtensions": ["png", "jpg", "svg", "pdf"],
+          "maxFileMb": 10,
+          "maxFiles": 1
+        },
+        {
+          "uuid": "a0000000-0000-4000-8000-000000000050",
+          "type": "toggle",
+          "label": "Expedited 3-Day Tournament Rush Production",
+          "pricing": { "strategy": "fixed", "amount": "35.00" }
+        }
       ],
-      "rules": [],
-      "preview": {"assets": [], "layers": [], "bindings": []},
-      "style": {"palette": "iris-studio", "overrides": {}, "typography": {"family": "Outfit"}},
-      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+      "rules": [
+        {
+          "uuid": "a0000000-0000-4000-8000-000000000101",
+          "name": "Rush production delivery notice",
+          "condition": {
+            "field": "a0000000-0000-4000-8000-000000000050",
+            "operator": "equals",
+            "value": true
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "a0000000-0000-4000-8000-000000000050",
+              "value": "Tournament rush orders are assigned a dedicated printing press and tracked courier dispatch."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "iris-studio",
+        "overrides": {},
+        "typography": { "family": "Outfit" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
     }
   }
 }

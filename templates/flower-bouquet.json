@@ -1,0 +1,145 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {
+    "slug": "flower-bouquet",
+    "version": 1
+  },
+  "optionSet": {
+    "title": "Artisan flower bouquet",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "d0000000-0000-4000-8000-000000000001",
+      "revisionUuid": "d0000000-0000-4000-8000-000000000002",
+      "title": "Design your flower bouquet",
+      "layout": {
+        "type": "grid",
+        "settings": {}
+      },
+      "fields": [
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000010",
+          "type": "radio",
+          "label": "Bouquet size & stem count",
+          "required": true,
+          "choices": [
+            { "uuid": "d0000000-0000-4000-8000-000000000011", "label": "Classic Bouquet · 12 Stems", "default": true },
+            { "uuid": "d0000000-0000-4000-8000-000000000012", "label": "Deluxe Bouquet · 24 Stems", "pricing": { "strategy": "fixed", "amount": "25.00" } },
+            { "uuid": "d0000000-0000-4000-8000-000000000013", "label": "Grand Luxury Arrangement · 36 Stems", "pricing": { "strategy": "fixed", "amount": "50.00" } }
+          ]
+        },
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000020",
+          "type": "color_swatch",
+          "label": "Rose color palette",
+          "required": true,
+          "choices": [
+            { "uuid": "d0000000-0000-4000-8000-000000000021", "label": "Romantic Crimson Red", "color": "#991B1B", "default": true },
+            { "uuid": "d0000000-0000-4000-8000-000000000022", "label": "Pure Cream & White", "color": "#FEF3C7" },
+            { "uuid": "d0000000-0000-4000-8000-000000000023", "label": "Sweet Blush Pink", "color": "#F43F5E" },
+            { "uuid": "d0000000-0000-4000-8000-000000000024", "label": "Vibrant Sunset Coral", "color": "#F97316" }
+          ]
+        },
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000030",
+          "type": "segmented",
+          "label": "Artisan wrapping design",
+          "required": true,
+          "choices": [
+            { "uuid": "d0000000-0000-4000-8000-000000000031", "label": "Rustic Brown Kraft", "default": true },
+            { "uuid": "d0000000-0000-4000-8000-000000000032", "label": "Pastel Pink Matte", "pricing": { "strategy": "fixed", "amount": "3.00" } },
+            { "uuid": "d0000000-0000-4000-8000-000000000033", "label": "Double Layered Floral Silk", "pricing": { "strategy": "fixed", "amount": "5.00" } }
+          ]
+        },
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000040",
+          "type": "color_swatch",
+          "label": "Satin ribbon tie",
+          "choices": [
+            { "uuid": "d0000000-0000-4000-8000-000000000041", "label": "Champagne Silk", "color": "#F59E0B", "default": true },
+            { "uuid": "d0000000-0000-4000-8000-000000000042", "label": "Ruby Velvet", "color": "#881337" },
+            { "uuid": "d0000000-0000-4000-8000-000000000043", "label": "Emerald Forest", "color": "#047857" },
+            { "uuid": "d0000000-0000-4000-8000-000000000044", "label": "Pearl Ivory", "color": "#E2E8F0" }
+          ]
+        },
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000050",
+          "type": "textarea",
+          "label": "Greeting card message",
+          "placeholder": "Write the personal note to be handwritten on the gift card...",
+          "maxLength": 250
+        },
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000060",
+          "type": "checkbox_group",
+          "label": "Curated gift add-ons",
+          "choices": [
+            { "uuid": "d0000000-0000-4000-8000-000000000061", "label": "Artisan Chocolate Truffles Box", "pricing": { "strategy": "fixed", "amount": "14.00" } },
+            { "uuid": "d0000000-0000-4000-8000-000000000062", "label": "Fluted Glass Flower Vase", "pricing": { "strategy": "fixed", "amount": "18.00" } },
+            { "uuid": "d0000000-0000-4000-8000-000000000063", "label": "Botanical Scented Travel Candle", "pricing": { "strategy": "fixed", "amount": "10.00" } }
+          ]
+        },
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000070",
+          "type": "date",
+          "label": "Preferred flower delivery date",
+          "required": true
+        },
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000080",
+          "type": "segmented",
+          "label": "Delivery time window",
+          "choices": [
+            { "uuid": "d0000000-0000-4000-8000-000000000081", "label": "Morning (9 AM – 1 PM)", "default": true },
+            { "uuid": "d0000000-0000-4000-8000-000000000082", "label": "Afternoon (1 PM – 6 PM)" },
+            { "uuid": "d0000000-0000-4000-8000-000000000083", "label": "Evening Rush (6 PM – 9 PM)", "pricing": { "strategy": "fixed", "amount": "5.00" } }
+          ]
+        }
+      ],
+      "rules": [
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000101",
+          "name": "Notice for 36-stem grand bouquet",
+          "condition": {
+            "field": "d0000000-0000-4000-8000-000000000010",
+            "operator": "equals",
+            "value": "d0000000-0000-4000-8000-000000000013"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "d0000000-0000-4000-8000-000000000010",
+              "value": "Grand arrangements include floral hydration water packs for long-distance transport."
+            }
+          ]
+        },
+        {
+          "uuid": "d0000000-0000-4000-8000-000000000102",
+          "name": "Evening courier dispatch confirmation",
+          "condition": {
+            "field": "d0000000-0000-4000-8000-000000000080",
+            "operator": "equals",
+            "value": "d0000000-0000-4000-8000-000000000083"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "d0000000-0000-4000-8000-000000000080",
+              "value": "Evening delivery is guaranteed by a dedicated refrigerated courier."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "iris-studio",
+        "overrides": { "primary": "#BE185D" },
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
+    }
+  }
+}

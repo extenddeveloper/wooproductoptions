@@ -1,0 +1,128 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {
+    "slug": "pet-harness",
+    "version": 1
+  },
+  "optionSet": {
+    "title": "Personalized pet harness",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "e0000000-0000-4000-8000-000000000001",
+      "revisionUuid": "e0000000-0000-4000-8000-000000000002",
+      "title": "Customize your dog harness",
+      "layout": {
+        "type": "stack",
+        "settings": {}
+      },
+      "fields": [
+        {
+          "uuid": "e0000000-0000-4000-8000-000000000010",
+          "type": "segmented",
+          "label": "Harness size",
+          "required": true,
+          "choices": [
+            { "uuid": "e0000000-0000-4000-8000-000000000011", "label": "Small (15–25 lbs)", "default": true },
+            { "uuid": "e0000000-0000-4000-8000-000000000012", "label": "Medium (25–50 lbs)" },
+            { "uuid": "e0000000-0000-4000-8000-000000000013", "label": "Large (50–80 lbs)", "pricing": { "strategy": "fixed", "amount": "4.00" } },
+            { "uuid": "e0000000-0000-4000-8000-000000000014", "label": "Extra Large (80+ lbs)", "pricing": { "strategy": "fixed", "amount": "7.00" } }
+          ]
+        },
+        {
+          "uuid": "e0000000-0000-4000-8000-000000000020",
+          "type": "color_swatch",
+          "label": "Harness colorway",
+          "required": true,
+          "choices": [
+            { "uuid": "e0000000-0000-4000-8000-000000000021", "label": "Tactical Olive", "color": "#14532D", "default": true },
+            { "uuid": "e0000000-0000-4000-8000-000000000022", "label": "Safety Neon Orange", "color": "#EA580C" },
+            { "uuid": "e0000000-0000-4000-8000-000000000023", "label": "Berry Magenta", "color": "#BE185D" },
+            { "uuid": "e0000000-0000-4000-8000-000000000024", "label": "Stealth Black", "color": "#18181B" }
+          ]
+        },
+        {
+          "uuid": "e0000000-0000-4000-8000-000000000030",
+          "type": "toggle",
+          "label": "Add 3M Scotchlite reflective night safety trim",
+          "pricing": { "strategy": "fixed", "amount": "3.50" }
+        },
+        {
+          "uuid": "e0000000-0000-4000-8000-000000000040",
+          "type": "text",
+          "label": "Embroidered pet name",
+          "required": true,
+          "maxLength": 16,
+          "placeholder": "e.g. Charlie"
+        },
+        {
+          "uuid": "e0000000-0000-4000-8000-000000000050",
+          "type": "tel",
+          "label": "Owner contact phone number",
+          "placeholder": "+1 (555) 123-4567"
+        },
+        {
+          "uuid": "e0000000-0000-4000-8000-000000000060",
+          "type": "select",
+          "label": "Matching padded leash bundle",
+          "choices": [
+            { "uuid": "e0000000-0000-4000-8000-000000000061", "label": "No leash (Harness only)", "default": true },
+            { "uuid": "e0000000-0000-4000-8000-000000000062", "label": "5ft Standard Matching Leash", "pricing": { "strategy": "fixed", "amount": "12.00" } },
+            { "uuid": "e0000000-0000-4000-8000-000000000063", "label": "6ft Padded Traffic-Handle Leash", "pricing": { "strategy": "fixed", "amount": "18.00" } }
+          ]
+        },
+        {
+          "uuid": "e0000000-0000-4000-8000-000000000070",
+          "type": "textarea",
+          "label": "Special fit notes & breed details",
+          "placeholder": "e.g. French Bulldog broad chest, puller...",
+          "maxLength": 160
+        }
+      ],
+      "rules": [
+        {
+          "uuid": "e0000000-0000-4000-8000-000000000101",
+          "name": "Hardware upgrade for Extra Large size",
+          "condition": {
+            "field": "e0000000-0000-4000-8000-000000000010",
+            "operator": "equals",
+            "value": "e0000000-0000-4000-8000-000000000014"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "e0000000-0000-4000-8000-000000000010",
+              "value": "Extra Large sizes include reinforced aircraft-grade aluminum alloy leash clips."
+            }
+          ]
+        },
+        {
+          "uuid": "e0000000-0000-4000-8000-000000000102",
+          "name": "Matching leash hardware notice",
+          "condition": {
+            "field": "e0000000-0000-4000-8000-000000000060",
+            "operator": "not_equals",
+            "value": "e0000000-0000-4000-8000-000000000061"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "e0000000-0000-4000-8000-000000000060",
+              "value": "Leashes are woven with the same custom colorway fabric and padded neoprene handle."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "iris-studio",
+        "overrides": {},
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
+    }
+  }
+}

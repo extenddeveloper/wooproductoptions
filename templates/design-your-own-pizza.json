@@ -1,6 +1,9 @@
 {
   "exportSchemaVersion": 1,
-  "template": {"slug": "design-your-own-pizza", "version": 1},
+  "template": {
+    "slug": "design-your-own-pizza",
+    "version": 1
+  },
   "optionSet": {
     "title": "Design-your-own pizza",
     "definition": {
@@ -8,30 +11,437 @@
       "setUuid": "10000000-0000-4000-8000-000000000001",
       "revisionUuid": "10000000-0000-4000-8000-000000000002",
       "title": "Build your perfect pizza",
-      "layout": {"type": "stack", "settings": {}},
+      "layout": {
+        "type": "grid",
+        "settings": {}
+      },
       "fields": [
-        {"uuid": "10000000-0000-4000-8000-000000000010", "type": "radio", "label": "Pizza size", "description": "Choose the size that fits your table.", "required": true, "choices": [
-          {"uuid": "10000000-0000-4000-8000-000000000011", "label": "Personal · 9 inch", "default": true, "pricing": {"strategy": "none"}},
-          {"uuid": "10000000-0000-4000-8000-000000000012", "label": "Classic · 12 inch", "pricing": {"strategy": "fixed", "amount": "4.00"}},
-          {"uuid": "10000000-0000-4000-8000-000000000013", "label": "Party · 16 inch", "pricing": {"strategy": "fixed", "amount": "9.00"}}
-        ]},
-        {"uuid": "10000000-0000-4000-8000-000000000020", "type": "segmented", "label": "Crust", "required": true, "choices": [
-          {"uuid": "10000000-0000-4000-8000-000000000021", "label": "Classic", "default": true},
-          {"uuid": "10000000-0000-4000-8000-000000000022", "label": "Thin & crisp"},
-          {"uuid": "10000000-0000-4000-8000-000000000023", "label": "Cheese filled", "pricing": {"strategy": "fixed", "amount": "2.50"}}
-        ]},
-        {"uuid": "10000000-0000-4000-8000-000000000030", "type": "checkbox_group", "label": "Toppings", "description": "Pick as many as you like.", "choices": [
-          {"uuid": "10000000-0000-4000-8000-000000000031", "label": "Roasted mushrooms", "pricing": {"strategy": "fixed", "amount": "1.25"}},
-          {"uuid": "10000000-0000-4000-8000-000000000032", "label": "Fresh basil", "pricing": {"strategy": "fixed", "amount": "0.75"}},
-          {"uuid": "10000000-0000-4000-8000-000000000033", "label": "Smoked pepperoni", "pricing": {"strategy": "fixed", "amount": "1.75"}},
-          {"uuid": "10000000-0000-4000-8000-000000000034", "label": "Hot honey", "pricing": {"strategy": "fixed", "amount": "1.00"}}
-        ]},
-        {"uuid": "10000000-0000-4000-8000-000000000040", "type": "textarea", "label": "Kitchen note", "placeholder": "For example: extra crispy", "maxLength": 180}
+        {
+          "uuid": "10000000-0000-4000-8000-000000000010",
+          "type": "radio",
+          "label": "Pizza size",
+          "description": "Choose the size that fits your table.",
+          "required": true,
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-000000000011",
+              "label": "Personal · 9 inch",
+              "default": true,
+              "pricing": { "strategy": "none" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000012",
+              "label": "Classic · 12 inch",
+              "pricing": { "strategy": "fixed", "amount": "4.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000013",
+              "label": "Large · 14 inch",
+              "pricing": { "strategy": "fixed", "amount": "7.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000014",
+              "label": "Party · 16 inch",
+              "pricing": { "strategy": "fixed", "amount": "10.00" }
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000020",
+          "type": "segmented",
+          "label": "Crust style",
+          "required": true,
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-000000000021",
+              "label": "Classic hand-tossed",
+              "default": true
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000022",
+              "label": "Thin & crispy"
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000023",
+              "label": "Cheese stuffed crust",
+              "pricing": { "strategy": "fixed", "amount": "2.50" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000024",
+              "label": "Gluten-free cauliflower",
+              "pricing": { "strategy": "fixed", "amount": "3.50" }
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000030",
+          "type": "select",
+          "label": "Stuffed crust cheese filling",
+          "description": "Select the cheese melted inside your crust edge.",
+          "conditions": {
+            "visible": {
+              "field": "10000000-0000-4000-8000-000000000020",
+              "operator": "equals",
+              "value": "10000000-0000-4000-8000-000000000023"
+            }
+          },
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-000000000031",
+              "label": "Mozzarella & herb",
+              "default": true
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000032",
+              "label": "Garlic four-cheese",
+              "pricing": { "strategy": "fixed", "amount": "1.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000033",
+              "label": "Cheddar & jalapeño",
+              "pricing": { "strategy": "fixed", "amount": "1.25" }
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000040",
+          "type": "radio",
+          "label": "Sauce base",
+          "description": "Every great pizza starts with a rich sauce base.",
+          "required": true,
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-000000000041",
+              "label": "San Marzano tomato",
+              "default": true
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000042",
+              "label": "Creamy garlic alfredo",
+              "pricing": { "strategy": "fixed", "amount": "1.50" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000043",
+              "label": "Sweet smokey BBQ",
+              "pricing": { "strategy": "fixed", "amount": "1.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000044",
+              "label": "Basil pesto",
+              "pricing": { "strategy": "fixed", "amount": "2.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000045",
+              "label": "Spicy arrabiata",
+              "pricing": { "strategy": "fixed", "amount": "1.00" }
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000050",
+          "type": "segmented",
+          "label": "Sauce amount",
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-000000000051",
+              "label": "Light sauce"
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000052",
+              "label": "Regular",
+              "default": true
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000053",
+              "label": "Extra sauce",
+              "pricing": { "strategy": "fixed", "amount": "0.75" }
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000060",
+          "type": "radio",
+          "label": "Cheese blend",
+          "required": true,
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-000000000061",
+              "label": "Whole-milk mozzarella",
+              "default": true
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000062",
+              "label": "Extra mozzarella",
+              "pricing": { "strategy": "fixed", "amount": "1.50" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000063",
+              "label": "Buffalo mozzarella & parmesan",
+              "pricing": { "strategy": "fixed", "amount": "2.50" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000064",
+              "label": "Plant-based vegan cheese",
+              "pricing": { "strategy": "fixed", "amount": "2.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000065",
+              "label": "No cheese"
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000070",
+          "type": "checkbox_group",
+          "label": "Meat toppings",
+          "description": "Select your favorite proteins. Each portion can have multiple servings.",
+          "enableQuantity": true,
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-000000000071",
+              "label": "Smoked pepperoni",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "1.75" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000072",
+              "label": "Italian sausage",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "1.75" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000073",
+              "label": "Crispy bacon",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "2.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000074",
+              "label": "Grilled herb chicken",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "2.25" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000075",
+              "label": "Shaved prosciutto",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "2.50" }
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000080",
+          "type": "checkbox_group",
+          "label": "Fresh vegetables & herbs",
+          "description": "Fresh garden toppings sliced daily.",
+          "enableQuantity": true,
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-000000000081",
+              "label": "Roasted button mushrooms",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "1.25" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000082",
+              "label": "Sweet bell peppers",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "1.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000083",
+              "label": "Red onions",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "0.75" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000084",
+              "label": "Kalamata olives",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "1.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000085",
+              "label": "Pickled jalapeños",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "0.75" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000086",
+              "label": "Fresh basil leaves",
+              "quantityEnabled": true,
+              "pricing": { "strategy": "fixed", "amount": "0.75" }
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000090",
+          "type": "select",
+          "label": "Gourmet drizzle finish",
+          "description": "Drizzled over your hot pizza right out of the oven.",
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-000000000091",
+              "label": "None",
+              "default": true
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000092",
+              "label": "Hot honey drizzle",
+              "pricing": { "strategy": "fixed", "amount": "1.25" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000093",
+              "label": "Aged balsamic glaze",
+              "pricing": { "strategy": "fixed", "amount": "1.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000094",
+              "label": "Extra virgin olive oil & oregano",
+              "pricing": { "strategy": "fixed", "amount": "0.75" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-000000000095",
+              "label": "White truffle oil",
+              "pricing": { "strategy": "fixed", "amount": "2.50" }
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-0000000000a0",
+          "type": "checkbox_group",
+          "label": "Crust dipping sauces",
+          "description": "Served on the side with warm garlic cups.",
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-0000000000a1",
+              "label": "Creamy garlic dip",
+              "pricing": { "strategy": "fixed", "amount": "1.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-0000000000a2",
+              "label": "Homemade buttermilk ranch",
+              "pricing": { "strategy": "fixed", "amount": "1.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-0000000000a3",
+              "label": "Warm marinara cup",
+              "pricing": { "strategy": "fixed", "amount": "1.00" }
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-0000000000a4",
+              "label": "Sweet hot honey cup",
+              "pricing": { "strategy": "fixed", "amount": "1.25" }
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-0000000000b0",
+          "type": "segmented",
+          "label": "Bake & cut style",
+          "choices": [
+            {
+              "uuid": "10000000-0000-4000-8000-0000000000b1",
+              "label": "Regular bake · Pie cut",
+              "default": true
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-0000000000b2",
+              "label": "Extra crispy bake"
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-0000000000b3",
+              "label": "Square / party cut"
+            },
+            {
+              "uuid": "10000000-0000-4000-8000-0000000000b4",
+              "label": "Double-cut 16 slices"
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-0000000000c0",
+          "type": "textarea",
+          "label": "Special instructions & dietary notes",
+          "placeholder": "e.g. extra crispy crust, allergy notice, please leave at door...",
+          "maxLength": 200
+        }
       ],
-      "rules": [],
-      "preview": {"assets": [], "layers": [], "bindings": []},
-      "style": {"palette": "ember-craft", "overrides": {}, "typography": {"family": "system-ui"}},
-      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+      "rules": [
+        {
+          "uuid": "10000000-0000-4000-8000-000000000101",
+          "name": "Show stuffed crust filling when stuffed crust is selected",
+          "condition": {
+            "field": "10000000-0000-4000-8000-000000000020",
+            "operator": "equals",
+            "value": "10000000-0000-4000-8000-000000000023"
+          },
+          "actions": [
+            {
+              "type": "show",
+              "target": "10000000-0000-4000-8000-000000000030"
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000102",
+          "name": "Hide stuffed crust filling when classic or thin crust is selected",
+          "condition": {
+            "field": "10000000-0000-4000-8000-000000000020",
+            "operator": "not_equals",
+            "value": "10000000-0000-4000-8000-000000000023"
+          },
+          "actions": [
+            {
+              "type": "hide",
+              "target": "10000000-0000-4000-8000-000000000030"
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000103",
+          "name": "Allergen notice for plant-based vegan cheese",
+          "condition": {
+            "field": "10000000-0000-4000-8000-000000000060",
+            "operator": "equals",
+            "value": "10000000-0000-4000-8000-000000000064"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "10000000-0000-4000-8000-0000000000c0",
+              "value": "Vegan cheese selected: prepared using dedicated dairy-free utensils."
+            }
+          ]
+        },
+        {
+          "uuid": "10000000-0000-4000-8000-000000000104",
+          "name": "Preparation note for gluten-free cauliflower crust",
+          "condition": {
+            "field": "10000000-0000-4000-8000-000000000020",
+            "operator": "equals",
+            "value": "10000000-0000-4000-8000-000000000024"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "10000000-0000-4000-8000-0000000000c0",
+              "value": "Gluten-free crust baked on separate foil tray to minimize cross-contact."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "ember-craft",
+        "overrides": {},
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
     }
   }
 }

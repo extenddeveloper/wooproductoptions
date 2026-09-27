@@ -1,0 +1,144 @@
+{
+  "exportSchemaVersion": 1,
+  "template": {
+    "slug": "custom-mug",
+    "version": 1
+  },
+  "optionSet": {
+    "title": "Custom photo & text mug",
+    "definition": {
+      "schemaVersion": 1,
+      "setUuid": "c0000000-0000-4000-8000-000000000001",
+      "revisionUuid": "c0000000-0000-4000-8000-000000000002",
+      "title": "Design your personalized mug",
+      "layout": {
+        "type": "stack",
+        "settings": {}
+      },
+      "fields": [
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000010",
+          "type": "radio",
+          "label": "Mug type & size",
+          "required": true,
+          "choices": [
+            { "uuid": "c0000000-0000-4000-8000-000000000011", "label": "Classic Ceramic Mug · 11 oz", "default": true },
+            { "uuid": "c0000000-0000-4000-8000-000000000012", "label": "Grande Bistro Mug · 15 oz", "pricing": { "strategy": "fixed", "amount": "3.50" } },
+            { "uuid": "c0000000-0000-4000-8000-000000000013", "label": "Insulated Stainless Steel Travel Tumbler · 20 oz", "pricing": { "strategy": "fixed", "amount": "12.00" } }
+          ]
+        },
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000020",
+          "type": "color_swatch",
+          "label": "Mug exterior finish",
+          "required": true,
+          "choices": [
+            { "uuid": "c0000000-0000-4000-8000-000000000021", "label": "Bright Gloss White", "color": "#FFFFFF", "default": true },
+            { "uuid": "c0000000-0000-4000-8000-000000000022", "label": "Matte Charcoal Slate", "color": "#334155" },
+            { "uuid": "c0000000-0000-4000-8000-000000000023", "label": "Warm Terracotta", "color": "#C2410C" },
+            { "uuid": "c0000000-0000-4000-8000-000000000024", "label": "Earthy Sage", "color": "#059669" }
+          ]
+        },
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000030",
+          "type": "file",
+          "label": "Upload your photo or artwork",
+          "description": "Upload a high-resolution photo or illustration (PNG or JPG).",
+          "allowedExtensions": ["jpg", "jpeg", "png", "svg", "pdf"],
+          "maxFileMb": 10,
+          "maxFiles": 1
+        },
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000040",
+          "type": "text",
+          "label": "Custom text or inscription",
+          "placeholder": "e.g. World's Best Mom, Coffee First...",
+          "maxLength": 28,
+          "pricing": { "strategy": "per_character", "amount": "0.25" }
+        },
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000050",
+          "type": "font",
+          "label": "Text typography style",
+          "appliedFields": ["c0000000-0000-4000-8000-000000000040"],
+          "choices": [
+            { "uuid": "c0000000-0000-4000-8000-000000000051", "label": "Modern Clean (Roboto)", "fontFamily": "Roboto, sans-serif", "fontCategory": "Sans-Serif", "fontSource": "google", "default": true },
+            { "uuid": "c0000000-0000-4000-8000-000000000052", "label": "Timeless Serif (Playfair)", "fontFamily": "'Playfair Display', serif", "fontCategory": "Serif", "fontSource": "google" },
+            { "uuid": "c0000000-0000-4000-8000-000000000053", "label": "Calligraphy Script (Dancing Script)", "fontFamily": "'Dancing Script', cursive", "fontCategory": "Handwriting", "fontSource": "google" }
+          ]
+        },
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000060",
+          "type": "segmented",
+          "label": "Print placement & coverage",
+          "choices": [
+            { "uuid": "c0000000-0000-4000-8000-000000000061", "label": "Front Facing Only", "default": true },
+            { "uuid": "c0000000-0000-4000-8000-000000000062", "label": "Both Sides (Wrap Print)", "pricing": { "strategy": "fixed", "amount": "2.50" } }
+          ]
+        },
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000070",
+          "type": "select",
+          "label": "Gift box packaging",
+          "choices": [
+            { "uuid": "c0000000-0000-4000-8000-000000000071", "label": "Standard Eco Protective Mailer", "default": true },
+            { "uuid": "c0000000-0000-4000-8000-000000000072", "label": "Kraft Gift Box with Crinkle Paper", "pricing": { "strategy": "fixed", "amount": "3.00" } },
+            { "uuid": "c0000000-0000-4000-8000-000000000073", "label": "Holiday Red Ribbon Presentation Box", "pricing": { "strategy": "fixed", "amount": "5.00" } }
+          ]
+        },
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000080",
+          "type": "textarea",
+          "label": "Special printing requests",
+          "placeholder": "e.g. crop photo to circle, center text below photo...",
+          "maxLength": 180
+        }
+      ],
+      "rules": [
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000101",
+          "name": "Wrap print alignment tip",
+          "condition": {
+            "field": "c0000000-0000-4000-8000-000000000060",
+            "operator": "equals",
+            "value": "c0000000-0000-4000-8000-000000000062"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "c0000000-0000-4000-8000-000000000080",
+              "value": "Wrap print displays your graphic seamlessly on both the front and back face."
+            }
+          ]
+        },
+        {
+          "uuid": "c0000000-0000-4000-8000-000000000102",
+          "name": "Tumbler dishwasher care notice",
+          "condition": {
+            "field": "c0000000-0000-4000-8000-000000000010",
+            "operator": "equals",
+            "value": "c0000000-0000-4000-8000-000000000013"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "c0000000-0000-4000-8000-000000000010",
+              "value": "Stainless steel tumblers feature double-wall vacuum insulation (hand wash recommended)."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "iris-studio",
+        "overrides": {},
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
+    }
+  }
+}

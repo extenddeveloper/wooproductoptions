@@ -1,6 +1,9 @@
 {
   "exportSchemaVersion": 1,
-  "template": {"slug": "gift-box", "version": 1},
+  "template": {
+    "slug": "gift-box",
+    "version": 1
+  },
   "optionSet": {
     "title": "Build a gift box",
     "definition": {
@@ -8,25 +11,169 @@
       "setUuid": "40000000-0000-4000-8000-000000000001",
       "revisionUuid": "40000000-0000-4000-8000-000000000002",
       "title": "Build a thoughtful gift",
-      "layout": {"type": "stack", "settings": {}},
+      "layout": {
+        "type": "accordion",
+        "settings": {}
+      },
       "fields": [
-        {"uuid": "40000000-0000-4000-8000-000000000010", "type": "checkbox_group", "label": "Choose treats", "required": true, "minChoices": 2, "maxChoices": 4, "choices": [
-          {"uuid": "40000000-0000-4000-8000-000000000011", "label": "Single-origin chocolate", "pricing": {"strategy": "fixed", "amount": "8"}},
-          {"uuid": "40000000-0000-4000-8000-000000000012", "label": "Small-batch coffee", "pricing": {"strategy": "fixed", "amount": "12"}},
-          {"uuid": "40000000-0000-4000-8000-000000000013", "label": "Botanical candle", "pricing": {"strategy": "fixed", "amount": "14"}},
-          {"uuid": "40000000-0000-4000-8000-000000000014", "label": "Handmade biscuits", "pricing": {"strategy": "fixed", "amount": "7"}}
-        ]},
-        {"uuid": "40000000-0000-4000-8000-000000000020", "type": "text", "label": "Recipient name", "required": true, "maxLength": 80},
-        {"uuid": "40000000-0000-4000-8000-000000000030", "type": "textarea", "label": "Gift message", "maxLength": 280, "placeholder": "Write a personal note"},
-        {"uuid": "40000000-0000-4000-8000-000000000040", "type": "radio", "label": "Wrap style", "choices": [
-          {"uuid": "40000000-0000-4000-8000-000000000041", "label": "Signature paper", "default": true},
-          {"uuid": "40000000-0000-4000-8000-000000000042", "label": "Reusable fabric wrap", "pricing": {"strategy": "fixed", "amount": "6"}}
-        ]}
+        {
+          "uuid": "40000000-0000-4000-8000-000000000010",
+          "type": "radio",
+          "label": "Gift box size",
+          "required": true,
+          "choices": [
+            { "uuid": "40000000-0000-4000-8000-000000000011", "label": "Classic Keepsake Box (Holds 3-4 items)", "default": true },
+            { "uuid": "40000000-0000-4000-8000-000000000012", "label": "Deluxe Presentation Hamper (Holds 6-8 items)", "pricing": { "strategy": "fixed", "amount": "14.00" } }
+          ]
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000020",
+          "type": "segmented",
+          "label": "Box color theme",
+          "required": true,
+          "choices": [
+            { "uuid": "40000000-0000-4000-8000-000000000021", "label": "Kraft Natural", "default": true },
+            { "uuid": "40000000-0000-4000-8000-000000000022", "label": "Midnight Navy" },
+            { "uuid": "40000000-0000-4000-8000-000000000023", "label": "Blush Rose" }
+          ]
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000030",
+          "type": "checkbox_group",
+          "label": "Artisan treats",
+          "description": "Select the gourmet confectionery to pack inside.",
+          "required": true,
+          "choices": [
+            { "uuid": "40000000-0000-4000-8000-000000000031", "label": "Single-origin dark chocolate", "pricing": { "strategy": "fixed", "amount": "8.00" } },
+            { "uuid": "40000000-0000-4000-8000-000000000032", "label": "Handcrafted sea salt caramels", "pricing": { "strategy": "fixed", "amount": "9.50" } },
+            { "uuid": "40000000-0000-4000-8000-000000000033", "label": "Shortbread butter biscuits", "pricing": { "strategy": "fixed", "amount": "7.00" } },
+            { "uuid": "40000000-0000-4000-8000-000000000034", "label": "Honey roasted almonds", "pricing": { "strategy": "fixed", "amount": "6.50" } }
+          ]
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000040",
+          "type": "select",
+          "label": "Artisan beverage addition",
+          "choices": [
+            { "uuid": "40000000-0000-4000-8000-000000000041", "label": "None", "default": true },
+            { "uuid": "40000000-0000-4000-8000-000000000042", "label": "Single-Estate Ethiopian Coffee Beans (250g)", "pricing": { "strategy": "fixed", "amount": "12.00" } },
+            { "uuid": "40000000-0000-4000-8000-000000000043", "label": "Organic Chamomile & Lavender Tea Tin", "pricing": { "strategy": "fixed", "amount": "10.00" } }
+          ]
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000050",
+          "type": "select",
+          "label": "Relaxation & candle accent",
+          "choices": [
+            { "uuid": "40000000-0000-4000-8000-000000000051", "label": "None", "default": true },
+            { "uuid": "40000000-0000-4000-8000-000000000052", "label": "Amber Jar Soy Candle (Cedar & Fig)", "pricing": { "strategy": "fixed", "amount": "15.00" } },
+            { "uuid": "40000000-0000-4000-8000-000000000053", "label": "Botanical Himalayan Bath Salts", "pricing": { "strategy": "fixed", "amount": "11.00" } }
+          ]
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000060",
+          "type": "select",
+          "label": "Greeting card design",
+          "required": true,
+          "choices": [
+            { "uuid": "40000000-0000-4000-8000-000000000061", "label": "Warm Wishes & Congratulations", "default": true },
+            { "uuid": "40000000-0000-4000-8000-000000000062", "label": "Happy Birthday Floral Foil" },
+            { "uuid": "40000000-0000-4000-8000-000000000063", "label": "Thank You So Very Much" },
+            { "uuid": "40000000-0000-4000-8000-000000000064", "label": "No Greeting Card" }
+          ]
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000070",
+          "type": "textarea",
+          "label": "Handwritten gift card message",
+          "placeholder": "Write your heartfelt message here (up to 280 characters)...",
+          "maxLength": 280
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000080",
+          "type": "color_swatch",
+          "label": "Hand-tied satin ribbon",
+          "choices": [
+            { "uuid": "40000000-0000-4000-8000-000000000081", "label": "Champagne Gold", "color": "#F59E0B", "default": true },
+            { "uuid": "40000000-0000-4000-8000-000000000082", "label": "Burgundy Wine", "color": "#881337" },
+            { "uuid": "40000000-0000-4000-8000-000000000083", "label": "Sage Green", "color": "#059669" },
+            { "uuid": "40000000-0000-4000-8000-000000000084", "label": "Midnight Blue", "color": "#1E3A8A" }
+          ]
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000090",
+          "type": "text",
+          "label": "Recipient full name",
+          "required": true,
+          "placeholder": "For the outer mailing label",
+          "maxLength": 80
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-0000000000a0",
+          "type": "date",
+          "label": "Requested dispatch date",
+          "description": "Choose when you would like us to ship this gift."
+        }
       ],
-      "rules": [],
-      "preview": {"assets": [], "layers": [], "bindings": []},
-      "style": {"palette": "iris-studio", "overrides": {"primary": "#7C3AED"}, "typography": {"family": "system-ui"}},
-      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+      "rules": [
+        {
+          "uuid": "40000000-0000-4000-8000-000000000101",
+          "name": "Hide message when no card chosen",
+          "condition": {
+            "field": "40000000-0000-4000-8000-000000000060",
+            "operator": "equals",
+            "value": "40000000-0000-4000-8000-000000000064"
+          },
+          "actions": [
+            {
+              "type": "hide",
+              "target": "40000000-0000-4000-8000-000000000070"
+            }
+          ]
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000102",
+          "name": "Show message when card chosen",
+          "condition": {
+            "field": "40000000-0000-4000-8000-000000000060",
+            "operator": "not_equals",
+            "value": "40000000-0000-4000-8000-000000000064"
+          },
+          "actions": [
+            {
+              "type": "show",
+              "target": "40000000-0000-4000-8000-000000000070"
+            }
+          ]
+        },
+        {
+          "uuid": "40000000-0000-4000-8000-000000000103",
+          "name": "Notice for deluxe hamper volume",
+          "condition": {
+            "field": "40000000-0000-4000-8000-000000000010",
+            "operator": "equals",
+            "value": "40000000-0000-4000-8000-000000000012"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "40000000-0000-4000-8000-000000000030",
+              "value": "Deluxe hamper includes shredded wood filler and custom embossed wax seal."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "iris-studio",
+        "overrides": { "primary": "#7C3AED" },
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
     }
   }
 }

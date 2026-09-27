@@ -1,6 +1,9 @@
 {
   "exportSchemaVersion": 1,
-  "template": {"slug": "donation", "version": 1},
+  "template": {
+    "slug": "donation",
+    "version": 1
+  },
   "optionSet": {
     "title": "Donation amount",
     "definition": {
@@ -8,15 +11,94 @@
       "setUuid": "90000000-0000-4000-8000-000000000001",
       "revisionUuid": "90000000-0000-4000-8000-000000000002",
       "title": "Choose your contribution",
-      "layout": {"type": "stack", "settings": {}},
+      "layout": {
+        "type": "stack",
+        "settings": {}
+      },
       "fields": [
-        {"uuid": "90000000-0000-4000-8000-000000000010", "type": "customer_defined_price", "label": "Donation amount", "required": true, "min": "5", "max": "5000", "step": "1", "default": "25"},
-        {"uuid": "90000000-0000-4000-8000-000000000020", "type": "checkbox", "label": "Make this gift in someone’s honor"}
+        {
+          "uuid": "90000000-0000-4000-8000-000000000010",
+          "type": "segmented",
+          "label": "Preset gift tiers",
+          "choices": [
+            { "uuid": "90000000-0000-4000-8000-000000000011", "label": "$15 Friend" },
+            { "uuid": "90000000-0000-4000-8000-000000000012", "label": "$35 Supporter", "default": true },
+            { "uuid": "90000000-0000-4000-8000-000000000013", "label": "$75 Advocate" },
+            { "uuid": "90000000-0000-4000-8000-000000000014", "label": "$150 Champion" }
+          ]
+        },
+        {
+          "uuid": "90000000-0000-4000-8000-000000000020",
+          "type": "customer_defined_price",
+          "label": "Exact contribution amount ($)",
+          "required": true,
+          "min": "5",
+          "max": "5000",
+          "step": "1",
+          "default": "35"
+        },
+        {
+          "uuid": "90000000-0000-4000-8000-000000000030",
+          "type": "toggle",
+          "label": "Make this contribution in honor or memory of someone special"
+        },
+        {
+          "uuid": "90000000-0000-4000-8000-000000000040",
+          "type": "text",
+          "label": "Honoree name",
+          "placeholder": "Full name of the person being honored",
+          "maxLength": 100,
+          "conditions": {
+            "visible": {
+              "field": "90000000-0000-4000-8000-000000000030",
+              "operator": "equals",
+              "value": true
+            }
+          }
+        },
+        {
+          "uuid": "90000000-0000-4000-8000-000000000050",
+          "type": "textarea",
+          "label": "Personal dedication note",
+          "placeholder": "Add a tribute message to be included in our annual impact report...",
+          "maxLength": 300,
+          "conditions": {
+            "visible": {
+              "field": "90000000-0000-4000-8000-000000000030",
+              "operator": "equals",
+              "value": true
+            }
+          }
+        }
       ],
-      "rules": [],
-      "preview": {"assets": [], "layers": [], "bindings": []},
-      "style": {"palette": "forest-atelier", "overrides": {}, "typography": {"family": "system-ui"}},
-      "settings": {"showPriceBreakdown": true, "saveEnabled": false, "shareEnabled": false}
+      "rules": [
+        {
+          "uuid": "90000000-0000-4000-8000-000000000101",
+          "name": "Show honoree fields when dedication is enabled",
+          "condition": {
+            "field": "90000000-0000-4000-8000-000000000030",
+            "operator": "equals",
+            "value": true
+          },
+          "actions": [
+            {
+              "type": "show",
+              "target": "90000000-0000-4000-8000-000000000040"
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "forest-atelier",
+        "overrides": {},
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": false,
+        "shareEnabled": false
+      }
     }
   }
 }

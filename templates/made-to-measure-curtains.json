@@ -1,6 +1,9 @@
 {
   "exportSchemaVersion": 1,
-  "template": {"slug": "made-to-measure-curtains", "version": 1},
+  "template": {
+    "slug": "made-to-measure-curtains",
+    "version": 1
+  },
   "optionSet": {
     "title": "Made-to-measure curtains",
     "definition": {
@@ -8,21 +11,136 @@
       "setUuid": "60000000-0000-4000-8000-000000000001",
       "revisionUuid": "60000000-0000-4000-8000-000000000002",
       "title": "Made for your window",
-      "layout": {"type": "grid", "settings": {}},
+      "layout": {
+        "type": "grid",
+        "settings": {}
+      },
       "fields": [
-        {"uuid": "60000000-0000-4000-8000-000000000010", "type": "number", "label": "Finished width (cm)", "required": true, "min": "40", "max": "800", "step": "0.5", "default": "180"},
-        {"uuid": "60000000-0000-4000-8000-000000000020", "type": "number", "label": "Finished drop (cm)", "required": true, "min": "40", "max": "500", "step": "0.5", "default": "220"},
-        {"uuid": "60000000-0000-4000-8000-000000000030", "type": "select", "label": "Fabric collection", "required": true, "choices": [
-          {"uuid": "60000000-0000-4000-8000-000000000031", "label": "Everyday linen", "default": true},
-          {"uuid": "60000000-0000-4000-8000-000000000032", "label": "Blackout velvet", "pricing": {"strategy": "fixed", "amount": "45"}},
-          {"uuid": "60000000-0000-4000-8000-000000000033", "label": "Organic cotton", "pricing": {"strategy": "fixed", "amount": "25"}}
-        ]},
-        {"uuid": "60000000-0000-4000-8000-000000000040", "type": "formula", "label": "Made-to-measure area charge", "pricing": {"strategy": "formula", "expression": "ROUND(FIELD(\"60000000-0000-4000-8000-000000000010\") * FIELD(\"60000000-0000-4000-8000-000000000020\") * 0.0025, 2)", "mode": "adjustment"}}
+        {
+          "uuid": "60000000-0000-4000-8000-000000000010",
+          "type": "number",
+          "label": "Finished track / pole width (cm)",
+          "required": true,
+          "min": "40",
+          "max": "800",
+          "step": "0.5",
+          "default": "180"
+        },
+        {
+          "uuid": "60000000-0000-4000-8000-000000000020",
+          "type": "number",
+          "label": "Finished curtain drop (cm)",
+          "required": true,
+          "min": "40",
+          "max": "500",
+          "step": "0.5",
+          "default": "220"
+        },
+        {
+          "uuid": "60000000-0000-4000-8000-000000000030",
+          "type": "select",
+          "label": "Fabric collection",
+          "required": true,
+          "choices": [
+            { "uuid": "60000000-0000-4000-8000-000000000031", "label": "Everyday Washed Linen", "default": true },
+            { "uuid": "60000000-0000-4000-8000-000000000032", "label": "Blackout Velvet", "pricing": { "strategy": "fixed", "amount": "45.00" } },
+            { "uuid": "60000000-0000-4000-8000-000000000033", "label": "Organic Belgian Cotton", "pricing": { "strategy": "fixed", "amount": "25.00" } },
+            { "uuid": "60000000-0000-4000-8000-000000000034", "label": "Textured Chenille", "pricing": { "strategy": "fixed", "amount": "35.00" } }
+          ]
+        },
+        {
+          "uuid": "60000000-0000-4000-8000-000000000040",
+          "type": "radio",
+          "label": "Lining upgrade",
+          "choices": [
+            { "uuid": "60000000-0000-4000-8000-000000000041", "label": "Standard Light Filtering", "default": true },
+            { "uuid": "60000000-0000-4000-8000-000000000042", "label": "Thermal Blackout Lining (100% Light Block)", "pricing": { "strategy": "fixed", "amount": "30.00" } },
+            { "uuid": "60000000-0000-4000-8000-000000000043", "label": "Interlined Luxury Acoustic & Draft Barrier", "pricing": { "strategy": "fixed", "amount": "65.00" } }
+          ]
+        },
+        {
+          "uuid": "60000000-0000-4000-8000-000000000050",
+          "type": "segmented",
+          "label": "Heading style",
+          "choices": [
+            { "uuid": "60000000-0000-4000-8000-000000000051", "label": "Eyelet Rings", "default": true },
+            { "uuid": "60000000-0000-4000-8000-000000000052", "label": "Double Pinch Pleat", "pricing": { "strategy": "fixed", "amount": "25.00" } },
+            { "uuid": "60000000-0000-4000-8000-000000000053", "label": "Pencil Pleat" },
+            { "uuid": "60000000-0000-4000-8000-000000000054", "label": "Wave Drape", "pricing": { "strategy": "fixed", "amount": "20.00" } }
+          ]
+        },
+        {
+          "uuid": "60000000-0000-4000-8000-000000000060",
+          "type": "toggle",
+          "label": "Include matching fabric tiebacks (Pair)",
+          "pricing": { "strategy": "fixed", "amount": "24.00" }
+        },
+        {
+          "uuid": "60000000-0000-4000-8000-000000000070",
+          "type": "select",
+          "label": "Fitting hardware type",
+          "choices": [
+            { "uuid": "60000000-0000-4000-8000-000000000071", "label": "Pole (28mm diameter)", "default": true },
+            { "uuid": "60000000-0000-4000-8000-000000000072", "label": "Ceiling Mounted Track" },
+            { "uuid": "60000000-0000-4000-8000-000000000073", "label": "Recessed Silent Gliss Track" }
+          ]
+        },
+        {
+          "uuid": "60000000-0000-4000-8000-000000000080",
+          "type": "formula",
+          "label": "Custom fabric yardage charge",
+          "pricing": {
+            "strategy": "formula",
+            "expression": "ROUND(FIELD(\"60000000-0000-4000-8000-000000000010\") * FIELD(\"60000000-0000-4000-8000-000000000020\") * 0.0025, 2)",
+            "mode": "adjustment"
+          }
+        }
       ],
-      "rules": [],
-      "preview": {"assets": [], "layers": [], "bindings": []},
-      "style": {"palette": "ocean-commerce", "overrides": {}, "typography": {"family": "Manrope"}},
-      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+      "rules": [
+        {
+          "uuid": "60000000-0000-4000-8000-000000000101",
+          "name": "Notice for eyelet ring heading",
+          "condition": {
+            "field": "60000000-0000-4000-8000-000000000050",
+            "operator": "equals",
+            "value": "60000000-0000-4000-8000-000000000051"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "60000000-0000-4000-8000-000000000070",
+              "value": "Eyelet rings slide directly onto a curtain pole; tracks are not suitable for eyelets."
+            }
+          ]
+        },
+        {
+          "uuid": "60000000-0000-4000-8000-000000000102",
+          "name": "Thermal blackout lining room darkening note",
+          "condition": {
+            "field": "60000000-0000-4000-8000-000000000040",
+            "operator": "equals",
+            "value": "60000000-0000-4000-8000-000000000042"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "60000000-0000-4000-8000-000000000040",
+              "value": "3-pass blackout layer provides maximum light reduction and winter thermal insulation."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "ocean-commerce",
+        "overrides": {},
+        "typography": { "family": "Manrope" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
     }
   }
 }

@@ -1,6 +1,9 @@
 {
   "exportSchemaVersion": 1,
-  "template": {"slug": "engraving", "version": 1},
+  "template": {
+    "slug": "engraving",
+    "version": 1
+  },
   "optionSet": {
     "title": "Engraving studio",
     "definition": {
@@ -8,20 +11,146 @@
       "setUuid": "50000000-0000-4000-8000-000000000001",
       "revisionUuid": "50000000-0000-4000-8000-000000000002",
       "title": "Add a personal engraving",
-      "layout": {"type": "stack", "settings": {}},
+      "layout": {
+        "type": "stack",
+        "settings": {}
+      },
       "fields": [
-        {"uuid": "50000000-0000-4000-8000-000000000010", "type": "text", "label": "Engraving text", "required": true, "maxLength": 32, "placeholder": "Up to 32 characters", "pricing": {"strategy": "per_character", "amount": "0.50"}},
-        {"uuid": "50000000-0000-4000-8000-000000000020", "type": "font", "label": "Lettering style", "required": true, "appliedFields": ["50000000-0000-4000-8000-000000000010"], "choices": [
-          {"uuid": "50000000-0000-4000-8000-000000000021", "label": "Modern sans (Roboto)", "fontFamily": "Roboto, sans-serif", "fontCategory": "Sans-Serif", "fontSource": "google", "default": true},
-          {"uuid": "50000000-0000-4000-8000-000000000022", "label": "Classic serif (Playfair Display)", "fontFamily": "'Playfair Display', serif", "fontCategory": "Serif", "fontSource": "google"},
-          {"uuid": "50000000-0000-4000-8000-000000000023", "label": "Soft script (Dancing Script)", "fontFamily": "'Dancing Script', cursive", "fontCategory": "Handwriting", "fontSource": "google", "pricing": {"strategy": "fixed", "amount": "3"}}
-        ]},
-        {"uuid": "50000000-0000-4000-8000-000000000030", "type": "help", "label": "Engraving note", "content": "<strong>Proof carefully:</strong> engraving text is produced exactly as entered."}
+        {
+          "uuid": "50000000-0000-4000-8000-000000000010",
+          "type": "text",
+          "label": "Primary engraving text (Line 1)",
+          "required": true,
+          "maxLength": 32,
+          "placeholder": "e.g. Forever & Always",
+          "pricing": { "strategy": "per_character", "amount": "0.50" }
+        },
+        {
+          "uuid": "50000000-0000-4000-8000-000000000020",
+          "type": "toggle",
+          "label": "Add a second line of engraving?"
+        },
+        {
+          "uuid": "50000000-0000-4000-8000-000000000030",
+          "type": "text",
+          "label": "Secondary engraving text (Line 2)",
+          "maxLength": 32,
+          "placeholder": "e.g. 10.24.2024",
+          "pricing": { "strategy": "per_character", "amount": "0.50" },
+          "conditions": {
+            "visible": {
+              "field": "50000000-0000-4000-8000-000000000020",
+              "operator": "equals",
+              "value": true
+            }
+          }
+        },
+        {
+          "uuid": "50000000-0000-4000-8000-000000000040",
+          "type": "font",
+          "label": "Lettering font style",
+          "required": true,
+          "appliedFields": [
+            "50000000-0000-4000-8000-000000000010",
+            "50000000-0000-4000-8000-000000000030"
+          ],
+          "choices": [
+            {
+              "uuid": "50000000-0000-4000-8000-000000000041",
+              "label": "Modern Sans (Roboto)",
+              "fontFamily": "Roboto, sans-serif",
+              "fontCategory": "Sans-Serif",
+              "fontSource": "google",
+              "default": true
+            },
+            {
+              "uuid": "50000000-0000-4000-8000-000000000042",
+              "label": "Classic Serif (Playfair)",
+              "fontFamily": "'Playfair Display', serif",
+              "fontCategory": "Serif",
+              "fontSource": "google"
+            },
+            {
+              "uuid": "50000000-0000-4000-8000-000000000043",
+              "label": "Graceful Script (Dancing Script)",
+              "fontFamily": "'Dancing Script', cursive",
+              "fontCategory": "Handwriting",
+              "fontSource": "google",
+              "pricing": { "strategy": "fixed", "amount": "3.00" }
+            }
+          ]
+        },
+        {
+          "uuid": "50000000-0000-4000-8000-000000000050",
+          "type": "segmented",
+          "label": "Engraving placement",
+          "choices": [
+            { "uuid": "50000000-0000-4000-8000-000000000051", "label": "Front center", "default": true },
+            { "uuid": "50000000-0000-4000-8000-000000000052", "label": "Inside secret inscription", "pricing": { "strategy": "fixed", "amount": "3.00" } },
+            { "uuid": "50000000-0000-4000-8000-000000000053", "label": "Back case" }
+          ]
+        },
+        {
+          "uuid": "50000000-0000-4000-8000-000000000060",
+          "type": "toggle",
+          "label": "Include luxury velvet pouch & silver polishing cloth",
+          "pricing": { "strategy": "fixed", "amount": "4.00" }
+        }
       ],
-      "rules": [],
-      "preview": {"assets": [], "layers": [], "bindings": [{"uuid": "50000000-0000-4000-8000-000000000040", "fieldUuid": "50000000-0000-4000-8000-000000000010", "target": "text", "layerUuid": ""}]},
-      "style": {"palette": "mono-luxe", "overrides": {}, "typography": {"family": "system-ui"}},
-      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+      "rules": [
+        {
+          "uuid": "50000000-0000-4000-8000-000000000101",
+          "name": "Show Line 2 when second line toggle is enabled",
+          "condition": {
+            "field": "50000000-0000-4000-8000-000000000020",
+            "operator": "equals",
+            "value": true
+          },
+          "actions": [
+            {
+              "type": "show",
+              "target": "50000000-0000-4000-8000-000000000030"
+            }
+          ]
+        },
+        {
+          "uuid": "50000000-0000-4000-8000-000000000102",
+          "name": "Hide Line 2 when second line toggle is disabled",
+          "condition": {
+            "field": "50000000-0000-4000-8000-000000000020",
+            "operator": "equals",
+            "value": false
+          },
+          "actions": [
+            {
+              "type": "hide",
+              "target": "50000000-0000-4000-8000-000000000030"
+            }
+          ]
+        }
+      ],
+      "preview": {
+        "assets": [],
+        "layers": [],
+        "bindings": [
+          {
+            "uuid": "50000000-0000-4000-8000-000000000071",
+            "fieldUuid": "50000000-0000-4000-8000-000000000010",
+            "target": "text",
+            "layerUuid": ""
+          }
+        ]
+      },
+      "style": {
+        "palette": "mono-luxe",
+        "overrides": {},
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
     }
   }
 }

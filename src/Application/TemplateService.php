@@ -32,6 +32,25 @@ final class TemplateService {
 						? WOOPTIONSFIC_URL . 'assets/templates/' . $slug . '-large.jpg'
 						: $img_url;
 
+					$file = WOOPTIONSFIC_PATH . 'templates/' . $slug . '.json';
+					$actual_fields = null;
+					$actual_rules = null;
+					if (is_readable($file)) {
+						$raw = (string) file_get_contents($file);
+						$data = json_decode($raw, true);
+						if (is_array($data) && isset($data['optionSet']['definition']['fields']) && is_array($data['optionSet']['definition']['fields'])) {
+							$actual_fields = count($data['optionSet']['definition']['fields']);
+							$actual_rules = count($data['optionSet']['definition']['rules'] ?? []);
+						}
+					}
+
+					$fields_count = $actual_fields !== null ? $actual_fields : (int) ($item['fieldsCount'] ?? $item['fieldCount'] ?? 0);
+					$rules_count = $actual_rules !== null ? $actual_rules : (int) ($item['rulesCount'] ?? 0);
+
+					$details = is_array($item['details'] ?? null) ? $item['details'] : [];
+					$details['fields'] = $fields_count . ' ' . ($fields_count === 1 ? __('field', 'wooptionsfic') : __('fields', 'wooptionsfic'));
+					$details['rules'] = $rules_count . ' ' . ($rules_count === 1 ? __('rule', 'wooptionsfic') : __('rules', 'wooptionsfic'));
+
 					return [
 						'slug'          => (string) $item['slug'],
 						'name'          => (string) $item['name'],
@@ -40,16 +59,16 @@ final class TemplateService {
 						'icon'          => (string) ($item['icon'] ?? 'screenoptions'),
 						'category'      => (string) ($item['category'] ?? 'commerce'),
 						'categoryLabel' => (string) ($item['categoryLabel'] ?? $item['category'] ?? 'Commerce'),
-						'fieldCount'    => (int) ($item['fieldsCount'] ?? $item['fieldCount'] ?? 0),
-						'fieldsCount'   => (int) ($item['fieldsCount'] ?? $item['fieldCount'] ?? 0),
-						'rulesCount'    => (int) ($item['rulesCount'] ?? 0),
+						'fieldCount'    => $fields_count,
+						'fieldsCount'   => $fields_count,
+						'rulesCount'    => $rules_count,
 						'pricingModel'  => (string) ($item['pricingModel'] ?? 'Cumulative pricing'),
 						'layoutModel'   => (string) ($item['layoutModel'] ?? 'Grid layout'),
 						'tested'        => ! empty($item['tested']),
 						'previewImage'  => $img_url,
 						'heroImage'     => $hero_url,
 						'features'      => array_values(array_map('strval', (array) ($item['features'] ?? []))),
-						'details'       => is_array($item['details'] ?? null) ? $item['details'] : [],
+						'details'       => $details,
 						'footerIcons'   => array_values(array_map('strval', (array) ($item['footerIcons'] ?? []))),
 						'fieldTypes'    => array_values(array_map('strval', (array) ($item['fieldTypes'] ?? []))),
 						'usage'         => (int) ($item['usage'] ?? 0),

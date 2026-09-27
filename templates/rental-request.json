@@ -1,6 +1,9 @@
 {
   "exportSchemaVersion": 1,
-  "template": {"slug": "rental-request", "version": 1},
+  "template": {
+    "slug": "rental-request",
+    "version": 1
+  },
   "optionSet": {
     "title": "Rental request",
     "definition": {
@@ -8,16 +11,112 @@
       "setUuid": "80000000-0000-4000-8000-000000000001",
       "revisionUuid": "80000000-0000-4000-8000-000000000002",
       "title": "Plan your rental",
-      "layout": {"type": "stack", "settings": {}},
+      "layout": {
+        "type": "stack",
+        "settings": {}
+      },
       "fields": [
-        {"uuid": "80000000-0000-4000-8000-000000000010", "type": "date_range", "label": "Rental dates", "required": true, "description": "This collects preferred dates; availability is confirmed separately."},
-        {"uuid": "80000000-0000-4000-8000-000000000020", "type": "time", "label": "Preferred pickup time", "required": true},
-        {"uuid": "80000000-0000-4000-8000-000000000030", "type": "number", "label": "Guests", "required": true, "min": "1", "max": "50", "default": "2", "pricing": {"strategy": "per_unit", "amount": "5"}}
+        {
+          "uuid": "80000000-0000-4000-8000-000000000010",
+          "type": "date_range",
+          "label": "Requested rental dates",
+          "required": true,
+          "description": "Select your rental pickup and return calendar range."
+        },
+        {
+          "uuid": "80000000-0000-4000-8000-000000000020",
+          "type": "time",
+          "label": "Preferred pickup time",
+          "required": true
+        },
+        {
+          "uuid": "80000000-0000-4000-8000-000000000030",
+          "type": "time",
+          "label": "Preferred return time",
+          "required": true
+        },
+        {
+          "uuid": "80000000-0000-4000-8000-000000000040",
+          "type": "number",
+          "label": "Equipment quantity (Units)",
+          "required": true,
+          "min": "1",
+          "max": "20",
+          "default": "1",
+          "pricing": {
+            "strategy": "per_unit",
+            "amount": "15.00"
+          }
+        },
+        {
+          "uuid": "80000000-0000-4000-8000-000000000050",
+          "type": "segmented",
+          "label": "Delivery service",
+          "required": true,
+          "choices": [
+            { "uuid": "80000000-0000-4000-8000-000000000051", "label": "Customer Depot Pickup", "default": true },
+            { "uuid": "80000000-0000-4000-8000-000000000052", "label": "On-Site Trailer Delivery", "pricing": { "strategy": "fixed", "amount": "45.00" } }
+          ]
+        },
+        {
+          "uuid": "80000000-0000-4000-8000-000000000060",
+          "type": "toggle",
+          "label": "Zero-Deductible Loss & Damage Waiver Protection",
+          "pricing": { "strategy": "fixed", "amount": "29.00" }
+        },
+        {
+          "uuid": "80000000-0000-4000-8000-000000000070",
+          "type": "tel",
+          "label": "On-site emergency contact phone",
+          "required": true,
+          "placeholder": "+1 (555) 000-0000"
+        }
       ],
-      "rules": [],
-      "preview": {"assets": [], "layers": [], "bindings": []},
-      "style": {"palette": "ocean-commerce", "overrides": {}, "typography": {"family": "system-ui"}},
-      "settings": {"showPriceBreakdown": true, "saveEnabled": false, "shareEnabled": false}
+      "rules": [
+        {
+          "uuid": "80000000-0000-4000-8000-000000000101",
+          "name": "Notice when on-site delivery selected",
+          "condition": {
+            "field": "80000000-0000-4000-8000-000000000050",
+            "operator": "equals",
+            "value": "80000000-0000-4000-8000-000000000052"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "80000000-0000-4000-8000-000000000070",
+              "value": "Our dispatch driver will call this number 30 minutes before arrival."
+            }
+          ]
+        },
+        {
+          "uuid": "80000000-0000-4000-8000-000000000102",
+          "name": "Damage waiver confirmation note",
+          "condition": {
+            "field": "80000000-0000-4000-8000-000000000060",
+            "operator": "equals",
+            "value": true
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "80000000-0000-4000-8000-000000000060",
+              "value": "Waiver covers accidental cosmetic and mechanical wear throughout rental."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "ocean-commerce",
+        "overrides": {},
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": false,
+        "shareEnabled": false
+      }
     }
   }
 }

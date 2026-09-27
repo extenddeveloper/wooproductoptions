@@ -1,6 +1,9 @@
 {
   "exportSchemaVersion": 1,
-  "template": {"slug": "custom-computer", "version": 1},
+  "template": {
+    "slug": "custom-computer",
+    "version": 1
+  },
   "optionSet": {
     "title": "Custom computer",
     "definition": {
@@ -8,29 +11,136 @@
       "setUuid": "70000000-0000-4000-8000-000000000001",
       "revisionUuid": "70000000-0000-4000-8000-000000000002",
       "title": "Configure your workstation",
-      "layout": {"type": "accordion", "settings": {}},
+      "layout": {
+        "type": "accordion",
+        "settings": {}
+      },
       "fields": [
-        {"uuid": "70000000-0000-4000-8000-000000000010", "type": "radio", "label": "Processor", "required": true, "choices": [
-          {"uuid": "70000000-0000-4000-8000-000000000011", "label": "Performance 8-core", "default": true},
-          {"uuid": "70000000-0000-4000-8000-000000000012", "label": "Pro 12-core", "pricing": {"strategy": "fixed", "amount": "220"}},
-          {"uuid": "70000000-0000-4000-8000-000000000013", "label": "Studio 16-core", "pricing": {"strategy": "fixed", "amount": "480"}}
-        ]},
-        {"uuid": "70000000-0000-4000-8000-000000000020", "type": "segmented", "label": "Memory", "required": true, "choices": [
-          {"uuid": "70000000-0000-4000-8000-000000000021", "label": "16 GB", "default": true},
-          {"uuid": "70000000-0000-4000-8000-000000000022", "label": "32 GB", "pricing": {"strategy": "fixed", "amount": "95"}},
-          {"uuid": "70000000-0000-4000-8000-000000000023", "label": "64 GB", "pricing": {"strategy": "fixed", "amount": "245"}}
-        ]},
-        {"uuid": "70000000-0000-4000-8000-000000000030", "type": "radio", "label": "Storage", "choices": [
-          {"uuid": "70000000-0000-4000-8000-000000000031", "label": "1 TB NVMe", "default": true},
-          {"uuid": "70000000-0000-4000-8000-000000000032", "label": "2 TB NVMe", "pricing": {"strategy": "fixed", "amount": "120"}},
-          {"uuid": "70000000-0000-4000-8000-000000000033", "label": "4 TB NVMe", "pricing": {"strategy": "fixed", "amount": "310"}}
-        ]},
-        {"uuid": "70000000-0000-4000-8000-000000000040", "type": "toggle", "label": "Three-year care plan", "pricing": {"strategy": "fixed", "amount": "149"}}
+        {
+          "uuid": "70000000-0000-4000-8000-000000000010",
+          "type": "radio",
+          "label": "Processor (CPU)",
+          "required": true,
+          "choices": [
+            { "uuid": "70000000-0000-4000-8000-000000000011", "label": "Performance 8-Core (Up to 5.2 GHz)", "default": true },
+            { "uuid": "70000000-0000-4000-8000-000000000012", "label": "Creator Pro 12-Core (Up to 5.6 GHz)", "pricing": { "strategy": "fixed", "amount": "220.00" } },
+            { "uuid": "70000000-0000-4000-8000-000000000013", "label": "Studio Extreme 16-Core (Up to 5.8 GHz)", "pricing": { "strategy": "fixed", "amount": "480.00" } }
+          ]
+        },
+        {
+          "uuid": "70000000-0000-4000-8000-000000000020",
+          "type": "segmented",
+          "label": "System Memory (RAM)",
+          "required": true,
+          "choices": [
+            { "uuid": "70000000-0000-4000-8000-000000000021", "label": "16 GB DDR5 6000MHz", "default": true },
+            { "uuid": "70000000-0000-4000-8000-000000000022", "label": "32 GB DDR5 6000MHz", "pricing": { "strategy": "fixed", "amount": "95.00" } },
+            { "uuid": "70000000-0000-4000-8000-000000000023", "label": "64 GB DDR5 6000MHz", "pricing": { "strategy": "fixed", "amount": "245.00" } }
+          ]
+        },
+        {
+          "uuid": "70000000-0000-4000-8000-000000000030",
+          "type": "radio",
+          "label": "Primary NVMe SSD Storage",
+          "choices": [
+            { "uuid": "70000000-0000-4000-8000-000000000031", "label": "1 TB Gen4 NVMe (7,000 MB/s)", "default": true },
+            { "uuid": "70000000-0000-4000-8000-000000000032", "label": "2 TB Gen4 NVMe (7,400 MB/s)", "pricing": { "strategy": "fixed", "amount": "120.00" } },
+            { "uuid": "70000000-0000-4000-8000-000000000033", "label": "4 TB Gen4 NVMe (7,400 MB/s)", "pricing": { "strategy": "fixed", "amount": "310.00" } }
+          ]
+        },
+        {
+          "uuid": "70000000-0000-4000-8000-000000000040",
+          "type": "radio",
+          "label": "Dedicated Graphics (GPU)",
+          "required": true,
+          "choices": [
+            { "uuid": "70000000-0000-4000-8000-000000000041", "label": "GeForce RTX 4070 12GB GDDR6X", "default": true },
+            { "uuid": "70000000-0000-4000-8000-000000000042", "label": "GeForce RTX 4080 Super 16GB", "pricing": { "strategy": "fixed", "amount": "450.00" } },
+            { "uuid": "70000000-0000-4000-8000-000000000043", "label": "GeForce RTX 4090 24GB Flagship", "pricing": { "strategy": "fixed", "amount": "1150.00" } }
+          ]
+        },
+        {
+          "uuid": "70000000-0000-4000-8000-000000000050",
+          "type": "segmented",
+          "label": "Cooling System",
+          "choices": [
+            { "uuid": "70000000-0000-4000-8000-000000000051", "label": "Stealth Tower Air Cooler", "default": true },
+            { "uuid": "70000000-0000-4000-8000-000000000052", "label": "240mm AIO Liquid Cooler", "pricing": { "strategy": "fixed", "amount": "85.00" } },
+            { "uuid": "70000000-0000-4000-8000-000000000053", "label": "360mm ARGB Liquid Cooler", "pricing": { "strategy": "fixed", "amount": "145.00" } }
+          ]
+        },
+        {
+          "uuid": "70000000-0000-4000-8000-000000000060",
+          "type": "select",
+          "label": "Power Supply (PSU)",
+          "choices": [
+            { "uuid": "70000000-0000-4000-8000-000000000061", "label": "750W 80+ Gold Modular", "default": true },
+            { "uuid": "70000000-0000-4000-8000-000000000062", "label": "850W 80+ Gold Modular", "pricing": { "strategy": "fixed", "amount": "45.00" } },
+            { "uuid": "70000000-0000-4000-8000-000000000063", "label": "1000W 80+ Platinum ATX 3.0", "pricing": { "strategy": "fixed", "amount": "110.00" } }
+          ]
+        },
+        {
+          "uuid": "70000000-0000-4000-8000-000000000070",
+          "type": "segmented",
+          "label": "Operating System",
+          "choices": [
+            { "uuid": "70000000-0000-4000-8000-000000000071", "label": "Windows 11 Home", "default": true },
+            { "uuid": "70000000-0000-4000-8000-000000000072", "label": "Windows 11 Pro", "pricing": { "strategy": "fixed", "amount": "60.00" } },
+            { "uuid": "70000000-0000-4000-8000-000000000073", "label": "Ubuntu Linux LTS" }
+          ]
+        },
+        {
+          "uuid": "70000000-0000-4000-8000-000000000080",
+          "type": "toggle",
+          "label": "3-Year Advanced Hardware Replacement & On-Site Care Plan",
+          "pricing": { "strategy": "fixed", "amount": "149.00" }
+        }
       ],
-      "rules": [],
-      "preview": {"assets": [], "layers": [], "bindings": []},
-      "style": {"palette": "night-studio", "overrides": {}, "typography": {"family": "system-ui"}},
-      "settings": {"showPriceBreakdown": true, "saveEnabled": true, "shareEnabled": true}
+      "rules": [
+        {
+          "uuid": "70000000-0000-4000-8000-000000000101",
+          "name": "PSU recommendation for RTX 4090",
+          "condition": {
+            "field": "70000000-0000-4000-8000-000000000040",
+            "operator": "equals",
+            "value": "70000000-0000-4000-8000-000000000043"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "70000000-0000-4000-8000-000000000060",
+              "value": "RTX 4090 high-transient loads perform best paired with 850W or 1000W ATX 3.0 power units."
+            }
+          ]
+        },
+        {
+          "uuid": "70000000-0000-4000-8000-000000000102",
+          "name": "Cooling advice for Studio 16-Core",
+          "condition": {
+            "field": "70000000-0000-4000-8000-000000000010",
+            "operator": "equals",
+            "value": "70000000-0000-4000-8000-000000000013"
+          },
+          "actions": [
+            {
+              "type": "help",
+              "target": "70000000-0000-4000-8000-000000000050",
+              "value": "Liquid AIO cooling is recommended to maintain peak multi-threaded boost clocks."
+            }
+          ]
+        }
+      ],
+      "preview": { "assets": [], "layers": [], "bindings": [] },
+      "style": {
+        "palette": "night-studio",
+        "overrides": {},
+        "typography": { "family": "system-ui" }
+      },
+      "settings": {
+        "showPriceBreakdown": true,
+        "saveEnabled": true,
+        "shareEnabled": true
+      }
     }
   }
 }

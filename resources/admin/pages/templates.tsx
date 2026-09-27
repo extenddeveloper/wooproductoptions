@@ -171,7 +171,7 @@ namespace WooOptionsFic.Pages {
 
             <div className="wof-template-card__specs">
               <div className="wof-template-card__spec">
-                {item.fieldsCount || item.fieldCount || 4} {__('fields', 'wooptionsfic')} · {item.rulesCount ?? 2} {__('rules', 'wooptionsfic')}
+                {(item.fieldsCount ?? item.fieldCount ?? 0)} {__('fields', 'wooptionsfic')} · {(item.rulesCount ?? 0)} {__('rules', 'wooptionsfic')}
               </div>
               <div className="wof-template-card__spec">
                 {item.pricingModel ?? __('Cumulative pricing', 'wooptionsfic')}
@@ -678,20 +678,20 @@ namespace WooOptionsFic.Pages {
                 <h4 className="wof-drawer-section-title">{__('Details', 'wooptionsfic')}</h4>
                 <div className="wof-drawer-details-list">
                   <div className="wof-drawer-detail-item">
-                    <span className="wof-detail-icon is-glyph">$$</span>
-                    <span>{selectedItem.details?.fields || `${selectedItem.fieldsCount || selectedItem.fieldCount || 12} fields`}</span>
+                    <span className="wof-detail-icon">☰</span>
+                    <span>{selectedItem.details?.fields || `${selectedItem.fieldsCount ?? selectedItem.fieldCount ?? 0} ${__('fields', 'wooptionsfic')}`}</span>
                   </div>
                   <div className="wof-drawer-detail-item">
                     <span className="wof-detail-icon">⚡</span>
-                    <span>{selectedItem.details?.rules || `${selectedItem.rulesCount ?? 4} rules`}</span>
+                    <span>{selectedItem.details?.rules || `${selectedItem.rulesCount ?? 0} ${__('rules', 'wooptionsfic')}`}</span>
                   </div>
                   <div className="wof-drawer-detail-item">
                     <span className="wof-detail-icon">⊞</span>
-                    <span>{selectedItem.details?.layout || selectedItem.layoutModel || 'Grid layout'}</span>
+                    <span>{selectedItem.details?.layout || selectedItem.layoutModel || __('Grid layout', 'wooptionsfic')}</span>
                   </div>
                   <div className="wof-drawer-detail-item">
                     <span className="wof-detail-icon is-check">✔</span>
-                    <span>{selectedItem.details?.tested || 'Tested for accessibility'}</span>
+                    <span>{selectedItem.details?.tested || __('Tested for accessibility', 'wooptionsfic')}</span>
                   </div>
                 </div>
               </div>
